@@ -70,6 +70,178 @@
 * **许可证选择**：
   采用 [Apache-2.0](https://gitee.com/jcnc-org/snow/blob/main/LICENSE)，最大程度降低贡献门槛。
 
+## 3.3 项目运行输出
+``` Snow
+## 源代码 (main.snow)
+module: Main
+    import:Math
+    function: main
+        parameter:
+        return_type: int
+        body:
+            Math.factorial(6L,1L)
+
+            return 0
+        end body
+    end function
+
+end module
+
+## 源代码 (test.snow)
+module: Math
+    function: factorial
+        parameter:
+            declare n1: long
+            declare n2: long
+        return_type: long
+        body:
+           return n1+n2
+        end body
+    end function
+end module
+
+## 编译器输出
+### AST
+[
+  {
+    "type": "Module",
+    "name": "Main",
+    "imports": [
+      {
+        "module": "Math",
+        "type": "Import"
+      }
+    ],
+    "functions": [
+      {
+        "type": "Function",
+        "name": "main",
+        "parameters": [
+          
+        ],
+        "returnType": "int",
+        "body": [
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "Math"
+                },
+                "member": "factorial"
+              },
+              "arguments": [
+                {
+                  "type": "NumberLiteral",
+                  "value": "6L"
+                },
+                {
+                  "type": "NumberLiteral",
+                  "value": "1L"
+                }
+              ]
+            }
+          },
+          {
+            "type": "Return",
+            "value": {
+              "type": "NumberLiteral",
+              "value": "0"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Module",
+    "name": "Math",
+    "imports": [
+      
+    ],
+    "functions": [
+      {
+        "type": "Function",
+        "name": "factorial",
+        "parameters": [
+          {
+            "type": "long",
+            "name": "n1"
+          },
+          {
+            "type": "long",
+            "name": "n2"
+          }
+        ],
+        "returnType": "long",
+        "body": [
+          {
+            "type": "Return",
+            "value": {
+              "type": "BinaryExpression",
+              "left": {
+                "type": "Identifier",
+                "name": "n1"
+              },
+              "operator": "+",
+              "right": {
+                "type": "Identifier",
+                "name": "n2"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+]
+### IR
+func main() {
+  %0 = CONST 6
+  %1 = CONST 1
+  %2 = CALL Math.factorial, %0, %1
+  %3 = CONST 0
+  RET %3
+}
+func factorial(%0, %1) {
+  %2 = ADD_L64 %0, %1
+  RET %2
+}
+
+### VM code
+112 6
+152 0
+112 1
+152 1
+162 0
+162 1
+201 12 2
+152 2
+111 0
+151 3
+161 3
+255
+162 0
+162 1
+11
+152 2
+162 2
+202
+Calling function at address: 12
+Return 7
+Process has ended
+
+
+### VM Local Variable Table:
+0: 6
+1: 1
+2: 7
+3: 0
+```
+
 ---
 
 # 4. 从 v0.1 到 v0.2 / v1.0 的计划与展望
@@ -85,8 +257,8 @@
 ## 4.2 v0.3 目标
 1. **IDE的支持**
    重构和优化[JCNC开源社区](https://gitee.com/jcnc-org)的[JNotepad](https://gitee.com/jcnc-org/JNotepad),实现Snow官方IDE的发布。
-   ![Alt text](image-1.png)
-   ![Alt text](image-2.png)
+   ![Alt text](img/IMG_JNotepad_1.png)
+   ![Alt text](img/IMG_JNotepad_2.png)
 
 ## 4.3 v1.0 长期规划
 
