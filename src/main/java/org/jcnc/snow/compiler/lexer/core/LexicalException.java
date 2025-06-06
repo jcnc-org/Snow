@@ -1,0 +1,54 @@
+package org.jcnc.snow.compiler.lexer.core;
+
+/**
+ * 词法异常（LexicalException）。
+ * <p>
+ * 当 {@link LexerEngine} 在扫描过程中遇到
+ * 非法或无法识别的字符序列时抛出该异常。
+ * <ul>
+ *   <li>异常消息仅包含一行简明错误信息（包含行号与列号）；</li>
+ *   <li>完全禁止 Java 堆栈信息输出，使命令行输出保持整洁。</li>
+ * </ul>
+ * <pre>
+ * 例：
+ *     main.s:2:19: Lexical error: Illegal character sequence '@' at 2:19
+ * </pre>
+ */
+public class LexicalException extends RuntimeException {
+    /** 错误发生的行号（从1开始） */
+    private final int line;
+    /** 错误发生的列号（从1开始） */
+    private final int column;
+
+    /**
+     * 构造词法异常
+     * @param reason  错误原因（如：非法字符描述）
+     * @param line    出错行号
+     * @param column  出错列号
+     */
+    public LexicalException(String reason, int line, int column) {
+        // 构造出错消息，并禁止异常堆栈打印
+        super(String.format("Lexical error: %s at %d:%d", reason, line, column),
+                null, false, false);
+        this.line   = line;
+        this.column = column;
+    }
+
+    /**
+     * 屏蔽异常堆栈填充（始终不打印堆栈信息）
+     */
+    @Override
+    public synchronized Throwable fillInStackTrace() { return this; }
+
+    /**
+     * 获取出错的行号
+     * @return 行号
+     */
+    public int getLine()   { return line; }
+
+    /**
+     * 获取出错的列号
+     * @return 列号
+     */
+    public int getColumn() { return column; }
+}

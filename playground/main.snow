@@ -1,0 +1,13 @@
+module: Main
+    import:Math
+    function: main
+        parameter:
+        return_type: int
+        body:
+            Math.factorial(6L,1L)
+
+            return 0
+        end body
+    end function
+
+end module
