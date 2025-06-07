@@ -30,7 +30,7 @@ ir/
 
 ## 开发环境
 
-* JDK 23 或更高版本
+* JDK 24 或更高版本
 * Maven 构建管理
 * 推荐 IDE：IntelliJ IDEA
 
