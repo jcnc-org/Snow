@@ -4,11 +4,9 @@ module: Math
         return_type: int
         body:
             Math.factorial(6)
-
             return 0
         end body
     end function
-
 
     function: factorial
         parameter:
@@ -30,5 +28,4 @@ module: Math
             return num1
         end body
     end function
-
 end module

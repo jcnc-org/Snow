@@ -16,7 +16,6 @@
   </configuration>
   <configuration default="false" name="SnowCompiler" type="Application" factoryName="Application" activateToolWindowBeforeRun="false" nameIsGenerated="true">
     <option name="ALTERNATIVE_JRE_PATH" value="graalvm-ce-23" />
-    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <option name="MAIN_CLASS_NAME" value="org.jcnc.snow.compiler.cli.SnowCompiler" />
     <module name="Snow" />
     <option name="PROGRAM_PARAMETERS" value="-d playground" />
