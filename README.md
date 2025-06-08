@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="doc/README/IMG/IMG_Snow_ICON.png" alt="Snow Icon">
+  <img src="doc/README/IMG/IMG_Snow_icon_128.svg" alt="Snow Icon">
 <h1 align="center" style="margin: 30px 0 30px; font-weight: bold;">Snow编程语言</h1>
 
 <p align="center">
@@ -36,7 +36,7 @@ Snow 语言是一个正在发展的编程语言,采用类模块（module）语�
 
 Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的语法和严格的类型系统,以帮助人工智能模型更好地理解程序结构。语言使用显式的 `module` 声明来组织代码,用 `function`,`parameter`,`return_type`,`body` 等关键字分隔不同代码块,语法结构固定且易读。此外,Snow 实现了语义分析来检查变量作用域和类型一致性,在编译阶段捕获错误并确保生成的中间代码正确无误。这种自上而下的编译流程,使得代码设计和生成更加模块化,可解释,也有利于调试和优化。
 
-相关背景: [心路历程](doc/Snow%20心路历程/Snow%20心路历程.md)
+相关背景: [心路历程](doc/Snow's-Journey/Snow's-Journey.md)
 
 ## 下载Snow发行版
 
@@ -70,7 +70,7 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
 
      使用IDEA配置好的运行配置SnowCompiler
 
-    ![IMG_运行配置文件_1.png](doc/README/IMG/IMG_%E8%BF%90%E8%A1%8C%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6_1.png)
+    ![IMG_运行配置文件_1.png](doc/README/IMG/IMG_Run-Profile_1.png)
 
 4. **运行成功**
 
@@ -325,6 +325,12 @@ end module
     * `io/`：输入输出辅助类（加载指令,文件解析等）
     * 其他如 `factories/`,`utils/` 等目录包含指令创建和调试工具类
 
+## 相关文档
+
+[Git 管理规范](doc/Git-Management/Git-Management.md)
+
+
+
 ## 开发计划 / TODO
 
 * 扩展标准库支持和更多内置模块,如字符串,文件操作等常用功能。
@@ -333,6 +339,6 @@ end module
 * 增加更多示例程序试,丰富项目文档和用例。
 
 ## 加入我们
-* 微信: xuxiaolankaka
-* QQ: 1399528359
-* E-Mail: luke.k.xu@hotmail.com
+* 微信: `xuxiaolankaka`
+* QQ: `1399528359`
+* E-Mail: `luke.k.xu@hotmail.com`
