@@ -14,7 +14,12 @@ import java.util.List;
  * @param callee    被调用的表达式节点，通常为函数标识符或成员访问表达式。
  * @param arguments 参数表达式列表，依照调用顺序排列。
  */
-public record CallExpressionNode(ExpressionNode callee, List<ExpressionNode> arguments) implements ExpressionNode {
+public record CallExpressionNode(
+        ExpressionNode callee,
+        List<ExpressionNode> arguments,
+        int line,    // 添加行号
+        int column   // 添加列号
+) implements ExpressionNode {
 
     /**
      * 返回函数调用表达式的字符串形式。
@@ -35,5 +40,14 @@ public record CallExpressionNode(ExpressionNode callee, List<ExpressionNode> arg
         }
         sb.append(")");
         return sb.toString();
+    }
+
+    // Getter方法用于访问行号和列号
+    public int line() {
+        return line;
+    }
+
+    public int column() {
+        return column;
     }
 }

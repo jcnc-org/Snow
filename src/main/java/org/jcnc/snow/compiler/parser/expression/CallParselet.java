@@ -12,8 +12,7 @@ import java.util.List;
  * {@code CallParselet} 表示函数调用语法的中缀解析器。
  * <p>
  * 用于处理形如 {@code foo(arg1, arg2)} 的函数调用结构。
- * 在 Pratt 解析器架构中，该解析器在函数名之后接收括号开始的调用参数，
- * 构建 {@link CallExpressionNode} 抽象语法树节点。
+ * 在 Pratt 解析器架构中，该解析器在函数名之后接收括号开始的调用参数，构建 {@link CallExpressionNode} 抽象语法树节点。
  * </p>
  */
 public class CallParselet implements InfixParselet {
@@ -31,6 +30,11 @@ public class CallParselet implements InfixParselet {
 
         List<ExpressionNode> args = new ArrayList<>();
 
+        // 获取当前 token 的行号和列号
+        int line = ctx.getTokens().peek().getLine();
+        int column = ctx.getTokens().peek().getCol();
+
+        // 解析函数调用参数
         if (!ctx.getTokens().peek().getLexeme().equals(")")) {
             do {
                 args.add(new PrattExpressionParser().parse(ctx));
@@ -38,7 +42,9 @@ public class CallParselet implements InfixParselet {
         }
 
         ctx.getTokens().expect(")"); // 消费并验证 ")"
-        return new CallExpressionNode(left, args);
+
+        // 创建 CallExpressionNode 并传递位置信息
+        return new CallExpressionNode(left, args, line, column);
     }
 
     /**
