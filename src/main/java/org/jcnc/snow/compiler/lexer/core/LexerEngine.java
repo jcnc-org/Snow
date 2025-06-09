@@ -48,7 +48,7 @@ public class LexerEngine {
      * 构造时立即进行全量扫描。
      *
      * @param source     源代码文本
-     * @param sourceName 文件名或来源描述（如"main.snow"）
+     * @param sourceName 文件名或来源描述（如"Main.snow"）
      */
     public LexerEngine(String source, String sourceName) {
         this.context = new LexerContext(source);

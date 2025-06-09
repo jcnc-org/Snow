@@ -2,7 +2,7 @@ module: Math
     function: factorial
         parameter:
             declare n1: long
-            declare n2: long
+            declare n2: int
         return_type: long
         body:
            return n1+n2
