@@ -8,22 +8,22 @@
 </p>
 
 <p align="center">
-    <a href="https://gitee.com/jcnc-org/JNotepad/blob/master/LICENSE">
+    <a href="https://gitee.com/jcnc-org/snow/blob/main/LICENSE">
         <img src="https://img.shields.io/badge/%20license-Apache--2.0%20-blue" alt="">
     </a>
-    <a href="https://gitee.com/jcnc-org/JNotepad/blob/master/LICENSE">
+    <a href="https://gitee.com/jcnc-org/snow/tree/v0.1/">
         <img src="https://img.shields.io/badge/version-v0.1-blue" alt="">
     </a>
 </p>
 
 <p align="center">
-    <a href="https://gitee.com/jcnc-org/JNotepad/releases">
+    <a href="https://gitee.com/jcnc-org/snow/releases">
         <img src="https://img.shields.io/badge/Windows-Passing-49%2C198%2C84.svg?style=falt&logo=Windows" alt="">
     </a>
-    <a href="https://gitee.com/jcnc-org/JNotepad/releases">
+    <a href="https://gitee.com/jcnc-org/snow/releases">
         <img src="https://img.shields.io/badge/Ubuntu-Passing-49%2C198%2C84.svg?style=falt&logo=Ubuntu" alt="">
     </a>
-    <a href="https://gitee.com/jcnc-org/JNotepad/releases">
+    <a href="https://gitee.com/jcnc-org/snow/releases">
         <img src="https://img.shields.io/badge/MacOS-Passing-49%2C198%2C84.svg?style=falt&logo=Apple" alt="">
     </a>
 </p>
