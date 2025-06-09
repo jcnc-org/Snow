@@ -88,7 +88,6 @@ public class ModuleParser implements TopLevelParser {
         // 确保模块体以 "end module" 结束
         ts.expect("end");
         ts.expect("module");
-        ts.expectType(TokenType.NEWLINE);
 
         // 构建并返回完整的模块语法树节点
         return new ModuleNode(name, imports, functions);
