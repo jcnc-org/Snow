@@ -1,6 +1,8 @@
 package org.jcnc.snow.compiler.parser.context;
 
 import org.jcnc.snow.compiler.lexer.token.Token;
+
+import java.nio.file.Paths;
 import java.util.List;
 
 /**
@@ -33,7 +35,7 @@ public class ParserContext {
      */
     public ParserContext(List<Token> tokens, String sourceName) {
         this.tokens = new TokenStream(tokens);
-        this.sourceName = sourceName;
+        this.sourceName = Paths.get(sourceName).toAbsolutePath().toString();
     }
 
 
