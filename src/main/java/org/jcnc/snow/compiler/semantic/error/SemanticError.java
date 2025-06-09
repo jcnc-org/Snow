@@ -16,7 +16,7 @@ import org.jcnc.snow.compiler.parser.ast.base.Node;
  *
  * <p><b>示例输出：</b></p>
  * <pre>
- *   playground\main.snow: 行 7, 列 28: 参数类型不匹配 (位置 1): 期望 int, 实际 long
+ *   D:\Devs\IdeaProjects\Snow\playground\main.snow: 行 7, 列 28: 参数类型不匹配 (位置 1): 期望 int, 实际 long
  * </pre>
  *
  * @param node    指向发生语义错误的 AST 节点，可用于获取详细的位置信息（文件名、行号、列号等）
@@ -28,7 +28,7 @@ public record SemanticError(Node node, String message) {
     /**
      * 返回该语义错误的字符串描述，格式如下：
      * <pre>
-     * [文件名: ]行 X, 列 Y: [错误信息]
+     * [文件绝对路径: ]行 X, 列 Y: [错误信息]
      * </pre>
      * 若节点未能提供有效位置，则输出“未知位置”。
      *
