@@ -19,7 +19,8 @@ public record CallExpressionNode(
         ExpressionNode callee,           // 被调用的表达式节点，表示函数或方法名
         List<ExpressionNode> arguments,  // 函数调用的参数表达式列表
         int line,                        // 当前节点所在的行号
-        int column                       // 当前节点所在的列号
+        int column,                      // 当前节点所在的列号
+        String file                      // 当前节点所在的文件
 ) implements ExpressionNode {
 
     /**
@@ -59,4 +60,11 @@ public record CallExpressionNode(
     public int column() {
         return column;
     }
+
+    /**
+     * 获取当前表达式所在的文件名。
+     *
+     * @return 当前表达式所在的文件名。
+     */
+    public String file()   { return file;   }
 }

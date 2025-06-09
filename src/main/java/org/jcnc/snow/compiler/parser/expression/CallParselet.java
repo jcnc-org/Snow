@@ -43,8 +43,9 @@ public class CallParselet implements InfixParselet {
 
         ctx.getTokens().expect(")"); // 消费并验证 ")"
 
-        // 创建 CallExpressionNode 并传递位置信息
-        return new CallExpressionNode(left, args, line, column);
+        // 创建 CallExpressionNode 并传递位置信息,文件名称
+        String file = ctx.getSourceName();
+        return new CallExpressionNode(left, args, line, column, file);
     }
 
     /**
