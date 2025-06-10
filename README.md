@@ -3,8 +3,8 @@
 <h1 align="center" style="margin: 30px 0 30px; font-weight: bold;">Snow编程语言</h1>
 
 <p align="center">
-<a href='https://gitee.com/jcnc-org/snow/stargazers'><img src='https://gitee.com/jcnc-org/snow/badge/star.svg?theme=dark' alt='star'></img></a>
-<a href='https://gitee.com/jcnc-org/snow/members'><img src='https://gitee.com/jcnc-org/snow/badge/fork.svg?theme=dark' alt='fork'></img></a>
+<a href='https://gitee.com/jcnc-org/snow/stargazers'><img src='https://gitee.com/jcnc-org/snow/badge/star.svg?theme=dark' alt='star'></a>
+<a href='https://gitee.com/jcnc-org/snow/members'><img src='https://gitee.com/jcnc-org/snow/badge/fork.svg?theme=dark' alt='fork'></a>
 </p>
 
 <p align="center">
@@ -12,7 +12,7 @@
         <img src="https://img.shields.io/badge/%20license-Apache--2.0%20-blue" alt="">
     </a>
     <a href="https://gitee.com/jcnc-org/snow/tree/v0.1/">
-        <img src="https://img.shields.io/badge/version-v0.1-blue" alt="">
+        <img src="https://img.shields.io/badge/version-v0.1.1-blue" alt="">
     </a>
 </p>
 
@@ -68,9 +68,9 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
 
 3. **运行项目**
 
-     使用IDEA配置好的运行配置SnowCompiler
+   使用IDEA配置好的运行配置SnowCompiler
 
-    ![IMG_运行配置文件_1.png](doc/README/IMG/IMG_Run-Profile_1.png)
+   ![IMG_运行配置文件_1.png](doc/README/IMG/IMG_Run-Profile_1.png)
 
 4. **运行成功**
 
@@ -243,7 +243,7 @@ Process has ended
 3: 0
 
 ```
-    
+
 
 ## 编译Snow源代码
 
@@ -328,8 +328,6 @@ end module
 ## 相关文档
 
 [Git 管理规范](doc/Git-Management/Git-Management.md)
-
-
 
 ## 开发计划 / TODO
 
