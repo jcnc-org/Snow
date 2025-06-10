@@ -59,7 +59,7 @@ public class SnowCompiler {
             System.out.println(code);
 
             LexerEngine lexer = new LexerEngine(code, p.toString());
-            ParserContext ctx = new ParserContext(lexer.getAllTokens());
+            ParserContext ctx = new ParserContext(lexer.getAllTokens(), p.toString());
             allAst.addAll(new ParserEngine(ctx).parse());
         }
 

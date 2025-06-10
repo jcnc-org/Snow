@@ -17,7 +17,7 @@ public record ParserEngine(ParserContext ctx) {
         List<String> errs = new ArrayList<>();
         TokenStream ts = ctx.getTokens();
 
-        while (ts.isAtEnd()) {          // ← 取反
+        while (ts.isAtEnd()) {
             // 跳过空行
             if (ts.peek().getType() == TokenType.NEWLINE) {
                 ts.next();
