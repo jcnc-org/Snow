@@ -182,7 +182,7 @@ public class ASTJsonSerializer {
             case IdentifierNode(String name) -> exprMap("Identifier", "name", name);
             case NumberLiteralNode(String value) -> exprMap("NumberLiteral", "value", value);
             case StringLiteralNode(String value) -> exprMap("StringLiteral", "value", value);
-            case CallExpressionNode(ExpressionNode callee, List<ExpressionNode> arguments) -> {
+            case CallExpressionNode(ExpressionNode callee, List<ExpressionNode> arguments, int line, int column, String file) -> {
                 List<Object> args = new ArrayList<>(arguments.size());
                 for (ExpressionNode arg : arguments) args.add(exprToMap(arg));
                 yield exprMap("CallExpression", "callee", exprToMap(callee), "arguments", args);
