@@ -1,9 +1,9 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="SnowCompiler" type="Application" factoryName="Application" activateToolWindowBeforeRun="false" nameIsGenerated="true">
-    <option name="ALTERNATIVE_JRE_PATH" value="23" />
+  <configuration default="false" name="Demo5" type="Application" factoryName="Application" folderName="Demo" activateToolWindowBeforeRun="false">
+    <option name="ALTERNATIVE_JRE_PATH" value="graalvm-ce-23" />
     <option name="MAIN_CLASS_NAME" value="org.jcnc.snow.compiler.cli.SnowCompiler" />
-    <module name="SCompiler" />
-    <option name="PROGRAM_PARAMETERS" value="test" />
+    <module name="Snow" />
+    <option name="PROGRAM_PARAMETERS" value="-d playground/Demo5" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="org.jcnc.snow.compiler.parser.preprocessor.lexer.impl.api.*" />
