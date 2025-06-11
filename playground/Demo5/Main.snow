@@ -3,7 +3,7 @@ module: Main
         parameter:
         return_type: int
         body:
-            declare b1: boolean = false
+            declare b1: boolean = true
             loop:
                 initializer:
                     declare i:int = 0
