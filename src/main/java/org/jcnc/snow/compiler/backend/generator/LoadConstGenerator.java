@@ -64,6 +64,7 @@ public class LoadConstGenerator implements InstructionGenerator<LoadConstInstruc
             case Byte _ -> 'B';  // 字节型
             case Double _ -> 'D';  // 双精度浮点型
             case Float _ -> 'F';  // 单精度浮点型
+            case Boolean _  -> 'I';  // 布尔（作为 0/1 整型存储）
             case null, default ->
                     throw new IllegalStateException("Unknown const type: " + (value != null ? value.getClass() : null));
         };

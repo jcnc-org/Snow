@@ -1,11 +1,11 @@
 module: Main
     function: main
         parameter:
-        return_type: int
+        return_type: boolean
         body:
-           declare b1: boolean
+           declare b1: boolean =true
 
-        return 0
+        return b1
         end body
     end function
 end module
