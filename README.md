@@ -11,8 +11,8 @@
     <a href="https://gitee.com/jcnc-org/snow/blob/main/LICENSE">
         <img src="https://img.shields.io/badge/%20license-Apache--2.0%20-blue" alt="">
     </a>
-    <a href="https://gitee.com/jcnc-org/snow/tree/v0.1/">
-        <img src="https://img.shields.io/badge/version-v0.1.1-blue" alt="">
+    <a href="https://gitee.com/jcnc-org/snow/tree/v0.2.0/">
+        <img src="https://img.shields.io/badge/version-v0.2.0-blue" alt="">
     </a>
 </p>
 
@@ -42,6 +42,10 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
 
 访问:  https://gitee.com/jcnc-org/snow/releases
 
+## 相关文档
+
+[Git 管理规范](doc/Git-Management/Git-Management.md)
+
 ## 功能特性
 
 * **模块化语法**：支持顶层的 `module:` 声明和 `import:` 导入语句,用于组织代码和依赖管理。
@@ -53,6 +57,10 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
 * **后端指令生成**：IR 模块通过线性扫描寄存器分配器映射寄存器,使用指令生成器将 IR 翻译为定制的 VM 指令集。
 * **虚拟机执行**：自带虚拟机引擎（VirtualMachineEngine）,能够加载并执行生成的指令序列,支持调试模式输出虚拟机状态。
 * **调试与输出**：编译过程会输出源码,AST（JSON 格式）,IR 和最终生成的 VM 代码,方便用户查看编译中间结果和调试。
+
+## 开发计划
+
+[Snow 语言现状和下一阶段开发路线图-2025-06-11](doc/Snow's-current-language-situation-and-the-development-roadmap-for-the-next-stage/Snow's-current-language-situation-and-the-development-roadmap-for-the-next-stage.md)
 
 ## 开发环境安装
 
@@ -324,14 +332,6 @@ end module
     * `execution/`：执行流程控制（按指令顺序执行,分支跳转等）
     * `io/`：输入输出辅助类（加载指令,文件解析等）
     * 其他如 `factories/`,`utils/` 等目录包含指令创建和调试工具类
-
-## 相关文档
-
-[Git 管理规范](doc/Git-Management/Git-Management.md)
-
-## 开发计划 
-
-[Snow 语言现状和下一阶段开发路线图-2025-06-11](doc/Snow's-current-language-situation-and-the-development-roadmap-for-the-next-stage/Snow's-current-language-situation-and-the-development-roadmap-for-the-next-stage.md)
 
 ## 加入我们
 * 微信: `xuxiaolankaka`
