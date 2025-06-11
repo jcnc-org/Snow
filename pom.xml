@@ -41,7 +41,13 @@
                                 <phase>test</phase>
                             </execution>
                         </executions>
+                        <configuration>
+                            <buildArgs>
+                                <buildArg>--emit build-report</buildArg>
+                            </buildArgs>
+                        </configuration>
                     </plugin>
+
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-compiler-plugin</artifactId>
