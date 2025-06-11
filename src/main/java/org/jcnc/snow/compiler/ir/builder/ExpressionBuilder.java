@@ -44,22 +44,26 @@ public record ExpressionBuilder(IRContext ctx) {
      */
     public IRVirtualRegister build(ExpressionNode expr) {
         return switch (expr) {
-            // 数字字面量，如 "123", "1.0f"
+            // 数字字面量
             case NumberLiteralNode n -> buildNumberLiteral(n.value());
-            // 标识符，如变量x，直接查作用域
+            // 布尔字面量
+            case BoolLiteralNode b   -> buildBoolLiteral(b.getValue());
+            // 标识符
             case IdentifierNode id -> {
                 IRVirtualRegister reg = ctx.getScope().lookup(id.name());
-                if (reg == null) throw new IllegalStateException("未定义标识符: " + id.name());
+                if (reg == null)
+                    throw new IllegalStateException("未定义标识符: " + id.name());
                 yield reg;
             }
-            // 二元表达式，如 "a + b"
+            // 二元表达式
             case BinaryExpressionNode bin -> buildBinary(bin);
-            // 函数调用，如 foo(a, b)
+            // 函数调用
             case CallExpressionNode call -> buildCall(call);
-            // 其它不支持
-            default -> throw new IllegalStateException("不支持的表达式类型: " + expr.getClass().getSimpleName());
+            default -> throw new IllegalStateException(
+                    "不支持的表达式类型: " + expr.getClass().getSimpleName());
         };
     }
+
 
     /**
      * 直接将表达式计算结果写入指定的目标寄存器（dest）。
@@ -90,8 +94,6 @@ public record ExpressionBuilder(IRContext ctx) {
             }
         }
     }
-
-    // ===================== 内部私有方法 =====================
 
     /**
      * 构建二元表达式的IR，生成新寄存器存储结果。
@@ -175,6 +177,14 @@ public record ExpressionBuilder(IRContext ctx) {
      */
     private IRVirtualRegister buildNumberLiteral(String value) {
         IRConstant constant = ExpressionUtils.buildNumberConstant(value);
+        IRVirtualRegister reg = ctx.newRegister();
+        ctx.addInstruction(new LoadConstInstruction(reg, constant));
+        return reg;
+    }
+
+    /** 布尔字面量 → CONST （true=1，false=0）*/
+    private IRVirtualRegister buildBoolLiteral(boolean value) {
+        IRConstant constant = new IRConstant(value ? 1 : 0);
         IRVirtualRegister reg = ctx.newRegister();
         ctx.addInstruction(new LoadConstInstruction(reg, constant));
         return reg;

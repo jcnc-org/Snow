@@ -1,0 +1,12 @@
+module: Main
+    function: main
+        parameter:
+        return_type: boolean
+        body:
+           declare b1: boolean =true
+           
+
+        return b1
+        end body
+    end function
+end module

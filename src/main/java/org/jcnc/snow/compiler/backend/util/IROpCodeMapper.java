@@ -82,7 +82,7 @@ public final class IROpCodeMapper {
         opcodeMap.put(IROpCode.NEG_D64, "D_NEG");
 
         // 比较运算映射
-        opcodeMap.put(IROpCode.CMP_EQ, "IC_EQ");   // 相等
+        opcodeMap.put(IROpCode.CMP_EQ, "IC_E");   // 相等
         opcodeMap.put(IROpCode.CMP_NE, "IC_NE");   // 不等
         opcodeMap.put(IROpCode.CMP_LT, "IC_L");    // 小于
         opcodeMap.put(IROpCode.CMP_GT, "IC_G");    // 大于

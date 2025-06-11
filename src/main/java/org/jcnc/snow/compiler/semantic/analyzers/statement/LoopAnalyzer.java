@@ -2,12 +2,12 @@ package org.jcnc.snow.compiler.semantic.analyzers.statement;
 
 import org.jcnc.snow.compiler.parser.ast.FunctionNode;
 import org.jcnc.snow.compiler.parser.ast.LoopNode;
+import org.jcnc.snow.compiler.semantic.analyzers.TypeUtils;
 import org.jcnc.snow.compiler.semantic.analyzers.base.StatementAnalyzer;
 import org.jcnc.snow.compiler.semantic.core.Context;
 import org.jcnc.snow.compiler.semantic.core.ModuleInfo;
 import org.jcnc.snow.compiler.semantic.error.SemanticError;
 import org.jcnc.snow.compiler.semantic.symbol.SymbolTable;
-import org.jcnc.snow.compiler.semantic.type.BuiltinType;
 import org.jcnc.snow.compiler.semantic.type.Type;
 
 /**
@@ -17,7 +17,7 @@ import org.jcnc.snow.compiler.semantic.type.Type;
  * <ul>
  *   <li>为整个循环体（包括初始化、条件、更新、循环体本身）创建独立的块级符号表（作用域），保证循环内变量与外部隔离。</li>
  *   <li>依次分析初始化语句、条件表达式、更新语句和循环体各语句，并递归检查嵌套的语法结构。</li>
- *   <li>检查条件表达式的类型必须为 int（布尔条件），否则记录语义错误。</li>
+ *   <li>检查条件表达式的类型必须为 boolean，否则记录语义错误。</li>
  *   <li>支持所有错误的收集而不中断流程，便于一次性输出全部问题。</li>
  * </ul>
  * 该分析器实现了 SCompiler 语言的块级作用域循环与类型健壮性，是健全语义分析的基础部分。
@@ -53,9 +53,9 @@ public class LoopAnalyzer implements StatementAnalyzer<LoopNode> {
         // 3. 分析条件表达式（如 for(...; cond; ...) 或 while(cond)）
         var condAnalyzer = ctx.getRegistry().getExpressionAnalyzer(ln.condition());
         Type condType = condAnalyzer.analyze(ctx, mi, fn, loopScope, ln.condition());
-        // 条件类型必须为 int（即 bool），否则记录错误
-        if (condType != BuiltinType.INT) {
-            ctx.getErrors().add(new SemanticError(ln, "loop 条件必须为 int 类型(表示真假)"));
+        // 条件类型必须为 boolean，否则记录错误
+        if (TypeUtils.isLogic(condType)) {
+            ctx.getErrors().add(new SemanticError(ln, "loop 条件必须为 boolean"));
         }
 
         // 4. 分析更新语句（如 for(...; ...; update)）

@@ -15,6 +15,7 @@ package org.jcnc.snow.compiler.semantic.type;
  *   <li>{@link #FLOAT}  - 单精度浮点数</li>
  *   <li>{@link #DOUBLE} - 双精度浮点数</li>
  *   <li>{@link #STRING} - 字符串类型</li>
+ *   <li>{@link #BOOLEAN} - 布尔类型</li>
  *   <li>{@link #VOID}   - 空类型，用于表示无返回值的函数</li>
  * </ul>
  *
@@ -34,6 +35,7 @@ public enum BuiltinType implements Type {
     FLOAT,   // 单精度浮点数
     DOUBLE,  // 双精度浮点数
     STRING,  // 字符串类型
+    BOOLEAN, // 布尔类型
     VOID;    // 空类型，用于表示函数无返回值
 
     /**

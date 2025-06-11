@@ -19,6 +19,8 @@ public enum TokenType {
     /** 内置类型名称（如 int、string、bool 等） */
     TYPE,
 
+    /** 布尔字面量 （true / false） */
+    BOOL_LITERAL,
     /** 字符串字面量（如 "hello"） */
     STRING_LITERAL,
 

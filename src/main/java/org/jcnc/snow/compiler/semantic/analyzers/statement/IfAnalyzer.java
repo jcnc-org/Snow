@@ -2,12 +2,12 @@ package org.jcnc.snow.compiler.semantic.analyzers.statement;
 
 import org.jcnc.snow.compiler.parser.ast.FunctionNode;
 import org.jcnc.snow.compiler.parser.ast.IfNode;
+import org.jcnc.snow.compiler.semantic.analyzers.TypeUtils;
 import org.jcnc.snow.compiler.semantic.analyzers.base.StatementAnalyzer;
 import org.jcnc.snow.compiler.semantic.core.Context;
 import org.jcnc.snow.compiler.semantic.core.ModuleInfo;
 import org.jcnc.snow.compiler.semantic.error.SemanticError;
 import org.jcnc.snow.compiler.semantic.symbol.SymbolTable;
-import org.jcnc.snow.compiler.semantic.type.BuiltinType;
 import org.jcnc.snow.compiler.semantic.type.Type;
 
 /**
@@ -15,7 +15,7 @@ import org.jcnc.snow.compiler.semantic.type.Type;
  * <p>
  * 主要职责如下：
  * <ul>
- *   <li>条件表达式类型检查：确认 if 的条件表达式类型为 int（用于真假判断），否则记录语义错误。</li>
+ *   <li>条件表达式类型检查：确认 if 的条件表达式类型为 boolean，否则记录语义错误。</li>
  *   <li>块级作用域：分别为 then 分支和 else 分支创建独立的符号表（SymbolTable），
  *       支持分支内变量的块级作用域，防止分支内声明的变量污染外部或互相干扰，允许分支内变量同名遮蔽。</li>
  *   <li>分支递归分析：对 then 和 else 分支的每条语句递归调用对应的语义分析器，进行语义检查。</li>
@@ -48,9 +48,9 @@ public class IfAnalyzer implements StatementAnalyzer<IfNode> {
         var exprAnalyzer = ctx.getRegistry().getExpressionAnalyzer(ifn.condition());
         // 对条件表达式执行类型分析
         Type condType = exprAnalyzer.analyze(ctx, mi, fn, locals, ifn.condition());
-        // 判断条件类型是否为 int（SCompiler 约定 int 表示真假），否则报错
-        if (condType != BuiltinType.INT) {
-            ctx.getErrors().add(new SemanticError(ifn, "if 条件必须为 int 类型(表示真假)"));
+        // 判断条件类型是否为 boolean，否则报错
+        if (TypeUtils.isLogic(condType)) {
+            ctx.getErrors().add(new SemanticError(ifn, "if 条件必须为 boolean"));
         }
 
         // 2. 分析 then 分支

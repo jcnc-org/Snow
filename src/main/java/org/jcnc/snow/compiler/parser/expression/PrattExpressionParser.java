@@ -43,6 +43,7 @@ public class PrattExpressionParser implements ExpressionParser {
         prefixes.put(TokenType.IDENTIFIER.name(), new IdentifierParselet());
         prefixes.put(TokenType.LPAREN.name(), new GroupingParselet());
         prefixes.put(TokenType.STRING_LITERAL.name(), new StringLiteralParselet());
+        prefixes.put(TokenType.BOOL_LITERAL.name(), new BoolLiteralParselet());
 
         // 注册中缀解析器
         infixes.put("+", new BinaryOperatorParselet(Precedence.SUM, true));
