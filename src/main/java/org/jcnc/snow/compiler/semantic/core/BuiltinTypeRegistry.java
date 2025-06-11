@@ -31,6 +31,7 @@ public final class BuiltinTypeRegistry {
             "float",  BuiltinType.FLOAT,
             "double", BuiltinType.DOUBLE,
             "string", BuiltinType.STRING,
+            "boolean", BuiltinType.BOOLEAN,
             "void",   BuiltinType.VOID
     );
 

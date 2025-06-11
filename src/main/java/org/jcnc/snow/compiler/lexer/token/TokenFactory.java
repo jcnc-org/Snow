@@ -28,19 +28,12 @@ public class TokenFactory {
     /**
      * 语言的保留关键字集合。
      */
-    private static final Set<String> KEYWORDS = Set.of(
-            "module", "function", "parameter", "return_type",
-            "body", "end", "if", "then", "else", "loop",
-            "declare", "return", "import",
-            "initializer", "condition", "update"
-    );
+    private static final Set<String> KEYWORDS = Set.of("module", "function", "parameter", "return_type", "body", "end", "if", "then", "else", "loop", "declare", "return", "import", "initializer", "condition", "update");
 
     /**
      * 内置类型名称集合，如 int、string 等。
      */
-    private static final Set<String> TYPES = Set.of(
-            "int", "string", "float", "bool", "void", "double", "long", "short", "byte"
-    );
+    private static final Set<String> TYPES = Set.of("int", "string", "float", "bool", "void", "double", "long", "short", "byte");
 
     /**
      * 创建一个根据内容自动推断类型的 {@link Token} 实例。
@@ -69,6 +62,7 @@ public class TokenFactory {
      * @return 推断出的 {@link TokenType} 类型
      */
     private static TokenType determineTokenType(String raw) {
+        if (isABoolean(raw)) return TokenType.BOOL_LITERAL;
         if (isType(raw)) return TokenType.TYPE;
         if (isKeyword(raw)) return TokenType.KEYWORD;
         if (isIdentifier(raw)) return TokenType.IDENTIFIER;
@@ -76,7 +70,21 @@ public class TokenFactory {
     }
 
     /**
+     * 判断指定字符串是否为布尔字面量（"true" 或 "false"）。
+     *
+     * <p>本方法通过字符串比较，判断输入是否严格等于 "true" 或 "false"。</p>
+     *
+     * @param raw 待判断的字符串
+     * @return 若为布尔字面量，则返回 {@code true}；否则返回 {@code false}
+     */
+    private static boolean isABoolean(String raw) {
+        return "true".equals(raw) || "false".equals(raw);
+    }
+
+    /**
      * 判断指定字符串是否为内置类型标识。
+     *
+     * <p>本方法用于辅助语义分析或类型识别，判断输入字符串是否存在于预定义的类型集合 {@code TYPES} 中。</p>
      *
      * @param raw 输入的字符串
      * @return 若为类型名则返回 {@code true}，否则返回 {@code false}
@@ -84,6 +92,7 @@ public class TokenFactory {
     private static boolean isType(String raw) {
         return TYPES.contains(raw);
     }
+
 
     /**
      * 判断指定字符串是否为语言保留关键字。
