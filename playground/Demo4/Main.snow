@@ -4,6 +4,7 @@ module: Main
         return_type: boolean
         body:
            declare b1: boolean =true
+           
 
         return b1
         end body
