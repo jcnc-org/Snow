@@ -3,7 +3,7 @@ module: Main
         parameter:
         return_type: int
         body:
-           declare b1: bool
+           declare b1: boolean
 
         return 0
         end body

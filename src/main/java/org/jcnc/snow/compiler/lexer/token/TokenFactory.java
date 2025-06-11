@@ -33,7 +33,7 @@ public class TokenFactory {
     /**
      * 内置类型名称集合，如 int、string 等。
      */
-    private static final Set<String> TYPES = Set.of("int", "string", "float", "bool", "void", "double", "long", "short", "byte");
+    private static final Set<String> TYPES = Set.of("int", "string", "float", "boolean", "void", "double", "long", "short", "byte");
 
     /**
      * 创建一个根据内容自动推断类型的 {@link Token} 实例。
