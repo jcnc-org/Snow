@@ -329,12 +329,9 @@ end module
 
 [Git 管理规范](doc/Git-Management/Git-Management.md)
 
-## 开发计划 / TODO
+## 开发计划 
 
-* 扩展标准库支持和更多内置模块,如字符串,文件操作等常用功能。
-* 增强类型系统和错误检查,完善编译时诊断信息。
-* 优化 IR 和虚拟机性能,实现更多优化策略（如常量折叠等）。
-* 增加更多示例程序试,丰富项目文档和用例。
+[Snow 语言现状和下一阶段开发路线图-2025-06-11](doc/Snow's-current-language-situation-and-the-development-roadmap-for-the-next-stage/Snow's-current-language-situation-and-the-development-roadmap-for-the-next-stage.md)
 
 ## 加入我们
 * 微信: `xuxiaolankaka`
