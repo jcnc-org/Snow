@@ -63,7 +63,7 @@ public class OperatorTokenScanner extends AbstractTokenScanner {
                     type = TokenType.NOT_EQUALS;
                 } else {
                     lexeme = "!";
-                    type = TokenType.UNKNOWN;
+                    type = TokenType.NOT;
                 }
                 break;
             case '>':
