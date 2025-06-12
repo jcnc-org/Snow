@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.jcnc.snow</groupId>
@@ -14,10 +15,92 @@
         <native.maven.plugin.version>0.10.5</native.maven.plugin.version>
     </properties>
 
+    <!-- 通用编译 & 打包插件 -->
+    <build>
+        <plugins>
+            <!-- Java 编译插件 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.12.1</version>
+                <configuration>
+                    <fork>true</fork>
+                </configuration>
+            </plugin>
+            <!-- Jar 打包插件 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>org.jcnc.snow.compiler.cli.SnowCompiler</mainClass>
+                            <addClasspath>true</addClasspath>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
     <profiles>
         <profile>
-            <id>native</id>
+            <id>native-linux</id>
+            <activation>
+                <os>
+                    <family>unix</family>
+                </os>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <version>${native.maven.plugin.version}</version>
+                        <extensions>true</extensions>
+                        <executions>
+                            <execution>
+                                <id>build-native</id>
+                                <goals>
+                                    <goal>compile-no-fork</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                            <execution>
+                                <id>test-native</id>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <phase>test</phase>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <buildArgs>
+                                <buildArg>--static</buildArg>
+                                <buildArg>--libc=musl</buildArg>
+                                <buildArg>--emit build-report</buildArg>
+                                <buildArg>-O2</buildArg>
+                            </buildArgs>
+                            <environment>
+                                <!-- 指定 musl-gcc 工具链 -->
+                                <PATH>/opt/musl-1.2.5/bin:${env.PATH}</PATH>
+                                <C_INCLUDE_PATH>/opt/musl-1.2.5/include</C_INCLUDE_PATH>
+                                <LIBRARY_PATH>/opt/musl-1.2.5/lib</LIBRARY_PATH>
+                            </environment>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
 
+        <profile>
+            <id>native-windows</id>
+            <activation>
+                <os>
+                    <family>Windows</family>
+                </os>
+            </activation>
             <build>
                 <plugins>
                     <plugin>
@@ -44,35 +127,12 @@
                         <configuration>
                             <buildArgs>
                                 <buildArg>--emit build-report</buildArg>
+                                <buildArg>-O2</buildArg>
                             </buildArgs>
-                        </configuration>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-compiler-plugin</artifactId>
-                        <version>3.12.1</version>
-                        <configuration>
-                            <fork>true</fork>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-jar-plugin</artifactId>
-                        <version>3.3.0</version>
-                        <configuration>
-                            <archive>
-                                <manifest>
-                                    <mainClass>org.jcnc.snow.compiler.cli.SnowCompiler</mainClass>
-                                    <addClasspath>true</addClasspath>
-                                </manifest>
-                            </archive>
                         </configuration>
                     </plugin>
                 </plugins>
             </build>
-
         </profile>
     </profiles>
-
 </project>
