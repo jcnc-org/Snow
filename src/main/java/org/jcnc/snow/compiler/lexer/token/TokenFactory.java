@@ -19,9 +19,6 @@ import java.util.Set;
  *     <li>对不合法的词素自动标记为 UNKNOWN 类型。</li>
  * </ul>
  * </p>
- *
- * @author 你的名字
- * @version 1.0
  */
 public class TokenFactory {
 

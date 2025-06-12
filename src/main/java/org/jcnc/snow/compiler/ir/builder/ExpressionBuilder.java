@@ -3,6 +3,7 @@ package org.jcnc.snow.compiler.ir.builder;
 import org.jcnc.snow.compiler.ir.core.IROpCode;
 import org.jcnc.snow.compiler.ir.instruction.CallInstruction;
 import org.jcnc.snow.compiler.ir.instruction.LoadConstInstruction;
+import org.jcnc.snow.compiler.ir.instruction.UnaryOperationInstruction;
 import org.jcnc.snow.compiler.ir.value.IRConstant;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 import org.jcnc.snow.compiler.ir.utils.ExpressionUtils;
@@ -59,11 +60,32 @@ public record ExpressionBuilder(IRContext ctx) {
             case BinaryExpressionNode bin -> buildBinary(bin);
             // 函数调用
             case CallExpressionNode call -> buildCall(call);
+            case UnaryExpressionNode u  -> buildUnary(u);
             default -> throw new IllegalStateException(
                     "不支持的表达式类型: " + expr.getClass().getSimpleName());
         };
     }
 
+    private IRVirtualRegister buildUnary(UnaryExpressionNode un) {
+        String               op  = un.operator();
+        IRVirtualRegister    val = build(un.operand());
+
+        //  -x  → NEG_I32
+        if (op.equals("-")) {
+            IRVirtualRegister dest = ctx.newRegister();
+            ctx.addInstruction(new UnaryOperationInstruction(
+                    IROpCode.NEG_I32, dest, val));
+            return dest;
+        }
+
+        //  !x  →  (x == 0)
+        if (op.equals("!")) {
+            IRVirtualRegister zero = InstructionFactory.loadConst(ctx, 0);
+            return InstructionFactory.binOp(ctx, IROpCode.CMP_EQ, val, zero);
+        }
+
+        throw new IllegalStateException("未知一元运算符: " + op);
+    }
 
     /**
      * 直接将表达式计算结果写入指定的目标寄存器（dest）。
