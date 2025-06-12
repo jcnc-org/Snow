@@ -3,8 +3,8 @@ module: Main
         parameter:
         return_type: int
         body:
-
-            return 0
+            declare b1 :int =-1
+            return b1
         end body
     end function
 end module
