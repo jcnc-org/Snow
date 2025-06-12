@@ -1,0 +1,12 @@
+module: Main
+    function: main
+        parameter:
+        return_type: boolean
+        body:
+            declare b1 :boolean = true
+            declare b2 :boolean = !b1
+
+            return b2
+        end body
+    end function
+end module
