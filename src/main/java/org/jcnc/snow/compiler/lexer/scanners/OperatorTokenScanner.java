@@ -5,26 +5,29 @@ import org.jcnc.snow.compiler.lexer.token.Token;
 import org.jcnc.snow.compiler.lexer.token.TokenType;
 
 /**
- * 运算符扫描器：识别逻辑与比较运算符，包括单字符和双字符组合。
- * <p>
- * 支持的运算符包括：
+ * 运算符扫描器（OperatorTokenScanner）
+ *
+ * <p>负责在词法分析阶段识别由 <b>= ! &lt; &gt; | &amp; %</b> 等字符
+ * 起始的单字符或双字符运算符，并生成相应 {@link Token}：</p>
+ *
  * <ul>
- *     <li>赋值与比较：=、==、!=</li>
- *     <li>关系运算符：&gt;、&gt;=、&lt;、&lt;=</li>
- *     <li>逻辑运算符：&&、||</li>
+ *   <li>赋值 / 比较：{@code =}, {@code ==}, {@code !=}</li>
+ *   <li>关系运算：{@code >}, {@code >=}, {@code <}, {@code <=}</li>
+ *   <li>逻辑运算：{@code &&}, {@code ||}</li>
+ *   <li>取模运算：{@code %}</li>
+ *   <li>逻辑非：{@code !}</li>
  * </ul>
- * <p>
- * 不符合上述组合的字符会返回 {@code UNKNOWN} 类型的 Token。
+ *
+ * <p>如果无法匹配到合法组合，将返回 {@link TokenType#UNKNOWN}。</p>
  */
 public class OperatorTokenScanner extends AbstractTokenScanner {
 
     /**
-     * 判断是否可以处理当前位置的字符。
-     * <p>运算符扫描器关注的起始字符包括：=、!、&lt;、&gt;、|、&amp;</p>
+     * 判断当前字符是否可能是运算符的起始字符。
      *
      * @param c   当前字符
-     * @param ctx 当前词法上下文
-     * @return 如果是潜在的运算符起始字符，则返回 true
+     * @param ctx 词法上下文
+     * @return 若是关注的起始字符则返回 {@code true}
      */
     @Override
     public boolean canHandle(char c, LexerContext ctx) {
@@ -32,14 +35,12 @@ public class OperatorTokenScanner extends AbstractTokenScanner {
     }
 
     /**
-     * 扫描并识别运算符 Token。
-     * <p>支持组合运算符判断，如 ==、!=、&gt;= 等，
-     * 若无法匹配组合形式则退回单字符形式。</p>
+     * 按最长匹配优先原则扫描并生成运算符 token。
      *
-     * @param ctx 词法上下文
+     * @param ctx  词法上下文
      * @param line 当前行号
-     * @param col 当前列号
-     * @return 对应的运算符 Token，无法识别的运算符返回 {@code UNKNOWN}
+     * @param col  当前列号
+     * @return 已识别的 {@link Token}
      */
     @Override
     protected Token scanToken(LexerContext ctx, int line, int col) {
@@ -51,64 +52,71 @@ public class OperatorTokenScanner extends AbstractTokenScanner {
             case '=':
                 if (ctx.match('=')) {
                     lexeme = "==";
-                    type = TokenType.DOUBLE_EQUALS;
+                    type   = TokenType.DOUBLE_EQUALS;
                 } else {
                     lexeme = "=";
-                    type = TokenType.EQUALS;
+                    type   = TokenType.EQUALS;
                 }
                 break;
+
             case '!':
                 if (ctx.match('=')) {
                     lexeme = "!=";
-                    type = TokenType.NOT_EQUALS;
+                    type   = TokenType.NOT_EQUALS;
                 } else {
                     lexeme = "!";
-                    type = TokenType.NOT;
+                    type   = TokenType.NOT;
                 }
                 break;
+
             case '>':
                 if (ctx.match('=')) {
                     lexeme = ">=";
-                    type = TokenType.GREATER_EQUAL;
+                    type   = TokenType.GREATER_EQUAL;
                 } else {
                     lexeme = ">";
-                    type = TokenType.GREATER_THAN;
+                    type   = TokenType.GREATER_THAN;
                 }
                 break;
+
             case '<':
                 if (ctx.match('=')) {
                     lexeme = "<=";
-                    type = TokenType.LESS_EQUAL;
+                    type   = TokenType.LESS_EQUAL;
                 } else {
                     lexeme = "<";
-                    type = TokenType.LESS_THAN;
+                    type   = TokenType.LESS_THAN;
                 }
                 break;
+
             case '%':
                 lexeme = "%";
-                type = TokenType.MODULO;
+                type   = TokenType.MODULO;
                 break;
+
             case '&':
                 if (ctx.match('&')) {
                     lexeme = "&&";
-                    type = TokenType.AND;
+                    type   = TokenType.AND;
                 } else {
                     lexeme = "&";
-                    type = TokenType.UNKNOWN;
+                    type   = TokenType.UNKNOWN;
                 }
                 break;
+
             case '|':
                 if (ctx.match('|')) {
                     lexeme = "||";
-                    type = TokenType.OR;
+                    type   = TokenType.OR;
                 } else {
                     lexeme = "|";
-                    type = TokenType.UNKNOWN;
+                    type   = TokenType.UNKNOWN;
                 }
                 break;
+
             default:
                 lexeme = String.valueOf(c);
-                type = TokenType.UNKNOWN;
+                type   = TokenType.UNKNOWN;
         }
 
         return new Token(type, lexeme, line, col);

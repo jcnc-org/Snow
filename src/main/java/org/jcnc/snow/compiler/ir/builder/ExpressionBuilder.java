@@ -33,8 +33,15 @@ public record ExpressionBuilder(IRContext ctx) {
      * <p>会根据节点的实际类型分别处理：
      * <ul>
      *   <li>数字字面量：新建常量寄存器</li>
+     *   <li>布尔字面量：生成值为 0 或 1 的常量寄存器</li>
      *   <li>标识符：查找当前作用域中的寄存器</li>
      *   <li>二元表达式：递归处理子表达式并进行相应运算</li>
+     *   <li>一元运算符：
+     *     <ul>
+     *        <li><code>-x</code>（取负，生成 <code>NEG_I32</code> 指令）与</li>
+     *        <li>code>!x</code>（逻辑非，转换为 <code>x == 0</code> 比较指令）</li>
+     *     </ul>
+     *   </li>
      *   <li>函数调用：生成对应的Call指令</li>
      *   <li>其它类型不支持，抛出异常</li>
      * </ul>
@@ -43,6 +50,7 @@ public record ExpressionBuilder(IRContext ctx) {
      * @return 该表达式的计算结果寄存器
      * @throws IllegalStateException 如果遇到未定义的标识符或不支持的表达式类型
      */
+
     public IRVirtualRegister build(ExpressionNode expr) {
         return switch (expr) {
             // 数字字面量
@@ -176,7 +184,7 @@ public record ExpressionBuilder(IRContext ctx) {
                 .toList();
         // 获取完整调用目标名称（支持成员/模块调用和普通调用）
         String fullName = switch (call.callee()) {
-            case MemberExpressionNode member when member.object() instanceof IdentifierNode mod ->
+            case MemberExpressionNode member when member.object() instanceof IdentifierNode _ ->
                     ((IdentifierNode)member.object()).name() + "." + member.member();
             case IdentifierNode id -> id.name();
             default -> throw new IllegalStateException("不支持的调用目标: " + call.callee().getClass().getSimpleName());
