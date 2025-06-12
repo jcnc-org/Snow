@@ -48,8 +48,8 @@ public class LXorCommand implements Command {
         }
 
         // Pop the top two operands from the stack
-        final int b = (int) operandStack.pop();
-        final int a = (int) operandStack.pop();
+        final long b = (long) operandStack.pop();
+        final long a = (long) operandStack.pop();
 
         // Perform the long64 bitwise XOR operation and push the result back onto the stack
         operandStack.push(a ^ b);
