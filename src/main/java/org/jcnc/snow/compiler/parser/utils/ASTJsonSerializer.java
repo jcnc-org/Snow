@@ -196,7 +196,7 @@ public class ASTJsonSerializer {
             // 字符串字面量
             case StringLiteralNode(String value) -> exprMap("StringLiteral", "value", value);
             // 调用表达式
-            case CallExpressionNode(ExpressionNode callee, List<ExpressionNode> arguments, int line, int column, String file) -> {
+            case CallExpressionNode(ExpressionNode callee, List<ExpressionNode> arguments, _, _, _) -> {
                 List<Object> args = new ArrayList<>(arguments.size());
                 for (ExpressionNode arg : arguments) args.add(exprToMap(arg));
                 yield exprMap("CallExpression", "callee", exprToMap(callee), "arguments", args);
