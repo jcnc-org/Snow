@@ -4,9 +4,7 @@ module: Main
         return_type: boolean
         body:
             declare b1 :boolean = true
-            declare b2 :boolean = !b1
-
-            return b2
+            return !b1
         end body
     end function
 end module
