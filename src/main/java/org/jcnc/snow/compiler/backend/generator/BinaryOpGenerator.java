@@ -2,24 +2,45 @@ package org.jcnc.snow.compiler.backend.generator;
 
 import org.jcnc.snow.compiler.backend.builder.VMProgramBuilder;
 import org.jcnc.snow.compiler.backend.core.InstructionGenerator;
+import org.jcnc.snow.compiler.backend.util.IROpCodeMapper;
 import org.jcnc.snow.compiler.backend.util.OpHelper;
 import org.jcnc.snow.compiler.ir.instruction.BinaryOperationInstruction;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * 二元运算指令生成器
- * 支持二元运算指令的自动类型提升。
- * <p>类型提升优先级为：D > F > L > I > S > B</p>
+ * 二元运算指令生成器。
+ * <p>
+ * 负责将中间表示的二元运算指令（算术运算及比较运算）生成对应的虚拟机指令序列。
+ * 支持对操作数进行自动类型提升，以保证运算结果的正确性。
+ * </p>
+ * <p>类型提升优先级：D &gt; F &gt; L &gt; I &gt; S &gt; B</p>
  */
 public class BinaryOpGenerator implements InstructionGenerator<BinaryOperationInstruction> {
 
-    /* ---------- 类型优先级工具 ---------- */
+    /**
+     * 用于生成唯一标签的计数器。
+     */
+    private static final AtomicInteger COUNTER = new AtomicInteger(0);
 
     /**
-     * 返回类型前缀的优先级数值。数值越大，类型“越宽”。
-     * D: 6, F: 5, L: 4, I: 3, S: 2, B: 1
+     * 生成一个新的唯一标签。
+     *
+     * @param fn  当前函数名，用于标签前缀
+     * @param tag 标签用途标识
+     * @return  格式为 fn$tag$序号 的唯一标签字符串
+     */
+    private static String fresh(String fn, String tag) {
+        return fn + "$" + tag + "$" + COUNTER.getAndIncrement();
+    }
+
+    /**
+     * 返回类型字符对应的优先级。
+     *
+     * @param p 类型字符（例如 'D','F','L','I','S','B'）
+     * @return  对应的优先级整数，数值越大优先级越高
      */
     private static int rank(char p) {
         return switch (p) {
@@ -29,35 +50,41 @@ public class BinaryOpGenerator implements InstructionGenerator<BinaryOperationIn
             case 'I' -> 3;
             case 'S' -> 2;
             case 'B' -> 1;
-            default -> 0;
+            default  -> 0;
         };
     }
 
     /**
-     * 返回a和b中优先级更高的类型前缀（即类型提升结果）。
+     * 比较两个类型字符，返回优先级更高的那个。
+     *
+     * @param a 左操作数类型
+     * @param b 右操作数类型
+     * @return  优先级更高者的类型字符
      */
     private static char promote(char a, char b) {
         return rank(a) >= rank(b) ? a : b;
     }
 
     /**
-     * 类型前缀转字符串，方便拼接。
+     * 将类型字符转换为字符串形式。
+     *
+     * @param p 类型字符
+     * @return  长度为1的字符串
      */
     private static String str(char p) {
         return String.valueOf(p);
     }
 
-    /* ---------- 类型转换指令工具 ---------- */
 
     /**
-     * 根据源类型和目标类型前缀，返回相应的类型转换指令助记符。
+     * 获取从类型 from 到类型 to 的转换指令名称。
      *
-     * @param from 源类型前缀
-     * @param to   目标类型前缀
-     * @return 转换指令字符串，如 "I2L" 或 "F2D"，若无需转换则返回null
+     * @param from 源类型字符
+     * @param to   目标类型字符
+     * @return     对应的指令名称，如 "I2L"；若两类型相同或不可转换则返回 null
      */
     private static String convert(char from, char to) {
-        if (from == to) return null;  // 类型一致，无需转换
+        if (from == to) return null;
         return switch ("" + from + to) {
             case "IL" -> "I2L";
             case "ID" -> "I2D";
@@ -73,12 +100,14 @@ public class BinaryOpGenerator implements InstructionGenerator<BinaryOperationIn
             case "DF" -> "D2F";
             case "SI" -> "S2I";
             case "BI" -> "B2I";
-            default -> null;   // 其它组合暂未用到
+            default   -> null;
         };
     }
 
     /**
-     * 返回本生成器支持的指令类型，即 BinaryOperationInstruction。
+     * 返回该生成器支持的指令类型。
+     *
+     * @return BinaryOperationInstruction 的 Class 对象
      */
     @Override
     public Class<BinaryOperationInstruction> supportedClass() {
@@ -86,12 +115,24 @@ public class BinaryOpGenerator implements InstructionGenerator<BinaryOperationIn
     }
 
     /**
-     * 生成二元运算的虚拟机指令，实现自动类型提升和必要的类型转换。
+     * 根据中间表示的二元运算指令生成对应的虚拟机指令序列。
      *
-     * @param ins       当前二元运算IR指令
-     * @param out       虚拟机程序构建器
-     * @param slotMap   IR虚拟寄存器到实际槽位编号的映射
-     * @param currentFn 当前函数名
+     * <p>步骤：</p>
+     * <ol>
+     *   <li>获取操作数与目标操作数寄存槽位及其类型。</li>
+     *   <li>将左右操作数加载到栈并根据需要进行类型转换。</li>
+     *   <li>区分算术/位运算与比较运算，分别生成不同指令序列：</li>
+     *   <ul>
+     *     <li>算术/位运算：直接调用对应的运算指令并保存结果。</li>
+     *     <li>比较运算：使用条件跳转生成布尔结果。</li>
+     *   </ul>
+     *   <li>将结果存回目标槽位，并更新槽位类型。</li>
+     * </ol>
+     *
+     * @param ins       中间表示的二元运算指令实例
+     * @param out       字节码生成器，用于输出虚拟机指令
+     * @param slotMap   虚拟寄存器到槽位编号的映射
+     * @param currentFn 当前函数名，用于生成唯一标签
      */
     @Override
     public void generate(BinaryOperationInstruction ins,
@@ -99,35 +140,60 @@ public class BinaryOpGenerator implements InstructionGenerator<BinaryOperationIn
                          Map<IRVirtualRegister, Integer> slotMap,
                          String currentFn) {
 
-        /* ------- 1. 获取左右操作数的槽位编号和类型 ------- */
-        int lSlot = slotMap.get((IRVirtualRegister) ins.operands().get(0)); // 左操作数槽位
-        int rSlot = slotMap.get((IRVirtualRegister) ins.operands().get(1)); // 右操作数槽位
-        int dSlot = slotMap.get(ins.dest());                                // 目标槽位
-        char lType = out.getSlotType(lSlot);  // 左操作数类型前缀
-        char rType = out.getSlotType(rSlot);  // 右操作数类型前缀
+        /* ---------- 1. 槽位与类型 ---------- */
+        int lSlot = slotMap.get((IRVirtualRegister) ins.operands().get(0));
+        int rSlot = slotMap.get((IRVirtualRegister) ins.operands().get(1));
+        int dSlot = slotMap.get(ins.dest());
 
-        // 类型提升，确定本次二元运算的目标类型（优先级较高的那一个）
-        char tType = promote(lType, rType);
-        String tPref = str(tType);  // 用于拼接指令字符串
+        char lType = out.getSlotType(lSlot);   // 如未登记默认 'I'
+        char rType = out.getSlotType(rSlot);
 
-        /* ------- 2. 加载左操作数，并自动进行类型转换（如有必要） ------- */
-        out.emit(OpHelper.opcode(str(lType) + "_LOAD") + " " + lSlot); // LOAD指令
-        String cvt = convert(lType, tType);                            // 如需类型提升
-        if (cvt != null) out.emit(OpHelper.opcode(cvt));               // 插入类型转换指令
+        char tType  = promote(lType, rType);   // 类型提升结果
+        String tPre = str(tType);
 
-        /* ------- 3. 加载右操作数，并自动进行类型转换（如有必要） ------- */
-        out.emit(OpHelper.opcode(str(rType) + "_LOAD") + " " + rSlot); // LOAD指令
-        cvt = convert(rType, tType);                                   // 如需类型提升
-        if (cvt != null) out.emit(OpHelper.opcode(cvt));               // 插入类型转换指令
+        /* ---------- 2. 加载并做类型转换 ---------- */
+        out.emit(OpHelper.opcode(str(lType) + "_LOAD") + " " + lSlot);
+        String cvt = convert(lType, tType);
+        if (cvt != null) out.emit(OpHelper.opcode(cvt));
 
-        /* ------- 4. 生成具体的二元运算指令 ------- */
-        // 获取IR指令中的操作名（如ADD、SUB、MUL等，去掉结尾的"_"后缀）
-        String opName = ins.op().name().split("_")[0];
-        // 例如生成 "I_ADD", "D_MUL" 等虚拟机指令
-        out.emit(OpHelper.opcode(tPref + "_" + opName));
+        out.emit(OpHelper.opcode(str(rType) + "_LOAD") + " " + rSlot);
+        cvt = convert(rType, tType);
+        if (cvt != null) out.emit(OpHelper.opcode(cvt));
 
-        /* ------- 5. 结果存入目标槽位，并更新槽位类型 ------- */
-        out.emit(OpHelper.opcode(tPref + "_STORE") + " " + dSlot);
-        out.setSlotType(dSlot, tType); // 记录运算结果的类型前缀，便于后续指令正确处理
+        /* ---------- 3. 区分算术 / 比较 ---------- */
+        String irName = ins.op().name();
+        boolean isCmp = irName.startsWith("CMP_");
+
+        /* === 3-A. 普通算术 / 位运算 === */
+        if (!isCmp) {
+            String opName = irName.split("_")[0];                 // ADD / SUB / MUL …
+            out.emit(OpHelper.opcode(tPre + "_" + opName));       // I_ADD / D_MUL …
+            out.emit(OpHelper.opcode(tPre + "_STORE") + " " + dSlot);
+            out.setSlotType(dSlot, tType);
+            return;
+        }
+
+        /* === 3-B. CMP_* —— 生成布尔结果 === */
+        String branchOp = OpHelper.opcode(IROpCodeMapper.toVMOp(ins.op())); // IC_E / IC_NE …
+        String lblTrue  = fresh(currentFn, "true");
+        String lblEnd   = fresh(currentFn, "end");
+
+        // ① 条件跳转；成立 → lblTrue
+        out.emitBranch(branchOp, lblTrue);
+
+        // ② 不成立：压 0
+        out.emit(OpHelper.opcode("I_PUSH") + " 0");
+        out.emitBranch(OpHelper.opcode("JUMP"), lblEnd);
+
+        // ③ 成立分支：压 1
+        out.emit(lblTrue + ":");
+        out.emit(OpHelper.opcode("I_PUSH") + " 1");
+
+        // ④ 结束标签
+        out.emit(lblEnd + ":");
+
+        // ⑤ 写入目标槽位
+        out.emit(OpHelper.opcode("I_STORE") + " " + dSlot);
+        out.setSlotType(dSlot, 'I');        // 布尔 ➜ int
     }
 }
