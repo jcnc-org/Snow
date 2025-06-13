@@ -45,6 +45,10 @@ public class PrattExpressionParser implements ExpressionParser {
         prefixes.put(TokenType.STRING_LITERAL.name(), new StringLiteralParselet());
         prefixes.put(TokenType.BOOL_LITERAL.name(), new BoolLiteralParselet());
 
+        // 注册一元前缀运算
+        prefixes.put(TokenType.MINUS.name(), new UnaryOperatorParselet());
+        prefixes.put(TokenType.NOT.name(), new UnaryOperatorParselet());
+
         // 注册中缀解析器
         infixes.put("+", new BinaryOperatorParselet(Precedence.SUM, true));
         infixes.put("-", new BinaryOperatorParselet(Precedence.SUM, true));

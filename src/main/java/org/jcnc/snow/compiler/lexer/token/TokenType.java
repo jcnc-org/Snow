@@ -10,6 +10,7 @@ package org.jcnc.snow.compiler.lexer.token;
  */
 public enum TokenType {
 
+    /* ---------- 基础 ---------- */
     /** 普通标识符，如变量名、函数名等 */
     IDENTIFIER,
 
@@ -19,14 +20,17 @@ public enum TokenType {
     /** 内置类型名称（如 int、string、bool 等） */
     TYPE,
 
+    /* ---------- 字面量 ---------- */
     /** 布尔字面量 （true / false） */
     BOOL_LITERAL,
+
     /** 字符串字面量（如 "hello"） */
     STRING_LITERAL,
 
     /** 数字字面量（整数或浮点数） */
     NUMBER_LITERAL,
 
+    /* ---------- 分隔符 ---------- */
     /** 冒号 ':' */
     COLON,
 
@@ -36,6 +40,7 @@ public enum TokenType {
     /** 点号 '.' */
     DOT,
 
+    /* ---------- 运算符 ---------- */
     /** 赋值符号 '=' */
     EQUALS,
 
@@ -52,6 +57,9 @@ public enum TokenType {
 
     /** 减号 '-' */
     MINUS,
+
+    /** 取反 '!' */
+    NOT,
 
     /** 左括号 '(' */
     LPAREN,

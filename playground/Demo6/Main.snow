@@ -1,0 +1,10 @@
+module: Main
+    function: main
+        parameter:
+        return_type: int
+        body:
+            declare b1 :int = -1
+            return b1
+        end body
+    end function
+end module

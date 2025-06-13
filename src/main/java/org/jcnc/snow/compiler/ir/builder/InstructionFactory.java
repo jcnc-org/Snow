@@ -78,7 +78,7 @@ public class InstructionFactory {
     }
 
     /**
-     * 简易 Move 指令（src → dest）。若寄存器相同也安全。
+     * Move 指令（src → dest）。若寄存器相同也安全。
      * <p>
      * 实现方式：dest = src + 0（即加上常量 0）。
      * </p>
@@ -88,7 +88,11 @@ public class InstructionFactory {
      * @param dest 目标寄存器
      */
     public static void move(IRContext ctx, IRVirtualRegister src, IRVirtualRegister dest) {
-        /* 采用 “dest = src + 0” 的最简实现 */
+        // 自赋值无需任何操作，避免生成多余的常量 0 寄存器
+        if (src == dest) {
+            return;
+        }
+        // 回退实现：dest = src + 0
         IRVirtualRegister zero = loadConst(ctx, 0);
         ctx.addInstruction(new BinaryOperationInstruction(IROpCode.ADD_I32, dest, src, zero));
     }

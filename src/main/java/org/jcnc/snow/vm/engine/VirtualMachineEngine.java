@@ -20,7 +20,8 @@ import java.util.List;
  *   <li>{@link CommandExecutionHandler} — dispatches opcodes</li>
  * </ul>
  *
- * <h2>Root-frame contract</h2>
+ * Root-frame contract:
+ * <p>
  * A <strong>root stack frame</strong> is pushed <em>once</em> via
  * {@link #ensureRootFrame()} before the first instruction executes
  * and is never popped.  When a {@code RET} executed in the root frame

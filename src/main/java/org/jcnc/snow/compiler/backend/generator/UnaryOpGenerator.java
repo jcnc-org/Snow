@@ -41,13 +41,29 @@ public class UnaryOpGenerator implements InstructionGenerator<UnaryOperationInst
                          VMProgramBuilder out,
                          Map<IRVirtualRegister, Integer> slotMap,
                          String currentFn) {
-        // 获取操作数所在槽号
-        int slotId = slotMap.get((IRVirtualRegister) ins.operands().getFirst());
-        // 加载操作数到虚拟机栈顶
-        out.emit(OpHelper.opcode("I_LOAD") + " " + slotId);
-        // 生成对应的一元运算操作码（如取负等）
-        out.emit(OpHelper.opcode(IROpCodeMapper.toVMOp(ins.op())));
-        // 将结果存储到目标寄存器槽
-        out.emit(OpHelper.opcode("I_STORE") + " " + slotMap.get(ins.dest()));
+
+        /* -------- 1. 源槽位与类型 -------- */
+        int srcSlot  = slotMap.get((IRVirtualRegister) ins.operands().getFirst());
+        char prefix  = out.getSlotType(srcSlot);          // 未登记则返回默认 'I'
+
+        String loadOp  = prefix + "_LOAD";
+        String storeOp = prefix + "_STORE";
+
+        /* -------- 2. 指令序列 -------- */
+        // 2-A. 加载操作数
+        out.emit(OpHelper.opcode(loadOp) +
+                " " + srcSlot);
+
+        // 2-B. 执行具体一元运算（NEG、NOT…）
+        out.emit(OpHelper.opcode(
+                IROpCodeMapper.toVMOp(ins.op())));
+
+        // 2-C. 存结果到目标槽
+        int destSlot = slotMap.get(ins.dest());
+        out.emit(OpHelper.opcode(storeOp) +
+                " " + destSlot);
+
+        /* -------- 3. 更新目标槽类型 -------- */
+        out.setSlotType(destSlot, prefix);
     }
 }

@@ -8,6 +8,8 @@ import org.jcnc.snow.compiler.parser.ast.*;
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
 
+import java.util.Locale;
+
 /**
  * StatementBuilder —— 将 AST 语句节点 ({@link StatementNode}) 转换为 IR 指令序列的构建器。
  * <p>
@@ -176,5 +178,17 @@ public class StatementBuilder {
             IRVirtualRegister zero    = InstructionFactory.loadConst(ctx, 0);
             InstructionFactory.cmpJump(ctx, IROpCode.CMP_EQ, condReg, zero, falseLabel);
         }
+    }
+
+    private static char typeSuffixFromType(String type) {
+        if (type == null) return '\0';
+        return switch (type.toLowerCase(Locale.ROOT)) {
+            case "byte"   -> 'b';
+            case "short"  -> 's';
+            case "long"   -> 'l';
+            case "float"  -> 'f';
+            case "double" -> 'd';
+            default       -> '\0';   // 其余默认按 32-bit 整型处理
+        };
     }
 }

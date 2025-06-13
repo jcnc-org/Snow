@@ -19,7 +19,7 @@ import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
  */
 public class IRContext {
 
-    /* ➡ 新增：生成唯一标签用 */
+    /* 生成唯一标签用 */
     private int labelCounter = 0;
     /**
      * 当前正在构建的 IRFunction 对象，所有指令将添加至此
