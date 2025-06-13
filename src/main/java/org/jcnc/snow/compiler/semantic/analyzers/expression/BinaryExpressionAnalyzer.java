@@ -69,7 +69,7 @@ public class BinaryExpressionAnalyzer implements ExpressionAnalyzer<BinaryExpres
 
                 // 若为比较运算符，统一返回 int 类型作为布尔值表示
                 if ("< <= > >= == !=".contains(op)) {
-                    return BuiltinType.INT;
+                    return BuiltinType.BOOLEAN;
                 }
 
                 return wide;
