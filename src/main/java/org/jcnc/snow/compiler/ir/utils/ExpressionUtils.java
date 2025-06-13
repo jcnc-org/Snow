@@ -78,6 +78,30 @@ public class ExpressionUtils {
         };
     }
 
+    /**
+     * 根据表达式节点推断一元取负（-）运算应使用的操作码。
+     *
+     * <p>优先级与 {@link #resolveOpCode} 使用的类型提升规则保持一致：</p>
+     * <ul>
+     *   <li>字面量或标识符带显式后缀时，直接以后缀决定位宽；</li>
+     *   <li>未显式指定时，默认使用 32 位整型 {@link IROpCode#NEG_I32}。</li>
+     * </ul>
+     *
+     * @param operand 一元取负运算的操作数
+     * @return 匹配的 {@link IROpCode}
+     */
+    public static IROpCode negOp(ExpressionNode operand) {
+        char t = typeChar(operand);
+        return switch (t) {
+            case 'b' -> IROpCode.NEG_B8;
+            case 's' -> IROpCode.NEG_S16;
+            case 'l' -> IROpCode.NEG_L64;
+            case 'f' -> IROpCode.NEG_F32;
+            case 'd' -> IROpCode.NEG_D64;
+            default  -> IROpCode.NEG_I32;
+        };
+    }
+
     /* =================== 类型推断与操作符匹配 =================== */
 
     /**

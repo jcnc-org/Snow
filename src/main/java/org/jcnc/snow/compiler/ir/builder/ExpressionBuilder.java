@@ -74,15 +74,16 @@ public record ExpressionBuilder(IRContext ctx) {
         };
     }
 
+    /** 处理一元表达式 */
     private IRVirtualRegister buildUnary(UnaryExpressionNode un) {
-        String               op  = un.operator();
-        IRVirtualRegister    val = build(un.operand());
+        String            op  = un.operator();
+        IRVirtualRegister val = build(un.operand());
 
-        //  -x  → NEG_I32
+        //  -x  → NEG_*（根据类型自动选择位宽）
         if (op.equals("-")) {
             IRVirtualRegister dest = ctx.newRegister();
-            ctx.addInstruction(new UnaryOperationInstruction(
-                    IROpCode.NEG_I32, dest, val));
+            IROpCode          code = ExpressionUtils.negOp(un.operand());
+            ctx.addInstruction(new UnaryOperationInstruction(code, dest, val));
             return dest;
         }
 
