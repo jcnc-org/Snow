@@ -333,7 +333,18 @@ end module
     * `io/`：输入输出辅助类（加载指令,文件解析等）
     * 其他如 `factories/`,`utils/` 等目录包含指令创建和调试工具类
 
+
+## 版权声明
+
+版权所有 © 2025 许轲（Luke），代表 SnowLang 项目。  
+本项目依据 [Apache 2.0 许可证](LICENSE) 进行许可和发布。
+
+“SnowLang 项目”为由许轲（Luke）发起的独立开源项目。  
+未来，项目可能会成立正式的组织或实体，以进一步负责本项目的开发和管理。
+
 ## 加入我们
-* 微信: `xuxiaolankaka`
-* QQ: `1399528359`
-* E-Mail: `luke.k.xu@hotmail.com`
+
+- 微信：`xuxiaolankaka`
+- QQ：`1399528359`
+- 邮箱：`luke.k.xu [at] hotmail.com`
+
