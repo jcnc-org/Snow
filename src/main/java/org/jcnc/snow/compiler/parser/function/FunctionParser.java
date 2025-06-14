@@ -140,7 +140,6 @@ public class FunctionParser implements TopLevelParser {
     private void parseFunctionFooter(TokenStream ts) {
         ts.expect("end");
         ts.expect("function");
-        ts.expectType(TokenType.NEWLINE);
     }
 
     /**

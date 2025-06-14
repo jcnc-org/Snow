@@ -13,7 +13,7 @@ import java.util.*;
  * 并可借助 {@code JSONParser.toJson(Object)} 方法将其序列化为 JSON 字符串，用于调试、
  * 可视化或跨语言数据传输。
  * <p>
- * 支持的节点类型包括：
+ * 支持的节点类型包括（新增对 {@code BoolLiteralNode}、{@code UnaryExpressionNode} 的完整支持）：
  * <ul>
  *   <li>{@link ModuleNode}</li>
  *   <li>{@link FunctionNode}</li>
@@ -23,7 +23,9 @@ import java.util.*;
  *   <li>{@link LoopNode}</li>
  *   <li>{@link ReturnNode}</li>
  *   <li>{@link ExpressionStatementNode}</li>
- *   <li>各类 {@link ExpressionNode} 子类型，如 {@code BinaryExpressionNode}, {@code IdentifierNode} 等</li>
+ *   <li>{@link BoolLiteralNode}</li>
+ *   <li>{@link UnaryExpressionNode}</li>
+ *   <li>以及各类 {@link ExpressionNode} 子类型，如 {@code BinaryExpressionNode}, {@code IdentifierNode} 等</li>
  * </ul>
  */
 public class ASTJsonSerializer {
@@ -174,19 +176,32 @@ public class ASTJsonSerializer {
      */
     private static Object exprToMap(ExpressionNode expr) {
         return switch (expr) {
+            // 二元表达式
             case BinaryExpressionNode(ExpressionNode left, String operator, ExpressionNode right) -> exprMap("BinaryExpression",
                     "left", exprToMap(left),
                     "operator", operator,
                     "right", exprToMap(right)
             );
+            // 一元表达式
+            case UnaryExpressionNode(String operator, ExpressionNode operand) -> exprMap("UnaryExpression",
+                    "operator", operator,
+                    "operand", exprToMap(operand)
+            );
+            // 布尔字面量
+            case BoolLiteralNode(boolean value) -> exprMap("BoolLiteral", "value", value);
+            // 标识符
             case IdentifierNode(String name) -> exprMap("Identifier", "name", name);
+            // 数字字面量
             case NumberLiteralNode(String value) -> exprMap("NumberLiteral", "value", value);
+            // 字符串字面量
             case StringLiteralNode(String value) -> exprMap("StringLiteral", "value", value);
-            case CallExpressionNode(ExpressionNode callee, List<ExpressionNode> arguments, int line, int column, String file) -> {
+            // 调用表达式
+            case CallExpressionNode(ExpressionNode callee, List<ExpressionNode> arguments, _, _, _) -> {
                 List<Object> args = new ArrayList<>(arguments.size());
                 for (ExpressionNode arg : arguments) args.add(exprToMap(arg));
                 yield exprMap("CallExpression", "callee", exprToMap(callee), "arguments", args);
             }
+            // 成员访问表达式
             case MemberExpressionNode(ExpressionNode object, String member) -> exprMap("MemberExpression",
                     "object", exprToMap(object),
                     "member", member

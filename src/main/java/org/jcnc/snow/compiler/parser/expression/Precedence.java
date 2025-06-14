@@ -24,6 +24,9 @@ public enum Precedence {
      */
     PRODUCT,
 
+    /** 一元前缀（-x !x） */
+    UNARY,
+
     /**
      * 函数调用、成员访问等最强绑定（例如 foo()、obj.prop）。
      */

@@ -5,15 +5,13 @@ import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 /**
  * 表示布尔字面量（boolean literal）的抽象语法树（AST）节点。
  * <p>
- * 本类实现了 {@link ExpressionNode} 接口，用于在编译器前端构建语法分析过程中，
+ * 该纪录类实现 {@link ExpressionNode} 接口，用于在编译器前端构建语法分析过程中，
  * 表达布尔类型的字面量常量（如 "true" 或 "false"）。
  * </p>
+ *
+ * @param value 字面量的布尔值
  */
-public class BoolLiteralNode implements ExpressionNode {
-    /**
-     * 字面量的布尔值。
-     */
-    private final boolean value;
+public record BoolLiteralNode(boolean value) implements ExpressionNode {
 
     /**
      * 使用布尔字面量字符串构造一个 {@code BoolLiteralNode} 实例。
@@ -25,7 +23,7 @@ public class BoolLiteralNode implements ExpressionNode {
      * @param lexeme 布尔字面量的字符串表示
      */
     public BoolLiteralNode(String lexeme) {
-        this.value = Boolean.parseBoolean(lexeme);
+        this(Boolean.parseBoolean(lexeme));
     }
 
     /**
