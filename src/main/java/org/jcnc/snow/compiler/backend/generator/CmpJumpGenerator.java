@@ -46,9 +46,9 @@ public class CmpJumpGenerator implements InstructionGenerator<IRCompareJumpInstr
         // 获取右操作数所在的寄存器槽编号
         int rightSlot = slotMap.get(ins.right());
         // 加载左操作数到虚拟机栈
-        out.emit(OpHelper.opcode("I_LOAD") + " " + leftSlot);
+        out.emit(OpHelper.opcode("L_LOAD") + " " + leftSlot);
         // 加载右操作数到虚拟机栈
-        out.emit(OpHelper.opcode("I_LOAD") + " " + rightSlot);
+        out.emit(OpHelper.opcode("L_LOAD") + " " + rightSlot);
         // 获取与当前比较操作对应的虚拟机操作码
         String cmpOp = IROpCodeMapper.toVMOp(ins.op());
         // 生成分支跳转指令，如果比较成立则跳转到目标标签

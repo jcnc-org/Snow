@@ -16,6 +16,7 @@ import org.jcnc.snow.vm.commands.bitwise.long64.LOrCommand;
 import org.jcnc.snow.vm.commands.bitwise.long64.LXorCommand;
 import org.jcnc.snow.vm.commands.control.all.JumpCommand;
 import org.jcnc.snow.vm.commands.control.int32.*;
+import org.jcnc.snow.vm.commands.control.long64.*;
 import org.jcnc.snow.vm.commands.function.CallCommand;
 import org.jcnc.snow.vm.commands.function.RetCommand;
 import org.jcnc.snow.vm.commands.memory.all.MovCommand;
@@ -142,13 +143,22 @@ public class CommandFactory {
         COMMANDS[VMOpCode.L_XOR] = new LXorCommand();      // 88
 
         // 3. Control Flow Operations (91–110)
+        // 3.1 JUMP (91-91)
         COMMANDS[VMOpCode.JUMP] = new JumpCommand();       // 91
+        // 3.2 int32 (92-97)
         COMMANDS[VMOpCode.IC_E] = new ICECommand();        // 92
         COMMANDS[VMOpCode.IC_NE] = new ICNECommand();      // 93
         COMMANDS[VMOpCode.IC_G] = new ICGCommand();        // 94
         COMMANDS[VMOpCode.IC_GE] = new ICGECommand();      // 95
         COMMANDS[VMOpCode.IC_L] = new ICLCommand();        // 96
         COMMANDS[VMOpCode.IC_LE] = new ICLECommand();      // 97
+        // 3.3 long64 (98-103)
+        COMMANDS[VMOpCode.LC_E] = new LCECommand();        // 98
+        COMMANDS[VMOpCode.LC_NE] = new LCNECommand();      // 99
+        COMMANDS[VMOpCode.LC_G] = new LCGCommand();        // 100
+        COMMANDS[VMOpCode.LC_GE] = new LCGECommand();      // 101
+        COMMANDS[VMOpCode.LC_L] = new LCLCommand();        // 102
+        COMMANDS[VMOpCode.LC_LE] = new LCLECommand();      // 103
 
         // 4.  Stack Operations (111–150)
         // 4.1 PUSH (111-120)
