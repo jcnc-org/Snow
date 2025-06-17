@@ -16,7 +16,7 @@ import java.util.function.Supplier;
  */
 public class SnowCLI {
     /** Snow 编程语言的版本号。 */
-    public static final String VERSION = "1.0.0";
+    public static final String SNOW_VERSION = "1.0.0";
 
     /** 全局帮助标志，当输入匹配时显示帮助信息。 */
     private static final Set<String> GLOBAL_HELP_FLAGS = Set.of("help", "-h", "--help");
