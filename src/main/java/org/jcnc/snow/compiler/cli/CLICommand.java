@@ -9,7 +9,6 @@ package org.jcnc.snow.compiler.cli;
  *   <li>可通过 {@link java.util.ServiceLoader ServiceLoader} 自动发现，或直接在 {@link SnowCLI} 注册。</li>
  * </ul>
  * <p>
-
  */
 public interface CLICommand {
 
@@ -31,7 +30,8 @@ public interface CLICommand {
      * 打印命令的专用 usage 信息（可选实现）。
      * 可覆盖此方法自定义帮助信息，默认无操作。
      */
-    default void printUsage() {}
+    default void printUsage() {
+    }
 
     /**
      * 执行命令逻辑。

@@ -7,7 +7,7 @@ import org.jcnc.snow.vm.VMLauncher;
  * <p>
  * 命令实现：`snow run`
  * <br>
- * 用于运行已编译的 VM 字节码文件（.vm）。
+ * 用于运行已编译的 VM 字节码文件（.water）。
  * </p>
  * <ul>
  *     <li>支持传递额外 VM 参数。</li>
@@ -15,7 +15,7 @@ import org.jcnc.snow.vm.VMLauncher;
  * </ul>
  * <p>
  * 用法：<br>
- * <code>snow run program.vm</code>
+ * <code>snow run program.water</code>
  * </p>
  */
 public final class RunCommand implements CLICommand {
@@ -26,7 +26,9 @@ public final class RunCommand implements CLICommand {
      * @return "run"
      */
     @Override
-    public String name() { return "run"; }
+    public String name() {
+        return "run";
+    }
 
     /**
      * 获取命令描述。
@@ -44,7 +46,7 @@ public final class RunCommand implements CLICommand {
     @Override
     public void printUsage() {
         System.out.println("""
-                Usage: snow run <program.vm> [additional VM options]
+                Usage: snow run <program.water> [additional VM options]
                 """);
     }
 
@@ -61,7 +63,6 @@ public final class RunCommand implements CLICommand {
             printUsage();
             return 1;
         }
-        // 直接复用 VM 启动逻辑
         VMLauncher.main(args);
         return 0;
     }

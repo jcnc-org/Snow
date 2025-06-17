@@ -91,7 +91,6 @@ public final class SnowCLI {
      */
     private void printGlobalUsage() {
         System.out.println("""
-                Snow Programming Language CLI
                 Usage: snow <command> [options]
 
                 Available commands:""");
