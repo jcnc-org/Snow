@@ -36,7 +36,7 @@ public class IRContext {
     /**
      * 当前声明变量的类型，不在声明变量时为空
      */
-    private Optional<String> var_type;
+    private Optional<String> varType;
 
     /**
      * 构造一个新的 IRContext，并将指定的 IRFunction 与作用域关联。
@@ -48,7 +48,7 @@ public class IRContext {
         this.scope = new IRBuilderScope();
         // 关联作用域与 IRFunction，以便在声明变量时申请寄存器
         this.scope.attachFunction(function);
-        this.var_type = Optional.empty();
+        this.varType = Optional.empty();
     }
 
     /**
@@ -100,7 +100,7 @@ public class IRContext {
      * @return 当前 declare 的变量类型
      */
     public Optional<String> getVarType() {
-        return var_type;
+        return varType;
     }
 
     /**
@@ -108,7 +108,7 @@ public class IRContext {
      *
      */
     public void setVarType(String type) {
-        this.var_type = Optional.of(type);
+        this.varType = Optional.of(type);
     }
 
     /**
@@ -116,6 +116,6 @@ public class IRContext {
      *
      */
     public void clearVarType() {
-        this.var_type = Optional.empty();
+        this.varType = Optional.empty();
     }
 }
