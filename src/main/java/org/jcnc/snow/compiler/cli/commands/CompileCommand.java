@@ -216,7 +216,7 @@ public final class CompileCommand implements CLICommand {
         } else if (dir != null) {
             base = dir.getFileName().toString();
         } else if (sources.size() == 1) {
-            base = sources.get(0).getFileName().toString().replaceFirst("\\.snow$", "");
+            base = sources.getFirst().getFileName().toString().replaceFirst("\\.snow$", "");
         } else {
             base = "program";
         }

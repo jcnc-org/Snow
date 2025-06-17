@@ -5,7 +5,7 @@
     <option name="PROGRAM_PARAMETERS" value="help" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="org.jcnc.snow.compiler.cli.*" />
+        <option name="PATTERN" value="org.jcnc.snow.compiler.cli.SnowCLI" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>
