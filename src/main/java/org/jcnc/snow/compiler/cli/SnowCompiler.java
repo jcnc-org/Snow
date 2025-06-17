@@ -4,11 +4,12 @@ import org.jcnc.snow.compiler.backend.alloc.RegisterAllocator;
 import org.jcnc.snow.compiler.backend.builder.VMCodeGenerator;
 import org.jcnc.snow.compiler.backend.builder.VMProgramBuilder;
 import org.jcnc.snow.compiler.backend.core.InstructionGenerator;
-import org.jcnc.snow.compiler.backend.generator.*;
+import org.jcnc.snow.compiler.backend.generator.InstructionGeneratorProvider;
 import org.jcnc.snow.compiler.ir.builder.IRProgramBuilder;
 import org.jcnc.snow.compiler.ir.core.IRFunction;
 import org.jcnc.snow.compiler.ir.core.IRInstruction;
 import org.jcnc.snow.compiler.ir.core.IRProgram;
+import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 import org.jcnc.snow.compiler.lexer.core.LexerEngine;
 import org.jcnc.snow.compiler.parser.ast.base.Node;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
@@ -20,7 +21,8 @@ import org.jcnc.snow.vm.engine.VirtualMachineEngine;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 /**
@@ -78,19 +80,10 @@ public class SnowCompiler {
 
         /* ---------- 5. IR → VM 指令 ---------- */
         VMProgramBuilder builder = new VMProgramBuilder();
-        List<InstructionGenerator<? extends IRInstruction>> generators = Arrays.asList(
-                new LoadConstGenerator(),
-                new BinaryOpGenerator(),
-                new UnaryOpGenerator(),
-                new CallGenerator(),
-                new ReturnGenerator(),
-                new LabelGenerator(),
-                new JumpGenerator(),
-                new CmpJumpGenerator()
-        );
+        List<InstructionGenerator<? extends IRInstruction>> generators = InstructionGeneratorProvider.defaultGenerators();
 
         for (IRFunction fn : program.functions()) {
-            Map<org.jcnc.snow.compiler.ir.value.IRVirtualRegister, Integer> slotMap =
+            Map<IRVirtualRegister, Integer> slotMap =
                     new RegisterAllocator().allocate(fn);
             new VMCodeGenerator(slotMap, builder, generators).generate(fn);
         }
@@ -108,8 +101,8 @@ public class SnowCompiler {
 
     /**
      * 根据参数收集待编译文件：
-     *   - snow file1 file2 …      ← 多文件 / 单文件
-     *   - snow -d srcDir          ← 目录递归所有 *.snow
+     * - snow file1 file2 …      ← 多文件 / 单文件
+     * - snow -d srcDir          ← 目录递归所有 *.snow
      */
     private static List<Path> collectSources(String[] args) throws IOException {
         if (args.length == 2 && "-d".equals(args[0])) {
@@ -137,7 +130,8 @@ public class SnowCompiler {
         int idx = -1;
         for (int i = 0; i < ordered.size(); i++) {
             if ("main".equals(ordered.get(i).name())) {
-                idx = i; break;
+                idx = i;
+                break;
             }
         }
         if (idx > 0) Collections.swap(ordered, 0, idx);
