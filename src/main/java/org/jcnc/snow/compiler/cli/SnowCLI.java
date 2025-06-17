@@ -11,12 +11,6 @@ import java.util.*;
  * <br>
  * 负责命令注册、解析与调度。
  * </p>
- * <pre>
- * 示例用法:
- *   $ snow help
- *   $ snow compile main.snow
- *   $ snow run     main.vm
- * </pre>
  * <ul>
  *   <li>支持核心命令自动注册（compile/run）。</li>
  *   <li>支持通过 ServiceLoader 自动发现并注册第三方命令。</li>
