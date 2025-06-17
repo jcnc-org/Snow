@@ -66,8 +66,8 @@ public class ExpressionUtils {
         String digits = switch (suffix) {
             case 'b','s','l','f','d' -> value.substring(0, value.length() - 1);
             default -> {
-                if (ctx.getVarType().isPresent()) {
-                    final var receiverType = ctx.getVarType().get();
+                if (ctx.getVarType() != null) {
+                    final var receiverType = ctx.getVarType();
                     switch (receiverType) {
                         case "byte" -> suffix = 'b';
                         case "short" -> suffix = 's';
