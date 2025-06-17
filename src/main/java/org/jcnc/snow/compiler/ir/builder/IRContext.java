@@ -4,7 +4,6 @@ import org.jcnc.snow.compiler.ir.core.IRFunction;
 import org.jcnc.snow.compiler.ir.core.IRInstruction;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 
-import java.util.Optional;
 
 /**
  * IRContext 类负责封装当前正在构建的 IRFunction 实例
