@@ -3,111 +3,87 @@ package org.jcnc.snow.compiler.cli;
 import org.jcnc.snow.compiler.cli.commands.CompileCommand;
 import org.jcnc.snow.compiler.cli.commands.RunCommand;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Supplier;
 
 /**
- * <p>
- * Snow 语言统一命令行入口（CLI）。
- * <br>
- * 负责命令注册、解析与调度。
- * </p>
- * <ul>
- *   <li>支持核心命令自动注册（compile/run）。</li>
- *   <li>支持通过 ServiceLoader 自动发现并注册第三方命令。</li>
- *   <li>统一异常处理和 usage 帮助输出。</li>
- * </ul>
+ * SnowCLI 是项目的命令行入口类，负责解析用户输入、分发子命令并统一处理帮助和错误。
  */
-public final class SnowCLI {
-
-    /** 命令注册表，按插入顺序保存命令名到实现的映射。 */
-    private final Map<String, CLICommand> registry = new LinkedHashMap<>();
+public class SnowCLI {
 
     /**
-     * 构造 CLI，自动注册所有可用命令。
-     * <ul>
-     *   <li>通过 ServiceLoader 加载所有外部扩展命令。</li>
-     *   <li>始终内置注册 compile、run 等核心命令。</li>
-     * </ul>
+     * 保存所有可用子命令的映射：命令名称 -> 命令实例的提供者
+     * 通过 Map.of 初始化，添加新命令时只需在此注册。
      */
-    public SnowCLI() {
-        // 1. 自动发现 ServiceLoader 扩展命令
-        ServiceLoader.load(CLICommand.class).forEach(this::register);
-        // 2. 注册核心命令，保证 CLI 可用
-        register(new CompileCommand());
-        register(new RunCommand());
-    }
+    private static final Map<String, Supplier<CLICommand>> COMMANDS = Map.of(
+            "compile", CompileCommand::new,
+            "run", RunCommand::new
+    );
 
     /**
-     * 注册一个命令到 CLI（命令名唯一，若已注册则跳过）。
+     * 程序主入口，解析和分发命令。
      *
-     * @param cmd 待注册命令
-     */
-    private void register(CLICommand cmd) {
-        registry.putIfAbsent(cmd.name(), cmd);
-    }
-
-    /**
-     * 解析命令行参数并执行相应命令。
-     *
-     * @param args 命令行参数
-     * @return 进程退出码（0=成功, 1=未知命令, -1=命令异常）
-     */
-    public int run(String[] args) {
-        // 无参数或 help，打印全局用法
-        if (args.length == 0
-                || Set.of("help", "-h", "--help").contains(args[0])) {
-            printGlobalUsage();
-            return 0;
-        }
-
-        // 根据命令名查找注册表
-        CLICommand cmd = registry.get(args[0]);
-        if (cmd == null) {
-            System.err.printf("Unknown command: %s%n%n", args[0]);
-            printGlobalUsage();
-            return 1;
-        }
-
-        // 提取命令余下参数（不包含命令名）
-        String[] sub = Arrays.copyOfRange(args, 1, args.length);
-        try {
-            return cmd.execute(sub);
-        } catch (Exception e) {
-            System.err.printf("Error executing command '%s': %s%n",
-                    cmd.name(), e.getMessage());
-            e.printStackTrace(System.err);
-            return -1;
-        }
-    }
-
-    /**
-     * 打印全局帮助信息（所有已注册命令的 usage）。
-     */
-    private void printGlobalUsage() {
-        System.out.println("""
-                Usage: snow <command> [options]
-
-                Available commands:""");
-        int pad = registry.keySet().stream()
-                .mapToInt(String::length).max().orElse(10) + 2;
-        registry.values().stream()
-                .sorted(Comparator.comparing(CLICommand::name))
-                .forEach(c -> System.out.printf("  %-" + pad + "s%s%n",
-                        c.name(), c.description()));
-
-        System.out.println("""
-                
-                Use 'snow <command> --help' for command-specific details.
-                """);
-    }
-
-    /**
-     * CLI 程序主入口。
-     *
-     * @param args 命令行参数
+     * @param args 用户在命令行中输入的参数数组
      */
     public static void main(String[] args) {
-        int code = new SnowCLI().run(args);
-        System.exit(code);
+        // 如果未给出任何参数，则打印通用帮助并退出
+        if (args.length == 0) {
+            printGeneralUsage();
+            System.exit(1);
+        }
+
+        // 第一个参数为子命令名称
+        String cmdName = args[0];
+        Supplier<CLICommand> cmdSupplier = COMMANDS.get(cmdName);
+        // 如果命令不存在，则打印错误和帮助
+        if (cmdSupplier == null) {
+            System.err.println("Unknown command: " + cmdName);
+            printGeneralUsage();
+            System.exit(1);
+        }
+
+        // 创建子命令实例
+        CLICommand cmd = cmdSupplier.get();
+
+        // 提取子命令的剩余参数
+        String[] sub = Arrays.copyOfRange(args, 1, args.length);
+
+        // 支持统一的帮助标志：help, -h, --help
+        if (sub.length > 0 && Set.of("help", "-h", "--help").contains(sub[0])) {
+            // 调用子命令自己的 printUsage
+            cmd.printUsage();
+            System.exit(0);
+        }
+
+        // 执行子命令并捕获异常
+        try {
+            int exitCode = cmd.execute(sub);
+            System.exit(exitCode);
+        } catch (Exception e) {
+            // 打印错误信息和堆栈
+            System.err.println("Error: " + e.getMessage());
+            System.exit(1);
+        }
+    }
+
+    /**
+     * 打印动态生成的通用帮助信息。
+     * 会遍历 COMMANDS，输出所有子命令的名称及描述信息。
+     */
+    private static void printGeneralUsage() {
+        // 使用方式说明
+        System.out.println("Usage: snow <command> [options]");
+        System.out.println("Commands:");
+
+        // 对每个注册的子命令，获取 description 并格式化输出
+        COMMANDS.forEach((name, supplier) -> {
+            CLICommand c = supplier.get();
+            // %-10s 保证命令名称列宽度为 10
+            System.out.printf("  %-10s %s%n", name, c.description());
+        });
+        // 提示如何查看子命令帮助
+        System.out.println("Use 'snow <command> --help' to see command-specific options.");
     }
 }
