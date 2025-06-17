@@ -55,19 +55,37 @@ public class StatementBuilder {
         }
         if (stmt instanceof AssignmentNode(String var, ExpressionNode rhs)) {
             // 赋值语句，如 a = b + 1;
-            IRVirtualRegister target = getOrDeclareRegister(var);
+
+            final String type = ctx.getScope().lookupType(var);
+
+            // 1. 设置声明变量的类型
+            ctx.setVarType(type);
+
+            IRVirtualRegister target = getOrDeclareRegister(var, type);
             expr.buildInto(rhs, target);
+
+            // 2. 清除变量声明
+            ctx.clearVarType();
+
             return;
         }
         if (stmt instanceof DeclarationNode decl) {
             // 变量声明，如 int a = 1;
             if (decl.getInitializer().isPresent()) {
                 // 声明同时有初值
+
+                // 1. 设置声明变量的类型
+                ctx.setVarType(decl.getType());
+
                 IRVirtualRegister r = expr.build(decl.getInitializer().get());
-                ctx.getScope().declare(decl.getName(), r);
+
+                // 2. 清除变量声明
+                ctx.clearVarType();
+
+                ctx.getScope().declare(decl.getName(), decl.getType(), r);
             } else {
                 // 仅声明，无初值
-                ctx.getScope().declare(decl.getName());
+                ctx.getScope().declare(decl.getName(), decl.getType());
             }
             return;
         }
@@ -92,11 +110,12 @@ public class StatementBuilder {
      * @param name 变量名
      * @return 变量对应的虚拟寄存器
      */
-    private IRVirtualRegister getOrDeclareRegister(String name) {
+    private IRVirtualRegister getOrDeclareRegister(String name, String type) {
         IRVirtualRegister reg = ctx.getScope().lookup(name);
         if (reg == null) {
             reg = ctx.newRegister();
-            ctx.getScope().declare(name, reg);
+            ctx.getScope().declare(name, type, reg);
+            throw new IllegalStateException("这里是怎么到达？");
         }
         return reg;
     }
