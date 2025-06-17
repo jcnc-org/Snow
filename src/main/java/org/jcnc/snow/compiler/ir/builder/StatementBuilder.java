@@ -115,7 +115,6 @@ public class StatementBuilder {
         if (reg == null) {
             reg = ctx.newRegister();
             ctx.getScope().declare(name, type, reg);
-            throw new IllegalStateException("这里是怎么到达？");
         }
         return reg;
     }
