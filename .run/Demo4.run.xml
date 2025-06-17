@@ -1,9 +1,9 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Demo4" type="Application" factoryName="Application" folderName="Demo" activateToolWindowBeforeRun="false">
     <option name="ALTERNATIVE_JRE_PATH" value="graalvm-ce-23" />
-    <option name="MAIN_CLASS_NAME" value="org.jcnc.snow.compiler.cli.SnowCompiler" />
+    <option name="MAIN_CLASS_NAME" value="org.jcnc.snow.compiler.cli.SnowCLI" />
     <module name="Snow" />
-    <option name="PROGRAM_PARAMETERS" value="-d playground/Demo4" />
+    <option name="PROGRAM_PARAMETERS" value="compile run -d playground/Demo4" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="org.jcnc.snow.compiler.parser.preprocessor.lexer.impl.api.*" />
