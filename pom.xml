@@ -35,7 +35,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.jcnc.snow.compiler.cli.SnowCompiler</mainClass>
+                            <mainClass>org.jcnc.snow.compiler.cli.SnowCLI</mainClass>
                             <addClasspath>true</addClasspath>
                         </manifest>
                     </archive>
