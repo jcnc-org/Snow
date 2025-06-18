@@ -1,0 +1,37 @@
+name: "紧急修复"
+description: "生产环境紧急问题的快速修复"
+title: "[Hotfix] "
+labels:
+  - hotfix
+assignees: []
+
+body:
+  - type: textarea
+    id: issue_summary
+    attributes:
+      label: 问题概述
+      description: 简要描述需紧急修复的问题
+      placeholder: "在此填写紧急问题描述…"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 优先级
+      description: 选择修复优先级
+      options:
+        - P0
+        - P1
+        - P2
+    validations:
+      required: true
+
+  - type: input
+    id: deadline
+    attributes:
+      label: 修复截止日期
+      description: 填写计划完成的日期 (YYYY-MM-DD)
+      placeholder: "例如：2025-06-20"
+    validations:
+      required: false

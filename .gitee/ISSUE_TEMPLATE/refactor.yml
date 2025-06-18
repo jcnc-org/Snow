@@ -1,0 +1,34 @@
+name: "代码重构"
+description: "优化现有代码结构、命名或逻辑的重构任务"
+title: "[Refactor] "
+labels:
+  - refactor
+assignees: []
+
+body:
+  - type: textarea
+    id: refactor_scope
+    attributes:
+      label: 重构范围
+      description: 描述需要重构的模块或文件
+      placeholder: "在此填写重构目标…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: refactor_reason
+    attributes:
+      label: 重构原因
+      description: 说明当前存在的痛点或待改进之处
+      placeholder: "如：变量命名不规范、函数职责过多…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: refactor_expectation
+    attributes:
+      label: 预期效果
+      description: 说明重构后带来的好处或验证方式
+      placeholder: "如：提高性能、增强可读性…"
+    validations:
+      required: false

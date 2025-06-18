@@ -1,0 +1,25 @@
+name: "文档改进"
+description: "报告文档错误、更新需求或新增文档请求"
+title: "[Docs] "
+labels:
+  - docs
+assignees: []
+
+body:
+  - type: textarea
+    id: docs_summary
+    attributes:
+      label: 文档概述
+      description: 简要说明需要更新或新增的文档部分
+      placeholder: "在此填写文档改进或更新需求…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: docs_details
+    attributes:
+      label: 详细说明
+      description: 说明当前文档存在的问题或改进建议
+      placeholder: "如有示例、截图或链接，请在此补充…"
+    validations:
+      required: false

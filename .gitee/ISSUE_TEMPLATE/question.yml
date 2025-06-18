@@ -1,0 +1,34 @@
+name: "疑问与讨论"
+description: "提交使用疑问或设计讨论话题"
+title: "[Question] "
+labels:
+  - question
+assignees: []
+
+body:
+  - type: textarea
+    id: question_details
+    attributes:
+      label: 问题描述
+      description: 清晰说明遇到的问题或讨论主题
+      placeholder: "在此填写问题或讨论点…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: question_attempts
+    attributes:
+      label: 已尝试方法
+      description: 列出已尝试过的解决方案或思路
+      placeholder: "如：查阅文档、尝试示例代码…"
+    validations:
+      required: false
+
+  - type: textarea
+    id: question_expectation
+    attributes:
+      label: 期望答案
+      description: 描述希望获得的解答或帮助方向
+      placeholder: "如：最佳实践、配置示例…"
+    validations:
+      required: false

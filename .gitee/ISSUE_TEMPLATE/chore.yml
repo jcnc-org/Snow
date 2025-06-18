@@ -1,0 +1,25 @@
+name: "维护任务"
+description: "依赖升级、格式化、脚本运行等项目维护工作"
+title: "[Chore] "
+labels:
+  - chore
+assignees: []
+
+body:
+  - type: input
+    id: chore_title
+    attributes:
+      label: 任务标题
+      description: 简要描述维护内容
+      placeholder: "如：升级 JDK 版本"
+    validations:
+      required: true
+
+  - type: textarea
+    id: chore_description
+    attributes:
+      label: 任务详情
+      description: 描述执行步骤或相关脚本命令
+      placeholder: "如：修改 pom.xml…"
+    validations:
+      required: false

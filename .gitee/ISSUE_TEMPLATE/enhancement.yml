@@ -1,0 +1,34 @@
+name: "功能优化"
+description: "对现有功能的改进或性能优化建议"
+title: "[Enhancement] "
+labels:
+  - enhancement
+assignees: []
+
+body:
+  - type: textarea
+    id: enhancement_summary
+    attributes:
+      label: 优化概述
+      description: 简要说明希望改进的功能模块
+      placeholder: "在此填写优化目标…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: enhancement_details
+    attributes:
+      label: 优化方案
+      description: 详细描述改进思路与实现方式
+      placeholder: "如：缓存机制、算法优化…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: enhancement_benefit
+    attributes:
+      label: 预期收益
+      description: 描述优化后带来的效益或体验提升
+      placeholder: "如：响应时间缩短 30%…"
+    validations:
+      required: false
