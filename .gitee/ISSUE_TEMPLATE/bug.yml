@@ -1,5 +1,5 @@
 name: "Bug 报告"
-description: "提交代码中发现的缺陷报告"
+description: "提交代码中发现的缺陷"
 title: "[Bug] "
 labels:
   - bug
@@ -7,55 +7,91 @@ assignees: []
 
 body:
   - type: textarea
-    id: problem_summary
+    id: summary
     attributes:
       label: 问题概述
-      description: 清晰、简短地描述问题现象 & 出现场景
+      description: 简要说明发生了什么
       placeholder: "在此填写问题概述…"
     validations:
       required: true
 
   - type: textarea
-    id: reproduction_steps
+    id: steps
     attributes:
       label: 重现步骤
-      description: 请逐步列出重现流程
-      placeholder: "1. 执行…  2. 输入…  3. 观察到…"
+      description: 按顺序列出重现流程
+      placeholder: |
+        1. …
+        2. …
+        3. …
     validations:
       required: true
 
   - type: textarea
-    id: expected_result
+    id: expected
     attributes:
       label: 期望结果
-      description: 描述理想情况下的行为或输出
       placeholder: "在此填写期望结果…"
     validations:
       required: true
 
   - type: textarea
-    id: actual_result
+    id: actual
     attributes:
       label: 实际结果
-      description: 描述当前的行为或输出，与预期的差异
-      placeholder: "在此填写实际观察到的结果…"
+      placeholder: "在此填写实际结果…"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os_type
+    attributes:
+      label: 操作系统
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - 其他
     validations:
       required: true
 
   - type: input
-    id: environment_info
+    id: os_version
     attributes:
-      label: 环境信息
-      description: 操作系统、软件版本/分支等
-      placeholder: "例如：Windows 11 / v0.4.0"
+      label: 系统版本
+      description: 如 Windows 10 / macOS 14.0 / Ubuntu 22.04
+      placeholder: "请输入操作系统版本"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: app_version
+    attributes:
+      label: 软件版本/分支
+      options:
+        - v0.4.0
+        - v0.3.1
+        - v0.3.0
+        - main
+        - dev
+        - 其他
+    validations:
+      required: true
+
+  - type: input
+    id: app_version_other
+    attributes:
+      label: 其他分支
+      description: 如果上方选“其他”，请填写
+      placeholder: "请输入分支"
     validations:
       required: false
 
   - type: textarea
-    id: additional_info
+    id: attachments
     attributes:
       label: 附加信息（可选）
-      description: 如错误日志、截图、链接等
-      placeholder: "如有额外信息，可在此补充…"
+      description: 日志、截图或其他相关信息
+      placeholder: "如有日志或截图，可粘贴或附链接…"
     validations:
       required: false
