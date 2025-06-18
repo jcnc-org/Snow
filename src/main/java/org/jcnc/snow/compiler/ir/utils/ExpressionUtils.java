@@ -1,5 +1,6 @@
 package org.jcnc.snow.compiler.ir.utils;
 
+import org.jcnc.snow.compiler.ir.builder.IRContext;
 import org.jcnc.snow.compiler.ir.core.IROpCode;
 import org.jcnc.snow.compiler.ir.core.IROpCodeMappings;
 import org.jcnc.snow.compiler.ir.value.IRConstant;
@@ -56,14 +57,29 @@ public class ExpressionUtils {
      * 根据数字字面量字符串自动判断类型，生成对应类型的 IRConstant。
      * 支持 b/s/l/f/d 类型后缀与浮点格式，自动分配合适类型。
      *
+     * @param ctx IR 编译上下文环境
      * @param value 字面量字符串（如 "1", "2l", "3.14f", "5D"）
      * @return 生成的 IRConstant 对象，包含正确类型
      */
-    public static IRConstant buildNumberConstant(String value) {
+    public static IRConstant buildNumberConstant(IRContext ctx, String value) {
         char suffix = value.isEmpty() ? '\0' : Character.toLowerCase(value.charAt(value.length() - 1));
         String digits = switch (suffix) {
             case 'b','s','l','f','d' -> value.substring(0, value.length() - 1);
-            default -> value;
+            default -> {
+                if (ctx.getVarType() != null) {
+                    final var receiverType = ctx.getVarType();
+                    switch (receiverType) {
+                        case "byte" -> suffix = 'b';
+                        case "short" -> suffix = 's';
+                        case "int" -> suffix = 'i';
+                        case "long" -> suffix = 'l';
+                        case "float" -> suffix = 'f';
+                        case "double" -> suffix = 'd';
+                    }
+                }
+
+                yield value;
+            }
         };
         // 根据类型后缀或数值格式创建常量
         return switch (suffix) {

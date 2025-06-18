@@ -95,6 +95,12 @@ public final class OpHelper {
         map.put("IC_GE", Integer.toString(VMOpCode.IC_GE));
         map.put("IC_L", Integer.toString(VMOpCode.IC_L));
         map.put("IC_LE", Integer.toString(VMOpCode.IC_LE));
+        map.put("LC_E", Integer.toString(VMOpCode.LC_E));
+        map.put("LC_NE", Integer.toString(VMOpCode.LC_NE));
+        map.put("LC_G", Integer.toString(VMOpCode.LC_G));
+        map.put("LC_GE", Integer.toString(VMOpCode.LC_GE));
+        map.put("LC_L", Integer.toString(VMOpCode.LC_L));
+        map.put("LC_LE", Integer.toString(VMOpCode.LC_LE));
         map.put("I_PUSH", Integer.toString(VMOpCode.I_PUSH));
         map.put("L_PUSH", Integer.toString(VMOpCode.L_PUSH));
         map.put("S_PUSH", Integer.toString(VMOpCode.S_PUSH));

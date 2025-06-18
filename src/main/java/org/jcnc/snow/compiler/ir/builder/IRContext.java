@@ -4,6 +4,7 @@ import org.jcnc.snow.compiler.ir.core.IRFunction;
 import org.jcnc.snow.compiler.ir.core.IRInstruction;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 
+
 /**
  * IRContext 类负责封装当前正在构建的 IRFunction 实例
  * 以及与之配套的作用域管理（IRBuilderScope），
@@ -32,6 +33,11 @@ public class IRContext {
     private final IRBuilderScope scope;
 
     /**
+     * 当前声明变量的类型，不在声明变量时为空
+     */
+    private String varType;
+
+    /**
      * 构造一个新的 IRContext，并将指定的 IRFunction 与作用域关联。
      *
      * @param function 要构建的 IRFunction 实例
@@ -41,6 +47,7 @@ public class IRContext {
         this.scope = new IRBuilderScope();
         // 关联作用域与 IRFunction，以便在声明变量时申请寄存器
         this.scope.attachFunction(function);
+        this.varType = null;
     }
 
     /**
@@ -84,5 +91,30 @@ public class IRContext {
     /** 生成一个形如 L0 / L1 ... 的唯一标签名 */
     public String newLabel() {
         return "L" + (labelCounter++);
+    }
+
+    /**
+     * 获取当前 declare 编译阶段变量类型
+     *
+     * @return 当前 declare 的变量类型
+     */
+    public String getVarType() {
+        return varType;
+    }
+
+    /**
+     * 设置当前 declare 编译阶段变量类型
+     *
+     */
+    public void setVarType(String type) {
+        this.varType = type;
+    }
+
+    /**
+     * 清除当前 declare 编译阶段变量类型
+     *
+     */
+    public void clearVarType() {
+        this.varType = null;
     }
 }
