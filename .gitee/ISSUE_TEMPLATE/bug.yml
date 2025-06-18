@@ -69,8 +69,6 @@ body:
     attributes:
       label: 软件版本/分支
       options:
-        - v0.4.0
-        - v0.3.1
         - v0.3.0
         - main
         - dev
@@ -81,9 +79,9 @@ body:
   - type: input
     id: app_version_other
     attributes:
-      label: 其他分支
+      label: 其他版本/分支
       description: 如果上方选“其他”，请填写
-      placeholder: "请输入分支"
+      placeholder: "请输入版本号或分支"
     validations:
       required: false
 
