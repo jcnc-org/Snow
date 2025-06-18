@@ -1,0 +1,86 @@
+name: "Bug 报告"
+description: "提交代码中发现的缺陷报告"
+title: "[Bug] "
+labels:
+  - bug
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 问题概述
+        <!-- 清晰、简短地描述问题现象 & 出现场景 -->
+  - type: textarea
+    id: problem_summary
+    attributes:
+      label: 问题概述
+      description: 清晰、简短地描述问题现象 & 出现场景
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ## 重现步骤
+        1. 在项目中执行…
+        2. 输入…
+        3. 观察到…
+        > 如有多种触发场景，可分别列出
+  - type: textarea
+    id: reproduction_steps
+    attributes:
+      label: 重现步骤
+      description: 列出重现流程
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ## 期望结果
+        <!-- 描述理想情况下的行为或输出 -->
+  - type: textarea
+    id: expected_result
+    attributes:
+      label: 期望结果
+      description: 描述理想情况下的行为或输出
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ## 实际结果
+        <!-- 描述当前的行为或输出，与预期的差异 -->
+  - type: textarea
+    id: actual_result
+    attributes:
+      label: 实际结果
+      description: 描述当前的行为或输出，与预期的差异
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ## 环境信息
+        * 操作系统：
+        * 软件版本/分支：
+  - type: input
+    id: environment_info
+    attributes:
+      label: 环境信息
+      description: 填写操作系统、软件版本/分支等信息
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        ## 附加信息（可选）
+        * 错误日志
+        * 调试输出
+        * 屏幕截图或录屏
+        * 相关链接/配置文件
+  - type: textarea
+    id: additional_info
+    attributes:
+      label: 附加信息（可选）
+      description: 可提供错误日志、截图、链接等
+    validations:
+      required: false

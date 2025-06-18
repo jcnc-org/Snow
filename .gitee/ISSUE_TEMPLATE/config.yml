@@ -1,0 +1,5 @@
+blank_issues_enabled: false       # 禁用空白 Issue，强制选择模板
+contact_links:                    # 外部文档或反馈链接
+  - name: Snow 项目 Git 管理规范
+    url: https://gitee.com/jcnc-org/snow/blob/main/doc/Git-Management/Git-Management.md
+    about: 分支管理与提交规范
