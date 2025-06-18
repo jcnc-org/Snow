@@ -7,7 +7,7 @@
 
     <groupId>org.jcnc.snow</groupId>
     <artifactId>Snow</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.4.0</version>
 
     <properties>
         <maven.compiler.source>24</maven.compiler.source>
@@ -17,6 +17,13 @@
 
     <!-- 通用编译 & 打包插件 -->
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+
         <plugins>
             <!-- Java 编译插件 -->
             <plugin>
@@ -37,6 +44,7 @@
                         <manifest>
                             <mainClass>org.jcnc.snow.compiler.cli.SnowCLI</mainClass>
                             <addClasspath>true</addClasspath>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                     </archive>
                 </configuration>

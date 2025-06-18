@@ -49,7 +49,8 @@ public final class VersionCommand implements CLICommand {
      */
     @Override
     public int execute(String[] args) {
-        System.out.println("snow version " + SnowCLI.SNOW_VERSION);
+        System.out.println("snow version " + "\"" + SnowCLI.SNOW_VERSION + "\"");
+
         return 0;
     }
 }
