@@ -1101,6 +1101,7 @@ public class VMOpCode {
 
 
     // 3. Control Flow Operations (91–110)
+    // 3.1 JUMP (91-91)
     /**
      * JUMP Opcode: Represents an unconditional jump to a target instruction address.
      * <p>This opcode is implemented by the {@link JumpCommand} class, which defines its specific execution logic.</p>
@@ -1120,6 +1121,7 @@ public class VMOpCode {
      * </ul>
      */
     public static final int JUMP = 91;
+    // 3.2 int32 (92-97)
     /**
      * IC_E Opcode: Represents a conditional jump based on int32 equality.
      * <p>This opcode is implemented by the {@link ICECommand} class, which defines its specific execution logic.</p>
@@ -1246,6 +1248,133 @@ public class VMOpCode {
      * </ul>
      */
     public static final int IC_LE = 97;
+    // 3.3 long64 (98-103)
+    /**
+     * LC_E Opcode: Represents a conditional jump based on long64 equality.
+     * <p>This opcode is implemented by the {@link ICECommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two long64 values from the operand stack.</li>
+     *     <li>Compares the two long64s for equality.</li>
+     *     <li>If the long64s are equal, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the long64s are not equal, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on long64 comparison.</li>
+     *     <li>Implementing control flow structures such as if-statements and loops.</li>
+     * </ul>
+     */
+    public static final int LC_E = 98;
+    /**
+     * LC_NE Opcode: Represents a conditional jump based on long64 inequality.
+     * <p>This opcode is implemented by the {@link ICNECommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two long64 values from the operand stack.</li>
+     *     <li>Compares the two long64s for inequality.</li>
+     *     <li>If the long64s are not equal, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the long64s are equal, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on long64 comparison.</li>
+     *     <li>Implementing control flow structures such as conditional loops and if-else statements.</li>
+     * </ul>
+     */
+    public static final int LC_NE = 99;
+    /**
+     * LC_G Opcode: Represents a conditional jump based on long64 comparison (greater than).
+     * <p>This opcode is implemented by the {@link ICGCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two long64 values from the operand stack.</li>
+     *     <li>Compares the first long64 with the second to determine if it is greater.</li>
+     *     <li>If the first long64 is greater than the second, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the first long64 is not greater than the second, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on long64 comparison.</li>
+     *     <li>Implementing control flow structures such as greater-than conditions in loops and conditional statements.</li>
+     * </ul>
+     */
+    public static final int LC_G = 100;
+    /**
+     * LC_GE Opcode: Represents a conditional jump based on long64 comparison (greater than or equal to).
+     * <p>This opcode is implemented by the {@link ICGECommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two long64 values from the operand stack.</li>
+     *     <li>Compares the first long64 with the second to determine if it is greater than or equal to the second long64.</li>
+     *     <li>If the first long64 is greater than or equal to the second, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the first long64 is less than the second, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on long64 comparison.</li>
+     *     <li>Implementing control flow structures such as loops, conditional statements, and range checks.</li>
+     * </ul>
+     */
+    public static final int LC_GE = 101;
+    /**
+     * LC_L Opcode: Represents a conditional jump based on long64 comparison (less than).
+     * <p>This opcode is implemented by the {@link ICLCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two long64 values from the operand stack.</li>
+     *     <li>Compares the first long64 with the second to determine if it is less than the second long64.</li>
+     *     <li>If the first long64 is less than the second, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the first long64 is greater than or equal to the second, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on long64 comparison.</li>
+     *     <li>Implementing control flow structures such as loops, conditional statements, and range validations.</li>
+     * </ul>
+     */
+    public static final int LC_L = 102;
+    /**
+     * LC_LE Opcode: Represents a conditional jump based on long64 comparison (less than or equal).
+     * <p>This opcode is implemented by the {@link ICLECommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two long64 values from the operand stack.</li>
+     *     <li>Compares the first long64 with the second to determine if it is less than or equal to the second long64.</li>
+     *     <li>If the first long64 is less than or equal to the second, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the first long64 is greater than the second, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on long64 comparison.</li>
+     *     <li>Implementing control flow structures such as loops, conditional statements, and boundary checks.</li>
+     * </ul>
+     */
+    public static final int LC_LE = 103;
 
     // 4.  Stack Operations (111–150)
     // 4.1 PUSH (111-120)

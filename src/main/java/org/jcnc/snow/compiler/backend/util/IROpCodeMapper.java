@@ -82,12 +82,21 @@ public final class IROpCodeMapper {
         opcodeMap.put(IROpCode.NEG_D64, "D_NEG");
 
         // 比较运算映射
+        // 整形32位比较运算映射
         opcodeMap.put(IROpCode.CMP_EQ, "IC_E");   // 相等
         opcodeMap.put(IROpCode.CMP_NE, "IC_NE");   // 不等
         opcodeMap.put(IROpCode.CMP_LT, "IC_L");    // 小于
         opcodeMap.put(IROpCode.CMP_GT, "IC_G");    // 大于
         opcodeMap.put(IROpCode.CMP_LE, "IC_LE");   // 小于等于
         opcodeMap.put(IROpCode.CMP_GE, "IC_GE");   // 大于等于
+
+        // 整形64位比较运算映射
+        opcodeMap.put(IROpCode.CMP_LEQ, "LC_E");   // 相等
+        opcodeMap.put(IROpCode.CMP_LNE, "LC_NE");   // 不等
+        opcodeMap.put(IROpCode.CMP_LLT, "LC_L");    // 小于
+        opcodeMap.put(IROpCode.CMP_LGT, "LC_G");    // 大于
+        opcodeMap.put(IROpCode.CMP_LLE, "LC_LE");   // 小于等于
+        opcodeMap.put(IROpCode.CMP_LGE, "LC_GE");   // 大于等于
 
         // 加载与存储
         opcodeMap.put(IROpCode.LOAD, "I_LOAD");  // 加载

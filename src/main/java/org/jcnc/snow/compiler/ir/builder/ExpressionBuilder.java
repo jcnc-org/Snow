@@ -109,7 +109,7 @@ public record ExpressionBuilder(IRContext ctx) {
         switch (node) {
             // 数字字面量，直接加载到目标寄存器
             case NumberLiteralNode n ->
-                    InstructionFactory.loadConstInto(ctx, dest, ExpressionUtils.parseIntSafely(n.value()));
+                    InstructionFactory.loadConstInto(ctx, dest, ExpressionUtils.buildNumberConstant(ctx, n.value()));
             // 标识符，查找并move到目标寄存器
             case IdentifierNode id -> {
                 IRVirtualRegister src = ctx.getScope().lookup(id.name());
@@ -207,7 +207,7 @@ public record ExpressionBuilder(IRContext ctx) {
      * @return 存放该常量的寄存器
      */
     private IRVirtualRegister buildNumberLiteral(String value) {
-        IRConstant constant = ExpressionUtils.buildNumberConstant(value);
+        IRConstant constant = ExpressionUtils.buildNumberConstant(ctx, value);
         IRVirtualRegister reg = ctx.newRegister();
         ctx.addInstruction(new LoadConstInstruction(reg, constant));
         return reg;

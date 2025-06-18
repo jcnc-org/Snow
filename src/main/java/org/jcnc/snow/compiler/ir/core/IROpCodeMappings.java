@@ -40,11 +40,11 @@ public final class IROpCodeMappings {
     );
     // 比较操作符映射
     public static final Map<String, IROpCode> CMP = Map.of(
-            "==", IROpCode.CMP_EQ,
-            "!=", IROpCode.CMP_NE,
-            "<",  IROpCode.CMP_LT,
-            ">",  IROpCode.CMP_GT,
-            "<=", IROpCode.CMP_LE,
-            ">=", IROpCode.CMP_GE
+            "==", IROpCode.CMP_LEQ,
+            "!=", IROpCode.CMP_LNE,
+            "<",  IROpCode.CMP_LLT,
+            ">",  IROpCode.CMP_LGT,
+            "<=", IROpCode.CMP_LLE,
+            ">=", IROpCode.CMP_LGE
     );
 }

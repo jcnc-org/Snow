@@ -25,6 +25,13 @@ final class IRBuilderScope {
     private final Map<String, IRVirtualRegister> vars = new HashMap<>();
 
     /**
+     * 存储变量名到对应类型的映射。
+     * <br>
+     * 变量名为键，变量类型为值，用于变量类型提升。
+     */
+    private final Map<String, String> varTypes = new HashMap<>();
+
+    /**
      * 当前作用域所绑定的 IRFunction 对象，用于申请新的虚拟寄存器。
      */
     private IRFunction fn;
@@ -44,10 +51,12 @@ final class IRBuilderScope {
      * 调用绑定的 IRFunction.newRegister() 生成寄存器后保存到映射表中。
      *
      * @param name 变量名称，作为映射键使用
+     * @param type 变量类型
      */
-    void declare(String name) {
+    void declare(String name, String type) {
         IRVirtualRegister reg = fn.newRegister();
         vars.put(name, reg);
+        varTypes.put(name, type);
     }
 
     /**
@@ -55,10 +64,12 @@ final class IRBuilderScope {
      * 该方法可用于将外部或前一作用域的寄存器导入到本作用域。
      *
      * @param name 变量名称，作为映射键使用
+     * @param type 变量类型
      * @param reg  要绑定到该名称的 IRVirtualRegister 实例
      */
-    void declare(String name, IRVirtualRegister reg) {
+    void declare(String name, String type, IRVirtualRegister reg) {
         vars.put(name, reg);
+        varTypes.put(name, type);
     }
 
     /**
@@ -81,5 +92,16 @@ final class IRBuilderScope {
      */
     IRVirtualRegister lookup(String name) {
         return vars.get(name);
+    }
+
+    /**
+     * 根据变量名称在当前作用域中查找对应的类型。
+     *
+     * @param name 需要查询的变量名称
+     * @return 如果该名称已声明，则返回对应的类型
+     *         如果未声明，则返回 null
+     */
+    String lookupType(String name) {
+        return varTypes.get(name);
     }
 }
