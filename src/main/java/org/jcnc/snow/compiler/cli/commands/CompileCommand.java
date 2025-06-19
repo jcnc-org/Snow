@@ -26,45 +26,36 @@ import java.util.*;
 
 /**
  * <p>
- * 编译器命令实现：`snow compile`
- * <br>
+ * 编译器子命令：<code>snow compile</code><br>
  * 将一个或多个 .snow 源文件编译为 VM 字节码文件（.water）。
  * </p>
+ *
  * <ul>
- *     <li>支持选项：-o 指定输出基名（不含 .water 后缀）。</li>
- *     <li>支持选项：-d 递归目录编译（输出名自动取目录名）。</li>
- *     <li>支持 run 子命令：编译后立即运行。</li>
+ *   <li>-o 指定输出基名（去掉 .water 后缀）</li>
+ *   <li>-d 递归目录编译（输出名自动取目录名）</li>
+ *   <li>run 子命令：编译完成立即运行 VM</li>
  * </ul>
- * <p>
- * 用法：<br>
- * <code>snow compile [run] [-o &lt;name&gt;] [-d &lt;srcDir&gt;] [file1.snow file2.snow …]</code>
- * </p>
+ *
+ * <pre>用法：
+ * snow compile [run] [-o &lt;name&gt;] [-d &lt;srcDir&gt;] [file1.snow file2.snow …]
+ * </pre>
  */
 public final class CompileCommand implements CLICommand {
 
-    /**
-     * 获取命令名。
-     *
-     * @return "compile"
-     */
+    /* --------------------------------------------------------------------- */
+    /* CLICommand 接口实现                                                   */
+    /* --------------------------------------------------------------------- */
+
     @Override
     public String name() {
         return "compile";
     }
 
-    /**
-     * 获取命令描述。
-     *
-     * @return 命令简介
-     */
     @Override
     public String description() {
         return "Compile .snow source files into VM byte-code (.water).";
     }
 
-    /**
-     * 打印该命令的用法说明。
-     */
     @Override
     public void printUsage() {
         System.out.println("Usage:");
@@ -75,15 +66,13 @@ public final class CompileCommand implements CLICommand {
         System.out.println("  -d <srcDir>   recursively compile all .snow files in directory");
     }
 
-    /**
-     * 执行 compile 命令，编译 .snow 源文件。
-     *
-     * @param args 剩余参数（不含命令名）
-     * @return 0 表示成功，1 表示参数错误或编译失败
-     * @throws Exception 编译过程中可能抛出的异常
-     */
+    /* --------------------------------------------------------------------- */
+    /* 核心：执行 compile 子命令                                              */
+    /* --------------------------------------------------------------------- */
+
     @Override
     public int execute(String[] args) throws Exception {
+        /* ---------------- 解析命令行参数 ---------------- */
         boolean runAfterCompile = false;
         String outputName = null;
         Path dir = null;
@@ -92,28 +81,24 @@ public final class CompileCommand implements CLICommand {
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
             switch (arg) {
-                case "run":
-                    runAfterCompile = true;
-                    break;
-                case "-o":
-                    if (i + 1 < args.length) {
-                        outputName = args[++i];
-                    } else {
+                case "run" -> runAfterCompile = true;
+                case "-o" -> {
+                    if (i + 1 < args.length) outputName = args[++i];
+                    else {
                         System.err.println("Missing argument for -o");
                         printUsage();
                         return 1;
                     }
-                    break;
-                case "-d":
-                    if (i + 1 < args.length) {
-                        dir = Path.of(args[++i]);
-                    } else {
+                }
+                case "-d" -> {
+                    if (i + 1 < args.length) dir = Path.of(args[++i]);
+                    else {
                         System.err.println("Missing argument for -d");
                         printUsage();
                         return 1;
                     }
-                    break;
-                default:
+                }
+                default -> {
                     if (arg.endsWith(".snow")) {
                         sources.add(Path.of(arg));
                     } else {
@@ -121,10 +106,11 @@ public final class CompileCommand implements CLICommand {
                         printUsage();
                         return 1;
                     }
+                }
             }
         }
 
-        // 目录编译时收集所有 .snow 文件
+        /* --------- 如果指定了目录则递归收集所有 *.snow --------- */
         if (dir != null) {
             if (!Files.isDirectory(dir)) {
                 System.err.println("Not a directory: " + dir);
@@ -132,7 +118,7 @@ public final class CompileCommand implements CLICommand {
             }
             try (var stream = Files.walk(dir)) {
                 stream.filter(p -> p.toString().endsWith(".snow"))
-                        .sorted()
+                        .sorted()                       // 确保稳定顺序
                         .forEach(sources::add);
             }
         }
@@ -142,42 +128,64 @@ public final class CompileCommand implements CLICommand {
             return 1;
         }
 
-        // 多文件且未指定输出时错误
+        /* 多文件但未指定 -o 且非目录编译 —— 提示必须指定输出名 */
         if (sources.size() > 1 && outputName == null && dir == null) {
             System.err.println("Please specify output name using -o <name>");
             return 1;
         }
 
-        // 1. 词法和语法分析
+        /* ----------------------------------------------------------------- */
+        /* 1. 词法 + 语法分析；同时打印源代码                                */
+        /* ----------------------------------------------------------------- */
         List<Node> allAst = new ArrayList<>();
+
+        System.out.println("## 编译器输出");
+        System.out.println("### Snow 源代码");        // ========== 新增：二级标题 ==========
+
         for (Path p : sources) {
             if (!Files.exists(p)) {
                 System.err.println("File not found: " + p);
                 return 1;
             }
+
             String code = Files.readString(p, StandardCharsets.UTF_8);
+
+            // ------- 打印每个文件的源码 -------
+            System.out.println("#### " + p.getFileName());
+            System.out.println(code);
+            // --------------------------------------------------------
+
+            /* 词法 + 语法 */
             LexerEngine lexer = new LexerEngine(code, p.toString());
             ParserContext ctx = new ParserContext(lexer.getAllTokens(), p.toString());
             allAst.addAll(new ParserEngine(ctx).parse());
         }
 
-        // 2. 语义分析
+        /* ----------------------------------------------------------------- */
+        /* 2. 语义分析                                                       */
+        /* ----------------------------------------------------------------- */
         SemanticAnalyzerRunner.runSemanticAnalysis(allAst, false);
 
-        // 3. AST -> IR 并重排序入口
+        /* ----------------------------------------------------------------- */
+        /* 3. AST → IR，并把 main 函数调到首位                                */
+        /* ----------------------------------------------------------------- */
         IRProgram program = new IRProgramBuilder().buildProgram(allAst);
         program = reorderForEntry(program);
 
-        System.out.println("## 编译器输出");
+        /* ---------------- 打印 AST / IR ---------------- */
         System.out.println("### AST");
         ASTPrinter.printJson(allAst);
+
         System.out.println("### IR");
         System.out.println(program);
 
-        // 4. IR -> VM 指令
+        /* ----------------------------------------------------------------- */
+        /* 4. IR → VM 指令                                                   */
+        /* ----------------------------------------------------------------- */
         VMProgramBuilder builder = new VMProgramBuilder();
         List<InstructionGenerator<? extends IRInstruction>> generators =
                 InstructionGeneratorProvider.defaultGenerators();
+
         for (IRFunction fn : program.functions()) {
             Map<IRVirtualRegister, Integer> slotMap =
                     new RegisterAllocator().allocate(fn);
@@ -188,26 +196,36 @@ public final class CompileCommand implements CLICommand {
         System.out.println("### VM code");
         finalCode.forEach(System.out::println);
 
-        // 5. 写出 .water 文件
+        /* ----------------------------------------------------------------- */
+        /* 5. 写出 .water 文件                                               */
+        /* ----------------------------------------------------------------- */
         Path outputFile = deriveOutputPath(sources, outputName, dir);
         Files.write(outputFile, finalCode, StandardCharsets.UTF_8);
         System.out.println("Written to " + outputFile.toAbsolutePath());
 
-        // 6. 可选执行
+        /* ----------------------------------------------------------------- */
+        /* 6. 可选：立即运行 VM                                              */
+        /* ----------------------------------------------------------------- */
         if (runAfterCompile) {
             System.out.println("\n=== Launching VM ===");
             VMLauncher.main(new String[]{outputFile.toString()});
         }
+
         return 0;
     }
 
+    /* --------------------------------------------------------------------- */
+    /* 辅助方法                                                              */
+    /* --------------------------------------------------------------------- */
+
     /**
-     * 推断输出 .water 文件的路径。
-     *
-     * @param sources 源文件列表
-     * @param outName 用户指定的输出基名
-     * @param dir 目录编译时的源目录
-     * @return 输出文件的完整路径
+     * 根据输入情况推断 .water 输出文件名：
+     * <ul>
+     *   <li>若指定 -o，则直接使用</li>
+     *   <li>目录编译：取目录名</li>
+     *   <li>单文件编译：取文件名去掉 .snow</li>
+     *   <li>其他情况兜底为 "program"</li>
+     * </ul>
      */
     private static Path deriveOutputPath(List<Path> sources, String outName, Path dir) {
         String base;
@@ -216,7 +234,8 @@ public final class CompileCommand implements CLICommand {
         } else if (dir != null) {
             base = dir.getFileName().toString();
         } else if (sources.size() == 1) {
-            base = sources.getFirst().getFileName().toString().replaceFirst("\\.snow$", "");
+            base = sources.getFirst().getFileName().toString()
+                    .replaceFirst("\\.snow$", "");
         } else {
             base = "program";
         }
@@ -224,10 +243,7 @@ public final class CompileCommand implements CLICommand {
     }
 
     /**
-     * 保证 main 函数为程序入口。
-     *
-     * @param in 输入的 IR 程序
-     * @return 重新排序，使 main 函数位于首位的 IR 程序
+     * 把 main 函数交换到程序函数列表首位，确保 PC=0 即入口。
      */
     private static IRProgram reorderForEntry(IRProgram in) {
         List<IRFunction> ordered = new ArrayList<>(in.functions());
