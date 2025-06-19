@@ -32,7 +32,12 @@ public class SnowCLI {
     private static final Map<String, Supplier<CLICommand>> COMMANDS = Map.of(
             "compile", CompileCommand::new,
             "run", RunCommand::new,
-            "version", VersionCommand::new
+            "version", VersionCommand::new,
+            "init", org.jcnc.snow.cli.commands.InitCommand::new,
+            "build", org.jcnc.snow.cli.commands.BuildCommand::new,
+            "install", org.jcnc.snow.cli.commands.InstallCommand::new,
+            "publish", org.jcnc.snow.cli.commands.PublishCommand::new,
+            "clean", org.jcnc.snow.cli.commands.CleanCommand::new
     );
 
     /**

@@ -24,20 +24,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
+
 /**
+ * CLI 命令：将 .snow 源文件编译为 VM 字节码（.water 文件）。
  * <p>
- * 编译器子命令：<code>snow compile</code><br>
- * 将一个或多个 .snow 源文件编译为 VM 字节码文件（.water）。
+ * 支持递归目录、多文件编译，可选编译后立即运行。<br>
+ * 命令参数支持 run、-o、-d 等。
  * </p>
  *
- * <ul>
- *   <li>-o 指定输出基名（去掉 .water 后缀）</li>
- *   <li>-d 递归目录编译（输出名自动取目录名）</li>
- *   <li>run 子命令：编译完成立即运行 VM</li>
- * </ul>
- *
- * <pre>用法：
- * snow compile [run] [-o &lt;name&gt;] [-d &lt;srcDir&gt;] [file1.snow file2.snow …]
+ * <pre>
+ * 用法示例：
+ * $ snow compile [run] [-o &lt;name&gt;] [-d &lt;srcDir&gt;] [file1.snow file2.snow …]
  * </pre>
  */
 public final class CompileCommand implements CLICommand {

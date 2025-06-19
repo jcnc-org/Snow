@@ -4,18 +4,22 @@ import org.jcnc.snow.cli.CLICommand;
 import org.jcnc.snow.cli.SnowCLI;
 
 /**
+ * CLI 子命令：输出当前 Snow 工具的版本号。
  * <p>
- * 子命令实现：`snow version`
- * <br>
- * 用于打印当前 Snow 的版本号。
+ * 用于显示当前 CLI 工具版本，便于诊断、升级、兼容性确认等场景。
  * </p>
+ *
+ * <pre>
+ * 用法示例：
+ * $ snow version
+ * </pre>
  */
 public final class VersionCommand implements CLICommand {
 
     /**
-     * 获取命令名。
+     * 返回命令名，用于 CLI 调用。
      *
-     * @return "version"
+     * @return 命令名称字符串（"version"）
      */
     @Override
     public String name() {
@@ -23,9 +27,9 @@ public final class VersionCommand implements CLICommand {
     }
 
     /**
-     * 获取命令描述。
+     * 返回命令简介，用于 CLI 帮助或命令列表展示。
      *
-     * @return 命令简介
+     * @return 命令描述字符串
      */
     @Override
     public String description() {
@@ -49,8 +53,7 @@ public final class VersionCommand implements CLICommand {
      */
     @Override
     public int execute(String[] args) {
-        System.out.println("snow version " + "\"" + SnowCLI.SNOW_VERSION + "\"");
-
+        System.out.println("snow version \"" + SnowCLI.SNOW_VERSION + "\"");
         return 0;
     }
 }
