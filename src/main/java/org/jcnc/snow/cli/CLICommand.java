@@ -1,4 +1,4 @@
-package org.jcnc.snow.compiler.cli;
+package org.jcnc.snow.cli;
 
 /**
  * <p>

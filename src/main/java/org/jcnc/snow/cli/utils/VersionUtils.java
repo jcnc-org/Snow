@@ -1,4 +1,4 @@
-package org.jcnc.snow.compiler.cli.utils;
+package org.jcnc.snow.cli.utils;
 
 import java.io.IOException;
 import java.io.InputStream;

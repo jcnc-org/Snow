@@ -1,10 +1,10 @@
-package org.jcnc.snow.compiler.cli;
+package org.jcnc.snow.cli;
 
-import org.jcnc.snow.compiler.cli.commands.CompileCommand;
-import org.jcnc.snow.compiler.cli.commands.RunCommand;
-import org.jcnc.snow.compiler.cli.commands.VersionCommand;
-import org.jcnc.snow.compiler.cli.utils.CLIUtils;
-import org.jcnc.snow.compiler.cli.utils.VersionUtils;
+import org.jcnc.snow.cli.commands.CompileCommand;
+import org.jcnc.snow.cli.commands.RunCommand;
+import org.jcnc.snow.cli.commands.VersionCommand;
+import org.jcnc.snow.cli.utils.CLIUtils;
+import org.jcnc.snow.cli.utils.VersionUtils;
 
 import java.util.Arrays;
 import java.util.Map;

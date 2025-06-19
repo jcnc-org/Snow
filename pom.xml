@@ -44,7 +44,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.jcnc.snow.compiler.cli.SnowCLI</mainClass>
+                            <mainClass>org.jcnc.snow.cli.SnowCLI</mainClass>
                             <addClasspath>true</addClasspath>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>

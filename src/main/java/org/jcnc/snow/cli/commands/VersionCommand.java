@@ -1,7 +1,7 @@
-package org.jcnc.snow.compiler.cli.commands;
+package org.jcnc.snow.cli.commands;
 
-import org.jcnc.snow.compiler.cli.CLICommand;
-import org.jcnc.snow.compiler.cli.SnowCLI;
+import org.jcnc.snow.cli.CLICommand;
+import org.jcnc.snow.cli.SnowCLI;
 
 /**
  * <p>

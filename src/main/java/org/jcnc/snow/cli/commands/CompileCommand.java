@@ -1,11 +1,11 @@
-package org.jcnc.snow.compiler.cli.commands;
+package org.jcnc.snow.cli.commands;
 
 import org.jcnc.snow.compiler.backend.alloc.RegisterAllocator;
 import org.jcnc.snow.compiler.backend.builder.VMCodeGenerator;
 import org.jcnc.snow.compiler.backend.builder.VMProgramBuilder;
 import org.jcnc.snow.compiler.backend.core.InstructionGenerator;
 import org.jcnc.snow.compiler.backend.generator.InstructionGeneratorProvider;
-import org.jcnc.snow.compiler.cli.CLICommand;
+import org.jcnc.snow.cli.CLICommand;
 import org.jcnc.snow.compiler.ir.builder.IRProgramBuilder;
 import org.jcnc.snow.compiler.ir.core.IRFunction;
 import org.jcnc.snow.compiler.ir.core.IRInstruction;

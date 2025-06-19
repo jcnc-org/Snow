@@ -1,11 +1,11 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Version" type="Application" factoryName="Application">
-    <option name="MAIN_CLASS_NAME" value="org.jcnc.snow.compiler.cli.SnowCLI" />
+    <option name="MAIN_CLASS_NAME" value="org.jcnc.snow.cli.SnowCLI" />
     <module name="Snow" />
     <option name="PROGRAM_PARAMETERS" value="--version" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="org.jcnc.snow.compiler.cli.SnowCLI" />
+        <option name="PATTERN" value="org.jcnc.snow.cli.SnowCLI" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>
