@@ -46,6 +46,8 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
 
 [Git 管理规范](doc/Snow-Lang-Git-Management/Snow-Lang-Git-Management.md)
 
+[Snow-Lang GraalVM AOT 打包指南](doc/Snow-Lang-GraalVM-AOT-Native-Image-Package/Snow-Lang-GraalVM-AOT-Native-Image-Package.md)
+
 ## 功能特性
 
 * **模块化语法**：支持顶层的 `module:` 声明和 `import:` 导入语句,用于组织代码和依赖管理。
