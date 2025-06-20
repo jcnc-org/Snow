@@ -1,0 +1,45 @@
+package org.jcnc.snow.cli;
+
+/**
+ * 所有 CLI 子命令（如 compile、run 等）都必须实现的命令接口。
+ * <p>
+ * 实现类应为无状态（stateless）、线程安全（thread-safe）。
+ * 可通过 {@link java.util.ServiceLoader ServiceLoader} 自动发现，
+ * 或直接在 {@link SnowCLI} 中注册。
+ * </p>
+ */
+public interface CLICommand {
+
+    /**
+     * 获取命令的名称（如 "compile"、"run"）。
+     *
+     * @return 命令名字符串
+     */
+    String name();
+
+    /**
+     * 获取命令的一行简介（用于 help 列表）。
+     *
+     * @return 命令描述字符串
+     */
+    String description();
+
+    /**
+     * 打印命令的专用 usage 信息（可选实现）。
+     * <p>
+     * 可覆盖此方法自定义帮助信息，默认无操作。
+     * </p>
+     */
+    default void printUsage() {
+        // 默认实现为空，可由子类覆盖
+    }
+
+    /**
+     * 执行命令逻辑。
+     *
+     * @param args 传递给子命令的参数（不含命令名本身）
+     * @return 进程退出码（0 为成功，非 0 为错误）
+     * @throws Exception 可抛出任意异常，框架会统一捕获和输出
+     */
+    int execute(String[] args) throws Exception;
+}

@@ -37,3 +37,6 @@ target/
 /.idea/
 /Snow.tar
 /src/main/java/org/jcnc/snow/compiler/ir.tar
+
+### Snow 虚拟机指令 ###
+*.water

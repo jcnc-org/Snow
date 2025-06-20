@@ -44,6 +44,6 @@ public class VMLauncher {
      */
     public static void main(String[] args) {
         // Call the method that initializes and runs the VM in DEBUG mode
-        initializeAndRunVM(args, VMMode.DEBUG);
+        initializeAndRunVM(args, VMMode.RUN);
     }
 }
