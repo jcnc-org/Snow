@@ -36,7 +36,7 @@ Snow 语言是一个正在发展的编程语言,采用类模块（module）语�
 
 Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的语法和严格的类型系统,以帮助人工智能模型更好地理解程序结构。语言使用显式的 `module` 声明来组织代码,用 `function`,`parameter`,`return_type`,`body` 等关键字分隔不同代码块,语法结构固定且易读。此外,Snow 实现了语义分析来检查变量作用域和类型一致性,在编译阶段捕获错误并确保生成的中间代码正确无误。这种自上而下的编译流程,使得代码设计和生成更加模块化,可解释,也有利于调试和优化。
 
-相关背景: [心路历程](doc/Snow's-Journey/Snow's-Journey.md)
+相关背景: [心路历程](doc/Snow-Lang-Journey/Snow-Lang-Journey.md)
 
 ## 下载Snow发行版
 
@@ -44,7 +44,7 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
 
 ## 相关文档
 
-[Git 管理规范](doc/Git-Management/Git-Management.md)
+[Git 管理规范](doc/Snow-Lang-Git-Management/Snow-Lang-Git-Management.md)
 
 ## 功能特性
 
@@ -60,7 +60,7 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
 
 ## 开发计划
 
-[Snow 语言现状和下一阶段开发路线图-2025-06-11](doc/Snow's-current-language-situation-and-the-development-roadmap-for-the-next-stage/Snow's-current-language-situation-and-the-development-roadmap-for-the-next-stage.md)
+[Snow 语言现状和下一阶段开发路线图-2025-06-11](doc/Snow-Lang-Roadmap/Snow-Lang-Roadmap.md)
 
 ## 开发环境安装
 
