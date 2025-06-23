@@ -1,8 +1,6 @@
 package org.jcnc.snow.cli;
 
-import org.jcnc.snow.cli.commands.CompileCommand;
-import org.jcnc.snow.cli.commands.RunCommand;
-import org.jcnc.snow.cli.commands.VersionCommand;
+import org.jcnc.snow.cli.commands.*;
 import org.jcnc.snow.cli.utils.CLIUtils;
 import org.jcnc.snow.cli.utils.VersionUtils;
 
@@ -33,11 +31,11 @@ public class SnowCLI {
             "compile", CompileCommand::new,
             "run", RunCommand::new,
             "version", VersionCommand::new,
-            "init", org.jcnc.snow.cli.commands.InitCommand::new,
-            "build", org.jcnc.snow.cli.commands.BuildCommand::new,
-            "install", org.jcnc.snow.cli.commands.InstallCommand::new,
-            "publish", org.jcnc.snow.cli.commands.PublishCommand::new,
-            "clean", org.jcnc.snow.cli.commands.CleanCommand::new
+            "init", InitCommand::new,
+            "build", BuildCommand::new,
+            "install", InstallCommand::new,
+            "publish", PublishCommand::new,
+            "clean", CleanCommand::new
     );
 
     /**
