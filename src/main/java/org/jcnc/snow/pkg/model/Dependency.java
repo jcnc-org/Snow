@@ -5,7 +5,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 表示一个 Maven 风格的 group:artifact:version 依赖坐标。
+ * group:artifact:version 依赖坐标。
  * <p>
  * 支持通过占位符和属性映射进行动态变量替换，可用于构建工具或依赖管理场景。
  * </p>
