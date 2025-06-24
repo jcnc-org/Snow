@@ -6,12 +6,12 @@ package org.jcnc.snow.pkg.utils;
  * 用于项目脚手架生成或帮助用户快速上手 .snow 语言。
  * </p>
  */
-public final class SnowExampleTemplate {
+public final class SnowExample {
 
     /**
      * 工具类构造方法，禁止实例化。
      */
-    private SnowExampleTemplate() {
+    private SnowExample() {
         // 工具类不允许实例化
     }
 

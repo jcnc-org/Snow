@@ -1,7 +1,7 @@
 package org.jcnc.snow.pkg.tasks;
 
 import org.jcnc.snow.pkg.model.Project;
-import org.jcnc.snow.pkg.utils.SnowExampleTemplate;
+import org.jcnc.snow.pkg.utils.SnowExample;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -69,7 +69,7 @@ public final class GenerateTask implements Task {
         // 创建 src/main.snow 示例入口文件
         Path mainSnow = root.resolve("src").resolve("main.snow");
         if (Files.notExists(mainSnow)) {
-            Files.writeString(mainSnow, SnowExampleTemplate.getMainModule());
+            Files.writeString(mainSnow, SnowExample.getMainModule());
             System.out.println("[generate] created src/main.snow");
         }
 
