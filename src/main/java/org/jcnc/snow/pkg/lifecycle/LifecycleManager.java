@@ -6,9 +6,10 @@ import java.util.EnumMap;
 import java.util.Map;
 
 /**
- * 管理不同生命周期阶段与其对应任务的工具类。
+ * 生命周期任务管理器。<br>
+ * 用于管理不同生命周期阶段与其对应 {@link Task}，并支持顺序执行所有已注册任务。
  * <p>
- * 可为每个 {@link LifecyclePhase} 注册对应的 {@link Task}，并按阶段顺序执行所有任务。
+ * 可为每个 {@link LifecyclePhase} 注册对应的 {@link Task}，并在构建/部署流程中自动执行。
  * </p>
  *
  * <pre>
@@ -20,9 +21,7 @@ import java.util.Map;
  */
 public final class LifecycleManager {
 
-    /**
-     * 存储生命周期阶段与对应任务的映射关系。
-     */
+    /** 生命周期阶段与对应任务的映射关系 */
     private final Map<LifecyclePhase, Task> tasks = new EnumMap<>(LifecyclePhase.class);
 
     /**
@@ -45,11 +44,13 @@ public final class LifecycleManager {
 
     /**
      * 按 {@link LifecyclePhase} 声明顺序依次执行所有已注册任务。
-     * <p>
-     * 未注册任务的阶段将被跳过。任务执行前会打印阶段名。
-     * </p>
+     * <ul>
+     *   <li>未注册任务的阶段会被自动跳过</li>
+     *   <li>每个任务执行前会输出当前阶段名</li>
+     *   <li>执行中遇到异常将立即抛出并终止后续执行</li>
+     * </ul>
      *
-     * @throws Exception 若某个任务执行时抛出异常，将直接抛出并终止后续任务执行
+     * @throws Exception 若某个任务执行时抛出异常，将直接抛出
      */
     public void executeAll() throws Exception {
         for (LifecyclePhase phase : LifecyclePhase.values()) {

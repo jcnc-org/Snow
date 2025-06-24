@@ -6,16 +6,16 @@ import java.util.HashMap;
 /**
  * 构建配置对象，封装构建过程中的所有选项。
  * <p>
- * 支持基于模板变量（形如{@code @{key}}）的选项值替换。
+ * 支持模板变量（形如 <code>@{key}</code>）的值自动替换。
  * </p>
  */
 public final class BuildConfiguration {
 
-    /** 存储配置项的键值对 */
+    /** 存储所有配置项 */
     private final Map<String, String> options;
 
     /**
-     * 私有构造函数，用于初始化配置项。
+     * 私有构造函数，仅供工厂方法调用。
      *
      * @param options 配置项键值对
      */
@@ -24,14 +24,15 @@ public final class BuildConfiguration {
     }
 
     /**
-     * 基于原始配置项和变量属性创建配置对象。
-     * <p>
-     * 会将原始配置中的所有值中的{@code @{key}}模板，替换为属性props中对应的值。
-     * </p>
+     * 基于原始配置项和属性集创建配置对象。
+     * <ul>
+     *   <li>会将所有值中的 <code>@{key}</code> 模板变量，替换为 props 中对应的值</li>
+     *   <li>属性未匹配到时保留原模板</li>
+     * </ul>
      *
-     * @param flat  原始的配置项，值中可包含模板变量（如@{name}）
-     * @param props 用于替换模板变量的属性集
-     * @return 构建完成的配置对象
+     * @param flat  原始配置项，值中可包含模板变量
+     * @param props 变量替换用的属性集
+     * @return 处理后生成的配置对象
      */
     public static BuildConfiguration fromFlatMap(Map<String, String> flat, Map<String, String> props) {
         Map<String, String> resolved = new HashMap<>();
@@ -46,11 +47,11 @@ public final class BuildConfiguration {
     }
 
     /**
-     * 获取指定key对应的配置值。
+     * 获取指定配置项的值。
      *
      * @param key 配置项名称
-     * @param def 默认值（若未找到key则返回此值）
-     * @return 配置项对应值，若不存在则返回默认值
+     * @param def 默认值（未找到时返回）
+     * @return 配置项值，若不存在则返回默认值
      */
     public String get(String key, String def) {
         return options.getOrDefault(key, def);

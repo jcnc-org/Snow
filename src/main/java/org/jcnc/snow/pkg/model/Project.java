@@ -8,41 +8,40 @@ import java.util.Map;
 /**
  * 表示一个软件包/模块的项目信息，包括元数据、属性、仓库、依赖和构建配置等。
  * <p>
- * 本类为不可变对象，仅提供getter，无setter。
- * 支持通过 {@link #fromFlatMap(Map)} 静态工厂方法从扁平Map快速创建。
+ * 本类为不可变对象，仅提供 getter 方法，无 setter。<br>
+ * 支持通过 {@link #fromFlatMap(Map)} 静态工厂方法，从扁平 Map 快速创建实例。
  * </p>
  *
  * <pre>
- * Map&lt;String,String&gt; map = ...;
+ * Map&lt;String, String&gt; map = ...;
  * Project project = Project.fromFlatMap(map);
  * </pre>
  */
 public final class Project {
 
-    /** 组织/分组名（如com.example） */
+    /** 组织/分组名（如 com.example） */
     private final String group;
-    /** 构件/模块名（如app-core） */
+    /** 构件/模块名（如 app-core） */
     private final String artifact;
     /** 项目展示名称 */
     private final String name;
-    /** 版本号（如1.0.0） */
+    /** 版本号（如 1.0.0） */
     private final String version;
     /** 项目描述 */
     private final String description;
     /** 许可证标识 */
     private final String license;
-    /** 项目主页URL */
+    /** 项目主页 URL */
     private final String homepage;
 
     /** 额外属性（不影响主字段，可用于模板/占位符） */
     private final Map<String, String> properties;
-    /** 仓库列表（仓库ID -> 仓库对象） */
+    /** 仓库列表（仓库 ID -> 仓库对象） */
     private final Map<String, Repository> repositories;
     /** 依赖列表 */
     private final List<Dependency> dependencies;
     /** 构建配置 */
     private final BuildConfiguration build;
-
 
     /**
      * 构造函数（私有），请使用 {@link #fromFlatMap(Map)} 创建实例。
@@ -74,7 +73,7 @@ public final class Project {
     }
 
     /**
-     * 通过扁平Map创建 Project 实例。约定key格式如下：
+     * 通过扁平 Map 创建 Project 实例。key 格式约定如下：
      * <ul>
      *   <li>project.*      —— 项目元数据</li>
      *   <li>properties.*   —— 额外属性</li>
@@ -83,12 +82,11 @@ public final class Project {
      *   <li>build.*        —— 构建配置</li>
      * </ul>
      *
-     * @param map 扁平的配置map
+     * @param map 扁平的配置 map
      * @return Project 实例
      */
     public static Project fromFlatMap(Map<String, String> map) {
-
-        // 1. simple project metadata
+        // 1. 基本元数据
         String group = map.getOrDefault("project.group", "unknown");
         String artifact = map.getOrDefault("project.artifact", "unknown");
         String name = map.getOrDefault("project.name", artifact);
@@ -123,14 +121,13 @@ public final class Project {
             }
         });
 
-        // 5. build.* simply hand the subtree map
+        // 5. build.*
         Map<String, String> buildMap = new LinkedHashMap<>();
         map.forEach((k, v) -> {
             if (k.startsWith("build.")) {
                 buildMap.put(k.substring("build.".length()), v);
             }
         });
-
         BuildConfiguration buildCfg = BuildConfiguration.fromFlatMap(buildMap, props);
 
         return new Project(group, artifact, name, version, description, license, homepage, props, repos, deps, buildCfg);
@@ -161,12 +158,12 @@ public final class Project {
         return description;
     }
 
-    /** @return 许可证 */
+    /** @return 许可证标识 */
     public String getLicense() {
         return license;
     }
 
-    /** @return 项目主页URL */
+    /** @return 项目主页 URL */
     public String getHomepage() {
         return homepage;
     }
