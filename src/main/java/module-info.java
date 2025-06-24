@@ -1,4 +1,4 @@
-import org.jcnc.snow.cli.commands.CLICommand;
+import org.jcnc.snow.cli.api.CLICommand;
 
 module org.jcnc.snow.compiler {
     uses CLICommand;

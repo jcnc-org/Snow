@@ -1,4 +1,4 @@
-package org.jcnc.snow.cli.commands;
+package org.jcnc.snow.cli.api;
 
 import org.jcnc.snow.cli.SnowCLI;
 

@@ -1,5 +1,6 @@
 package org.jcnc.snow.cli;
 
+import org.jcnc.snow.cli.api.CLICommand;
 import org.jcnc.snow.cli.commands.*;
 import org.jcnc.snow.cli.utils.CLIUtils;
 import org.jcnc.snow.cli.utils.VersionUtils;

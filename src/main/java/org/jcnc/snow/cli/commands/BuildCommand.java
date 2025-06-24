@@ -1,5 +1,6 @@
 package org.jcnc.snow.cli.commands;
 
+import org.jcnc.snow.cli.api.CLICommand;
 import org.jcnc.snow.pkg.dsl.CloudDSLParser;
 import org.jcnc.snow.pkg.lifecycle.LifecycleManager;
 import org.jcnc.snow.pkg.lifecycle.LifecyclePhase;

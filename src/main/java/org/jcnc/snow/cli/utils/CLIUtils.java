@@ -1,6 +1,6 @@
 package org.jcnc.snow.cli.utils;
 
-import org.jcnc.snow.cli.commands.CLICommand;
+import org.jcnc.snow.cli.api.CLICommand;
 
 import java.util.List;
 import java.util.Map;

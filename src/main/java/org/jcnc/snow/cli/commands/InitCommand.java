@@ -1,5 +1,7 @@
 package org.jcnc.snow.cli.commands;
 
+import org.jcnc.snow.cli.api.CLICommand;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;

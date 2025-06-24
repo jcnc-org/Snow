@@ -1,6 +1,7 @@
 package org.jcnc.snow.cli.commands;
 
 import org.jcnc.snow.cli.SnowCLI;
+import org.jcnc.snow.cli.api.CLICommand;
 
 /**
  * CLI 子命令：输出当前 Snow 工具的版本号。
