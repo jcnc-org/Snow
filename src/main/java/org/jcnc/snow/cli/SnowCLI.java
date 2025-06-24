@@ -29,6 +29,7 @@ public class SnowCLI {
      * 值为返回相应 {@link CLICommand} 实例的 Supplier。
      */
     private static final Map<String, Supplier<CLICommand>> COMMANDS = Map.of(
+            "generate", GenerateCommand::new,
             "compile", CompileCommand::new,
             "run", RunCommand::new,
             "version", VersionCommand::new,
@@ -37,6 +38,7 @@ public class SnowCLI {
             "install", InstallCommand::new,
             "publish", PublishCommand::new,
             "clean", CleanCommand::new
+
     );
 
     /**
