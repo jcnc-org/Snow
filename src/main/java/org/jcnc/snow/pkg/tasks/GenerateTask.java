@@ -1,6 +1,7 @@
 package org.jcnc.snow.pkg.tasks;
 
 import org.jcnc.snow.pkg.model.Project;
+import org.jcnc.snow.pkg.utils.SnowExampleTemplate;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -50,39 +51,7 @@ public final class GenerateTask implements Task {
         /* -------- 创建示例入口文件 -------- */
         Path mainSnow = root.resolve("src").resolve("main.snow");
         if (Files.notExists(mainSnow)) {
-            Files.writeString(mainSnow, """
-                    module: Math
-                        function: main
-                            parameter:
-                            return_type: int
-                            body:
-                                Math.factorial(6)
-                                return 0
-                            end body
-                        end function
-                    
-                        function: factorial
-                            parameter:
-                                declare n:int
-                            return_type: int
-                            body:
-                                declare num1:int = 1
-                                loop:
-                                    initializer:
-                                        declare counter:int = 1
-                                    condition:
-                                        counter <= n
-                                    update:
-                                        counter = counter + 1
-                                    body:
-                                        num1 = num1 * counter
-                                    end body
-                                end loop
-                                return num1
-                            end body
-                        end function
-                    end module
-                    """);
+            Files.writeString(mainSnow, SnowExampleTemplate.getMainModule());
             System.out.println("[generate] created src/main.snow");
         }
 
