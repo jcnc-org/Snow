@@ -19,13 +19,14 @@ import java.util.regex.Pattern;
  *   <li>顶级区块（如 project、properties、repositories、dependencies、build）以 <code>sectionName &#123;</code> 开始，以 <code>&#125;</code> 结束</li>
  *   <li>区块内部只识别 <code>key = value</code> 赋值，行尾可有 <code># 注释</code></li>
  *   <li>build 区块支持嵌套，内部键通过 <code>.</code> 展平，例如 <code>compile.enabled = true</code></li>
+ *   <li><strong>新增：</strong>对 <code>"value"</code> 或 <code>'value'</code> 形式的字面量自动去引号，调用方得到的均是不含引号的裸字符串</li>
  * </ul>
  *
  * <pre>
  * 示例 .cloud 文件片段：
  * project {
  *   group = com.example
- *   artifact = demo
+ *   artifact = "demo-app"
  *   version = 1.0.0
  * }
  * </pre>
@@ -34,19 +35,25 @@ public final class CloudDSLParser {
 
     /** 匹配 sectionName { 的行 */
     private static final Pattern SECTION_HEADER = Pattern.compile("^(\\w+)\\s*\\{\\s*$");
-    /** 匹配 key = value 行，忽略行尾注释 */
-    private static final Pattern KEY_VALUE = Pattern.compile("^(\\w+)\\s*=\\s*([^#]+?)\\s*(?:#.*)?$");
+
+    /**
+     * 匹配 key = value 行，忽略行尾注释。
+     * 使用非贪婪匹配 <code>.*?</code>，确保 <code>value</code> 内部允许出现空格或 =。
+     */
+    private static final Pattern KEY_VALUE = Pattern.compile("^(\\w+)\\s*=\\s*(.*?)\\s*(?:#.*)?$");
+
     /** 匹配仅为 } 的行 */
     private static final Pattern BLOCK_END = Pattern.compile("^}\\s*$");
 
-    /** 私有构造方法，工具类禁止实例化 */
+    /** 工具类禁止实例化 */
     private CloudDSLParser() {}
 
     /**
      * 解析指定 .cloud 文件为 {@link Project} 对象。
      * <ul>
-     *   <li>遇到语法错误（括号不配对、无法识别的行）时会抛出异常</li>
+     *   <li>遇到语法错误（括号不配对、无法识别的行）时抛出异常</li>
      *   <li>支持嵌套区块和注释</li>
+     *   <li>对字面量自动去除成对单/双引号</li>
      * </ul>
      *
      * @param path .cloud 文件路径
@@ -92,6 +99,7 @@ public final class CloudDSLParser {
             if (kv.matches()) {
                 String key = kv.group(1).trim();
                 String value = kv.group(2).trim();
+                value = unquote(value);                    // 去除首尾成对引号
 
                 // 计算区块前缀
                 String prefix = String.join(".", (Iterable<String>) sectionStack::descendingIterator);
@@ -114,5 +122,18 @@ public final class CloudDSLParser {
 
         // 构建 Project 模型
         return Project.fromFlatMap(flatMap);
+    }
+
+    /**
+     * 如果字符串首尾包裹成对单引号或双引号，则去掉引号后返回；否则直接返回原字符串。
+     */
+    private static String unquote(String s) {
+        if (s == null || s.length() < 2) return s;
+        char first = s.charAt(0);
+        char last  = s.charAt(s.length() - 1);
+        if ((first == '"' && last == '"') || (first == '\'' && last == '\'')) {
+            return s.substring(1, s.length() - 1);
+        }
+        return s;
     }
 }
