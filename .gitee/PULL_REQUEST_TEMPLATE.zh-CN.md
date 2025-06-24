@@ -20,7 +20,7 @@ https://gitee.com/jcnc-org/snow/blob/main/doc/Git-Management/Git-Management.md
 感谢你的配合！🙏
 -->
 
-# 描述 (Description)
+## 描述 (Description)
 
 请简要描述本次变更的目的和内容。
 
