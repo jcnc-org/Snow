@@ -1,4 +1,6 @@
-package org.jcnc.snow.cli;
+package org.jcnc.snow.cli.commands;
+
+import org.jcnc.snow.cli.SnowCLI;
 
 /**
  * 所有 CLI 子命令（如 compile、run 等）都必须实现的命令接口。
