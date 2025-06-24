@@ -1,5 +1,7 @@
+import org.jcnc.snow.cli.api.CLICommand;
+
 module org.jcnc.snow.compiler {
-    uses org.jcnc.snow.cli.CLICommand;
+    uses CLICommand;
     requires java.desktop;
     requires java.logging;
     exports org.jcnc.snow.compiler.ir.core;

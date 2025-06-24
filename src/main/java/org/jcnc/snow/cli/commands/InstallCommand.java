@@ -1,6 +1,6 @@
 package org.jcnc.snow.cli.commands;
 
-import org.jcnc.snow.cli.CLICommand;
+import org.jcnc.snow.cli.api.CLICommand;
 import org.jcnc.snow.pkg.dsl.CloudDSLParser;
 import org.jcnc.snow.pkg.model.Project;
 import org.jcnc.snow.pkg.resolver.DependencyResolver;

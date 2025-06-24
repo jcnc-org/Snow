@@ -1,25 +1,26 @@
 package org.jcnc.snow.cli.commands;
 
-import org.jcnc.snow.cli.CLICommand;
-import org.jcnc.snow.vm.VMLauncher;
+import org.jcnc.snow.cli.api.CLICommand;
+import org.jcnc.snow.pkg.tasks.RunTask;
 
 /**
  * CLI 命令：运行已编译的 VM 字节码文件（.water）。
  * <p>
- * 用于执行 VM 程序文件。支持传递额外 VM 参数，实际运行由 {@link VMLauncher#main(String[])} 完成。
+ * 仅解析参数并委托给 {@link RunTask}，
+ * 将 VM 运行逻辑下沉至 pkg 层，保持 CLI 无状态、薄封装。
  * </p>
  *
  * <pre>
  * 用法示例：
- * $ snow run program.water [additional VM options]
+ * $ snow run main.water
  * </pre>
  */
 public final class RunCommand implements CLICommand {
 
     /**
-     * 返回命令名，用于 CLI 调用。
+     * 返回命令名称，用于 CLI 调用。
      *
-     * @return 命令名称字符串（"run"）
+     * @return 命令名称，如 "run"
      */
     @Override
     public String name() {
@@ -33,25 +34,15 @@ public final class RunCommand implements CLICommand {
      */
     @Override
     public String description() {
-        return "Execute compiled VM instructions.";
+        return "Run the compiled VM bytecode file (.water)";
     }
 
     /**
-     * 打印该命令的用法说明。
-     */
-    @Override
-    public void printUsage() {
-        System.out.println("""
-                Usage: snow run <program.water> [additional VM options]
-                """);
-    }
-
-    /**
-     * 执行 run 命令，运行指定的 VM 字节码文件。
+     * 执行运行任务。
      *
-     * @param args 剩余参数（不含命令名），第一个应为 .water 文件路径，其后为可选 VM 参数
-     * @return 0 表示执行成功，1 表示参数错误
-     * @throws Exception VM 启动或执行过程中可能抛出的异常
+     * @param args CLI 传入的参数数组
+     * @return 执行结果码（0 表示成功，非 0 表示失败）
+     * @throws Exception 执行过程中出现错误时抛出
      */
     @Override
     public int execute(String[] args) throws Exception {
@@ -59,7 +50,17 @@ public final class RunCommand implements CLICommand {
             printUsage();
             return 1;
         }
-        VMLauncher.main(args);
+        // 委托给 RunTask 执行字节码运行逻辑
+        new RunTask(args).run();
         return 0;
+    }
+
+    /**
+     * 打印命令用法信息。
+     */
+    @Override
+    public void printUsage() {
+        System.out.println("Usage:");
+        System.out.println("  snow run <program.water>");
     }
 }

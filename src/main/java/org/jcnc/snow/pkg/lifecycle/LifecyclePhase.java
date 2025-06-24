@@ -1,7 +1,10 @@
 package org.jcnc.snow.pkg.lifecycle;
 
 /**
- * 定义了典型软件包生命周期的各个阶段。
+ * 定义典型软件包生命周期的各个阶段枚举。
+ * <p>
+ * 用于区分构建、依赖、发布等不同阶段的任务调度与管理。
+ * </p>
  */
 public enum LifecyclePhase {
     /** 初始化阶段 */
