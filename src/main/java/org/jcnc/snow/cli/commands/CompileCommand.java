@@ -5,69 +5,88 @@ import org.jcnc.snow.pkg.dsl.CloudDSLParser;
 import org.jcnc.snow.pkg.model.Project;
 import org.jcnc.snow.pkg.tasks.CompileTask;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * CLI 命令：编译当前项目。
- * <p>
- * 负责读取项目描述文件并委托给 {@link CompileTask}，
- * 将 .snow 文件编译为 .water 字节码。
- * </p>
  *
- * <pre>
- * 用法示例：
- * $ snow compile -o main -d src/
- * $ snow compile run entry.snow
- * </pre>
+ * <p>工作模式说明：</p>
+ * <ul>
+ *   <li><strong>Cloud 模式</strong>
+ *       - 项目根目录存在 {@code project.cloud} 时触发；
+ *       - 解析 build 区块，自动推导源码目录与输出文件名；
+ *       - 用法：{@code snow compile [run]}</li>
+ *   <li><strong>Local 模式</strong>
+ *       - 未检测到 {@code project.cloud} 时回退；
+ *       - 保持向后兼容：{@code snow compile [run] [-o <name>] [-d <srcDir>] [file.snow …]}</li>
+ * </ul>
+ *
+ * <p>两种模式均将最终参数交由 {@link CompileTask} 处理。</p>
  */
 public final class CompileCommand implements CLICommand {
 
-    /**
-     * 返回命令名称，用于 CLI 调用。
-     *
-     * @return 命令名称，如 "compile"
-     */
     @Override
     public String name() {
         return "compile";
     }
 
-    /**
-     * 返回命令简介，用于 CLI 帮助或命令列表展示。
-     *
-     * @return 命令描述字符串
-     */
     @Override
     public String description() {
         return "Compile .snow source files into VM byte-code (.water).";
     }
 
-    /**
-     * 打印命令用法信息。
-     */
     @Override
     public void printUsage() {
         System.out.println("Usage:");
-        System.out.println("  snow compile [run] [-o <name>] [-d <srcDir>] [file1.snow file2.snow …]");
-        System.out.println("Options:");
-        System.out.println("  run           compile then run");
-        System.out.println("  -o <name>     specify output base name (without .water suffix)");
-        System.out.println("  -d <srcDir>   recursively compile all .snow files in directory");
+        System.out.println("  snow compile [run]                               (cloud mode, use project.cloud)");
+        System.out.println("  snow compile [run] [-o <name>] [-d <srcDir>] [file1.snow …]  (GOPATH mode)");
     }
 
-    /**
-     * 执行编译任务。
-     *
-     * @param args CLI 传入的参数数组
-     * @return 执行结果码（0 表示成功）
-     * @throws Exception 执行过程中出现错误时抛出
-     */
     @Override
     public int execute(String[] args) throws Exception {
-        // 解析云项目描述文件（默认为工作目录下的 project.cloud）
-        Project project = CloudDSLParser.parse(Paths.get("project.cloud"));
-        // 委托给 CompileTask 处理核心编译逻辑
-        new CompileTask(project, args).run();
+
+        Path dslFile = Paths.get("project.cloud");
+        Project project;
+        String[] compileArgs;
+
+        /* ---------- 1. Cloud 模式 ---------- */
+        if (Files.exists(dslFile)) {
+            project = CloudDSLParser.parse(dslFile);
+
+            List<String> argList = new ArrayList<>();
+
+            // 保留用户在 cloud 模式下传入的 “run” 标志
+            for (String a : args) {
+                if ("run".equals(a)) {
+                    argList.add("run");
+                }
+            }
+
+            /* 源码目录：build.srcDir -> 默认 src */
+            String srcDir = project.getBuild().get("srcDir", "src");
+            argList.add("-d");
+            argList.add(srcDir);
+
+            /* 输出名称：build.output -> fallback to artifact */
+            String output = project.getBuild().get("output", project.getArtifact());
+            argList.add("-o");
+            argList.add(output);
+
+            compileArgs = argList.toArray(new String[0]);
+        }
+        /* ---------- 2. Local 模式 ---------- */
+        else {
+            project = Project.fromFlatMap(Collections.emptyMap()); // 占位项目，保持接口统一
+            compileArgs = args;                                    // 透传原始 CLI 参数
+        }
+
+        // 委托给 CompileTask 完成实际编译/运行
+        new CompileTask(project, compileArgs).run();
         return 0;
     }
 }
