@@ -1,0 +1,13 @@
+function: main
+    return_type: int
+    body:
+        declare res: boolean = 8.1 == 7.1
+        if res then
+            return 131
+        else
+            return 666
+        end if
+
+        return 65537
+    end body
+end function
