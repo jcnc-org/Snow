@@ -47,8 +47,8 @@ import org.jcnc.snow.vm.module.LocalVariableStore;
  * <p>Each opcode represents a specific operation executed by the virtual machine.</p>
  */
 public class VMOpCode {
-    // 1   Arithmetic Operations (1–80)
-    // 1.1 int32 (1-10)
+    // region 1. Arithmetic Operations (1–80)
+    // region 1.1 int32 (1-10)
     /**
      * I_ADD Opcode: Represents the int32 addition operation in the virtual machine.
      * <p>This opcode is implemented by the {@link IAddCommand} class, which defines its specific execution logic.</p>
@@ -158,7 +158,9 @@ public class VMOpCode {
      * <p>This opcode is typically used to negate an int32 value, making it a fundamental operation for arithmetic logic within the virtual machine.</p>
      */
     public static final int I_NEG = 7;
-    // 1.2 long64 (11-20)
+
+    // endregion
+    // region 1.2 long64 (11-20)
     /**
      * L_ADD Opcode: Represents the long64 addition operation in the virtual machine.
      * <p>This opcode is implemented by the {@link LAddCommand} class, which defines its specific execution logic.</p>
@@ -275,7 +277,8 @@ public class VMOpCode {
      */
     public static final int L_NEG = 17;
 
-    // 1.3 short16 (21-30)
+    // endregion
+    // region 1.3 short16 (21-30)
     /**
      * S_ADD Opcode: Represents the short16 addition operation in the virtual machine.
      * <p>This opcode is implemented by the {@link SAddCommand} class, which defines its specific execution logic.</p>
@@ -392,7 +395,8 @@ public class VMOpCode {
      */
     public static final int S_NEG = 27;
 
-    // 1.4 byte8 (31-40)
+    // endregion
+    // region 1.4 byte8 (31-40)
     /**
      * B_ADD Opcode: Represents the byte8 addition operation in the virtual machine.
      * <p>This opcode is implemented by the {@link BAddCommand} class, which defines its specific execution logic.</p>
@@ -509,7 +513,8 @@ public class VMOpCode {
      */
     public static final int B_NEG = 37;
 
-    // 1.5 double64 (41-50)
+    // endregion
+    // region 1.5 double64 (41-50)
     /**
      * D_ADD Opcode: Represents the double64 precision floating-point addition operation in the virtual machine.
      * <p>This opcode is implemented by the {@link DAddCommand} class, which defines its specific execution logic.</p>
@@ -625,7 +630,8 @@ public class VMOpCode {
      */
     public static final int D_NEG = 47;
 
-    // 1.6 float32 (51-60)
+    // endregion
+    // region 1.6 float32 (51-60)
     /**
      * F_ADD Opcode: Represents the float32 addition operation in the virtual machine.
      * <p>This opcode is implemented by the {@link FAddCommand} class, which defines its specific execution logic.</p>
@@ -976,10 +982,10 @@ public class VMOpCode {
      */
     public static final int B2I = 76;
 
-
-
-    // 2.  Bitwise Operations (81–90)
-    // 2.1 int32 (81-85)
+    // endregion
+    // endregion
+    // region 2. Bitwise Operations (81–90)
+    // region 2.1 int32 (81-85)
     /**
      * I_AND Opcode: Represents the int32 bitwise AND operation in the virtual machine.
      * <p>This opcode is implemented by the {@link IAndCommand} class, which defines its specific execution logic.</p>
@@ -1039,7 +1045,8 @@ public class VMOpCode {
      */
     public static final int I_XOR = 83;
 
-    // 2.2 Long64 (86-90)
+    // endregion
+    // region 2.2 Long64 (86-90)
     /**
      * L_AND Opcode: Represents the long64 bitwise AND operation in the virtual machine.
      * <p>This opcode is implemented by the {@link LAndCommand} class, which defines its specific execution logic.</p>
@@ -1100,8 +1107,10 @@ public class VMOpCode {
     public static final int L_XOR = 88;
 
 
-    // 3. Control Flow Operations (91–110)
-    // 3.1 JUMP (91-91)
+    // endregion
+    // endregion
+    // region 3. Control Flow Operations (91–110)
+    // region 3.1 JUMP (91-91)
     /**
      * JUMP Opcode: Represents an unconditional jump to a target instruction address.
      * <p>This opcode is implemented by the {@link JumpCommand} class, which defines its specific execution logic.</p>
@@ -1121,7 +1130,9 @@ public class VMOpCode {
      * </ul>
      */
     public static final int JUMP = 91;
-    // 3.2 int32 (92-97)
+
+    // endregion
+    // region 3.2 int32 (92-97)
     /**
      * IC_E Opcode: Represents a conditional jump based on int32 equality.
      * <p>This opcode is implemented by the {@link ICECommand} class, which defines its specific execution logic.</p>
@@ -1248,7 +1259,9 @@ public class VMOpCode {
      * </ul>
      */
     public static final int IC_LE = 97;
-    // 3.3 long64 (98-103)
+
+    // endregion
+    // region 3.3 long64 (98-103)
     /**
      * LC_E Opcode: Represents a conditional jump based on long64 equality.
      * <p>This opcode is implemented by the {@link ICECommand} class, which defines its specific execution logic.</p>
@@ -1376,8 +1389,10 @@ public class VMOpCode {
      */
     public static final int LC_LE = 103;
 
-    // 4.  Stack Operations (111–150)
-    // 4.1 PUSH (111-120)
+    // endregion
+    // endregion
+    // region 4. Stack Operations (111–150)
+    // region 4.1 PUSH (111-120)
     /**
      * I_PUSH Opcode: Represents a stack operation that pushes an int32 value onto the operand stack.
      * <p>This opcode is implemented by the {@link IPushCommand} class, which defines its specific execution logic.</p>
@@ -1510,7 +1525,9 @@ public class VMOpCode {
      *     <li>Ensuring stack balance during function calls or control flow transitions.</li>
      * </ul>
      */
-    // 4.2 POP (121-125)
+
+    // endregion
+    // region 4.2 POP (121-125)
     public static final int POP = 121;
     /**
      * DUP Opcode: Represents a stack operation that duplicates the top element of the operand stack.
@@ -1530,7 +1547,8 @@ public class VMOpCode {
      *     <li>Managing stack balance when performing operations that require repeated access to the same data.</li>
      * </ul>
      */
-    // 4.3 DUP (126-130)
+    // endregion
+    // region 4.3 DUP (126-130)
     public static final int DUP = 126;
     /**
      * SWAP Opcode: Represents a stack operation that swaps the top two values of the operand stack.
@@ -1551,10 +1569,14 @@ public class VMOpCode {
      *     <li>Ensuring proper operand placement for later instructions that depend on the order of stack elements.</li>
      * </ul>
      */
-    // 4.4 SWAP (131-135)
+
+    // endregion
+    // region 4.4 SWAP (131-135)
     public static final int SWAP = 131;
 
-    // 5. Memory Operations (151–)
+    // endregion
+    // endregion
+    // region 5. Memory Operations (151–166)
     /**
      * I_STORE Opcode: Represents a store operation that saves an int32 value from the operand stack into the local variable store.
      *
@@ -1576,8 +1598,6 @@ public class VMOpCode {
      * </ul>
      */
     public static final int I_STORE = 151;
-
-
     /**
      * L_STORE Opcode: Represents a store operation that stores a long64 value from the operand stack into the local variable store.
      * <p>This opcode is implemented by the {@link LStoreCommand} class, which defines its specific execution logic.</p>
@@ -1598,8 +1618,6 @@ public class VMOpCode {
      * </ul>
      */
     public static final int L_STORE = 152;
-
-
     /**
      * S_STORE Opcode: Represents a store operation that stores a short16 value from the operand stack into the local variable store.
      * <p>This opcode is implemented by the {@link SStoreCommand} class, which defines its specific execution logic.</p>
@@ -1620,8 +1638,6 @@ public class VMOpCode {
      * </ul>
      */
     public static final int S_STORE = 153;
-
-
     /**
      * B_STORE Opcode: Represents a store operation that stores a byte8 value from the operand stack into the local variable store.
      * <p>This opcode is implemented by the {@link BStoreCommand} class, which defines its specific execution logic.</p>
@@ -1642,8 +1658,6 @@ public class VMOpCode {
      * </ul>
      */
     public static final int B_STORE = 154;
-
-
     /**
      * D_STORE Opcode: Represents a store operation that stores a double64 value from the operand stack into the local variable store.
      * <p>This opcode is implemented by the {@link DStoreCommand} class, which defines its specific execution logic.</p>
@@ -1664,7 +1678,6 @@ public class VMOpCode {
      * </ul>
      */
     public static final int D_STORE = 155;
-
     /**
      * F_STORE Opcode: Represents a store operation that stores a float32 value from the operand stack into the local variable store.
      * <p>This opcode is implemented by the {@link FStoreCommand} class, which defines its specific execution logic.</p>
@@ -1685,8 +1698,6 @@ public class VMOpCode {
      * </ul>
      */
     public static final int F_STORE = 156;
-
-
     /**
      * I_LOAD Opcode: Represents a load operation that retrieves an int32 value from the local variable store and pushes it onto the operand stack.
      * <p>This opcode is implemented by the {@link ILoadCommand} class, which defines its specific execution logic.</p>
@@ -1807,7 +1818,7 @@ public class VMOpCode {
      * </ul>
      */
     public static final int F_LOAD = 166;
-
+    // endregion
     /**
      * MOV Opcode: Represents a move operation that transfers a value from one local variable to another within the local variable store.
      * <p>This opcode is implemented by the {@link MovCommand} class, which defines its specific execution logic.</p>
@@ -1828,6 +1839,7 @@ public class VMOpCode {
      * </ul>
      */
     public static final int MOV = 171;
+    // region 6. function call
     /**
      * CALL Opcode: Represents a function or subroutine call operation that transfers control to a specified function address.
      * <p>This opcode is implemented by the {@link CallCommand} class, which defines its specific execution logic.</p>
@@ -1885,10 +1897,7 @@ public class VMOpCode {
      * </ul>
      */
     public static final int HALT = 255;
-
-
-    // VI. Function Operations (50–59)
-
+    // endregion
     /**
      * Default constructor for creating an instance of VMOpCode.
      * This constructor is empty as no specific initialization is required.
