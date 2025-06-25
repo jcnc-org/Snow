@@ -4,6 +4,7 @@ import org.jcnc.snow.compiler.ir.core.IROpCode;
 import org.jcnc.snow.compiler.ir.instruction.CallInstruction;
 import org.jcnc.snow.compiler.ir.instruction.LoadConstInstruction;
 import org.jcnc.snow.compiler.ir.instruction.UnaryOperationInstruction;
+import org.jcnc.snow.compiler.ir.utils.ComparisonUtils;
 import org.jcnc.snow.compiler.ir.value.IRConstant;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 import org.jcnc.snow.compiler.ir.utils.ExpressionUtils;
@@ -137,13 +138,18 @@ public record ExpressionBuilder(IRContext ctx) {
      */
     private IRVirtualRegister buildBinary(BinaryExpressionNode bin) {
         String op = bin.operator();
-        IRVirtualRegister left = build(bin.left());
+        IRVirtualRegister left  = build(bin.left());
         IRVirtualRegister right = build(bin.right());
-        // 处理比较操作符
-        if (ExpressionUtils.isComparisonOperator(op)) {
-            return InstructionFactory.binOp(ctx, ExpressionUtils.cmpOp(op), left, right);
+
+        // 1. 比较运算
+        if (ComparisonUtils.isComparisonOperator(op)) {
+            return InstructionFactory.binOp(
+                    ctx,
+                    ComparisonUtils.cmpOp(op, bin.left(), bin.right()),
+                    left, right);
         }
-        // 处理算术运算符
+
+        // 2. 其他算术 / 逻辑运算
         IROpCode code = ExpressionUtils.resolveOpCode(op, bin.left(), bin.right());
         if (code == null) throw new IllegalStateException("不支持的运算符: " + op);
         return InstructionFactory.binOp(ctx, code, left, right);
@@ -161,8 +167,12 @@ public record ExpressionBuilder(IRContext ctx) {
         IRVirtualRegister a = build(bin.left());
         IRVirtualRegister b = build(bin.right());
         String op = bin.operator();
-        if (ExpressionUtils.isComparisonOperator(op)) {
-            InstructionFactory.binOpInto(ctx, ExpressionUtils.cmpOp(op), a, b, dest);
+
+        if (ComparisonUtils.isComparisonOperator(op)) {
+            InstructionFactory.binOpInto(
+                    ctx,
+                    ComparisonUtils.cmpOp(op, bin.left(), bin.right()),
+                    a, b, dest);
         } else {
             IROpCode code = ExpressionUtils.resolveOpCode(op, bin.left(), bin.right());
             if (code == null) throw new IllegalStateException("不支持的运算符: " + op);
