@@ -1,7 +1,7 @@
 function: main
     return_type: int
     body:
-        declare res: boolean = 8b == 7b
+        declare res: boolean = 8L > 7L
         if res then
             return 131
         end if
