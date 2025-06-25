@@ -12,8 +12,8 @@ import org.jcnc.snow.vm.utils.LoggingUtils;
  *
  * <p>Specific behavior:</p>
  * <ul>
- *     <li>Pops two integers from the virtual machine stack.</li>
- *     <li>If the two integers are not equal, jumps to the target command.</li>
+ *     <li>Pops two long64 from the virtual machine stack.</li>
+ *     <li>If the two long64 are not equal, jumps to the target command.</li>
  *     <li>Otherwise, the program continues with the next command.</li>
  * </ul>
  */
