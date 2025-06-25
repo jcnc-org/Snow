@@ -10,12 +10,12 @@ import java.util.Map;
 public class IROpCodeUtils {
     private static final Map<IROpCode, IROpCode> INVERT = Map.ofEntries(
             // 32-bit
-            Map.entry(IROpCode.CMP_EQ, IROpCode.CMP_NE),
-            Map.entry(IROpCode.CMP_NE, IROpCode.CMP_EQ),
-            Map.entry(IROpCode.CMP_LT, IROpCode.CMP_GE),
-            Map.entry(IROpCode.CMP_GE, IROpCode.CMP_LT),
-            Map.entry(IROpCode.CMP_GT, IROpCode.CMP_LE),
-            Map.entry(IROpCode.CMP_LE, IROpCode.CMP_GT),
+            Map.entry(IROpCode.CMP_IEQ, IROpCode.CMP_INE),
+            Map.entry(IROpCode.CMP_INE, IROpCode.CMP_IEQ),
+            Map.entry(IROpCode.CMP_ILT, IROpCode.CMP_IGE),
+            Map.entry(IROpCode.CMP_IGE, IROpCode.CMP_ILT),
+            Map.entry(IROpCode.CMP_IGT, IROpCode.CMP_ILE),
+            Map.entry(IROpCode.CMP_ILE, IROpCode.CMP_IGT),
             // 64-bit
             Map.entry(IROpCode.CMP_LEQ, IROpCode.CMP_LNE),
             Map.entry(IROpCode.CMP_LNE, IROpCode.CMP_LEQ),

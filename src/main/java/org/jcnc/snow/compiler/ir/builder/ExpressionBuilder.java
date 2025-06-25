@@ -91,7 +91,7 @@ public record ExpressionBuilder(IRContext ctx) {
         //  !x  →  (x == 0)
         if (op.equals("!")) {
             IRVirtualRegister zero = InstructionFactory.loadConst(ctx, 0);
-            return InstructionFactory.binOp(ctx, IROpCode.CMP_EQ, val, zero);
+            return InstructionFactory.binOp(ctx, IROpCode.CMP_IEQ, val, zero);
         }
 
         throw new IllegalStateException("未知一元运算符: " + op);

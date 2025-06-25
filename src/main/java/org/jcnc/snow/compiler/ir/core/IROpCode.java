@@ -67,12 +67,12 @@ public enum IROpCode {
     NEG_D64,   // 64位浮点取负
 
     /* ───── 逻辑与比较运算指令（32位整数：int） ───── */
-    CMP_EQ,    // 32位相等比较：a == b
-    CMP_NE,    // 32位不等比较：a != b
-    CMP_LT,    // 32位小于比较：a < b
-    CMP_GT,    // 32位大于比较：a > b
-    CMP_LE,    // 32位小于等于：a <= b
-    CMP_GE,    // 32位大于等于：a >= b
+    CMP_IEQ,    // 32位相等比较：a == b
+    CMP_INE,    // 32位不等比较：a != b
+    CMP_ILT,    // 32位小于比较：a < b
+    CMP_IGT,    // 32位大于比较：a > b
+    CMP_ILE,    // 32位小于等于：a <= b
+    CMP_IGE,    // 32位大于等于：a >= b
 
     /* ───── 逻辑与比较运算指令（64位整数：long） ───── */
     CMP_LEQ,    // 64位相等比较：a == b

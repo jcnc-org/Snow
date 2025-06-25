@@ -223,7 +223,7 @@ public class StatementBuilder {
         } else {
             IRVirtualRegister condReg = expr.build(cond);
             IRVirtualRegister zero = InstructionFactory.loadConst(ctx, 0);
-            InstructionFactory.cmpJump(ctx, IROpCode.CMP_EQ, condReg, zero, falseLabel);
+            InstructionFactory.cmpJump(ctx, IROpCode.CMP_IEQ, condReg, zero, falseLabel);
         }
     }
 }

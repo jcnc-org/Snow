@@ -42,12 +42,12 @@ public final class IROpCodeMappings {
     /* ────── 比较运算符映射 ────── */
     /** 32-bit（int）比较 */
     public static final Map<String, IROpCode> CMP_I32 = Map.of(
-            "==", IROpCode.CMP_EQ,
-            "!=", IROpCode.CMP_NE,
-            "<",  IROpCode.CMP_LT,
-            ">",  IROpCode.CMP_GT,
-            "<=", IROpCode.CMP_LE,
-            ">=", IROpCode.CMP_GE
+            "==", IROpCode.CMP_IEQ,
+            "!=", IROpCode.CMP_INE,
+            "<",  IROpCode.CMP_ILT,
+            ">",  IROpCode.CMP_IGT,
+            "<=", IROpCode.CMP_ILE,
+            ">=", IROpCode.CMP_IGE
     );
 
     /** 64-bit（long）比较 */
