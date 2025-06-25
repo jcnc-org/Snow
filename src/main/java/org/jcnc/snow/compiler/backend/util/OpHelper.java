@@ -134,9 +134,7 @@ public final class OpHelper {
         OPCODE_MAP = Collections.unmodifiableMap(map);
 
         Map<Integer, String> revmap = new HashMap<>();  // reverse map
-        OPCODE_MAP.forEach((key, value) -> {
-            revmap.put(Integer.parseInt(value), key);
-        });
+        OPCODE_MAP.forEach((key, value) -> revmap.put(Integer.parseInt(value), key));
 
         OPCODE_NAME_MAP = Collections.unmodifiableMap(revmap);
     }
