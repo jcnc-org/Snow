@@ -160,7 +160,7 @@ public class CmpJumpGenerator implements InstructionGenerator<IRCompareJumpInstr
         // 3. 选择正确的比较指令前缀
         String cmpOp = IROpCodeMapper.toVMOp(ins.op());
         /*
-         * 修正指令前缀（如 int 类型要用 IC_*, long 类型要用 LC_*）
+         * 指令前缀（如 int 类型要用 IC_*, long 类型要用 LC_*）
          */
         if (tType == 'I' && cmpOp.startsWith("LC_")) {
             cmpOp = "IC_" + cmpOp.substring(3);
