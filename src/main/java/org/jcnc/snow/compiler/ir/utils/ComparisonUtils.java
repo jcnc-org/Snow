@@ -13,9 +13,12 @@ import java.util.Map;
  * 正确的 IR 比较指令，保证 int/long 均能正常运行。
  */
 public final class ComparisonUtils {
-    private ComparisonUtils() {}
+    private ComparisonUtils() {
+    }
 
-    /** 判断给定操作符是否为比较运算符 */
+    /**
+     * 判断给定操作符是否为比较运算符
+     */
     public static boolean isComparisonOperator(String op) {
         // 两张表 key 完全一致，只需检查一张
         return IROpCodeMappings.CMP_I32.containsKey(op);
@@ -31,16 +34,15 @@ public final class ComparisonUtils {
     public static IROpCode cmpOp(String op, ExpressionNode left, ExpressionNode right) {
         boolean useLong = isLongLiteral(left) || isLongLiteral(right);
         Map<String, IROpCode> table = useLong ? IROpCodeMappings.CMP_L64
-                                              : IROpCodeMappings.CMP_I32;
+                : IROpCodeMappings.CMP_I32;
         return table.get(op);
     }
 
     /* ------------ 内部工具 ------------ */
 
     private static boolean isLongLiteral(ExpressionNode node) {
-        if (node instanceof NumberLiteralNode n) {
-            String v = n.value();
-            return v.endsWith("L") || v.endsWith("l");
+        if (node instanceof NumberLiteralNode(String value)) {
+            return value.endsWith("L") || value.endsWith("l");
         }
         return false;                   // 变量暂不处理（后续可扩展符号表查询）
     }
