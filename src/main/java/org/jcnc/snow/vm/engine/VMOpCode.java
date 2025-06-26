@@ -47,8 +47,8 @@ import org.jcnc.snow.vm.module.LocalVariableStore;
  * <p>Each opcode represents a specific operation executed by the virtual machine.</p>
  */
 public class VMOpCode {
-    // region 1. Arithmetic Operations (1–80)
-    // region 1.1 int32 (1-10)
+    // region 1. Arithmetic Operations (1–100)
+    // region 1.1 int32 (0-9)
     /**
      * I_ADD Opcode: Represents the int32 addition operation in the virtual machine.
      * <p>This opcode is implemented by the {@link IAddCommand} class, which defines its specific execution logic.</p>
@@ -63,7 +63,7 @@ public class VMOpCode {
      * <p>This opcode is a fundamental arithmetic operation within the virtual machine's instruction set,
      * primarily used to handle basic int32 addition tasks.</p>
      */
-    public static final int I_ADD = 1;
+    public static final int I_ADD = 0;
     /**
      * I_SUB Opcode: Represents the int32 subtraction operation in the virtual machine.
      * <p>This opcode is implemented by the {@link ISubCommand} class, which defines its specific execution logic.</p>
@@ -78,7 +78,7 @@ public class VMOpCode {
      * <p>This opcode is a fundamental arithmetic operation within the virtual machine's instruction set,
      * primarily used to handle basic int32 subtraction tasks.</p>
      */
-    public static final int I_SUB = 2;
+    public static final int I_SUB = 1;
     /**
      * I_MUL Opcode: Represents the int32 multiplication operation in the virtual machine.
      * <p>This opcode is implemented by the {@link IMulCommand} class, which defines its specific execution logic.</p>
@@ -93,7 +93,7 @@ public class VMOpCode {
      * <p>This opcode is a fundamental arithmetic operation within the virtual machine's instruction set,
      * primarily used to handle basic int32 multiplication tasks.</p>
      */
-    public static final int I_MUL = 3;
+    public static final int I_MUL = 2;
     /**
      * I_DIV Opcode: Represents the int32 division operation in the virtual machine.
      * <p>This opcode is implemented by the {@link IDivCommand} class, which defines its specific execution logic.</p>
@@ -109,7 +109,7 @@ public class VMOpCode {
      * <p>This opcode is a fundamental arithmetic operation within the virtual machine's instruction set,
      * primarily used to handle basic int32 division tasks.</p>
      */
-    public static final int I_DIV = 4;
+    public static final int I_DIV = 3;
     /**
      * I_MOD Opcode: Represents the int32 modulus (remainder) operation in the virtual machine.
      * <p>This opcode is implemented by the {@link IModCommand} class, which defines its specific execution logic.</p>
@@ -125,7 +125,7 @@ public class VMOpCode {
      * <p>This opcode is a fundamental arithmetic operation within the virtual machine's instruction set,
      * primarily used to handle basic int32 modulus (remainder)  tasks.</p>
      */
-    public static final int I_MOD = 5;
+    public static final int I_MOD = 4;
     /**
      * I_INC Opcode: Represents the int32 increment operation for a local variable in the virtual machine.
      * <p>This opcode is implemented by the {@link IIncCommand} class, which defines its specific execution logic.</p>
@@ -142,8 +142,7 @@ public class VMOpCode {
      *
      * <p>This opcode is particularly useful for optimizing scenarios where a local variable, such as a counter or loop index, is frequently incremented.</p>
      */
-    public static final int I_INC = 6;
-
+    public static final int I_INC = 5;
     /**
      * I_NEG Opcode: Represents the int32 negation operation in the virtual machine.
      * <p>This opcode is implemented by the {@link INegCommand} class, which defines its specific execution logic.</p>
@@ -157,10 +156,10 @@ public class VMOpCode {
      *
      * <p>This opcode is typically used to negate an int32 value, making it a fundamental operation for arithmetic logic within the virtual machine.</p>
      */
-    public static final int I_NEG = 7;
-
+    public static final int I_NEG = 6;
     // endregion
-    // region 1.2 long64 (11-20)
+
+    // region 1.2 long64 (10-19)
     /**
      * L_ADD Opcode: Represents the long64 addition operation in the virtual machine.
      * <p>This opcode is implemented by the {@link LAddCommand} class, which defines its specific execution logic.</p>
@@ -175,8 +174,7 @@ public class VMOpCode {
      * <p>This opcode is a fundamental arithmetic operation within the virtual machine's instruction set,
      * primarily used to handle basic long64 addition tasks.</p>
      */
-    public static final int L_ADD = 11;
-
+    public static final int L_ADD = 10;
     /**
      * L_SUB Opcode: Represents the long64 subtraction operation in the virtual machine.
      * <p>This opcode is implemented by the {@link LSubCommand} class, which defines its specific execution logic.</p>
@@ -191,8 +189,7 @@ public class VMOpCode {
      * <p>This opcode is a fundamental arithmetic operation within the virtual machine's instruction set,
      * primarily used to handle basic long64 subtraction tasks.</p>
      */
-    public static final int L_SUB = 12;
-
+    public static final int L_SUB = 11;
     /**
      * L_MUL Opcode: Represents the long64 multiplication operation in the virtual machine.
      * <p>This opcode is implemented by the {@link LMulCommand} class, which defines its specific execution logic.</p>
@@ -207,8 +204,7 @@ public class VMOpCode {
      * <p>This opcode is a fundamental arithmetic operation within the virtual machine's instruction set,
      * primarily used to handle basic long64 multiplication tasks.</p>
      */
-    public static final int L_MUL = 13;
-
+    public static final int L_MUL = 12;
     /**
      * L_DIV Opcode: Represents the long64 division operation in the virtual machine.
      * <p>This opcode is implemented by the {@link LDivCommand} class, which defines its specific execution logic.</p>
@@ -224,8 +220,7 @@ public class VMOpCode {
      * <p>This opcode is a fundamental arithmetic operation within the virtual machine's instruction set,
      * primarily used to handle basic long64 division tasks.</p>
      */
-    public static final int L_DIV = 14;
-
+    public static final int L_DIV = 13;
     /**
      * L_MOD Opcode: Represents the long64 modulus (remainder) operation in the virtual machine.
      * <p>This opcode is implemented by the {@link LModCommand} class, which defines its specific execution logic.</p>
@@ -241,8 +236,7 @@ public class VMOpCode {
      * <p>This opcode is a fundamental arithmetic operation within the virtual machine's instruction set,
      * primarily used to handle basic long64 modulus (remainder) tasks.</p>
      */
-    public static final int L_MOD = 15;
-
+    public static final int L_MOD = 14;
     /**
      * L_INC Opcode: Represents the long64 increment operation for a local variable in the virtual machine.
      * <p>This opcode is implemented by the {@link LIncCommand} class, which defines its specific execution logic.</p>
@@ -259,9 +253,7 @@ public class VMOpCode {
      *
      * <p>This opcode is particularly useful for optimizing scenarios where a local `long64` variable, such as a counter or loop index, is frequently incremented.</p>
      */
-    public static final int L_INC = 16;
-
-
+    public static final int L_INC = 15;
     /**
      * L_NEG Opcode: Represents the long64 negation operation in the virtual machine.
      * <p>This opcode is implemented by the {@link LNegCommand} class, which defines its specific execution logic.</p>
@@ -275,10 +267,10 @@ public class VMOpCode {
      *
      * <p>This opcode is typically used to negate a long64 value, making it a fundamental operation for arithmetic logic within the virtual machine.</p>
      */
-    public static final int L_NEG = 17;
-
+    public static final int L_NEG = 16;
     // endregion
-    // region 1.3 short16 (21-30)
+
+    // region 1.3 short16 (20-29)
     /**
      * S_ADD Opcode: Represents the short16 addition operation in the virtual machine.
      * <p>This opcode is implemented by the {@link SAddCommand} class, which defines its specific execution logic.</p>
@@ -293,8 +285,7 @@ public class VMOpCode {
      * <p>This opcode is a fundamental arithmetic operation within the virtual machine's instruction set,
      * primarily used to handle basic short16 addition tasks.</p>
      */
-    public static final int S_ADD = 21;
-
+    public static final int S_ADD = 20;
     /**
      * S_SUB Opcode: Represents the short16 subtraction operation in the virtual machine.
      * <p>This opcode is implemented by the {@link SSubCommand} class, which defines its specific execution logic.</p>
@@ -309,8 +300,7 @@ public class VMOpCode {
      * <p>This opcode is a fundamental arithmetic operation within the virtual machine's instruction set,
      * primarily used to handle basic short16 subtraction tasks.</p>
      */
-    public static final int S_SUB = 22;
-
+    public static final int S_SUB = 21;
     /**
      * S_MUL Opcode: Represents the short16 multiplication operation in the virtual machine.
      * <p>This opcode is implemented by the {@link SMulCommand} class, which defines its specific execution logic.</p>
@@ -325,8 +315,7 @@ public class VMOpCode {
      * <p>This opcode is a fundamental arithmetic operation within the virtual machine's instruction set,
      * primarily used to handle basic short16 multiplication tasks.</p>
      */
-    public static final int S_MUL = 23;
-
+    public static final int S_MUL = 22;
     /**
      * S_DIV Opcode: Represents the short16 division operation in the virtual machine.
      * <p>This opcode is implemented by the {@link SDivCommand} class, which defines its specific execution logic.</p>
@@ -342,8 +331,7 @@ public class VMOpCode {
      * <p>This opcode is a fundamental arithmetic operation within the virtual machine's instruction set,
      * primarily used to handle basic short16 division tasks.</p>
      */
-    public static final int S_DIV = 24;
-
+    public static final int S_DIV = 23;
     /**
      * S_MOD Opcode: Represents the short16 modulus (remainder) operation in the virtual machine.
      * <p>This opcode is implemented by the {@link SModCommand} class, which defines its specific execution logic.</p>
@@ -359,8 +347,7 @@ public class VMOpCode {
      * <p>This opcode is a fundamental arithmetic operation within the virtual machine's instruction set,
      * primarily used to handle basic short16 modulus (remainder) tasks.</p>
      */
-    public static final int S_MOD = 25;
-
+    public static final int S_MOD = 24;
     /**
      * S_INC Opcode: Represents the short16 increment operation in the virtual machine.
      * <p>This opcode is implemented by the {@link SIncCommand} class, which defines its specific execution logic.</p>
@@ -378,8 +365,7 @@ public class VMOpCode {
      * <p>This opcode is useful for scenarios where a local variable needs to be incremented, such as counters within loops,
      * or for optimizing the modification of variables in tight loops.</p>
      */
-    public static final int S_INC = 26;
-
+    public static final int S_INC = 25;
     /**
      * S_NEG Opcode: Represents the short16 negation operation in the virtual machine.
      * <p>This opcode is implemented by the {@link SNegCommand} class, which defines its specific execution logic.</p>
@@ -393,9 +379,9 @@ public class VMOpCode {
      *
      * <p>This opcode is typically used to negate a short16 value, making it a fundamental operation for arithmetic logic within the virtual machine.</p>
      */
-    public static final int S_NEG = 27;
-
+    public static final int S_NEG = 26;
     // endregion
+
     // region 1.4 byte8 (31-40)
     /**
      * B_ADD Opcode: Represents the byte8 addition operation in the virtual machine.
@@ -412,7 +398,6 @@ public class VMOpCode {
      * primarily used to handle basic byte8 addition tasks.</p>
      */
     public static final int B_ADD = 31;
-
     /**
      * B_SUB Opcode: Represents the byte8 subtraction operation in the virtual machine.
      * <p>This opcode is implemented by the {@link BSubCommand} class, which defines its specific execution logic.</p>
@@ -428,7 +413,6 @@ public class VMOpCode {
      * primarily used to handle basic byte8 subtraction tasks.</p>
      */
     public static final int B_SUB = 32;
-
     /**
      * B_MUL Opcode: Represents the byte8 multiplication operation in the virtual machine.
      * <p>This opcode is implemented by the {@link BMulCommand} class, which defines its specific execution logic.</p>
@@ -444,7 +428,6 @@ public class VMOpCode {
      * primarily used to handle basic byte8 multiplication tasks.</p>
      */
     public static final int B_MUL = 33;
-
     /**
      * B_DIV Opcode: Represents the byte8 division operation in the virtual machine.
      * <p>This opcode is implemented by the {@link BDivCommand} class, which defines its specific execution logic.</p>
@@ -461,7 +444,6 @@ public class VMOpCode {
      * primarily used to handle basic byte8 division tasks.</p>
      */
     public static final int B_DIV = 34;
-
     /**
      * B_MOD Opcode: Represents the byte8 modulus (remainder) operation in the virtual machine.
      * <p>This opcode is implemented by the {@link BModCommand} class, which defines its specific execution logic.</p>
@@ -478,7 +460,6 @@ public class VMOpCode {
      * primarily used to handle basic byte8 modulus (remainder) tasks.</p>
      */
     public static final int B_MOD = 35;
-
     /**
      * B_INC Opcode: Represents the byte8 increment operation for a local variable in the virtual machine.
      * <p>This opcode is implemented by the {@link BIncCommand} class, which defines its specific execution logic.</p>
@@ -496,8 +477,6 @@ public class VMOpCode {
      * <p>This opcode is particularly useful for optimizing scenarios where a local `byte8` variable, such as a counter or loop index, is frequently incremented.</p>
      */
     public static final int B_INC = 36;
-
-
     /**
      * B_NEG Opcode: Represents the byte8 negation operation in the virtual machine.
      * <p>This opcode is implemented by the {@link BNegCommand} class, which defines its specific execution logic.</p>
@@ -512,8 +491,8 @@ public class VMOpCode {
      * <p>This opcode is typically used to negate a byte8 value, making it a fundamental operation for arithmetic logic within the virtual machine.</p>
      */
     public static final int B_NEG = 37;
-
     // endregion
+
     // region 1.5 double64 (41-50)
     /**
      * D_ADD Opcode: Represents the double64 precision floating-point addition operation in the virtual machine.
@@ -530,7 +509,6 @@ public class VMOpCode {
      * primarily used to handle basic double64 precision floating-point addition tasks.</p>
      */
     public static final int D_ADD = 41;
-
     /**
      * D_SUB Opcode: Represents the double64 precision floating-point subtraction operation in the virtual machine.
      * <p>This opcode is implemented by the {@link DSubCommand} class, which defines its specific execution logic.</p>
@@ -546,7 +524,6 @@ public class VMOpCode {
      * primarily used to handle basic double64 precision floating-point subtraction tasks.</p>
      */
     public static final int D_SUB = 42;
-
     /**
      * D_MUL Opcode: Represents the double64 precision floating-point multiplication operation in the virtual machine.
      * <p>This opcode is implemented by the {@link DMulCommand} class, which defines its specific execution logic.</p>
@@ -562,7 +539,6 @@ public class VMOpCode {
      * primarily used to handle basic double64 precision floating-point multiplication tasks.</p>
      */
     public static final int D_MUL = 43;
-
     /**
      * D_DIV Opcode: Represents the double64 precision floating-point division operation in the virtual machine.
      * <p>This opcode is implemented by the {@link DDivCommand} class, which defines its specific execution logic.</p>
@@ -579,7 +555,6 @@ public class VMOpCode {
      * primarily used to handle basic double64 precision floating-point division tasks.</p>
      */
     public static final int D_DIV = 44;
-
     /**
      * D_MOD Opcode: Represents the double64 precision floating-point modulus (remainder) operation in the virtual machine.
      * <p>This opcode is implemented by the {@link DModCommand} class, which defines its specific execution logic.</p>
@@ -596,7 +571,6 @@ public class VMOpCode {
      * primarily used to handle basic double64 precision floating-point modulus (remainder) tasks.</p>
      */
     public static final int D_MOD = 45;
-
     /**
      * D_INC Opcode: Represents the double64 increment operation for a local variable in the virtual machine.
      * <p>This opcode is implemented by the {@link DIncCommand} class, which defines its specific execution logic.</p>
@@ -614,7 +588,6 @@ public class VMOpCode {
      * <p>This opcode is particularly useful for optimizing scenarios where a local `double64` variable, such as a counter or loop index, is frequently incremented.</p>
      */
     public static final int D_INC = 46;
-
     /**
      * D_NEG Opcode: Represents the double64 precision floating-point negation operation in the virtual machine.
      * <p>This opcode is implemented by the {@link DNegCommand} class, which defines its specific execution logic.</p>
@@ -629,8 +602,8 @@ public class VMOpCode {
      * <p>This opcode is typically used to negate a double64 precision floating-point value, making it a fundamental operation for double64 precision arithmetic logic within the virtual machine.</p>
      */
     public static final int D_NEG = 47;
-
     // endregion
+
     // region 1.6 float32 (51-60)
     /**
      * F_ADD Opcode: Represents the float32 addition operation in the virtual machine.
@@ -726,7 +699,6 @@ public class VMOpCode {
      * <p>This opcode is particularly useful for optimizing scenarios where a local `float32` variable, such as a counter or loop index, is frequently incremented.</p>
      */
     public static final int F_INC = 56;
-
     /**
      * F_NEG Opcode: Represents the float32 negation operation in the virtual machine.
      * <p>This opcode is implemented by the {@link FNegCommand} class, which defines its specific execution logic.</p>
@@ -741,7 +713,10 @@ public class VMOpCode {
      * <p>This opcode is typically used to negate a float32 value, making it a fundamental operation for float32 arithmetic logic within the virtual machine.</p>
      */
     public static final int F_NEG = 57;
+    // endregion
+    // endregion
 
+    // region 2. Type Conversion Operation
     /**
      * I2L Opcode: Represents the type conversion operation from int32 to long64 in the virtual machine.
      * <p>This opcode is implemented by the {@link I2LCommand} class, which defines its specific execution logic.</p>
@@ -756,7 +731,6 @@ public class VMOpCode {
      * <p>This opcode is commonly used to widen an int32 value to a long64 type to accommodate larger numeric ranges.</p>
      */
     public static final int I2L = 61;
-
     /**
      * I2S Opcode: Represents the type conversion operation from int32 to short16 in the virtual machine.
      * <p>This opcode is implemented by the {@link I2SCommand} class, which defines its specific execution logic.</p>
@@ -771,7 +745,6 @@ public class VMOpCode {
      * <p>This opcode is typically used to narrow an int32 value to a short16 type when a smaller data representation is needed.</p>
      */
     public static final int I2S = 62;
-
     /**
      * I2B Opcode: Represents the type conversion operation from int32 to byte8 in the virtual machine.
      * <p>This opcode is implemented by the {@link I2BCommand} class, which defines its specific execution logic.</p>
@@ -786,7 +759,6 @@ public class VMOpCode {
      * <p>This opcode is used to narrow an int32 value to a byte8 type, suitable when a smaller numeric type is required.</p>
      */
     public static final int I2B = 63;
-
     /**
      * I2D Opcode: Represents the type conversion operation from int32 to double64 in the virtual machine.
      * <p>This opcode is implemented by the {@link I2DCommand} class, which defines its specific execution logic.</p>
@@ -801,7 +773,6 @@ public class VMOpCode {
      * <p>This opcode is used to widen an int32 value to a double64 type, providing high-precision floating-point calculations.</p>
      */
     public static final int I2D = 64;
-
     /**
      * I2F Opcode: Represents the type conversion operation from int32 to float32 in the virtual machine.
      * <p>This opcode is implemented by the {@link I2FCommand} class, which defines its specific execution logic.</p>
@@ -816,7 +787,6 @@ public class VMOpCode {
      * <p>This opcode is used to convert an int32 value to a float32 type when floating-point arithmetic is required.</p>
      */
     public static final int I2F = 65;
-
     /**
      * L2I Opcode: Represents the type conversion operation from long64 to int32 in the virtual machine.
      * <p>This opcode is implemented by the {@link L2ICommand} class, which defines its specific execution logic.</p>
@@ -831,7 +801,6 @@ public class VMOpCode {
      * <p>This opcode is typically used to narrow a long64 value to an int32 type for further integer operations.</p>
      */
     public static final int L2I = 66;
-
     /**
      * L2D Opcode: Represents the type conversion operation from long64 to double64 in the virtual machine.
      * <p>This opcode is implemented by the {@link L2DCommand} class, which defines its specific execution logic.</p>
@@ -981,9 +950,8 @@ public class VMOpCode {
      * <p>This opcode is used to widen a byte8 value to an int32 type to ensure compatibility with integer-based operations.</p>
      */
     public static final int B2I = 76;
+    // endregion
 
-    // endregion
-    // endregion
     // region 2. Bitwise Operations (81–90)
     // region 2.1 int32 (81-85)
     /**
@@ -1507,6 +1475,8 @@ public class VMOpCode {
      * </ul>
      */
     public static final int F_PUSH = 116;
+    // endregion
+    // region 4.2 POP (121-125)
     /**
      * I_POP Opcode: Represents a stack operation that removes the top element from the operand stack.
      * <p>This opcode is implemented by the {@link PopCommand} class, which defines its specific execution logic.</p>
@@ -1525,10 +1495,9 @@ public class VMOpCode {
      *     <li>Ensuring stack balance during function calls or control flow transitions.</li>
      * </ul>
      */
-
-    // endregion
-    // region 4.2 POP (121-125)
     public static final int POP = 121;
+    // endregion
+    // region 4.3 DUP (126-130)
     /**
      * DUP Opcode: Represents a stack operation that duplicates the top element of the operand stack.
      * <p>This opcode is implemented by the {@link DupCommand} class, which defines its specific execution logic.</p>
@@ -1547,9 +1516,11 @@ public class VMOpCode {
      *     <li>Managing stack balance when performing operations that require repeated access to the same data.</li>
      * </ul>
      */
-    // endregion
-    // region 4.3 DUP (126-130)
+
     public static final int DUP = 126;
+    // endregion
+
+    // region 4.4 SWAP (131-135)
     /**
      * SWAP Opcode: Represents a stack operation that swaps the top two values of the operand stack.
      * <p>This opcode is implemented by the {@link SwapCommand} class, which defines its specific execution logic.</p>
@@ -1569,12 +1540,9 @@ public class VMOpCode {
      *     <li>Ensuring proper operand placement for later instructions that depend on the order of stack elements.</li>
      * </ul>
      */
-
-    // endregion
-    // region 4.4 SWAP (131-135)
     public static final int SWAP = 131;
-
     // endregion
+
     // endregion
     // region 5. Memory Operations (151–166)
     /**
@@ -1818,7 +1786,7 @@ public class VMOpCode {
      * </ul>
      */
     public static final int F_LOAD = 166;
-    // endregion
+
     /**
      * MOV Opcode: Represents a move operation that transfers a value from one local variable to another within the local variable store.
      * <p>This opcode is implemented by the {@link MovCommand} class, which defines its specific execution logic.</p>
@@ -1839,7 +1807,8 @@ public class VMOpCode {
      * </ul>
      */
     public static final int MOV = 171;
-    // region 6. function call
+    // endregion
+    // region 6. Function Call
     /**
      * CALL Opcode: Represents a function or subroutine call operation that transfers control to a specified function address.
      * <p>This opcode is implemented by the {@link CallCommand} class, which defines its specific execution logic.</p>
@@ -1898,6 +1867,7 @@ public class VMOpCode {
      */
     public static final int HALT = 255;
     // endregion
+
     /**
      * Default constructor for creating an instance of VMOpCode.
      * This constructor is empty as no specific initialization is required.
