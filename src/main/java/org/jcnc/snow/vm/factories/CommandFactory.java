@@ -52,7 +52,7 @@ import java.util.Optional;
  * <p>This class uses an array for fast, constant-time access to corresponding command instances.</p>
  */
 public class CommandFactory {
-    private static final Command[] COMMANDS = new Command[1000]; // Adjust, according to your VMOpCode range
+    private static final Command[] COMMANDS = new Command[0x04FF];
 
     static {
         // Initialize the array with corresponding commands based on opCode values
@@ -146,19 +146,19 @@ public class CommandFactory {
         // 3.1 JUMP (91-91)
         COMMANDS[VMOpCode.JUMP] = new JumpCommand();       // 91
         // 3.2 int32 (92-97)
-        COMMANDS[VMOpCode.IC_E] = new ICECommand();        // 92
-        COMMANDS[VMOpCode.IC_NE] = new ICNECommand();      // 93
-        COMMANDS[VMOpCode.IC_G] = new ICGCommand();        // 94
-        COMMANDS[VMOpCode.IC_GE] = new ICGECommand();      // 95
-        COMMANDS[VMOpCode.IC_L] = new ICLCommand();        // 96
-        COMMANDS[VMOpCode.IC_LE] = new ICLECommand();      // 97
+        COMMANDS[VMOpCode.I_CE] = new ICECommand();        // 92
+        COMMANDS[VMOpCode.I_CNE] = new ICNECommand();      // 93
+        COMMANDS[VMOpCode.I_CG] = new ICGCommand();        // 94
+        COMMANDS[VMOpCode.I_CGE] = new ICGECommand();      // 95
+        COMMANDS[VMOpCode.I_CL] = new ICLCommand();        // 96
+        COMMANDS[VMOpCode.I_CLE] = new ICLECommand();      // 97
         // 3.3 long64 (98-103)
-        COMMANDS[VMOpCode.LC_E] = new LCECommand();        // 98
-        COMMANDS[VMOpCode.LC_NE] = new LCNECommand();      // 99
-        COMMANDS[VMOpCode.LC_G] = new LCGCommand();        // 100
-        COMMANDS[VMOpCode.LC_GE] = new LCGECommand();      // 101
-        COMMANDS[VMOpCode.LC_L] = new LCLCommand();        // 102
-        COMMANDS[VMOpCode.LC_LE] = new LCLECommand();      // 103
+        COMMANDS[VMOpCode.L_CE] = new LCECommand();        // 98
+        COMMANDS[VMOpCode.L_CNE] = new LCNECommand();      // 99
+        COMMANDS[VMOpCode.L_CG] = new LCGCommand();        // 100
+        COMMANDS[VMOpCode.L_CGE] = new LCGECommand();      // 101
+        COMMANDS[VMOpCode.L_CL] = new LCLCommand();        // 102
+        COMMANDS[VMOpCode.L_CLE] = new LCLECommand();      // 103
 
         // 4.  Stack Operations (111–150)
         // 4.1 PUSH (111-120)
