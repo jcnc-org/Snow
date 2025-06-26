@@ -1,4 +1,4 @@
-package org.jcnc.snow.compiler.backend.util;
+package org.jcnc.snow.compiler.backend.utils;
 
 import org.jcnc.snow.compiler.ir.core.IROpCode;
 
