@@ -158,11 +158,63 @@ public class VMOpCode {
      * <p>This opcode is particularly useful for optimizing scenarios where a local `byte8` variable, such as a counter or loop index, is frequently incremented.</p>
      */
     public static final int B_INC = 0x0006;
-
+    /**
+     * I_AND Opcode: Represents the byte8 bitwise AND operation in the virtual machine.
+     * <p>This opcode is implemented by the {@link IAndCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pops the top two byte8 values from the operand stack. These values are treated as 32-bit binary representations.</li>
+     *     <li>Performs the byte8 bitwise AND operation on the two popped operands. The operation compares corresponding bits of both operands:
+     *         <ul>
+     *             <li>Each bit in the result is set to <code>1</code> only if the corresponding bits in both operands are also <code>1</code>.</li>
+     *             <li>If either of the corresponding bits is <code>0</code>, the resulting bit is <code>0</code>.</li>
+     *         </ul>
+     *     </li>
+     *     <li>Pushes the result of the byte8 bitwise AND operation back onto the operand stack for further processing.</li>
+     * </ol>
+     *
+     * <p>This opcode is essential for low-level bit manipulation tasks.</p>
+     */
     public static final int B_AND = 0x0007;
+    /**
+     * I_OR Opcode: Represents the byte8 bitwise OR operation in the virtual machine.
+     * <p>This opcode is implemented by the {@link IOrCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pops the top two byte8 values from the operand stack. These values are treated as 32-bit binary representations.</li>
+     *     <li>Performs the byte8 bitwise OR operation on the two popped operands. The operation compares corresponding bits of both operands:
+     *         <ul>
+     *             <li>Each bit in the result is set to <code>1</code> if at least one of the corresponding bits in either operand is <code>1</code>.</li>
+     *             <li>If both corresponding bits are <code>0</code>, the resulting bit is <code>0</code>.</li>
+     *         </ul>
+     *     </li>
+     *     <li>Pushes the result of the byte8 bitwise OR operation back onto the operand stack for further processing.</li>
+     * </ol>
+     *
+     * <p>This opcode is essential for low-level bit manipulation tasks.</p>
+     */
     public static final int B_OR = 0x0008;
+    /**
+     * I_XOR Opcode: Represents the byte8 bitwise XOR operation in the virtual machine.
+     * <p>This opcode is implemented by the {@link IXorCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pops the top two byte8 values from the operand stack. These values are treated as 32-bit binary representations.</li>
+     *     <li>Performs the byte8 bitwise XOR (exclusive OR) operation on the two operands:
+     *         <ul>
+     *             <li>If the corresponding bits are different, the result is <code>1</code>.</li>
+     *             <li>If the corresponding bits are the same, the result is <code>0</code>.</li>
+     *         </ul>
+     *     </li>
+     *     <li>Pushes the result of the byte8 bitwise XOR operation back onto the operand stack for further processing.</li>
+     * </ol>
+     *
+     * <p>This opcode is essential for low-level bit manipulation tasks.</p>
+     */
     public static final int B_XOR = 0x0009;
-
     /**
      * B_PUSH Opcode: Represents a stack operation that pushes a byte8 value onto the operand stack.
      * <p>This opcode is implemented by the {@link BPushCommand} class, which defines its specific execution logic.</p>
@@ -222,12 +274,131 @@ public class VMOpCode {
      * </ul>
      */
     public static final int B_STORE = 0x000C;
-
+    /**
+     * I_CE Opcode: Represents a conditional jump based on byte8 equality.
+     * <p>This opcode is implemented by the {@link ICECommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two byte8 values from the operand stack.</li>
+     *     <li>Compares the two byte8 for equality.</li>
+     *     <li>If the byte8 are equal, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the byte8 are not equal, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on byte8 comparison.</li>
+     *     <li>Implementing control flow structures such as if-statements and loops.</li>
+     * </ul>
+     */
     public static final int B_CE = 0x000D;
+    /**
+     * I_CNE Opcode: Represents a conditional jump based on byte8 inequality.
+     * <p>This opcode is implemented by the {@link ICNECommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two byte8 values from the operand stack.</li>
+     *     <li>Compares the two byte8 for inequality.</li>
+     *     <li>If the byte8 are not equal, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the byte8 are equal, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on byte8 comparison.</li>
+     *     <li>Implementing control flow structures such as conditional loops and if-else statements.</li>
+     * </ul>
+     */
     public static final int B_CNE = 0x000E;
+    /**
+     * I_CG Opcode: Represents a conditional jump based on byte8 comparison (greater than).
+     * <p>This opcode is implemented by the {@link ICGCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two byte8 values from the operand stack.</li>
+     *     <li>Compares the first byte8 with the second to determine if it is greater.</li>
+     *     <li>If the first byte8 is greater than the second, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the first byte8 is not greater than the second, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on byte8 comparison.</li>
+     *     <li>Implementing control flow structures such as greater-than conditions in loops and conditional statements.</li>
+     * </ul>
+     */
     public static final int B_CG = 0x000F;
+    /**
+     * I_CGE Opcode: Represents a conditional jump based on byte8 comparison (greater than or equal to).
+     * <p>This opcode is implemented by the {@link ICGECommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two byte8 values from the operand stack.</li>
+     *     <li>Compares the first byte8 with the second to determine if it is greater than or equal to the second byte8.</li>
+     *     <li>If the first byte8 is greater than or equal to the second, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the first byte8 is less than the second, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on byte8 comparison.</li>
+     *     <li>Implementing control flow structures such as loops, conditional statements, and range checks.</li>
+     * </ul>
+     */
     public static final int B_CGE = 0x0010;
+    /**
+     * I_CL Opcode: Represents a conditional jump based on byte8 comparison (less than).
+     * <p>This opcode is implemented by the {@link ICLCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two byte8 values from the operand stack.</li>
+     *     <li>Compares the first byte8 with the second to determine if it is less than the second byte8.</li>
+     *     <li>If the first byte8 is less than the second, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the first byte8 is greater than or equal to the second, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on byte8 comparison.</li>
+     *     <li>Implementing control flow structures such as loops, conditional statements, and range validations.</li>
+     * </ul>
+     */
     public static final int B_CL = 0x0011;
+    /**
+     * B_CLE Opcode: Represents a conditional jump based on byte8 comparison (less than or equal).
+     * <p>This opcode is implemented by the {@link ICLECommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two byte8 values from the operand stack.</li>
+     *     <li>Compares the first byte8 with the second to determine if it is less than or equal to the second byte8.</li>
+     *     <li>If the first byte8 is less than or equal to the second, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the first byte8 is greater than the second, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on byte8 comparison.</li>
+     *     <li>Implementing control flow structures such as loops, conditional statements, and boundary checks.</li>
+     * </ul>
+     */
     public static final int B_CLE = 0x0012;
     // endregion
 
@@ -327,11 +498,63 @@ public class VMOpCode {
      * or for optimizing the modification of variables in tight loops.</p>
      */
     public static final int S_INC = 0x0026;
-
+    /**
+     * I_AND Opcode: Represents the short16 bitwise AND operation in the virtual machine.
+     * <p>This opcode is implemented by the {@link IAndCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pops the top two short16 values from the operand stack. These values are treated as 32-bit binary representations.</li>
+     *     <li>Performs the short16 bitwise AND operation on the two popped operands. The operation compares corresponding bits of both operands:
+     *         <ul>
+     *             <li>Each bit in the result is set to <code>1</code> only if the corresponding bits in both operands are also <code>1</code>.</li>
+     *             <li>If either of the corresponding bits is <code>0</code>, the resulting bit is <code>0</code>.</li>
+     *         </ul>
+     *     </li>
+     *     <li>Pushes the result of the short16 bitwise AND operation back onto the operand stack for further processing.</li>
+     * </ol>
+     *
+     * <p>This opcode is essential for low-level bit manipulation tasks.</p>
+     */
     public static final int S_AND = 0x0027;
+    /**
+     * I_OR Opcode: Represents the short16 bitwise OR operation in the virtual machine.
+     * <p>This opcode is implemented by the {@link IOrCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pops the top two short16 values from the operand stack. These values are treated as 32-bit binary representations.</li>
+     *     <li>Performs the short16 bitwise OR operation on the two popped operands. The operation compares corresponding bits of both operands:
+     *         <ul>
+     *             <li>Each bit in the result is set to <code>1</code> if at least one of the corresponding bits in either operand is <code>1</code>.</li>
+     *             <li>If both corresponding bits are <code>0</code>, the resulting bit is <code>0</code>.</li>
+     *         </ul>
+     *     </li>
+     *     <li>Pushes the result of the short16 bitwise OR operation back onto the operand stack for further processing.</li>
+     * </ol>
+     *
+     * <p>This opcode is essential for low-level bit manipulation tasks.</p>
+     */
     public static final int S_OR = 0x0028;
+    /**
+     * I_XOR Opcode: Represents the short16 bitwise XOR operation in the virtual machine.
+     * <p>This opcode is implemented by the {@link IXorCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pops the top two short16 values from the operand stack. These values are treated as 32-bit binary representations.</li>
+     *     <li>Performs the short16 bitwise XOR (exclusive OR) operation on the two operands:
+     *         <ul>
+     *             <li>If the corresponding bits are different, the result is <code>1</code>.</li>
+     *             <li>If the corresponding bits are the same, the result is <code>0</code>.</li>
+     *         </ul>
+     *     </li>
+     *     <li>Pushes the result of the short16 bitwise XOR operation back onto the operand stack for further processing.</li>
+     * </ol>
+     *
+     * <p>This opcode is essential for low-level bit manipulation tasks.</p>
+     */
     public static final int S_XOR = 0x0029;
-
     /**
      * S_PUSH Opcode: Represents a stack operation that pushes a short16 value onto the operand stack.
      * <p>This opcode is implemented by the {@link SPushCommand} class, which defines its specific execution logic.</p>
@@ -391,14 +614,132 @@ public class VMOpCode {
      * </ul>
      */
     public static final int S_STORE = 0x002C;
-
+    /**
+     * I_CE Opcode: Represents a conditional jump based on short16 equality.
+     * <p>This opcode is implemented by the {@link ICECommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two short16 values from the operand stack.</li>
+     *     <li>Compares the two short16 for equality.</li>
+     *     <li>If the short16 are equal, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the short16 are not equal, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on short16 comparison.</li>
+     *     <li>Implementing control flow structures such as if-statements and loops.</li>
+     * </ul>
+     */
     public static final int S_CE = 0x002D;
+    /**
+     * I_CNE Opcode: Represents a conditional jump based on short16 inequality.
+     * <p>This opcode is implemented by the {@link ICNECommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two short16 values from the operand stack.</li>
+     *     <li>Compares the two short16 for inequality.</li>
+     *     <li>If the short16 are not equal, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the short16 are equal, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on short16 comparison.</li>
+     *     <li>Implementing control flow structures such as conditional loops and if-else statements.</li>
+     * </ul>
+     */
     public static final int S_CNE = 0x002E;
+    /**
+     * I_CG Opcode: Represents a conditional jump based on short16 comparison (greater than).
+     * <p>This opcode is implemented by the {@link ICGCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two short16 values from the operand stack.</li>
+     *     <li>Compares the first short16 with the second to determine if it is greater.</li>
+     *     <li>If the first short16 is greater than the second, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the first short16 is not greater than the second, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on short16 comparison.</li>
+     *     <li>Implementing control flow structures such as greater-than conditions in loops and conditional statements.</li>
+     * </ul>
+     */
     public static final int S_CG = 0x002F;
+    /**
+     * I_CGE Opcode: Represents a conditional jump based on short16 comparison (greater than or equal to).
+     * <p>This opcode is implemented by the {@link ICGECommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two short16 values from the operand stack.</li>
+     *     <li>Compares the first short16 with the second to determine if it is greater than or equal to the second short16.</li>
+     *     <li>If the first short16 is greater than or equal to the second, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the first short16 is less than the second, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on short16 comparison.</li>
+     *     <li>Implementing control flow structures such as loops, conditional statements, and range checks.</li>
+     * </ul>
+     */
     public static final int S_CGE = 0x0030;
+    /**
+     * I_CL Opcode: Represents a conditional jump based on short16 comparison (less than).
+     * <p>This opcode is implemented by the {@link ICLCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two short16 values from the operand stack.</li>
+     *     <li>Compares the first short16 with the second to determine if it is less than the second short16.</li>
+     *     <li>If the first short16 is less than the second, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the first short16 is greater than or equal to the second, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on short16 comparison.</li>
+     *     <li>Implementing control flow structures such as loops, conditional statements, and range validations.</li>
+     * </ul>
+     */
     public static final int S_CL = 0x0031;
+    /**
+     * S_CLE Opcode: Represents a conditional jump based on short16 comparison (less than or equal).
+     * <p>This opcode is implemented by the {@link ICLECommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two short16 values from the operand stack.</li>
+     *     <li>Compares the first short16 with the second to determine if it is less than or equal to the second short16.</li>
+     *     <li>If the first short16 is less than or equal to the second, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the first short16 is greater than the second, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on short16 comparison.</li>
+     *     <li>Implementing control flow structures such as loops, conditional statements, and boundary checks.</li>
+     * </ul>
+     */
     public static final int S_CLE = 0x0032;
-
     // endregion
 
     // region Int32 (0x0040-0x005F)
@@ -763,7 +1104,7 @@ public class VMOpCode {
      * <p>Execution Steps:</p>
      * <ol>
      *     <li>Pops the top two long64 values from the operand stack (the first value popped is the second operand, and the second value popped is the first operand).</li>
-     *     <li>Performs the addition operation on these two long64s.</li>
+     *     <li>Performs the addition operation on these two long64.</li>
      *     <li>Pushes the result of the addition back onto the operand stack for later instructions to use.</li>
      * </ol>
      *
@@ -793,7 +1134,7 @@ public class VMOpCode {
      * <p>Execution Steps:</p>
      * <ol>
      *     <li>Pops the top two long64 values from the operand stack (the first value popped is the second operand, and the second value popped is the first operand).</li>
-     *     <li>Performs the multiplication operation on these two long64s (i.e., <code>firstOperand * secondOperand</code>).</li>
+     *     <li>Performs the multiplication operation on these two long64 (i.e., <code>firstOperand * secondOperand</code>).</li>
      *     <li>Pushes the result of the multiplication back onto the operand stack for later instructions to use.</li>
      * </ol>
      *
@@ -988,10 +1329,10 @@ public class VMOpCode {
      * <ol>
      *     <li>Parses the target instruction address from the instruction parameters.</li>
      *     <li>Pops two long64 values from the operand stack.</li>
-     *     <li>Compares the two long64s for equality.</li>
-     *     <li>If the long64s are equal, updates the program counter (PC) to the specified target address,
+     *     <li>Compares the two long64 for equality.</li>
+     *     <li>If the long64 are equal, updates the program counter (PC) to the specified target address,
      *         effectively jumping to the target instruction.</li>
-     *     <li>If the long64s are not equal, increments the program counter to proceed with the next sequential instruction.</li>
+     *     <li>If the long64 are not equal, increments the program counter to proceed with the next sequential instruction.</li>
      * </ol>
      *
      * <p>This opcode is commonly used for:</p>
@@ -1009,10 +1350,10 @@ public class VMOpCode {
      * <ol>
      *     <li>Parses the target instruction address from the instruction parameters.</li>
      *     <li>Pops two long64 values from the operand stack.</li>
-     *     <li>Compares the two long64s for inequality.</li>
-     *     <li>If the long64s are not equal, updates the program counter (PC) to the specified target address,
+     *     <li>Compares the two long64 for inequality.</li>
+     *     <li>If the long64 are not equal, updates the program counter (PC) to the specified target address,
      *         effectively jumping to the target instruction.</li>
-     *     <li>If the long64s are equal, increments the program counter to proceed with the next sequential instruction.</li>
+     *     <li>If the long64 are equal, increments the program counter to proceed with the next sequential instruction.</li>
      * </ol>
      *
      * <p>This opcode is commonly used for:</p>
@@ -1276,14 +1617,132 @@ public class VMOpCode {
      * </ul>
      */
     public static final int F_STORE = 0x0089;
-
+    /**
+     * L_CE Opcode: Represents a conditional jump based on float32 equality.
+     * <p>This opcode is implemented by the {@link LCECommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two float32 values from the operand stack.</li>
+     *     <li>Compares the two float32 for equality.</li>
+     *     <li>If the float32 are equal, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the float32 are not equal, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on float32 comparison.</li>
+     *     <li>Implementing control flow structures such as if-statements and loops.</li>
+     * </ul>
+     */
     public static final int F_CE = 0x008A;
+    /**
+     * L_CNE Opcode: Represents a conditional jump based on float32 inequality.
+     * <p>This opcode is implemented by the {@link LCNECommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two float32 values from the operand stack.</li>
+     *     <li>Compares the two float32 for inequality.</li>
+     *     <li>If the float32 are not equal, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the float32 are equal, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on float32 comparison.</li>
+     *     <li>Implementing control flow structures such as conditional loops and if-else statements.</li>
+     * </ul>
+     */
     public static final int F_CNE = 0x008B;
+    /**
+     * L_CG Opcode: Represents a conditional jump based on float32 comparison (greater than).
+     * <p>This opcode is implemented by the {@link LCGCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two float32 values from the operand stack.</li>
+     *     <li>Compares the first float32 with the second to determine if it is greater.</li>
+     *     <li>If the first float32 is greater than the second, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the first float32 is not greater than the second, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on float32 comparison.</li>
+     *     <li>Implementing control flow structures such as greater-than conditions in loops and conditional statements.</li>
+     * </ul>
+     */
     public static final int F_CG = 0x008C;
+    /**
+     * L_CGE Opcode: Represents a conditional jump based on float32 comparison (greater than or equal to).
+     * <p>This opcode is implemented by the {@link LCGECommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two float32 values from the operand stack.</li>
+     *     <li>Compares the first float32 with the second to determine if it is greater than or equal to the second float32.</li>
+     *     <li>If the first float32 is greater than or equal to the second, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the first float32 is less than the second, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on float32 comparison.</li>
+     *     <li>Implementing control flow structures such as loops, conditional statements, and range checks.</li>
+     * </ul>
+     */
     public static final int F_CGE = 0x008D;
+    /**
+     * L_CL Opcode: Represents a conditional jump based on float32 comparison (less than).
+     * <p>This opcode is implemented by the {@link LCLCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two float32 values from the operand stack.</li>
+     *     <li>Compares the first float32 with the second to determine if it is less than the second float32.</li>
+     *     <li>If the first float32 is less than the second, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the first float32 is greater than or equal to the second, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on float32 comparison.</li>
+     *     <li>Implementing control flow structures such as loops, conditional statements, and range validations.</li>
+     * </ul>
+     */
     public static final int F_CL = 0x008E;
+    /**
+     * L_CLE Opcode: Represents a conditional jump based on float32 comparison (less than or equal).
+     * <p>This opcode is implemented by the {@link LCLECommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two float32 values from the operand stack.</li>
+     *     <li>Compares the first float32 with the second to determine if it is less than or equal to the second float32.</li>
+     *     <li>If the first float32 is less than or equal to the second, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the first float32 is greater than the second, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on float32 comparison.</li>
+     *     <li>Implementing control flow structures such as loops, conditional statements, and boundary checks.</li>
+     * </ul>
+     */
     public static final int F_CLE = 0x008F;
-
     // endregion
 
     // region Double64 (0x00A0-0x00BF)
@@ -1454,12 +1913,131 @@ public class VMOpCode {
      * </ul>
      */
     public static final int D_STORE = 0x00A9;
-
+    /**
+     * L_CE Opcode: Represents a conditional jump based on double64 equality.
+     * <p>This opcode is implemented by the {@link LCECommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two double64 values from the operand stack.</li>
+     *     <li>Compares the two double64 for equality.</li>
+     *     <li>If the double64 are equal, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the double64 are not equal, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on double64 comparison.</li>
+     *     <li>Implementing control flow structures such as if-statements and loops.</li>
+     * </ul>
+     */
     public static final int D_CE = 0x00AA;
+    /**
+     * L_CNE Opcode: Represents a conditional jump based on double64 inequality.
+     * <p>This opcode is implemented by the {@link LCNECommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two double64 values from the operand stack.</li>
+     *     <li>Compares the two double64 for inequality.</li>
+     *     <li>If the double64 are not equal, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the double64 are equal, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on double64 comparison.</li>
+     *     <li>Implementing control flow structures such as conditional loops and if-else statements.</li>
+     * </ul>
+     */
     public static final int D_CNE = 0x00AB;
+    /**
+     * L_CG Opcode: Represents a conditional jump based on double64 comparison (greater than).
+     * <p>This opcode is implemented by the {@link LCGCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two double64 values from the operand stack.</li>
+     *     <li>Compares the first double64 with the second to determine if it is greater.</li>
+     *     <li>If the first double64 is greater than the second, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the first double64 is not greater than the second, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on double64 comparison.</li>
+     *     <li>Implementing control flow structures such as greater-than conditions in loops and conditional statements.</li>
+     * </ul>
+     */
     public static final int D_CG = 0x00AC;
+    /**
+     * L_CGE Opcode: Represents a conditional jump based on double64 comparison (greater than or equal to).
+     * <p>This opcode is implemented by the {@link LCGECommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two double64 values from the operand stack.</li>
+     *     <li>Compares the first double64 with the second to determine if it is greater than or equal to the second double64.</li>
+     *     <li>If the first double64 is greater than or equal to the second, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the first double64 is less than the second, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on double64 comparison.</li>
+     *     <li>Implementing control flow structures such as loops, conditional statements, and range checks.</li>
+     * </ul>
+     */
     public static final int D_CGE = 0x00AD;
+    /**
+     * L_CL Opcode: Represents a conditional jump based on double64 comparison (less than).
+     * <p>This opcode is implemented by the {@link LCLCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two double64 values from the operand stack.</li>
+     *     <li>Compares the first double64 with the second to determine if it is less than the second double64.</li>
+     *     <li>If the first double64 is less than the second, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the first double64 is greater than or equal to the second, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on double64 comparison.</li>
+     *     <li>Implementing control flow structures such as loops, conditional statements, and range validations.</li>
+     * </ul>
+     */
     public static final int D_CL = 0x00AE;
+    /**
+     * L_CLE Opcode: Represents a conditional jump based on double64 comparison (less than or equal).
+     * <p>This opcode is implemented by the {@link LCLECommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target instruction address from the instruction parameters.</li>
+     *     <li>Pops two double64 values from the operand stack.</li>
+     *     <li>Compares the first double64 with the second to determine if it is less than or equal to the second double64.</li>
+     *     <li>If the first double64 is less than or equal to the second, updates the program counter (PC) to the specified target address,
+     *         effectively jumping to the target instruction.</li>
+     *     <li>If the first double64 is greater than the second, increments the program counter to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching in virtual machine execution based on double64 comparison.</li>
+     *     <li>Implementing control flow structures such as loops, conditional statements, and boundary checks.</li>
+     * </ul>
+     */
     public static final int D_CLE = 0x00AF;
 
     // endregion
