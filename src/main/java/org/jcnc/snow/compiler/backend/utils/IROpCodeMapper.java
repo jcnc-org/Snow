@@ -1,4 +1,4 @@
-package org.jcnc.snow.compiler.backend.util;
+package org.jcnc.snow.compiler.backend.utils;
 
 import org.jcnc.snow.compiler.ir.core.IROpCode;
 
@@ -83,12 +83,12 @@ public final class IROpCodeMapper {
 
         // 比较运算映射
         // 整形32位比较运算映射
-        opcodeMap.put(IROpCode.CMP_EQ, "IC_E");   // 相等
-        opcodeMap.put(IROpCode.CMP_NE, "IC_NE");   // 不等
-        opcodeMap.put(IROpCode.CMP_LT, "IC_L");    // 小于
-        opcodeMap.put(IROpCode.CMP_GT, "IC_G");    // 大于
-        opcodeMap.put(IROpCode.CMP_LE, "IC_LE");   // 小于等于
-        opcodeMap.put(IROpCode.CMP_GE, "IC_GE");   // 大于等于
+        opcodeMap.put(IROpCode.CMP_IEQ, "IC_E");   // 相等
+        opcodeMap.put(IROpCode.CMP_INE, "IC_NE");   // 不等
+        opcodeMap.put(IROpCode.CMP_ILT, "IC_L");    // 小于
+        opcodeMap.put(IROpCode.CMP_IGT, "IC_G");    // 大于
+        opcodeMap.put(IROpCode.CMP_ILE, "IC_LE");   // 小于等于
+        opcodeMap.put(IROpCode.CMP_IGE, "IC_GE");   // 大于等于
 
         // 整形64位比较运算映射
         opcodeMap.put(IROpCode.CMP_LEQ, "LC_E");   // 相等

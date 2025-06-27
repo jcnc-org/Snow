@@ -46,11 +46,11 @@ public class SAddCommand implements Command {
     @Override
     public int execute(String[] parts, int currentPC, OperandStack operandStack, LocalVariableStore localVariableStore, CallStack callStack) {
         // Pop the top two operands from the stack
-        Short b = (Short) operandStack.pop();
-        Short a = (Short) operandStack.pop();
+        short b = (short) operandStack.pop();
+        short a = (short) operandStack.pop();
 
         // Perform the addition and push the result back onto the stack
-        operandStack.push(a + b);
+        operandStack.push((short)(a + b));
 
         // Return the updated program counter (next instruction)
         return currentPC + 1;

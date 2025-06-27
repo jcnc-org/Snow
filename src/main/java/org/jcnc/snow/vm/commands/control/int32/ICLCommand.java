@@ -12,8 +12,8 @@ import org.jcnc.snow.vm.module.OperandStack;
  *
  * <p>Specific behavior:</p>
  * <ul>
- *     <li>Pops two integers from the virtual machine stack.</li>
- *     <li>If the first integer is less than the second, jumps to the target command.</li>
+ *     <li>Pops two int32 from the virtual machine stack.</li>
+ *     <li>If the first int32 is less than the second, jumps to the target command.</li>
  *     <li>Otherwise, the program continues with the next command.</li>
  * </ul>
  */

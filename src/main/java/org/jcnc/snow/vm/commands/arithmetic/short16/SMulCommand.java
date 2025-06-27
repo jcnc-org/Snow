@@ -50,7 +50,7 @@ public class SMulCommand implements Command {
         short a = (short) operandStack.pop();
 
         // Perform the multiplication and push the result back onto the stack
-        operandStack.push(a * b);
+        operandStack.push((short)(a * b));
 
         // Return the updated program counter (next instruction)
         return currentPC + 1;

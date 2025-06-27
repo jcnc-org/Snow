@@ -56,7 +56,7 @@ public class BDivCommand implements Command {
         }
 
         // Perform the division and push the result back onto the stack
-        operandStack.push(a / b);
+        operandStack.push((byte)(a / b));
 
         // Return the updated program counter (next instruction)
         return currentPC + 1;
