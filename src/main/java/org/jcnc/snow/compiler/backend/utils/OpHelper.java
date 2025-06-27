@@ -22,6 +22,11 @@ public final class OpHelper {
      */
     private static final Map<String, String> OPCODE_MAP;
 
+    /**
+     * opcode 字符串 → 指令名 的静态映射表
+     */
+    private static final Map<Integer, String> OPCODE_NAME_MAP;
+
     static {
         Map<String, String> map = new HashMap<>();
         map.put("I_ADD", Integer.toString(VMOpCode.I_ADD));
@@ -127,6 +132,11 @@ public final class OpHelper {
         map.put("RET", Integer.toString(VMOpCode.RET));
         map.put("HALT", Integer.toString(VMOpCode.HALT));
         OPCODE_MAP = Collections.unmodifiableMap(map);
+
+        Map<Integer, String> revmap = new HashMap<>();  // reverse map
+        OPCODE_MAP.forEach((key, value) -> revmap.put(Integer.parseInt(value), key));
+
+        OPCODE_NAME_MAP = Collections.unmodifiableMap(revmap);
     }
 
     /**
@@ -168,6 +178,28 @@ public final class OpHelper {
         if (v instanceof Double) return "D";
         if (v instanceof Float) return "F";
         throw new IllegalStateException("Unknown const type: " + v.getClass());
+    }
+
+    /**
+     * 根据 opcode 数值的字符串形式获取指令名
+     * @param code 字符串形式的 opcode 数值
+     * @return opcode 对应的指令名
+     */
+    public static String opcodeName(String code) {
+        return opcodeName(Integer.parseInt(code));
+    }
+
+    /**
+     * 根据 opcode 获取指令名
+     * @param code opcode
+     * @return opcode 对应的指令名
+     */
+    public static String opcodeName(int code) {
+        String name = OPCODE_NAME_MAP.get(code);
+        if (name == null) {
+            throw new IllegalStateException("Unknown opcode: " + name);
+        }
+        return name;
     }
 
     // endregion
