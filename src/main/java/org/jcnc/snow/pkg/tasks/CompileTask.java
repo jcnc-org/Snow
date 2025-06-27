@@ -1,7 +1,7 @@
 package org.jcnc.snow.pkg.tasks;
 
 import org.jcnc.snow.cli.commands.CompileCommand;
-import org.jcnc.snow.compiler.backend.util.OpHelper;
+import org.jcnc.snow.compiler.backend.utils.OpHelper;
 import org.jcnc.snow.compiler.backend.alloc.RegisterAllocator;
 import org.jcnc.snow.compiler.backend.builder.VMCodeGenerator;
 import org.jcnc.snow.compiler.backend.builder.VMProgramBuilder;

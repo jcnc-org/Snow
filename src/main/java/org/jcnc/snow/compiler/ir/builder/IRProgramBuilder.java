@@ -76,6 +76,14 @@ public final class IRProgramBuilder {
      * @return 生成的 FunctionNode，用于后续 IRFunction 构建
      */
     private FunctionNode wrapTopLevel(StatementNode stmt) {
-        return new FunctionNode("_start", null, String.valueOf(List.of()), List.of(stmt));
+        return new FunctionNode(
+                "_start",
+                null,
+                String.valueOf(List.of()),
+                List.of(stmt),
+                -1,
+                -1,
+                ""
+        );
     }
 }

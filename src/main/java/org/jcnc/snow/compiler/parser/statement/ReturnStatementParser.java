@@ -35,6 +35,11 @@ public class ReturnStatementParser implements StatementParser {
      */
     @Override
     public ReturnNode parse(ParserContext ctx) {
+        // 获取当前 token 的行号、列号和文件名
+        int line = ctx.getTokens().peek().getLine();
+        int column = ctx.getTokens().peek().getCol();
+        String file = ctx.getSourceName();
+
         // 消耗 "return" 关键字
         ctx.getTokens().expect("return");
 
@@ -49,6 +54,6 @@ public class ReturnStatementParser implements StatementParser {
         ctx.getTokens().expectType(TokenType.NEWLINE);
 
         // 构建并返回 ReturnNode（可能为空表达式）
-        return new ReturnNode(expr);
+        return new ReturnNode(expr, line, column, file);
     }
 }

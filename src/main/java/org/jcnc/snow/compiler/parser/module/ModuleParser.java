@@ -40,6 +40,11 @@ public class ModuleParser implements TopLevelParser {
         // 获取当前上下文中提供的词法流
         TokenStream ts = ctx.getTokens();
 
+        // 获取当前 token 的行号、列号和文件名
+        int line = ctx.getTokens().peek().getLine();
+        int column = ctx.getTokens().peek().getCol();
+        String file = ctx.getSourceName();
+
         // 期望模块声明以关键字 "module:" 开始
         ts.expect("module");
         ts.expect(":");
@@ -90,6 +95,6 @@ public class ModuleParser implements TopLevelParser {
         ts.expect("module");
 
         // 构建并返回完整的模块语法树节点
-        return new ModuleNode(name, imports, functions);
+        return new ModuleNode(name, imports, functions, line, column, file);
     }
 }

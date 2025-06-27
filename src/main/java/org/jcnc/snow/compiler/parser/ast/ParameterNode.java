@@ -11,8 +11,17 @@ import org.jcnc.snow.compiler.parser.ast.base.Node;
  *
  * @param name 参数名称标识符
  * @param type 参数类型字符串（如 "int"、"string"）
+ * @param line     当前节点所在的行号
+ * @param column   当前节点所在的列号
+ * @param file     当前节点所在的文件
  */
-public record ParameterNode(String name, String type) implements Node {
+public record ParameterNode(
+        String name,
+        String type,
+        int line,
+        int column,
+        String file
+) implements Node {
 
     /**
      * 返回参数的字符串形式，格式为 {@code name:type}。

@@ -28,8 +28,13 @@ public class MemberParselet implements InfixParselet {
         TokenStream ts = ctx.getTokens();
         ts.expect("."); // 消费点号
 
+        // 获取当前 token 的行号、列号和文件名
+        int line = ctx.getTokens().peek().getLine();
+        int column = ctx.getTokens().peek().getCol();
+        String file = ctx.getSourceName();
+
         String member = ts.expectType(TokenType.IDENTIFIER).getLexeme();
-        return new MemberExpressionNode(left, member);
+        return new MemberExpressionNode(left, member, line, column, file);
     }
 
     /**

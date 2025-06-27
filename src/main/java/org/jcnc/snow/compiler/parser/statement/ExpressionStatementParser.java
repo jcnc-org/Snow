@@ -50,6 +50,11 @@ public class ExpressionStatementParser implements StatementParser {
             throw new IllegalStateException("Cannot parse expression starting with keyword: " + ts.peek().getLexeme());
         }
 
+        // 获取当前 token 的行号、列号和文件名
+        int line = ctx.getTokens().peek().getLine();
+        int column = ctx.getTokens().peek().getCol();
+        String file = ctx.getSourceName();
+
         // 处理赋值语句：格式为 identifier = expression
         if (ts.peek().getType() == TokenType.IDENTIFIER
                 && ts.peek(1).getLexeme().equals("=")) {
@@ -58,13 +63,13 @@ public class ExpressionStatementParser implements StatementParser {
             ts.expect("=");                         // 消耗等号
             ExpressionNode value = new PrattExpressionParser().parse(ctx); // 解析表达式
             ts.expectType(TokenType.NEWLINE);       // 语句必须以换行符结束
-            return new AssignmentNode(varName, value); // 返回赋值节点
+            return new AssignmentNode(varName, value, line, column, file); // 返回赋值节点
         }
 
         // 处理普通表达式语句，如函数调用、字面量、运算表达式等
         ExpressionNode expr = new PrattExpressionParser().parse(ctx);
         ts.expectType(TokenType.NEWLINE);           // 语句必须以换行符结束
-        return new ExpressionStatementNode(expr);   // 返回表达式语句节点
+        return new ExpressionStatementNode(expr, line, column, file);   // 返回表达式语句节点
     }
 
 }
