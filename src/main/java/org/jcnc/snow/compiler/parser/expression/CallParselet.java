@@ -26,13 +26,14 @@ public class CallParselet implements InfixParselet {
      */
     @Override
     public ExpressionNode parse(ParserContext ctx, ExpressionNode left) {
+        // 获取函数名 token 的行号、列号和文件名
+        int line = ctx.getTokens().peek(-1).getLine();
+        int column = ctx.getTokens().peek(-1).getCol();
+        String file = ctx.getSourceName();
+
         ctx.getTokens().next(); // 消费 "("
 
         List<ExpressionNode> args = new ArrayList<>();
-
-        // 获取当前 token 的行号和列号
-        int line = ctx.getTokens().peek().getLine();
-        int column = ctx.getTokens().peek().getCol();
 
         // 解析函数调用参数
         if (!ctx.getTokens().peek().getLexeme().equals(")")) {
@@ -43,8 +44,7 @@ public class CallParselet implements InfixParselet {
 
         ctx.getTokens().expect(")"); // 消费并验证 ")"
 
-        // 创建 CallExpressionNode 并传递位置信息,文件名称
-        String file = ctx.getSourceName();
+        // 创建 CallExpressionNode 并传递位置信息
         return new CallExpressionNode(left, args, line, column, file);
     }
 

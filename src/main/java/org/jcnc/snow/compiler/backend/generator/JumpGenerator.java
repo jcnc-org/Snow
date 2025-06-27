@@ -1,6 +1,6 @@
 package org.jcnc.snow.compiler.backend.generator;
 
-import org.jcnc.snow.compiler.backend.util.OpHelper;
+import org.jcnc.snow.compiler.backend.utils.OpHelper;
 import org.jcnc.snow.compiler.backend.builder.VMProgramBuilder;
 import org.jcnc.snow.compiler.backend.core.InstructionGenerator;
 import org.jcnc.snow.compiler.ir.instruction.IRJumpInstruction;

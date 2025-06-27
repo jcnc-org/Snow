@@ -17,7 +17,17 @@ import java.util.List;
  * @param parameters 参数列表，每项为 {@link ParameterNode} 表示一个形参定义
  * @param returnType 函数的返回类型（如 "int"、"void" 等）
  * @param body       函数体语句块，由一组 {@link StatementNode} 构成
+ * @param line     当前节点所在的行号
+ * @param column   当前节点所在的列号
+ * @param file     当前节点所在的文件
  */
-public record FunctionNode(String name, List<ParameterNode> parameters, String returnType,
-                           List<StatementNode> body) implements Node {
+public record FunctionNode(
+        String name,
+        List<ParameterNode> parameters,
+        String returnType,
+        List<StatementNode> body,
+        int line,
+        int column,
+        String file
+) implements Node {
 }

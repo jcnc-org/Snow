@@ -13,8 +13,18 @@ import java.util.StringJoiner;
  * @param name      模块名称。
  * @param imports   模块导入列表，每个导入是一个 {@link ImportNode}。
  * @param functions 模块中的函数列表，每个函数是一个 {@link FunctionNode}。
+ * @param line     当前节点所在的行号
+ * @param column   当前节点所在的列号
+ * @param file     当前节点所在的文件
  */
-public record ModuleNode(String name, List<ImportNode> imports, List<FunctionNode> functions) implements Node {
+public record ModuleNode(
+        String name,
+        List<ImportNode> imports,
+        List<FunctionNode> functions,
+        int line,
+        int column,
+        String file
+) implements Node {
 
     /**
      * 返回模块节点的字符串表示形式，包含模块名、导入模块列表和函数列表。

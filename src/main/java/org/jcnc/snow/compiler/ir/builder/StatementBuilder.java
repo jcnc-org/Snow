@@ -66,12 +66,12 @@ public class StatementBuilder {
             buildIf(ifNode);
             return;
         }
-        if (stmt instanceof ExpressionStatementNode(ExpressionNode exp)) {
+        if (stmt instanceof ExpressionStatementNode(ExpressionNode exp, _, _, _)) {
             // 纯表达式语句，如 foo();
             expr.build(exp);
             return;
         }
-        if (stmt instanceof AssignmentNode(String var, ExpressionNode rhs)) {
+        if (stmt instanceof AssignmentNode(String var, ExpressionNode rhs, _, _, _)) {
             // 赋值语句，如 a = b + 1;
 
             final String type = ctx.getScope().lookupType(var);
@@ -208,7 +208,10 @@ public class StatementBuilder {
         if (cond instanceof BinaryExpressionNode(
                 ExpressionNode left,
                 String operator,
-                ExpressionNode right
+                ExpressionNode right,
+                _,
+                _,
+                _
         )
                 && ComparisonUtils.isComparisonOperator(operator)) {
 

@@ -50,7 +50,7 @@ public class BModCommand implements Command {
         byte a = (byte) operandStack.pop();
 
         // Perform the modulus operation and push the result back onto the stack
-        operandStack.push(a % b);
+        operandStack.push((byte)(a % b));
 
         // Return the updated program counter (next instruction)
         return currentPC + 1;

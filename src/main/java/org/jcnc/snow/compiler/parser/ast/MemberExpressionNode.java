@@ -11,8 +11,17 @@ import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
  *
  * @param object 左侧对象表达式，表示成员所属的作用域或容器
  * @param member 要访问的成员名称（字段名或方法名）
+ * @param line     当前节点所在的行号
+ * @param column   当前节点所在的列号
+ * @param file     当前节点所在的文件
  */
-public record MemberExpressionNode(ExpressionNode object, String member) implements ExpressionNode {
+public record MemberExpressionNode(
+        ExpressionNode object,
+        String member,
+        int line,
+        int column,
+        String file
+) implements ExpressionNode {
 
     /**
      * 返回成员访问表达式的字符串形式。

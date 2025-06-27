@@ -46,13 +46,18 @@ public class ImportParser {
 
         // 解析一个或多个模块名（标识符），允许使用逗号分隔多个模块
         do {
+            // 获取当前 token 的行号、列号和文件名
+            int line = ctx.getTokens().peek().getLine();
+            int column = ctx.getTokens().peek().getCol();
+            String file = ctx.getSourceName();
+
             // 获取当前标识符类型的词法单元，并提取其原始词素
             String mod = ctx.getTokens()
                     .expectType(TokenType.IDENTIFIER)
                     .getLexeme();
 
             // 创建 ImportNode 节点并加入列表
-            imports.add(new ImportNode(mod));
+            imports.add(new ImportNode(mod, line, column, file));
         } while (ctx.getTokens().match(",")); // 如果匹配到逗号，继续解析下一个模块名
 
         // 最后必须匹配换行符，标志 import 语句的结束

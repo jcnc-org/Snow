@@ -37,6 +37,11 @@ public record BinaryOperatorParselet(Precedence precedence, boolean leftAssoc) i
      */
     @Override
     public ExpressionNode parse(ParserContext ctx, ExpressionNode left) {
+        // 获取当前 token 的行号、列号和文件名
+        int line = ctx.getTokens().peek().getLine();
+        int column = ctx.getTokens().peek().getCol();
+        String file = ctx.getSourceName();
+
         Token op = ctx.getTokens().next();
         int prec = precedence.ordinal();
 
@@ -46,7 +51,7 @@ public record BinaryOperatorParselet(Precedence precedence, boolean leftAssoc) i
                 leftAssoc ? Precedence.values()[prec] : Precedence.values()[prec - 1]
         );
 
-        return new BinaryExpressionNode(left, op.getLexeme(), right);
+        return new BinaryExpressionNode(left, op.getLexeme(), right, line, column, file);
     }
 
     /**

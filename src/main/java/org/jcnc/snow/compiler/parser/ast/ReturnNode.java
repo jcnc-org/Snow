@@ -23,13 +23,25 @@ public class ReturnNode implements StatementNode {
     /** 可选的返回值表达式 */
     private final Optional<ExpressionNode> expression;
 
+    /** 当前节点所在的行号 **/
+    private final int line;
+
+    /** 当前节点所在的列号 **/
+    private final int column;
+
+    /** 当前节点所在的文件 **/
+    private final String file;
+
     /**
      * 构造一个 {@code ReturnNode} 实例。
      *
      * @param expression 返回值表达式，如果无返回值则可为 {@code null}
      */
-    public ReturnNode(ExpressionNode expression) {
+    public ReturnNode(ExpressionNode expression, int line, int column, String file) {
         this.expression = Optional.ofNullable(expression);
+        this.line = line;
+        this.column = column;
+        this.file = file;
     }
 
     /**
@@ -40,4 +52,29 @@ public class ReturnNode implements StatementNode {
     public Optional<ExpressionNode> getExpression() {
         return expression;
     }
+
+    /**
+     * 获取当前表达式所在的行号。
+     *
+     * @return 当前表达式的行号。
+     */
+    public int line() {
+        return line;
+    }
+
+    /**
+     * 获取当前表达式所在的列号。
+     *
+     * @return 当前表达式的列号。
+     */
+    public int column() {
+        return column;
+    }
+
+    /**
+     * 获取当前表达式所在的文件名。
+     *
+     * @return 当前表达式所在的文件名。
+     */
+    public String file()   { return file;   }
 }

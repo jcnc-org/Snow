@@ -29,10 +29,16 @@ import java.util.List;
  * @param condition  控制分支执行的条件表达式
  * @param thenBranch 条件为 true 时执行的语句块
  * @param elseBranch 条件为 false 时执行的语句块（可为空）
+ * @param line     当前节点所在的行号
+ * @param column   当前节点所在的列号
+ * @param file     当前节点所在的文件
  */
 public record IfNode(
         ExpressionNode condition,
         List<StatementNode> thenBranch,
-        List<StatementNode> elseBranch
+        List<StatementNode> elseBranch,
+        int line,
+        int column,
+        String file
 ) implements StatementNode {
 }

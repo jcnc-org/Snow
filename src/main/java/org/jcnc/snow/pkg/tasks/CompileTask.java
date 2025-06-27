@@ -1,7 +1,7 @@
 package org.jcnc.snow.pkg.tasks;
 
 import org.jcnc.snow.cli.commands.CompileCommand;
-import org.jcnc.snow.pkg.model.Project;
+import org.jcnc.snow.compiler.backend.utils.OpHelper;
 import org.jcnc.snow.compiler.backend.alloc.RegisterAllocator;
 import org.jcnc.snow.compiler.backend.builder.VMCodeGenerator;
 import org.jcnc.snow.compiler.backend.builder.VMProgramBuilder;
@@ -18,6 +18,7 @@ import org.jcnc.snow.compiler.parser.context.ParserContext;
 import org.jcnc.snow.compiler.parser.core.ParserEngine;
 import org.jcnc.snow.compiler.parser.function.ASTPrinter;
 import org.jcnc.snow.compiler.semantic.core.SemanticAnalyzerRunner;
+import org.jcnc.snow.pkg.model.Project;
 import org.jcnc.snow.vm.VMLauncher;
 
 import java.nio.charset.StandardCharsets;
@@ -198,7 +199,12 @@ public final class CompileTask implements Task {
         List<String> finalCode = builder.build();
 
         System.out.println("### VM code");
-        finalCode.forEach(System.out::println);
+        for (int i = 0; i < finalCode.size(); i++) {
+            String[] parts = finalCode.get(i).split(" ");
+            String name = OpHelper.opcodeName(parts[0]);
+            parts = Arrays.copyOfRange(parts, 1, parts.length);
+            System.out.printf("%04d: %-10s %s\n", i, name, String.join(" ", parts));
+        }
 
         // ---------------- 5. 写出 .water 文件 ----------------
         Path outputFile = deriveOutputPath(sources, outputName, dir);
