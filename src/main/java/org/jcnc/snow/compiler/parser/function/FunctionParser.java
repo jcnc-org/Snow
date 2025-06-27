@@ -57,6 +57,11 @@ public class FunctionParser implements TopLevelParser {
     public FunctionNode parse(ParserContext ctx) {
         TokenStream ts = ctx.getTokens();
 
+        // 获取当前 token 的行号、列号和文件名
+        int line = ctx.getTokens().peek().getLine();
+        int column = ctx.getTokens().peek().getCol();
+        String file = ctx.getSourceName();
+
         parseFunctionHeader(ts);
         String functionName = parseFunctionName(ts);
 
@@ -69,7 +74,7 @@ public class FunctionParser implements TopLevelParser {
 
         parseFunctionFooter(ts);
 
-        return new FunctionNode(functionName, parameters, returnType[0], body);
+        return new FunctionNode(functionName, parameters, returnType[0], body, line, column, file);
     }
 
     /**
@@ -92,7 +97,7 @@ public class FunctionParser implements TopLevelParser {
 
         map.put("parameter", new SectionDefinition(
                 (TokenStream stream) -> stream.peek().getLexeme().equals("parameter"),
-                (ParserContext context, TokenStream stream) -> params.addAll(parseParameters(stream))
+                (ParserContext context, TokenStream stream) -> params.addAll(parseParameters(context))
         ));
 
         map.put("return_type", new SectionDefinition(
@@ -154,10 +159,12 @@ public class FunctionParser implements TopLevelParser {
      * </pre>
      * </p>
      *
-     * @param ts 当前使用的 {@link TokenStream}。
+     * @param ctx 当前解析上下文，包含 {@link TokenStream} 和符号表等作用域信息。
      * @return 所有参数节点的列表。
      */
-    private List<ParameterNode> parseParameters(TokenStream ts) {
+    private List<ParameterNode> parseParameters(ParserContext ctx) {
+        TokenStream ts = ctx.getTokens();
+
         ts.expect("parameter");
         ts.expect(":");
         skipComments(ts);
@@ -175,13 +182,19 @@ public class FunctionParser implements TopLevelParser {
             if (lex.equals("return_type") || lex.equals("body") || lex.equals("end")) {
                 break;
             }
+
+            // 获取当前 token 的行号、列号和文件名
+            int line = ctx.getTokens().peek().getLine();
+            int column = ctx.getTokens().peek().getCol();
+            String file = ctx.getSourceName();
+
             ts.expect("declare");
             String pname = ts.expectType(TokenType.IDENTIFIER).getLexeme();
             ts.expect(":");
             String ptype = ts.expectType(TokenType.TYPE).getLexeme();
             skipComments(ts);
             ts.expectType(TokenType.NEWLINE);
-            list.add(new ParameterNode(pname, ptype));
+            list.add(new ParameterNode(pname, ptype, line, column, file));
         }
         return list;
     }

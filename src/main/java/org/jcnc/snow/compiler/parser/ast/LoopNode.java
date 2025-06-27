@@ -17,7 +17,17 @@ import java.util.List;
  * @param condition   每次迭代前评估的条件表达式，控制循环是否继续
  * @param update      每轮迭代完成后执行的更新语句
  * @param body        循环体语句列表，表示循环主体执行逻辑
+ * @param line     当前节点所在的行号
+ * @param column   当前节点所在的列号
+ * @param file     当前节点所在的文件
  */
-public record LoopNode(StatementNode initializer, ExpressionNode condition, StatementNode update,
-                       List<StatementNode> body) implements StatementNode {
+public record LoopNode(
+        StatementNode initializer,
+        ExpressionNode condition,
+        StatementNode update,
+        List<StatementNode> body,
+        int line,
+        int column,
+        String file
+) implements StatementNode {
 }

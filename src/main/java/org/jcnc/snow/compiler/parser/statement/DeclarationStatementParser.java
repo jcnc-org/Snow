@@ -43,6 +43,11 @@ public class DeclarationStatementParser implements StatementParser {
      */
     @Override
     public DeclarationNode parse(ParserContext ctx) {
+        // 获取当前 token 的行号、列号和文件名
+        int line = ctx.getTokens().peek().getLine();
+        int column = ctx.getTokens().peek().getCol();
+        String file = ctx.getSourceName();
+
         // 声明语句必须以 "declare" 开头
         ctx.getTokens().expect("declare");
 
@@ -69,6 +74,6 @@ public class DeclarationStatementParser implements StatementParser {
         ctx.getTokens().expectType(TokenType.NEWLINE);
 
         // 返回构建好的声明语法树节点
-        return new DeclarationNode(name, type, init);
+        return new DeclarationNode(name, type, init, line, column, file);
     }
 }

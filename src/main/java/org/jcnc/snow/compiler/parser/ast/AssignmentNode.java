@@ -16,8 +16,17 @@ import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
  *
  * @param variable 左值变量名（即赋值目标）
  * @param value    表达式右值（即赋值来源）
+ * @param line     当前节点所在的行号
+ * @param column   当前节点所在的列号
+ * @param file     当前节点所在的文件
  */
-public record AssignmentNode(String variable, ExpressionNode value) implements StatementNode {
+public record AssignmentNode(
+        String variable,
+        ExpressionNode value,
+        int line,
+        int column,
+        String file
+) implements StatementNode {
 
     /**
      * 返回赋值语句的字符串形式，便于调试与日志输出。
