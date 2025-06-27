@@ -67,6 +67,7 @@ public class ASTPrinter {
             }
             case FunctionNode(
                     String name, List<ParameterNode> parameters, String returnType, List<StatementNode> body
+                    , _, _, _
             ) -> {
                 System.out.println(pad + "function " + name
                         + "(params=" + parameters + ", return=" + returnType + ")");
@@ -81,9 +82,12 @@ public class ASTPrinter {
                         .orElse("");
                 System.out.println(pad + "declare " + d.getName() + ":" + d.getType() + init);
             }
-            case AssignmentNode(String variable, ExpressionNode value) ->
+            case AssignmentNode(String variable, ExpressionNode value, _, int _, String _) ->
                     System.out.println(pad + variable + " = " + value);
-            case IfNode(ExpressionNode condition, List<StatementNode> thenBranch, List<StatementNode> elseBranch) -> {
+            case IfNode(
+                    ExpressionNode condition, List<StatementNode> thenBranch, List<StatementNode> elseBranch, int _,
+                    int _, String _
+            ) -> {
                 System.out.println(pad + "if " + condition);
                 for (StatementNode stmt : thenBranch) {
                     print(stmt, indent + 1);
@@ -97,6 +101,7 @@ public class ASTPrinter {
             }
             case LoopNode(
                     StatementNode initializer, ExpressionNode condition, StatementNode update, List<StatementNode> body
+                    , int _, int _, String _
             ) -> {
                 System.out.println(pad + "loop {");
                 print(initializer, indent + 1);
@@ -111,10 +116,9 @@ public class ASTPrinter {
             }
             case ReturnNode r -> System.out.println(pad + "return" +
                     r.getExpression().map(e -> " " + e).orElse(""));
-            case ExpressionStatementNode(ExpressionNode expression) ->
+            case ExpressionStatementNode(ExpressionNode expression, int _, int _, String _) ->
                     System.out.println(pad + expression);
-            case null, default ->
-                    System.out.println(pad + n);  // 回退处理
+            case null, default -> System.out.println(pad + n);  // 回退处理
         }
     }
 

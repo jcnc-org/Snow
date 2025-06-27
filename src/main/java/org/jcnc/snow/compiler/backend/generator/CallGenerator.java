@@ -62,7 +62,7 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
             char t = out.getSlotType(slotId);                  // 获取参数类型
             if (t == '\0') t = 'I';                            // 类型未知时默认整型
             // 生成类型相关的加载指令，如 I_LOAD、F_LOAD 等
-            out.emit(OpHelper.opcode(String.valueOf(t) + "_LOAD") + " " + slotId);
+            out.emit(OpHelper.opcode(t + "_LOAD") + " " + slotId);
         }
 
         // —— 3. 生成 CALL 调用指令 ——
@@ -70,7 +70,7 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
 
         // —— 4. 将返回值存入目标槽，并记录槽的类型 ——
         int destSlot = slotMap.get(ins.getDest()); // 目标寄存器槽
-        out.emit(OpHelper.opcode(String.valueOf(retType) + "_STORE") + " " + destSlot);
+        out.emit(OpHelper.opcode(retType + "_STORE") + " " + destSlot);
         out.setSlotType(destSlot, retType);        // 标记返回值类型
     }
 }
