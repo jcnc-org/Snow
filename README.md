@@ -99,21 +99,21 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
    ![IMG_运行配置文件_1.png](docs/README/IMG/IMG_Run-Profile_1.png)
 
 4. **运行成功**
-
-    ``` snow
+    
+   `````snow   
     ## 编译器输出
     ### Snow 源代码
     #### Main.snow
     module: Main
         import:Math
         function: main
-            return_type: void
+            return_type: int
             body:
                 Math.add(6,1)
+                return 0
             end body
         end function
     end module
-    
     #### Math.snow
     module: Math
         function: add
@@ -122,111 +122,121 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
                 declare n2: int
             return_type: int
             body:
-               return n1 + n2
+            return n1 + n2
             end body
         end function
     end module
     ### AST
     [
-      {
+    {
         "type": "Module",
         "name": "Main",
         "imports": [
-          {
+        {
             "module": "Math",
             "type": "Import"
-          }
+        }
         ],
         "functions": [
-          {
+        {
             "type": "Function",
             "name": "main",
             "parameters": [
-              
-            ],
-            "returnType": "void",
-            "body": [
-              {
-                "type": "ExpressionStatement",
-                "expression": {
-                  "type": "CallExpression",
-                  "callee": {
-                    "type": "MemberExpression",
-                    "object": {
-                      "type": "Identifier",
-                      "name": "Math"
-                    },
-                    "member": "add"
-                  },
-                  "arguments": [
-                    {
-                      "type": "NumberLiteral",
-                      "value": "6"
-                    },
-                    {
-                      "type": "NumberLiteral",
-                      "value": "1"
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "type": "Module",
-        "name": "Math",
-        "imports": [
-          
-        ],
-        "functions": [
-          {
-            "type": "Function",
-            "name": "add",
-            "parameters": [
-              {
-                "name": "n1",
-                "type": "int"
-              },
-              {
-                "name": "n2",
-                "type": "int"
-              }
+            
             ],
             "returnType": "int",
             "body": [
-              {
+            {
+                "type": "ExpressionStatement",
+                "expression": {
+                "type": "CallExpression",
+                "callee": {
+                    "type": "MemberExpression",
+                    "object": {
+                    "type": "Identifier",
+                    "name": "Math"
+                    },
+                    "member": "add"
+                },
+                "arguments": [
+                    {
+                    "type": "NumberLiteral",
+                    "value": "6"
+                    },
+                    {
+                    "type": "NumberLiteral",
+                    "value": "1"
+                    }
+                ]
+                }
+            },
+            {
                 "type": "Return",
                 "value": {
-                  "type": "BinaryExpression",
-                  "left": {
+                "type": "NumberLiteral",
+                "value": "0"
+                }
+            }
+            ]
+        }
+        ]
+    },
+    {
+        "type": "Module",
+        "name": "Math",
+        "imports": [
+        
+        ],
+        "functions": [
+        {
+            "type": "Function",
+            "name": "add",
+            "parameters": [
+            {
+                "name": "n1",
+                "type": "int"
+            },
+            {
+                "name": "n2",
+                "type": "int"
+            }
+            ],
+            "returnType": "int",
+            "body": [
+            {
+                "type": "Return",
+                "value": {
+                "type": "BinaryExpression",
+                "left": {
                     "type": "Identifier",
                     "name": "n1"
-                  },
-                  "operator": "+",
-                  "right": {
+                },
+                "operator": "+",
+                "right": {
                     "type": "Identifier",
                     "name": "n2"
-                  }
                 }
-              }
+                }
+            }
             ]
-          }
+        }
         ]
-      }
+    }
     ]
     ### IR
     func main() {
-      %0 = CONST 6
-      %1 = CONST 1
-      %2 = CALL Math.add, %0, %1
+    %0 = CONST 6
+    %1 = CONST 1
+    %2 = CALL Math.add, %0, %1
+    %3 = CONST 0
+    RET %3
     }
     func add(%0, %1) {
-      %2 = ADD_I32 %0, %1
-      RET %2
+    %2 = ADD_I32 %0, %1
+    RET %2
     }
-    
+
+
     ### VM code
     0000: I_PUSH     6
     0001: I_STORE    0
@@ -234,27 +244,37 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
     0003: I_STORE    1
     0004: I_LOAD     0
     0005: I_LOAD     1
-    0006: CALL       8 2
+    0006: CALL       12 2
     0007: I_STORE    2
-    0008: I_LOAD     0
-    0009: I_LOAD     1
-    0010: I_ADD      
-    0011: I_STORE    2
-    0012: I_LOAD     2
-    0013: RET        
+    0008: I_PUSH     0
+    0009: I_STORE    3
+    0010: I_LOAD     3
+    0011: HALT       
+    0012: I_LOAD     0
+    0013: I_LOAD     1
+    0014: I_ADD      
+    0015: I_STORE    2
+    0016: I_LOAD     2
+    0017: RET        
     Written to D:\Devs\IdeaProjects\Snow\target\Demo1.water
-    
-    === Launching VM ===
-    Calling function at address: 8
-    Return 7
-    Return 2147483647
-    Operand Stack state:[7]
-    
-    --- Call Stack State ---
-    
-    Local variable table is empty
-    ```
 
+    === Launching VM ===
+    Calling function at address: 12
+    Return 7
+    Process has ended
+
+    Operand Stack state:[0]
+
+    --- Call Stack State ---
+
+
+    ### VM Local Variable Table:
+    0: 6
+    1: 1
+    2: 7
+    3: 0
+    `````
+    
 ## 编译Snow源代码
 
 ### 1. 独立编译 (Standalone Compilation)
@@ -269,13 +289,13 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
     * **单个文件编译：**
 
       ```bash
-      Snow [SnowCode].snow
+      Snow complete [SnowCode].snow
       ```
 
     * **多个文件编译：**
 
       ```bash
-      Snow [SnowCode1].snow [SnowCode2].snow [SnowCode3].snow
+      Snow complete [SnowCode1].snow [SnowCode2].snow [SnowCode3].snow -o [Name]
       ```
 
     * **目录递归编译：**
