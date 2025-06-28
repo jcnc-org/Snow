@@ -275,7 +275,7 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
     3: 0
     `````
     
-## 编译Snow源代码
+## 编译 Snow 源代码
 
 ### 1. 独立编译 (Standalone Compilation)
 
