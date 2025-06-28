@@ -12,11 +12,11 @@ import org.jcnc.snow.vm.module.OperandStack;
  * <p>Execution Steps:</p>
  * <ol>
  *     <li>Pop the top double64 value from the operand stack.</li>
- *     <li>Convert the double64 value to an short16 value (this may involve truncation).</li>
+ *     <li>Convert the double64 value to a short16 value (this may involve truncation).</li>
  *     <li>Push the converted short16 value back onto the operand stack for subsequent operations.</li>
  * </ol>
  *
- * <p>This opcode is used to narrow a double64 value to an short16 type for further integer-based operations.</p>
+ * <p>This opcode is used to narrow a double64 value to a short16 type for further integer-based operations.</p>
  */
 public class D2SCommand implements Command {
 
