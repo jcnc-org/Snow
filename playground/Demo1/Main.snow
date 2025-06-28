@@ -1,11 +1,9 @@
 module: Main
     import:Math
     function: main
-        parameter:
-        return_type: int
+        return_type: void
         body:
-            Math.factorial(6L,1L)
-            return 0
+            Math.add(6,1)
         end body
     end function
 end module

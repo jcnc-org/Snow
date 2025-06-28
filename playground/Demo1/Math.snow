@@ -1,11 +1,11 @@
 module: Math
-    function: factorial
+    function: add
         parameter:
-            declare n1: long
-            declare n2: long
-        return_type: long
+            declare n1: int
+            declare n2: int
+        return_type: int
         body:
-           return n1+n2
+           return n1 + n2
         end body
     end function
 end module
