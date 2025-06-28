@@ -40,7 +40,8 @@ public class S2BCommand implements Command {
     @Override
     public int execute(String[] parts, int currentPC, OperandStack operandStack,
                        LocalVariableStore localVariableStore, CallStack callStack) {
-        byte convertedValue = (byte) ((short) operandStack.pop());
+        short value = (short) operandStack.pop();
+        byte convertedValue = (byte) value;
         operandStack.push(convertedValue);
         return currentPC + 1;
     }
