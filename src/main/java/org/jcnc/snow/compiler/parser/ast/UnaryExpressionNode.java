@@ -15,9 +15,17 @@ import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
  *
  * @param operator 一元运算符（仅 "-" 或 "!"）
  * @param operand  运算对象 / 右操作数
+ * @param line     当前节点所在的行号
+ * @param column   当前节点所在的列号
+ * @param file     当前节点所在的文件
  */
-public record UnaryExpressionNode(String operator,
-                                  ExpressionNode operand) implements ExpressionNode {
+public record UnaryExpressionNode(
+        String operator,
+        ExpressionNode operand,
+        int line,
+        int column,
+        String file
+) implements ExpressionNode {
 
     /**
      * 生成调试友好的字符串表示，例如 {@code "-x"} 或 {@code "!flag"}。

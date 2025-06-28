@@ -58,8 +58,8 @@ public class InstructionFactory {
      * @param dest  目标寄存器
      * @param value 要加载的整数常量
      */
-    public static void loadConstInto(IRContext ctx, IRVirtualRegister dest, int value) {
-        ctx.addInstruction(new LoadConstInstruction(dest, new IRConstant(value)));
+    public static void loadConstInto(IRContext ctx, IRVirtualRegister dest, IRConstant value) {
+        ctx.addInstruction(new LoadConstInstruction(dest, value));
     }
 
     /**

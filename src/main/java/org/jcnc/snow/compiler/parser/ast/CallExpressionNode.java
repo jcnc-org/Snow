@@ -14,6 +14,7 @@ import java.util.List;
  * @param arguments 参数表达式列表，表示函数调用中传递给函数的实际参数。参数的顺序与调用顺序一致。
  * @param line      当前表达式所在的行号，方便调试和错误定位。
  * @param column    当前表达式所在的列号，用于精确定位错误位置。
+ * @param file      当前表达式所在的文件，用于错误定位。
  */
 public record CallExpressionNode(
         ExpressionNode callee,           // 被调用的表达式节点，表示函数或方法名

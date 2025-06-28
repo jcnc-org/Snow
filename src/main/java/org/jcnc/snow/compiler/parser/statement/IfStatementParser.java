@@ -47,6 +47,11 @@ public class IfStatementParser implements StatementParser {
     public IfNode parse(ParserContext ctx) {
         var ts = ctx.getTokens(); // 获取 token 流引用
 
+        // 获取当前 token 的行号、列号和文件名
+        int line = ctx.getTokens().peek().getLine();
+        int column = ctx.getTokens().peek().getCol();
+        String file = ctx.getSourceName();
+
         // 消耗起始关键字 "if"
         ts.expect("if");
 
@@ -120,6 +125,6 @@ public class IfStatementParser implements StatementParser {
         ts.expectType(TokenType.NEWLINE);
 
         // 构建并返回 IfNode，包含条件、then 分支和 else 分支
-        return new IfNode(condition, thenBranch, elseBranch);
+        return new IfNode(condition, thenBranch, elseBranch, line, column, file);
     }
 }

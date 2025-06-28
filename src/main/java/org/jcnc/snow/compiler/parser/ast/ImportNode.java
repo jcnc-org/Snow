@@ -14,6 +14,14 @@ import org.jcnc.snow.compiler.parser.ast.base.Node;
  * </p>
  *
  * @param moduleName 被导入的模块名称，通常为点分层次结构（如 "core.utils"）
+ * @param line     当前节点所在的行号
+ * @param column   当前节点所在的列号
+ * @param file     当前节点所在的文件
  */
-public record ImportNode(String moduleName) implements Node {
+public record ImportNode(
+        String moduleName,
+        int line,
+        int column,
+        String file
+) implements Node {
 }

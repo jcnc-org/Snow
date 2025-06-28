@@ -64,6 +64,12 @@ public class LoopStatementParser implements StatementParser {
     public LoopNode parse(ParserContext ctx) {
         TokenStream ts = ctx.getTokens();
 
+        // 获取当前 token 的行号、列号
+        int loop_line = ctx.getTokens().peek().getLine();
+        int loop_column = ctx.getTokens().peek().getCol();
+
+        String file = ctx.getSourceName();
+
         // 匹配 loop: 起始语法
         ParserUtils.matchHeader(ts, "loop");
 
@@ -101,12 +107,16 @@ public class LoopStatementParser implements StatementParser {
         sections.put("update", new FlexibleSectionParser.SectionDefinition(
                 ts1 -> ts1.peek().getLexeme().equals("update"),
                 (ctx1, ts1) -> {
+                    // 获取当前 token 的行号、列号
+                    int line = ctx.getTokens().peek().getLine();
+                    int column = ctx.getTokens().peek().getCol();
+
                     ParserUtils.matchHeader(ts1, "update");
                     String varName = ts1.expectType(TokenType.IDENTIFIER).getLexeme();
                     ts1.expect("=");
                     ExpressionNode expr = new PrattExpressionParser().parse(ctx1);
                     ts1.expectType(TokenType.NEWLINE);
-                    update[0] = new AssignmentNode(varName, expr);
+                    update[0] = new AssignmentNode(varName, expr, line, column, file);
                     ParserUtils.skipNewlines(ts1);
                 }
         ));
@@ -140,6 +150,6 @@ public class LoopStatementParser implements StatementParser {
         ParserUtils.matchFooter(ts, "loop");
 
         // 返回构造完成的 LoopNode
-        return new LoopNode(initializer[0], condition[0], update[0], body);
+        return new LoopNode(initializer[0], condition[0], update[0], body, loop_line, loop_column, file);
     }
 }

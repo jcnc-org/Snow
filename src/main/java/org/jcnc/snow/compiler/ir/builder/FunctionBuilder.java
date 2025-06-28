@@ -51,7 +51,7 @@ public class FunctionBuilder {
             // 2) 声明形参：为每个参数分配虚拟寄存器并声明到作用域
             for (ParameterNode p : functionNode.parameters()) {
                 IRVirtualRegister reg = irFunction.newRegister(); // 新寄存器
-                irContext.getScope().declare(p.name(), reg);      // 变量名→寄存器绑定
+                irContext.getScope().declare(p.name(), p.type(), reg);      // 变量名→寄存器绑定
                 irFunction.addParameter(reg);                     // 添加到函数参数列表
             }
 

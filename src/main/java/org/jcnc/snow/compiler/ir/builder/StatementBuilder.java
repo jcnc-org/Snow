@@ -1,7 +1,7 @@
 package org.jcnc.snow.compiler.ir.builder;
 
 import org.jcnc.snow.compiler.ir.core.IROpCode;
-import org.jcnc.snow.compiler.ir.utils.ExpressionUtils;
+import org.jcnc.snow.compiler.ir.utils.ComparisonUtils;
 import org.jcnc.snow.compiler.ir.utils.IROpCodeUtils;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 import org.jcnc.snow.compiler.parser.ast.*;
@@ -18,23 +18,41 @@ import java.util.Locale;
  */
 public class StatementBuilder {
 
-    /** 当前 IR 上下文，包含作用域、指令序列等信息。 */
+    /**
+     * 当前 IR 上下文，包含作用域、指令序列等信息。
+     */
     private final IRContext ctx;
-    /** 表达式 IR 构建器，用于将表达式节点转为 IR 指令。 */
+    /**
+     * 表达式 IR 构建器，用于将表达式节点转为 IR 指令。
+     */
     private final ExpressionBuilder expr;
 
     /**
      * 构造方法。
+     *
      * @param ctx IR 编译上下文环境
      */
     public StatementBuilder(IRContext ctx) {
-        this.ctx  = ctx;
+        this.ctx = ctx;
         this.expr = new ExpressionBuilder(ctx);
+    }
+
+    private static char typeSuffixFromType(String type) {
+        if (type == null) return '\0';
+        return switch (type.toLowerCase(Locale.ROOT)) {
+            case "byte" -> 'b';
+            case "short" -> 's';
+            case "long" -> 'l';
+            case "float" -> 'f';
+            case "double" -> 'd';
+            default -> '\0';   // 其余默认按 32-bit 整型处理
+        };
     }
 
     /**
      * 将一个 AST 语句节点转为 IR 指令序列。
      * 根据节点类型分发到对应的处理方法。
+     *
      * @param stmt 待转换的语句节点
      */
     public void build(StatementNode stmt) {
@@ -48,26 +66,44 @@ public class StatementBuilder {
             buildIf(ifNode);
             return;
         }
-        if (stmt instanceof ExpressionStatementNode(ExpressionNode exp)) {
+        if (stmt instanceof ExpressionStatementNode(ExpressionNode exp, _, _, _)) {
             // 纯表达式语句，如 foo();
             expr.build(exp);
             return;
         }
-        if (stmt instanceof AssignmentNode(String var, ExpressionNode rhs)) {
+        if (stmt instanceof AssignmentNode(String var, ExpressionNode rhs, _, _, _)) {
             // 赋值语句，如 a = b + 1;
-            IRVirtualRegister target = getOrDeclareRegister(var);
+
+            final String type = ctx.getScope().lookupType(var);
+
+            // 1. 设置声明变量的类型
+            ctx.setVarType(type);
+
+            IRVirtualRegister target = getOrDeclareRegister(var, type);
             expr.buildInto(rhs, target);
+
+            // 2. 清除变量声明
+            ctx.clearVarType();
+
             return;
         }
         if (stmt instanceof DeclarationNode decl) {
             // 变量声明，如 int a = 1;
             if (decl.getInitializer().isPresent()) {
                 // 声明同时有初值
+
+                // 1. 设置声明变量的类型
+                ctx.setVarType(decl.getType());
+
                 IRVirtualRegister r = expr.build(decl.getInitializer().get());
-                ctx.getScope().declare(decl.getName(), r);
+
+                // 2. 清除变量声明
+                ctx.clearVarType();
+
+                ctx.getScope().declare(decl.getName(), decl.getType(), r);
             } else {
                 // 仅声明，无初值
-                ctx.getScope().declare(decl.getName());
+                ctx.getScope().declare(decl.getName(), decl.getType());
             }
             return;
         }
@@ -89,20 +125,22 @@ public class StatementBuilder {
 
     /**
      * 获取变量名对应的寄存器，不存在则声明一个新的。
+     *
      * @param name 变量名
      * @return 变量对应的虚拟寄存器
      */
-    private IRVirtualRegister getOrDeclareRegister(String name) {
+    private IRVirtualRegister getOrDeclareRegister(String name, String type) {
         IRVirtualRegister reg = ctx.getScope().lookup(name);
         if (reg == null) {
             reg = ctx.newRegister();
-            ctx.getScope().declare(name, reg);
+            ctx.getScope().declare(name, type, reg);
         }
         return reg;
     }
 
     /**
      * 批量构建一组语句节点，顺序处理每个语句。
+     *
      * @param stmts 语句节点集合
      */
     private void buildStatements(Iterable<StatementNode> stmts) {
@@ -112,12 +150,13 @@ public class StatementBuilder {
     /**
      * 构建循环语句（for/while）。
      * 处理流程：初始语句 → 条件判断 → 循环体 → 更新语句 → 跳回条件。
+     *
      * @param loop 循环节点
      */
     private void buildLoop(LoopNode loop) {
         if (loop.initializer() != null) build(loop.initializer());
         String lblStart = ctx.newLabel();
-        String lblEnd   = ctx.newLabel();
+        String lblEnd = ctx.newLabel();
         // 循环开始标签
         InstructionFactory.label(ctx, lblStart);
 
@@ -137,11 +176,12 @@ public class StatementBuilder {
     /**
      * 构建分支语句（if/else）。
      * 处理流程：条件判断 → then 分支 → else 分支（可选）。
+     *
      * @param ifNode if 语句节点
      */
     private void buildIf(IfNode ifNode) {
         String lblElse = ctx.newLabel();
-        String lblEnd  = ctx.newLabel();
+        String lblEnd = ctx.newLabel();
         // 条件不成立则跳转到 else
         emitConditionalJump(ifNode.condition(), lblElse);
 
@@ -160,35 +200,33 @@ public class StatementBuilder {
     /**
      * 条件跳转指令的生成。
      * 如果是二元比较表达式，直接使用对应比较操作码；否则等价于与 0 比较。
-     * @param cond      条件表达式
+     *
+     * @param cond       条件表达式
      * @param falseLabel 条件不成立时跳转到的标签
      */
     private void emitConditionalJump(ExpressionNode cond, String falseLabel) {
-        if (cond instanceof BinaryExpressionNode(ExpressionNode left, String operator, ExpressionNode right)
-                && ExpressionUtils.isComparisonOperator(operator)) {
-            // 如果是比较操作（如 ==, >, <），直接生成对应的条件跳转
+        if (cond instanceof BinaryExpressionNode(
+                ExpressionNode left,
+                String operator,
+                ExpressionNode right,
+                _,
+                _,
+                _
+        )
+                && ComparisonUtils.isComparisonOperator(operator)) {
+
             IRVirtualRegister a = expr.build(left);
             IRVirtualRegister b = expr.build(right);
-            // 获取反向比较操作码
-            IROpCode falseOp   = IROpCodeUtils.invert(ExpressionUtils.cmpOp(operator));
+
+            // 使用适配后位宽正确的比较指令
+            IROpCode cmp = ComparisonUtils.cmpOp(operator, left, right);
+            IROpCode falseOp = IROpCodeUtils.invert(cmp);
+
             InstructionFactory.cmpJump(ctx, falseOp, a, b, falseLabel);
         } else {
-            // 否则将 cond 与 0 比较，相等则跳转
             IRVirtualRegister condReg = expr.build(cond);
-            IRVirtualRegister zero    = InstructionFactory.loadConst(ctx, 0);
-            InstructionFactory.cmpJump(ctx, IROpCode.CMP_EQ, condReg, zero, falseLabel);
+            IRVirtualRegister zero = InstructionFactory.loadConst(ctx, 0);
+            InstructionFactory.cmpJump(ctx, IROpCode.CMP_IEQ, condReg, zero, falseLabel);
         }
-    }
-
-    private static char typeSuffixFromType(String type) {
-        if (type == null) return '\0';
-        return switch (type.toLowerCase(Locale.ROOT)) {
-            case "byte"   -> 'b';
-            case "short"  -> 's';
-            case "long"   -> 'l';
-            case "float"  -> 'f';
-            case "double" -> 'd';
-            default       -> '\0';   // 其余默认按 32-bit 整型处理
-        };
     }
 }

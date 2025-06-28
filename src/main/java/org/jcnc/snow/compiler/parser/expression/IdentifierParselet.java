@@ -24,6 +24,11 @@ public class IdentifierParselet implements PrefixParselet {
      */
     @Override
     public ExpressionNode parse(ParserContext ctx, Token token) {
-        return new IdentifierNode(token.getLexeme());
+        // 获取标识符 token 的行号、列号和文件名
+        int line = ctx.getTokens().peek(-1).getLine();
+        int column = ctx.getTokens().peek(-1).getCol();
+        String file = ctx.getSourceName();
+
+        return new IdentifierNode(token.getLexeme(), line, column, file);
     }
 }

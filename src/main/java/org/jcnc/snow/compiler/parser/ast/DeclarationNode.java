@@ -23,6 +23,15 @@ public class DeclarationNode implements StatementNode {
     /** 可选的初始化表达式 */
     private final Optional<ExpressionNode> initializer;
 
+    /** 当前节点所在的行号 **/
+    private final int line;
+
+    /** 当前节点所在的列号 **/
+    private final int column;
+
+    /** 当前节点所在的文件 **/
+    private final String file;
+
     /**
      * 构造一个 {@code DeclarationNode} 实例。
      *
@@ -30,10 +39,13 @@ public class DeclarationNode implements StatementNode {
      * @param type        变量类型字符串（如 "int"、"string"）
      * @param initializer 可选初始化表达式，若为 {@code null} 表示未初始化
      */
-    public DeclarationNode(String name, String type, ExpressionNode initializer) {
+    public DeclarationNode(String name, String type, ExpressionNode initializer, int line, int column, String file) {
         this.name = name;
         this.type = type;
         this.initializer = Optional.ofNullable(initializer);
+        this.line = line;
+        this.column = column;
+        this.file = file;
     }
 
     /**
@@ -62,4 +74,29 @@ public class DeclarationNode implements StatementNode {
     public Optional<ExpressionNode> getInitializer() {
         return initializer;
     }
+
+    /**
+     * 获取当前表达式所在的行号。
+     *
+     * @return 当前表达式的行号。
+     */
+    public int line() {
+        return line;
+    }
+
+    /**
+     * 获取当前表达式所在的列号。
+     *
+     * @return 当前表达式的列号。
+     */
+    public int column() {
+        return column;
+    }
+
+    /**
+     * 获取当前表达式所在的文件名。
+     *
+     * @return 当前表达式所在的文件名。
+     */
+    public String file()   { return file;   }
 }

@@ -1,0 +1,12 @@
+module: Main
+    function: main
+        parameter:
+        return_type: long
+        body:
+            declare n: long
+            n = 2147483647
+            n = n + 1
+            return n
+        end body
+    end function
+end module

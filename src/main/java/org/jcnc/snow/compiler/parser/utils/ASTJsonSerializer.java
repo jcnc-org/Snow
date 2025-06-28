@@ -81,7 +81,10 @@ public class ASTJsonSerializer {
     private static Object nodeToMap(Node n) {
         return switch (n) {
             // 模块节点
-            case ModuleNode(String name, List<ImportNode> imports, List<FunctionNode> functions) -> {
+            case ModuleNode(
+                    String name, List<ImportNode> imports, List<FunctionNode> functions, _, int _,
+                    String _
+            ) -> {
                 Map<String, Object> map = newNodeMap("Module");
                 map.put("name", name);
                 List<Object> imps = new ArrayList<>(imports.size());
@@ -177,20 +180,23 @@ public class ASTJsonSerializer {
     private static Object exprToMap(ExpressionNode expr) {
         return switch (expr) {
             // 二元表达式
-            case BinaryExpressionNode(ExpressionNode left, String operator, ExpressionNode right) -> exprMap("BinaryExpression",
+            case BinaryExpressionNode(
+                    ExpressionNode left, String operator, ExpressionNode right, int _, int _, String _
+            ) -> exprMap("BinaryExpression",
                     "left", exprToMap(left),
                     "operator", operator,
                     "right", exprToMap(right)
             );
             // 一元表达式
-            case UnaryExpressionNode(String operator, ExpressionNode operand) -> exprMap("UnaryExpression",
-                    "operator", operator,
-                    "operand", exprToMap(operand)
-            );
+            case UnaryExpressionNode(String operator, ExpressionNode operand, int _, int _, String _) ->
+                    exprMap("UnaryExpression",
+                            "operator", operator,
+                            "operand", exprToMap(operand)
+                    );
             // 布尔字面量
             case BoolLiteralNode(boolean value) -> exprMap("BoolLiteral", "value", value);
             // 标识符
-            case IdentifierNode(String name) -> exprMap("Identifier", "name", name);
+            case IdentifierNode(String name, int _, int _, String _) -> exprMap("Identifier", "name", name);
             // 数字字面量
             case NumberLiteralNode(String value) -> exprMap("NumberLiteral", "value", value);
             // 字符串字面量
@@ -202,10 +208,11 @@ public class ASTJsonSerializer {
                 yield exprMap("CallExpression", "callee", exprToMap(callee), "arguments", args);
             }
             // 成员访问表达式
-            case MemberExpressionNode(ExpressionNode object, String member) -> exprMap("MemberExpression",
-                    "object", exprToMap(object),
-                    "member", member
-            );
+            case MemberExpressionNode(ExpressionNode object, String member, int _, int _, String _) ->
+                    exprMap("MemberExpression",
+                            "object", exprToMap(object),
+                            "member", member
+                    );
             // 默认兜底处理：只写类型
             default -> Map.of("type", expr.getClass().getSimpleName());
         };

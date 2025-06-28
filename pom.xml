@@ -7,9 +7,11 @@
 
     <groupId>org.jcnc.snow</groupId>
     <artifactId>Snow</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.4.0</version>
 
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.source>24</maven.compiler.source>
         <maven.compiler.target>24</maven.compiler.target>
         <native.maven.plugin.version>0.10.5</native.maven.plugin.version>
@@ -17,17 +19,36 @@
 
     <!-- 通用编译 & 打包插件 -->
     <build>
+        <!-- 资源文件目录及占位符替换（resource filtering） -->
+        <resources>
+            <resource>
+                <!-- 指定资源文件所在目录 -->
+                <directory>src/main/resources</directory>
+                <!-- 开启资源文件中的占位符（如 ${project.version}）替换 -->
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+
         <plugins>
-            <!-- Java 编译插件 -->
+            <!--
+                Java 编译插件：
+                - 使用 Maven 自带的 maven-compiler-plugin 进行源码编译
+                - <fork>true</fork> 表示在单独的进程中执行 javac，提高兼容性
+            -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.12.1</version>
+                <version>3.14.0</version>
                 <configuration>
-                    <fork>true</fork>
+                    <release>24</release>
                 </configuration>
             </plugin>
-            <!-- Jar 打包插件 -->
+
+            <!--
+                Jar 打包插件：
+                - 使用 maven-jar-plugin 将编译产物打包成可执行 JAR
+                - 在 MANIFEST 中指定主类，支持命令行直接 java -jar 调用
+            -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -35,8 +56,12 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.jcnc.snow.compiler.cli.SnowCompiler</mainClass>
+                            <!-- 指定程序入口类，运行 java -jar 时会执行此类的 main 方法 -->
+                            <mainClass>org.jcnc.snow.cli.SnowCLI</mainClass>
+                            <!-- 将项目类路径添加到 MANIFEST Class-Path 中 -->
                             <addClasspath>true</addClasspath>
+                            <!-- 在 MANIFEST 中添加实现版本、实现供应商等默认条目 -->
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                     </archive>
                 </configuration>
@@ -45,6 +70,11 @@
     </build>
 
     <profiles>
+        <!--
+            原生镜像构建：Linux 平台
+            - 使用 GraalVM 的 native-image 工具，生成静态链接的可执行文件
+            - 依赖 musl libc，需提前安装并配置 musl-gcc 工具链
+        -->
         <profile>
             <id>native-linux</id>
             <activation>
@@ -58,15 +88,19 @@
                         <groupId>org.graalvm.buildtools</groupId>
                         <artifactId>native-maven-plugin</artifactId>
                         <version>${native.maven.plugin.version}</version>
+                        <!-- 启用插件扩展，允许在 build 生命周期中无须额外配置 -->
                         <extensions>true</extensions>
                         <executions>
+                            <!-- 打包阶段生成原生可执行文件 -->
                             <execution>
                                 <id>build-native</id>
                                 <goals>
+                                    <!-- compile-no-fork 在当前 JVM 进程中执行 native-image -->
                                     <goal>compile-no-fork</goal>
                                 </goals>
                                 <phase>package</phase>
                             </execution>
+                            <!-- 测试阶段运行原生镜像的测试 -->
                             <execution>
                                 <id>test-native</id>
                                 <goals>
@@ -77,13 +111,17 @@
                         </executions>
                         <configuration>
                             <buildArgs>
+                                <!-- 静态链接 -->
                                 <buildArg>--static</buildArg>
+                                <!-- 指定 musl libc -->
                                 <buildArg>--libc=musl</buildArg>
+                                <!-- 输出构建报告 -->
                                 <buildArg>--emit build-report</buildArg>
+                                <!-- 优化级别 O2 -->
                                 <buildArg>-O2</buildArg>
                             </buildArgs>
                             <environment>
-                                <!-- 指定 musl-gcc 工具链 -->
+                                <!-- 指定使用 musl 工具链 -->
                                 <PATH>/opt/musl-1.2.5/bin:${env.PATH}</PATH>
                                 <C_INCLUDE_PATH>/opt/musl-1.2.5/include</C_INCLUDE_PATH>
                                 <LIBRARY_PATH>/opt/musl-1.2.5/lib</LIBRARY_PATH>
@@ -94,6 +132,11 @@
             </build>
         </profile>
 
+        <!--
+            原生镜像构建：Windows 平台
+            - 使用 GraalVM 的 native-image 工具，生成 Windows 可执行文件
+            - Windows 上不使用 musl，因此不配置静态链接
+        -->
         <profile>
             <id>native-windows</id>
             <activation>
@@ -109,6 +152,7 @@
                         <version>${native.maven.plugin.version}</version>
                         <extensions>true</extensions>
                         <executions>
+                            <!-- 打包阶段生成 Windows 可执行文件 -->
                             <execution>
                                 <id>build-native</id>
                                 <goals>
@@ -116,6 +160,7 @@
                                 </goals>
                                 <phase>package</phase>
                             </execution>
+                            <!-- 测试阶段运行原生镜像测试 -->
                             <execution>
                                 <id>test-native</id>
                                 <goals>
@@ -126,7 +171,9 @@
                         </executions>
                         <configuration>
                             <buildArgs>
+                                <!-- 输出构建报告 -->
                                 <buildArg>--emit build-report</buildArg>
+                                <!-- 优化级别 O2 -->
                                 <buildArg>-O2</buildArg>
                             </buildArgs>
                         </configuration>
@@ -135,4 +182,5 @@
             </build>
         </profile>
     </profiles>
+
 </project>
