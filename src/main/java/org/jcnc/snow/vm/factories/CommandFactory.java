@@ -1,56 +1,50 @@
 package org.jcnc.snow.vm.factories;
 
-import org.jcnc.snow.vm.commands.arithmetic.byte8.*;
-import org.jcnc.snow.vm.commands.arithmetic.conversion.*;
-import org.jcnc.snow.vm.commands.arithmetic.double64.*;
-import org.jcnc.snow.vm.commands.arithmetic.float32.*;
-import org.jcnc.snow.vm.commands.arithmetic.int32.*;
-import org.jcnc.snow.vm.commands.arithmetic.long64.*;
-import org.jcnc.snow.vm.commands.arithmetic.short16.*;
-import org.jcnc.snow.vm.commands.bitwise.byte8.BAndCommand;
-import org.jcnc.snow.vm.commands.bitwise.byte8.BOrCommand;
-import org.jcnc.snow.vm.commands.bitwise.byte8.BXorCommand;
-import org.jcnc.snow.vm.commands.bitwise.int32.IAndCommand;
-import org.jcnc.snow.vm.commands.bitwise.int32.IOrCommand;
-import org.jcnc.snow.vm.commands.bitwise.int32.IXorCommand;
-import org.jcnc.snow.vm.commands.bitwise.long64.LAndCommand;
-import org.jcnc.snow.vm.commands.bitwise.long64.LOrCommand;
-import org.jcnc.snow.vm.commands.bitwise.long64.LXorCommand;
-import org.jcnc.snow.vm.commands.bitwise.short16.SAndCommand;
-import org.jcnc.snow.vm.commands.bitwise.short16.SOrCommand;
-import org.jcnc.snow.vm.commands.bitwise.short16.SXorCommand;
-import org.jcnc.snow.vm.commands.control.all.JumpCommand;
-import org.jcnc.snow.vm.commands.control.byte8.*;
-import org.jcnc.snow.vm.commands.control.double64.*;
-import org.jcnc.snow.vm.commands.control.float32.*;
-import org.jcnc.snow.vm.commands.control.int32.*;
-import org.jcnc.snow.vm.commands.control.long64.*;
-import org.jcnc.snow.vm.commands.control.short16.*;
-import org.jcnc.snow.vm.commands.function.CallCommand;
-import org.jcnc.snow.vm.commands.function.RetCommand;
-import org.jcnc.snow.vm.commands.memory.all.MovCommand;
-import org.jcnc.snow.vm.commands.memory.byte8.BLoadCommand;
-import org.jcnc.snow.vm.commands.memory.byte8.BStoreCommand;
-import org.jcnc.snow.vm.commands.memory.double64.DLoadCommand;
-import org.jcnc.snow.vm.commands.memory.double64.DStoreCommand;
-import org.jcnc.snow.vm.commands.memory.float32.FLoadCommand;
-import org.jcnc.snow.vm.commands.memory.float32.FStoreCommand;
-import org.jcnc.snow.vm.commands.memory.int32.ILoadCommand;
-import org.jcnc.snow.vm.commands.memory.int32.IStoreCommand;
-import org.jcnc.snow.vm.commands.memory.long64.LLoadCommand;
-import org.jcnc.snow.vm.commands.memory.long64.LStoreCommand;
-import org.jcnc.snow.vm.commands.memory.short16.SLoadCommand;
-import org.jcnc.snow.vm.commands.memory.short16.SStoreCommand;
-import org.jcnc.snow.vm.commands.stack.all.DupCommand;
-import org.jcnc.snow.vm.commands.stack.all.PopCommand;
-import org.jcnc.snow.vm.commands.stack.all.SwapCommand;
-import org.jcnc.snow.vm.commands.stack.byte8.BPushCommand;
-import org.jcnc.snow.vm.commands.stack.double64.DPushCommand;
-import org.jcnc.snow.vm.commands.stack.float32.FPushCommand;
-import org.jcnc.snow.vm.commands.stack.int32.IPushCommand;
-import org.jcnc.snow.vm.commands.stack.long64.LPushCommand;
-import org.jcnc.snow.vm.commands.stack.short16.SPushCommand;
-import org.jcnc.snow.vm.commands.vm.HaltCommand;
+import org.jcnc.snow.vm.commands.type.control.byte8.*;
+import org.jcnc.snow.vm.commands.type.control.double64.*;
+import org.jcnc.snow.vm.commands.type.control.float32.*;
+import org.jcnc.snow.vm.commands.type.control.int32.*;
+import org.jcnc.snow.vm.commands.type.control.long64.*;
+import org.jcnc.snow.vm.commands.type.control.short16.*;
+import org.jcnc.snow.vm.commands.type.control.byte8.BAndCommand;
+import org.jcnc.snow.vm.commands.type.control.byte8.BOrCommand;
+import org.jcnc.snow.vm.commands.type.control.byte8.BXorCommand;
+import org.jcnc.snow.vm.commands.type.control.int32.IAndCommand;
+import org.jcnc.snow.vm.commands.type.control.int32.IOrCommand;
+import org.jcnc.snow.vm.commands.type.control.int32.IXorCommand;
+import org.jcnc.snow.vm.commands.type.control.long64.LAndCommand;
+import org.jcnc.snow.vm.commands.type.control.long64.LOrCommand;
+import org.jcnc.snow.vm.commands.type.control.long64.LXorCommand;
+import org.jcnc.snow.vm.commands.type.control.short16.SAndCommand;
+import org.jcnc.snow.vm.commands.type.control.short16.SOrCommand;
+import org.jcnc.snow.vm.commands.type.control.short16.SXorCommand;
+import org.jcnc.snow.vm.commands.flow.control.JumpCommand;
+import org.jcnc.snow.vm.commands.flow.control.CallCommand;
+import org.jcnc.snow.vm.commands.flow.control.RetCommand;
+import org.jcnc.snow.vm.commands.register.control.MovCommand;
+import org.jcnc.snow.vm.commands.type.control.byte8.BLoadCommand;
+import org.jcnc.snow.vm.commands.type.control.byte8.BStoreCommand;
+import org.jcnc.snow.vm.commands.type.control.double64.DLoadCommand;
+import org.jcnc.snow.vm.commands.type.control.double64.DStoreCommand;
+import org.jcnc.snow.vm.commands.type.control.float32.FLoadCommand;
+import org.jcnc.snow.vm.commands.type.control.float32.FStoreCommand;
+import org.jcnc.snow.vm.commands.type.control.int32.ILoadCommand;
+import org.jcnc.snow.vm.commands.type.control.int32.IStoreCommand;
+import org.jcnc.snow.vm.commands.type.control.long64.LLoadCommand;
+import org.jcnc.snow.vm.commands.type.control.long64.LStoreCommand;
+import org.jcnc.snow.vm.commands.type.control.short16.SLoadCommand;
+import org.jcnc.snow.vm.commands.type.control.short16.SStoreCommand;
+import org.jcnc.snow.vm.commands.stack.control.DupCommand;
+import org.jcnc.snow.vm.commands.stack.control.PopCommand;
+import org.jcnc.snow.vm.commands.stack.control.SwapCommand;
+import org.jcnc.snow.vm.commands.type.control.byte8.BPushCommand;
+import org.jcnc.snow.vm.commands.type.control.double64.DPushCommand;
+import org.jcnc.snow.vm.commands.type.control.float32.FPushCommand;
+import org.jcnc.snow.vm.commands.type.control.int32.IPushCommand;
+import org.jcnc.snow.vm.commands.type.control.long64.LPushCommand;
+import org.jcnc.snow.vm.commands.type.control.short16.SPushCommand;
+import org.jcnc.snow.vm.commands.type.conversion.*;
+import org.jcnc.snow.vm.commands.system.control.HaltCommand;
 import org.jcnc.snow.vm.engine.VMOpCode;
 import org.jcnc.snow.vm.interfaces.Command;
 
@@ -67,9 +61,8 @@ public class CommandFactory {
 
     static {
 
-        /* =====================================================
-         * 0x0000 – 0x001F  BYTE  (8-bit signed)
-         * ===================================================== */
+        // region Type Control (0x0000-0x00BF)
+        // region Byte8	 (0x0000-0x001F)
         COMMANDS[VMOpCode.B_ADD]   = new BAddCommand();
         COMMANDS[VMOpCode.B_SUB]   = new BSubCommand();
         COMMANDS[VMOpCode.B_MUL]   = new BMulCommand();
@@ -93,9 +86,9 @@ public class CommandFactory {
         COMMANDS[VMOpCode.B_CL]    = new BCLCommand();
         COMMANDS[VMOpCode.B_CLE]   = new BCLECommand();
 
-        /* =====================================================
-         * 0x0020 – 0x003F  SHORT (16-bit signed)
-         * ===================================================== */
+        // endregion
+
+        // region Short16 (0x0020-0x003F)
         COMMANDS[VMOpCode.S_ADD]   = new SAddCommand();
         COMMANDS[VMOpCode.S_SUB]   = new SSubCommand();
         COMMANDS[VMOpCode.S_MUL]   = new SMulCommand();
@@ -118,10 +111,9 @@ public class CommandFactory {
         COMMANDS[VMOpCode.S_CGE]   = new SCGECommand();
         COMMANDS[VMOpCode.S_CL]    = new SCLCommand();
         COMMANDS[VMOpCode.S_CLE]   = new SCLECommand();
+        // endregion
 
-        /* =====================================================
-         * 0x0040 – 0x005F  INT  (32-bit signed)
-         * ===================================================== */
+        // region Int32 (0x0040-0x005F)
         COMMANDS[VMOpCode.I_ADD]   = new IAddCommand();
         COMMANDS[VMOpCode.I_SUB]   = new ISubCommand();
         COMMANDS[VMOpCode.I_MUL]   = new IMulCommand();
@@ -144,10 +136,9 @@ public class CommandFactory {
         COMMANDS[VMOpCode.I_CGE]   = new ICGECommand();
         COMMANDS[VMOpCode.I_CL]    = new ICLCommand();
         COMMANDS[VMOpCode.I_CLE]   = new ICLECommand();
+        // endregion
 
-        /* =====================================================
-         * 0x0060 – 0x007F  LONG (64-bit signed)
-         * ===================================================== */
+        // region Long64 (0x0060-0x007F)
         COMMANDS[VMOpCode.L_ADD]   = new LAddCommand();
         COMMANDS[VMOpCode.L_SUB]   = new LSubCommand();
         COMMANDS[VMOpCode.L_MUL]   = new LMulCommand();
@@ -170,10 +161,9 @@ public class CommandFactory {
         COMMANDS[VMOpCode.L_CGE]   = new LCGECommand();
         COMMANDS[VMOpCode.L_CL]    = new LCLCommand();
         COMMANDS[VMOpCode.L_CLE]   = new LCLECommand();
+        // endregion
 
-        /* =====================================================
-         * 0x0080 – 0x009F  FLOAT (32-bit signed)
-         * ===================================================== */
+        // region Float32 (0x0080-0x009F)
         COMMANDS[VMOpCode.F_ADD]   = new FAddCommand();
         COMMANDS[VMOpCode.F_SUB]   = new FSubCommand();
         COMMANDS[VMOpCode.F_MUL]   = new FMulCommand();
@@ -192,10 +182,9 @@ public class CommandFactory {
         COMMANDS[VMOpCode.F_CGE]   = new FCGECommand();
         COMMANDS[VMOpCode.F_CL]    = new FCLCommand();
         COMMANDS[VMOpCode.F_CLE]   = new FCLECommand();
+        // endregion
 
-        /* =====================================================
-         * 0x00A0 – 0x00BF  DOUBLE (64-bit IEEE-754)
-         * ===================================================== */
+        // region Double64 (0x00A0-0x00BF)
         COMMANDS[VMOpCode.D_ADD]   = new DAddCommand();
         COMMANDS[VMOpCode.D_SUB]   = new DSubCommand();
         COMMANDS[VMOpCode.D_MUL]   = new DMulCommand();
@@ -214,10 +203,10 @@ public class CommandFactory {
         COMMANDS[VMOpCode.D_CGE]   = new DCGECommand();
         COMMANDS[VMOpCode.D_CL]    = new DCLCommand();
         COMMANDS[VMOpCode.D_CLE]   = new DCLECommand();
+        // endregion
+        // endregion
 
-        /* =====================================================
-         * 0x00C0 – 0x00DF  TYPE CONVERSIONS
-         * ===================================================== */
+        // region Type Conversion (0x00C0-0x00DF)
         COMMANDS[VMOpCode.I2L] = new I2LCommand();
         COMMANDS[VMOpCode.I2S] = new I2SCommand();
         COMMANDS[VMOpCode.I2B] = new I2BCommand();
@@ -238,32 +227,30 @@ public class CommandFactory {
 
         COMMANDS[VMOpCode.S2I] = new S2ICommand();
         COMMANDS[VMOpCode.B2I] = new B2ICommand();
+        // endregion
 
-        /* =====================================================
-         * 0x0100 – 0x01FF  GENERIC STACK OPS
-         * ===================================================== */
+        // region Stack Control (0x0100-0x01FF)
         COMMANDS[VMOpCode.POP]  = new PopCommand();
         COMMANDS[VMOpCode.DUP]  = new DupCommand();
         COMMANDS[VMOpCode.SWAP] = new SwapCommand();
+        // endregion
 
-        /* =====================================================
-         * 0x0200 – 0x02FF  CONTROL FLOW | FUNCTION CALLS
-         * ===================================================== */
+        // region Flow Control (0x0200-0x02FF)
         COMMANDS[VMOpCode.JUMP] = new JumpCommand();
         COMMANDS[VMOpCode.CALL] = new CallCommand();
         COMMANDS[VMOpCode.RET]  = new RetCommand();
+        // endregion
 
-        /* =====================================================
-         * 0x0300 – 0x03FF  MEMORY / REGISTER MOVE
-         * ===================================================== */
+        // region Register Control (0x0300-0x03FF)
         COMMANDS[VMOpCode.MOV]  = new MovCommand();
+        // endregion
 
-        /* =====================================================
-         * 0x0400 – 0x04FF  SYSTEM / DEBUG
-         * ===================================================== */
+        // region  System Control (0x0400-0x04FF)
         COMMANDS[VMOpCode.HALT]        = new HaltCommand();
 //        COMMANDS[VMOpCode.SYSCALL]     = new SyscallCommand();
 //        COMMANDS[VMOpCode.DEBUG_TRAP]  = new DebugTrapCommand();
+        // endregion
+
     }
 
 

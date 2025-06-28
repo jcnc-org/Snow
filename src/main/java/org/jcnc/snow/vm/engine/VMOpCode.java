@@ -1,46 +1,44 @@
 package org.jcnc.snow.vm.engine;
 
-import org.jcnc.snow.vm.commands.arithmetic.byte8.*;
-import org.jcnc.snow.vm.commands.arithmetic.conversion.*;
-import org.jcnc.snow.vm.commands.arithmetic.double64.*;
-import org.jcnc.snow.vm.commands.arithmetic.float32.*;
-import org.jcnc.snow.vm.commands.arithmetic.int32.*;
-import org.jcnc.snow.vm.commands.arithmetic.long64.*;
-import org.jcnc.snow.vm.commands.arithmetic.short16.*;
-import org.jcnc.snow.vm.commands.bitwise.int32.IAndCommand;
-import org.jcnc.snow.vm.commands.bitwise.int32.IOrCommand;
-import org.jcnc.snow.vm.commands.bitwise.int32.IXorCommand;
-import org.jcnc.snow.vm.commands.bitwise.long64.LAndCommand;
-import org.jcnc.snow.vm.commands.bitwise.long64.LOrCommand;
-import org.jcnc.snow.vm.commands.bitwise.long64.LXorCommand;
-import org.jcnc.snow.vm.commands.control.all.JumpCommand;
-import org.jcnc.snow.vm.commands.control.int32.*;
-import org.jcnc.snow.vm.commands.control.long64.*;
-import org.jcnc.snow.vm.commands.function.CallCommand;
-import org.jcnc.snow.vm.commands.function.RetCommand;
-import org.jcnc.snow.vm.commands.memory.all.MovCommand;
-import org.jcnc.snow.vm.commands.memory.byte8.BLoadCommand;
-import org.jcnc.snow.vm.commands.memory.byte8.BStoreCommand;
-import org.jcnc.snow.vm.commands.memory.double64.DLoadCommand;
-import org.jcnc.snow.vm.commands.memory.double64.DStoreCommand;
-import org.jcnc.snow.vm.commands.memory.float32.FLoadCommand;
-import org.jcnc.snow.vm.commands.memory.float32.FStoreCommand;
-import org.jcnc.snow.vm.commands.memory.int32.ILoadCommand;
-import org.jcnc.snow.vm.commands.memory.int32.IStoreCommand;
-import org.jcnc.snow.vm.commands.memory.long64.LLoadCommand;
-import org.jcnc.snow.vm.commands.memory.long64.LStoreCommand;
-import org.jcnc.snow.vm.commands.memory.short16.SLoadCommand;
-import org.jcnc.snow.vm.commands.memory.short16.SStoreCommand;
-import org.jcnc.snow.vm.commands.stack.all.DupCommand;
-import org.jcnc.snow.vm.commands.stack.all.PopCommand;
-import org.jcnc.snow.vm.commands.stack.all.SwapCommand;
-import org.jcnc.snow.vm.commands.stack.byte8.BPushCommand;
-import org.jcnc.snow.vm.commands.stack.double64.DPushCommand;
-import org.jcnc.snow.vm.commands.stack.float32.FPushCommand;
-import org.jcnc.snow.vm.commands.stack.int32.IPushCommand;
-import org.jcnc.snow.vm.commands.stack.long64.LPushCommand;
-import org.jcnc.snow.vm.commands.stack.short16.SPushCommand;
-import org.jcnc.snow.vm.commands.vm.HaltCommand;
+import org.jcnc.snow.vm.commands.type.control.byte8.*;
+import org.jcnc.snow.vm.commands.type.control.double64.*;
+import org.jcnc.snow.vm.commands.type.control.float32.*;
+import org.jcnc.snow.vm.commands.type.control.int32.*;
+import org.jcnc.snow.vm.commands.type.control.long64.*;
+import org.jcnc.snow.vm.commands.type.control.short16.*;
+import org.jcnc.snow.vm.commands.type.control.int32.IAndCommand;
+import org.jcnc.snow.vm.commands.type.control.int32.IOrCommand;
+import org.jcnc.snow.vm.commands.type.control.int32.IXorCommand;
+import org.jcnc.snow.vm.commands.type.control.long64.LAndCommand;
+import org.jcnc.snow.vm.commands.type.control.long64.LOrCommand;
+import org.jcnc.snow.vm.commands.type.control.long64.LXorCommand;
+import org.jcnc.snow.vm.commands.flow.control.JumpCommand;
+import org.jcnc.snow.vm.commands.flow.control.CallCommand;
+import org.jcnc.snow.vm.commands.flow.control.RetCommand;
+import org.jcnc.snow.vm.commands.register.control.MovCommand;
+import org.jcnc.snow.vm.commands.type.control.byte8.BLoadCommand;
+import org.jcnc.snow.vm.commands.type.control.byte8.BStoreCommand;
+import org.jcnc.snow.vm.commands.type.control.double64.DLoadCommand;
+import org.jcnc.snow.vm.commands.type.control.double64.DStoreCommand;
+import org.jcnc.snow.vm.commands.type.control.float32.FLoadCommand;
+import org.jcnc.snow.vm.commands.type.control.float32.FStoreCommand;
+import org.jcnc.snow.vm.commands.type.control.int32.ILoadCommand;
+import org.jcnc.snow.vm.commands.type.control.int32.IStoreCommand;
+import org.jcnc.snow.vm.commands.type.control.long64.LLoadCommand;
+import org.jcnc.snow.vm.commands.type.control.long64.LStoreCommand;
+import org.jcnc.snow.vm.commands.type.control.short16.SLoadCommand;
+import org.jcnc.snow.vm.commands.type.control.short16.SStoreCommand;
+import org.jcnc.snow.vm.commands.stack.control.DupCommand;
+import org.jcnc.snow.vm.commands.stack.control.PopCommand;
+import org.jcnc.snow.vm.commands.stack.control.SwapCommand;
+import org.jcnc.snow.vm.commands.type.control.byte8.BPushCommand;
+import org.jcnc.snow.vm.commands.type.control.double64.DPushCommand;
+import org.jcnc.snow.vm.commands.type.control.float32.FPushCommand;
+import org.jcnc.snow.vm.commands.type.control.int32.IPushCommand;
+import org.jcnc.snow.vm.commands.type.control.long64.LPushCommand;
+import org.jcnc.snow.vm.commands.type.control.short16.SPushCommand;
+import org.jcnc.snow.vm.commands.type.conversion.*;
+import org.jcnc.snow.vm.commands.system.control.HaltCommand;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 
 /**
@@ -49,6 +47,7 @@ import org.jcnc.snow.vm.module.LocalVariableStore;
  */
 public class VMOpCode {
 
+    // region Type Control (0x0000-0x00BF)
     // region Byte8	 (0x0000-0x001F)
     /**
      * B_ADD Opcode: Represents the byte8 addition operation in the virtual machine.
@@ -2040,6 +2039,7 @@ public class VMOpCode {
      */
     public static final int D_CLE = 0x00AF;
 
+    // endregion
     // endregion
 
     // region Type Conversion (0x00C0-0x00DF)
