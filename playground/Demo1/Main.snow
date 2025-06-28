@@ -1,9 +1,10 @@
 module: Main
     import:Math
     function: main
-        return_type: void
+        return_type: int
         body:
             Math.add(6,1)
+            return 0
         end body
     end function
 end module
