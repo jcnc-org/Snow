@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="doc/README/IMG/IMG_Snow_icon_128.svg" alt="Snow Icon">
+  <img src="docs/README/IMG/icon/IMG_Snow_icon_128.svg" alt="Snow Icon">
 <h1 align="center" style="margin: 30px 0 30px; font-weight: bold;">Snow编程语言</h1>
 
 <p align="center">
@@ -11,8 +11,8 @@
     <a href="https://gitee.com/jcnc-org/snow/blob/main/LICENSE">
         <img src="https://img.shields.io/badge/%20license-Apache--2.0%20-blue" alt="">
     </a>
-    <a href="https://gitee.com/jcnc-org/snow/tree/v0.3.0/">
-        <img src="https://img.shields.io/badge/version-v0.3.0-blue" alt="">
+    <a href="https://gitee.com/jcnc-org/snow/tree/v0.4.0/">
+        <img src="https://img.shields.io/badge/version-v0.4.0-blue" alt="">
     </a>
 </p>
 
@@ -30,39 +30,53 @@
 
 ## 项目简介
 
-Snow 语言是一个正在发展的编程语言,采用类模块（module）语法风格,支持函数定义和类型注解。它设计目标是让大型语言模型（LLM）更容易生成和理解编程代码。该项目实现了 Snow 语言的完整编译流程,包括词法分析,语法分析,语义分析,中间表示（IR）生成以及最终的虚拟机（VM）指令生成和执行器。通过 Snow 编译器,可以将 `.snow` 源文件编译为中间表示和自定义的虚拟机指令,并在内置的虚拟机上直接运行。
+Snow 是一门受 LLM 时代启发的、面向 AI 友好的编程语言。它设计目标是让 LLM 更容易生成和理解编程代码。
+
+该项目实现了 Snow
+语言的完整编译流程,包括词法分析,语法分析,语义分析,中间表示（IR）生成以及最终的虚拟机（VM）指令生成和执行器，提供从源码到字节码再到自研编程语言虚拟机 (
+SnowVM) 的完整编译-执行链路。
+
+通过 Snow 编译器,可以将 `.snow` 源文件编译为 `.water`虚拟机指令,并在 SnowVM 上直接运行。
+
+从源码编译、构建管理、依赖管理、项目标准化、可视化调试面板到原生镜像发布，全部由 Snow 官方工具完成，降低学习与集成成本。
 
 ## 背景理念
 
-Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的语法和严格的类型系统,以帮助人工智能模型更好地理解程序结构。语言使用显式的 `module` 声明来组织代码,用 `function`,`parameter`,`return_type`,`body` 等关键字分隔不同代码块,语法结构固定且易读。此外,Snow 实现了语义分析来检查变量作用域和类型一致性,在编译阶段捕获错误并确保生成的中间代码正确无误。这种自上而下的编译流程,使得代码设计和生成更加模块化,可解释,也有利于调试和优化。
+Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的语法和严格的类型系统,以帮助 LLM 更好地理解程序。
 
-相关背景: [心路历程](doc/Snow-Lang-Journey/Snow-Lang-Journey.md)
+语言使用显式的 `module` 声明来组织代码,用 `function`,`parameter`,`return_type`,`body` 等关键字分隔不同代码块,语法结构固定且易读。此外,Snow
+实现了语义分析来检查变量作用域和类型一致性,在编译阶段捕获错误并确保生成的中间代码正确无误。这种自上而下的编译流程,使得代码设计和生成更加模块化,可解释,也有利于调试和优化。
 
-## 下载Snow发行版
-
-访问:  https://gitee.com/jcnc-org/snow/releases
-
-## 相关文档
-
-[Git 管理规范](doc/Snow-Lang-Git-Management/Snow-Lang-Git-Management.md)
-
-[Snow-Lang GraalVM AOT 打包指南](doc/Snow-Lang-GraalVM-AOT-Native-Image-Package/Snow-Lang-GraalVM-AOT-Native-Image-Package.md)
+相关背景: [心路历程](docs/Snow-Lang-Journey/Snow-Lang-Journey.md)
 
 ## 功能特性
 
-* **模块化语法**：支持顶层的 `module:` 声明和 `import:` 导入语句,用于组织代码和依赖管理。
-* **函数与类型**：支持函数定义,函数参数和返回值。在函数体中可以声明变量并进行类型检查。
-* **丰富语句**：支持变量声明（`declare name:Type`,可选初始化）,条件语句（`if ... end if`）,循环语句（`loop ... end loop`）,返回语句等。
-* **表达式解析**：实现了 Pratt 算法的表达式解析器,支持算术,比较和逻辑运算,以及函数调用,成员访问等操作。
-* **完整编译器前端**：包含词法分析器（Lexer）,语法分析器（Parser）和语义分析器,对源代码生成抽象语法树（AST）并检查类型/作用域。
-* **中间表示（IR）**：将高层 AST 转换为自定义的三地址式 IR（Intermediate Representation）,结构清晰便于后端优化。
-* **后端指令生成**：IR 模块通过线性扫描寄存器分配器映射寄存器,使用指令生成器将 IR 翻译为定制的 VM 指令集。
-* **虚拟机执行**：自带虚拟机引擎（VirtualMachineEngine）,能够加载并执行生成的指令序列,支持调试模式输出虚拟机状态。
-* **调试与输出**：编译过程会输出源码,AST（JSON 格式）,IR 和最终生成的 VM 代码,方便用户查看编译中间结果和调试。
+| 类别       | 关键特性                                                                                              |
+|----------|---------------------------------------------------------------------------------------------------|
+| 语言层      | `module` / `import` / `function` / `loop` / `if–else` / Pratt 表达式解析<br>静态类型检查 & 作用域分析             |
+| 编译器前端    | **Lexer / Parser / Semantic Analyzer** 全栈自研，生成 JSON-AST                                           |
+| IR & 后端  | 三地址式 IR ➜ 线性扫描寄存器分配 ➜ SnowVM 指令                                                                   |
+| 虚拟机      | 栈 + 寄存器混合架构、GUI 局部变量监视                                                                            |
+| snow pkg | - `.cloud` DSL 描述项目、依赖与构建<br>- 预设 `clean / compile / run / package / publish` 任务<br>- 离线缓存与远程仓库解析 |
+| CLI      | `snow init`, `snow compile`, `snow run`, `snow clean`, `snow build`, `snow generate`              |
+
+## Snow-Lang 官网
+
+[https://snow-lang.com](https://snow-lang.com)
+
+## 下载 Snow 发行版
+
+[https://gitee.com/jcnc-org/snow/releases](https://gitee.com/jcnc-org/snow/releases)
+
+## 相关文档
+
+[Git 管理规范](docs/Snow-Lang-Git-Management/Snow-Lang-Git-Management.md)
+
+[Snow-Lang GraalVM AOT 打包指南](docs/Snow-Lang-GraalVM-AOT-Native-Image-Package/Snow-Lang-GraalVM-AOT-Native-Image-Package.md)
 
 ## 开发计划
 
-[Snow 语言现状和下一阶段开发路线图-2025-06-11](doc/Snow-Lang-Roadmap/Snow-Lang-Roadmap.md)
+~~[Snow 语言现状和下一阶段开发路线图-2025-06-11-已废弃](docs/Snow-Lang-Roadmap/Snow-Lang-Roadmap-2025-06-11.md)~~
 
 ## 开发环境安装
 
@@ -78,199 +92,257 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
 
 3. **运行项目**
 
-   使用IDEA配置好的运行配置SnowCompiler
+   使用IDEA配置好的运行配置 `Demo1`
 
-   ![IMG_运行配置文件_1.png](doc/README/IMG/IMG_Run-Profile_1.png)
+   ![IMG_运行配置文件_1.png](docs/README/IMG/IMG_Run-Profile_1.png)
 
 4. **运行成功**
 
-``` snow
-## 源代码 (main.snow)
-module: Main
-    import:Math
-    function: main
-        parameter:
-        return_type: int
-        body:
-            Math.factorial(6L,1L)
-            return 0
-        end body
-    end function
-end module
-
-## 源代码 (test.snow)
-module: Math
-    function: factorial
-        parameter:
-            declare n1: long
-            declare n2: long
-        return_type: long
-        body:
-           return n1+n2
-        end body
-    end function
-end module
-
-## 编译器输出
-### AST
-[
-  {
-    "type": "Module",
-    "name": "Main",
-    "imports": [
+    ``` snow
+    ## 编译器输出
+    ### Snow 源代码
+    #### Main.snow
+    module: Main
+        import:Math
+        function: main
+            return_type: void
+            body:
+                Math.add(6,1)
+            end body
+        end function
+    end module
+    
+    #### Math.snow
+    module: Math
+        function: add
+            parameter:
+                declare n1: int
+                declare n2: int
+            return_type: int
+            body:
+               return n1 + n2
+            end body
+        end function
+    end module
+    ### AST
+    [
       {
-        "module": "Math",
-        "type": "Import"
-      }
-    ],
-    "functions": [
+        "type": "Module",
+        "name": "Main",
+        "imports": [
+          {
+            "module": "Math",
+            "type": "Import"
+          }
+        ],
+        "functions": [
+          {
+            "type": "Function",
+            "name": "main",
+            "parameters": [
+              
+            ],
+            "returnType": "void",
+            "body": [
+              {
+                "type": "ExpressionStatement",
+                "expression": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "Math"
+                    },
+                    "member": "add"
+                  },
+                  "arguments": [
+                    {
+                      "type": "NumberLiteral",
+                      "value": "6"
+                    },
+                    {
+                      "type": "NumberLiteral",
+                      "value": "1"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
       {
-        "type": "Function",
-        "name": "main",
-        "parameters": [
+        "type": "Module",
+        "name": "Math",
+        "imports": [
           
         ],
-        "returnType": "int",
-        "body": [
+        "functions": [
           {
-            "type": "ExpressionStatement",
-            "expression": {
-              "type": "CallExpression",
-              "callee": {
-                "type": "MemberExpression",
-                "object": {
-                  "type": "Identifier",
-                  "name": "Math"
-                },
-                "member": "factorial"
+            "type": "Function",
+            "name": "add",
+            "parameters": [
+              {
+                "name": "n1",
+                "type": "int"
               },
-              "arguments": [
-                {
-                  "type": "NumberLiteral",
-                  "value": "6L"
-                },
-                {
-                  "type": "NumberLiteral",
-                  "value": "1L"
-                }
-              ]
-            }
-          },
-          {
-            "type": "Return",
-            "value": {
-              "type": "NumberLiteral",
-              "value": "0"
-            }
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "type": "Module",
-    "name": "Math",
-    "imports": [
-      
-    ],
-    "functions": [
-      {
-        "type": "Function",
-        "name": "factorial",
-        "parameters": [
-          {
-            "name": "n1",
-            "type": "long"
-          },
-          {
-            "name": "n2",
-            "type": "long"
-          }
-        ],
-        "returnType": "long",
-        "body": [
-          {
-            "type": "Return",
-            "value": {
-              "type": "BinaryExpression",
-              "left": {
-                "type": "Identifier",
-                "name": "n1"
-              },
-              "operator": "+",
-              "right": {
-                "type": "Identifier",
-                "name": "n2"
+              {
+                "name": "n2",
+                "type": "int"
               }
-            }
+            ],
+            "returnType": "int",
+            "body": [
+              {
+                "type": "Return",
+                "value": {
+                  "type": "BinaryExpression",
+                  "left": {
+                    "type": "Identifier",
+                    "name": "n1"
+                  },
+                  "operator": "+",
+                  "right": {
+                    "type": "Identifier",
+                    "name": "n2"
+                  }
+                }
+              }
+            ]
           }
         ]
       }
     ]
-  }
-]
-### IR
-func main() {
-  %0 = CONST 6
-  %1 = CONST 1
-  %2 = CALL Math.factorial, %0, %1
-  %3 = CONST 0
-  RET %3
-}
-func factorial(%0, %1) {
-  %2 = ADD_L64 %0, %1
-  RET %2
-}
-
-### VM code
-112 6
-152 0
-112 1
-152 1
-162 0
-162 1
-201 12 2
-152 2
-111 0
-151 3
-161 3
-255
-162 0
-162 1
-11
-152 2
-162 2
-202
-Calling function at address: 12
-Return 7
-Process has ended
-
-
-### VM Local Variable Table:
-0: 6
-1: 1
-2: 7
-3: 0
-
-```
-
+    ### IR
+    func main() {
+      %0 = CONST 6
+      %1 = CONST 1
+      %2 = CALL Math.add, %0, %1
+    }
+    func add(%0, %1) {
+      %2 = ADD_I32 %0, %1
+      RET %2
+    }
+    
+    ### VM code
+    0000: I_PUSH     6
+    0001: I_STORE    0
+    0002: I_PUSH     1
+    0003: I_STORE    1
+    0004: I_LOAD     0
+    0005: I_LOAD     1
+    0006: CALL       8 2
+    0007: I_STORE    2
+    0008: I_LOAD     0
+    0009: I_LOAD     1
+    0010: I_ADD      
+    0011: I_STORE    2
+    0012: I_LOAD     2
+    0013: RET        
+    Written to D:\Devs\IdeaProjects\Snow\target\Demo1.water
+    
+    === Launching VM ===
+    Calling function at address: 8
+    Return 7
+    Return 2147483647
+    Operand Stack state:[7]
+    
+    --- Call Stack State ---
+    
+    Local variable table is empty
+    ```
 
 ## 编译Snow源代码
 
-1. **运行编译器**：
-   运行 Snow 来编译 `.snow` 源文件 (Windows环境) 并且在Snow虚拟机运行,默认以 DEBUG 模式显示执行过程和状态。例如：
+### 1. 独立编译 (Standalone Compilation)
+
+独立编译不依赖 `.cloud` 文件，而是直接使用 `Snow` 编译器进行 `.snow` 文件的编译和执行。
+
+#### 独立编译步骤：
+
+1. **运行编译器：**
+   你可以通过以下命令来编译单个或多个 `.snow` 文件，或者递归编译一个目录中的所有 `.snow` 源文件为`.water`虚拟机指令。
+
+    * **单个文件编译：**
+
+      ```bash
+      Snow [SnowCode].snow
+      ```
+
+    * **多个文件编译：**
+
+      ```bash
+      Snow [SnowCode1].snow [SnowCode2].snow [SnowCode3].snow
+      ```
+
+    * **目录递归编译：**
+
+      ```bash
+      Snow -d path/to/source_dir
+      ```
+
+2. **查看编译输出：**
+   编译过程会输出源代码、抽象语法树（AST）、中间表示（IR）以及虚拟机指令等内容。你可以看到如下几个分段输出：
+
+    * **AST**（抽象语法树）部分以 JSON 格式输出。
+    * **IR**（中间表示）部分会列出逐行的中间代码。
+    * **VM code**（虚拟机指令）会展示虚拟机的字节码指令。
+
+3. **默认执行模式：**
+   编译器会在 **DEBUG 模式** 下运行，显示详细的执行过程和状态，并且在虚拟机中执行编译后的代码，最后会打印出所有局部变量的值。
+
+---
+
+### 2. **集成编译 (Integrated Compilation)**
+
+集成编译需要使用 `.cloud` 文件来指定项目的配置和结构，适用于项目标准化、依赖管理、构建管理和项目分发等场景。
+
+#### 集成编译命令：
+
+1. **基本用法：**
 
    ```bash
-   # 单个文件编译
-   Snow.exe [SnowCode].snow
-   # 多个文件编译
-   Snow.exe [SnowCode1].snow [SnowCode2].snow [SnowCode3].snow 
-   # 目录递归编译（-d 参数）
-   Snow.exe -d path/to/source_dir
+     snow [OPTIONS] <command>
+   ```
 
+2. **命令选项：**
 
-   编译器会输出源代码,AST,IR 和 VM 指令等内容,并自动执行虚拟机引擎,最后打印所有局部变量的值
-2. **查看 AST/IR/VM 输出**：在编译器输出中,可看到 `### AST`,`### IR` 和 `### VM code` 等分段内容。AST 部分为 JSON 格式,IR 和 VM 部分为逐行指令文本。
+    * `-h, --help`：显示帮助信息并退出。
+    * `-v, --version`：打印 Snow 编程语言的版本并退出。
+
+3. **可用命令：**
+
+    * `compile`：将 `.snow` 源文件编译成虚拟机字节码文件（`.water`）。此命令会使用 `.cloud` 文件来指导编译过程。
+    * `clean`：清理构建输出和本地缓存，移除中间产物，释放磁盘空间。
+    * `version`：打印 Snow 的版本。
+    * `run`：运行已编译的虚拟机字节码文件（`.water`）。
+    * `init`：初始化一个新项目，生成 `project.cloud` 文件。
+    * `generate`：根据 `project.cloud` 生成项目目录结构。
+    * `build`：构建当前项目，按顺序解析依赖、编译和打包。
+
+4. **例如，执行集成编译命令：**
+
+   ```bash
+   snow compile [SnowCode].snow
+   ```
+
+    * 此命令会使用 `.cloud` 文件中的配置信息来指导编译过程，并生成 `.water`。
+
+5. **使用帮助：**
+   如果你需要了解某个命令的详细选项，可以使用：
+
+   ```bash
+   snow <command> --help
+   ```
+
+   例如，查看 `compile` 命令的具体选项：
+
+   ```bash
+   snow compile --help
+   ```
+
+---
 
 ## 示例代码片段
 
@@ -279,7 +351,6 @@ Process has ended
 ```snow
 module: Math
     function: main
-        parameter:
         return_type: int
         body:
             Math.factorial(6)
@@ -308,32 +379,52 @@ module: Math
         end body
     end function
 end module
-
 ```
 
 上述代码定义了一个名为 `Math` 的模块，其中包含两个函数：
 
 * `main`：不接收任何参数，返回类型为 `int`。在函数体内调用了 `Math.factorial(6)`，然后返回 `0`。
-* `factorial`：接收一个 `int` 类型的参数 `n`，返回类型为 `int`。函数体内先声明并初始化局部变量 `num1` 为 `1`，然后通过一个 `loop` 循环（从 `counter = 1` 到 `counter <= n`）依次将 `num1` 乘以 `counter`，循环结束后返回 `num1`，即 `n` 的阶乘值。
+* `factorial`：接收一个 `int` 类型的参数 `n`，返回类型为 `int`。函数体内先声明并初始化局部变量 `num1` 为 `1`，然后通过一个
+  `loop` 循环（从 `counter = 1` 到 `counter <= n`）依次将 `num1` 乘以 `counter`，循环结束后返回 `num1`，即 `n` 的阶乘值。
 
+
+> 更多示例代码见 [playground 目录](https://gitee.com/jcnc-org/snow/tree/main/playground) 
 
 ## 项目结构说明
 
 * `compiler/`：Snow 编译器源代码目录
 
-    * `cli/`：命令行接口,包括 `SnowCompiler` 主程序
-    * `lexer/`：词法分析模块,负责将源码切分为 Token
-    * `parser/`：语法分析模块,将 Token 流解析为 AST；包括模块解析,函数解析,语句解析等子模块
-    * `semantic/`：语义分析模块,负责符号表管理,类型检查等
-    * `ir/`：中间表示（IR）模块,生成和管理三地址码形式的中间代码
-    * `backend/`：编译器后端模块,将 IR 翻译为虚拟机指令,包含寄存器分配和指令生成器
+    * `lexer/`：词法分析模块，负责将源码切分为 Token
+    * `parser/`：语法分析模块，将 Token 流解析为 AST（含模块/函数/语句解析）
+    * `semantic/`：语义分析模块，负责符号表管理、类型检查等
+    * `ir/`：中间表示（IR）模块，生成并管理三地址码形式的中间代码
+    * `backend/`：编译器后端模块，将 IR 翻译为虚拟机指令，包含寄存器分配和指令生成器
+
 * `vm/`：虚拟机相关源代码目录
 
-    * `commands/`：定义 VM 指令集的具体实现
-    * `engine/`：核心执行引擎,提供指令执行和寄存器栈管理
-    * `execution/`：执行流程控制（按指令顺序执行,分支跳转等）
-    * `io/`：输入输出辅助类（加载指令,文件解析等）
-    * 其他如 `factories/`,`utils/` 等目录包含指令创建和调试工具类
+    * `commands/`：定义 SnowVM 指令集的具体实现
+    * `engine/`：核心执行引擎，提供指令执行和寄存器/栈管理
+    * `execution/`：执行流程控制（按指令顺序执行、分支跳转等）
+    * `io/`：输入输出辅助类（加载指令、文件解析等）
+    * `gui/`：Swing 可视化调试面板，实时展示局部变量表
+    * `factories/`、`utils/`：指令创建、日志调试等公共工具
+
+* `pkg/`：内置构建与包管理器 **snow pkg**
+
+    * `dsl/`：`.cloud` 描述文件解析器
+    * `tasks/`：预设任务实现（`clean · compile · run · package · publish` 等）
+    * `resolver/`：本地/远程仓库解析与缓存
+    * `lifecycle/`：任务生命周期钩子（pre/post 脚本等）
+    * `model/`：项目、依赖、版本等模型
+    * `utils/`：文件、日志、校验和等通用工具
+    * `doc/`：开发者文档与示例 `.cloud` 配置
+
+* `cli/`：独立的命令行前端
+
+    * `commands/`：`compile` / `run` / `pkg` 等子命令实现
+    * `api/`：公共选项解析、终端交互抽象
+    * `utils/`：终端颜色、进度条、异常格式化等
+    * `SnowCLI.java`：CLI 主入口
 
 
 ## 版权声明
