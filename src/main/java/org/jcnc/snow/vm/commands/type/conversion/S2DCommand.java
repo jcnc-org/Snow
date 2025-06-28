@@ -12,11 +12,11 @@ import org.jcnc.snow.vm.module.OperandStack;
  * <p>Execution Steps:</p>
  * <ol>
  *     <li>Pop the top short16 value from the operand stack.</li>
- *     <li>Convert the short16 value to an double64 value.</li>
+ *     <li>Convert the short16 value to a double64 value.</li>
  *     <li>Push the converted double64 value back onto the operand stack for subsequent operations.</li>
  * </ol>
  *
- * <p>This opcode is used to widen a short16 value to an double64 type, facilitating subsequent integer arithmetic or comparison operations.</p>
+ * <p>This opcode is used to widen a short16 value to a double64 type, facilitating subsequent integer arithmetic or comparison operations.</p>
  */
 public class S2DCommand implements Command {
 
