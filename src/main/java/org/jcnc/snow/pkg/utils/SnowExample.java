@@ -34,10 +34,10 @@ public final class SnowExample {
                 
                     function: factorial
                         parameter:
-                            declare n:int
+                            declare n: int
                         return_type: int
                         body:
-                            declare num1:int = 1
+                            declare num1: int = 1
                             loop:
                                 initializer:
                                     declare counter:int = 1
