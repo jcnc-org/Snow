@@ -120,7 +120,7 @@ public class TokenStream {
      * @return 若当前位置 Token 为 EOF，则返回 true，否则 false
      */
     public boolean isAtEnd() {
-        return peek().getType() != TokenType.EOF;
+        return peek().getType() == TokenType.EOF;
     }
 
 

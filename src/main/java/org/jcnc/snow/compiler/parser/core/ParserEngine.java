@@ -17,7 +17,7 @@ public record ParserEngine(ParserContext ctx) {
         List<String> errs = new ArrayList<>();
         TokenStream ts = ctx.getTokens();
 
-        while (ts.isAtEnd()) {
+        while (!ts.isAtEnd()) {
             // 跳过空行
             if (ts.peek().getType() == TokenType.NEWLINE) {
                 ts.next();
@@ -46,7 +46,7 @@ public record ParserEngine(ParserContext ctx) {
      * 错误同步：跳到下一行或下一个已注册顶层关键字
      */
     private void synchronize(TokenStream ts) {
-        while (ts.isAtEnd()) {
+        while (!ts.isAtEnd()) {
             if (ts.peek().getType() == TokenType.NEWLINE) {
                 ts.next();
                 break;
@@ -57,7 +57,7 @@ public record ParserEngine(ParserContext ctx) {
             ts.next();
         }
         // 连续空行全部吃掉
-        while (ts.isAtEnd() && ts.peek().getType() == TokenType.NEWLINE) {
+        while (!ts.isAtEnd() && ts.peek().getType() == TokenType.NEWLINE) {
             ts.next();
         }
     }
