@@ -49,7 +49,7 @@ public class BAndCommand implements Command {
         final byte a = (byte) operandStack.pop();
 
         // Perform the byte8 bitwise AND operation and push the result back onto the stack
-        operandStack.push(a & b);
+        operandStack.push((byte)(a & b));
 
         return currentPC + 1;
     }

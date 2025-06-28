@@ -49,7 +49,7 @@ public class SOrCommand implements Command {
         final short a = (short) operandStack.pop();
 
         // Perform the short16 bitwise OR operation and push the result back onto the stack
-        operandStack.push(a | b);
+        operandStack.push((short)(a | b));
 
         return currentPC + 1;
     }
