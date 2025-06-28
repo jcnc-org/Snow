@@ -135,7 +135,6 @@ public final class OpHelper {
 
         Map<Integer, String> revmap = new HashMap<>();  // reverse map
         OPCODE_MAP.forEach((key, value) -> revmap.put(Integer.parseInt(value), key));
-
         OPCODE_NAME_MAP = Collections.unmodifiableMap(revmap);
     }
 
@@ -197,7 +196,7 @@ public final class OpHelper {
     public static String opcodeName(int code) {
         String name = OPCODE_NAME_MAP.get(code);
         if (name == null) {
-            throw new IllegalStateException("Unknown opcode: " + name);
+            throw new IllegalStateException("Unknown opcode: " + code);
         }
         return name;
     }
