@@ -22,25 +22,34 @@ import java.util.List;
  */
 public class LexerEngine {
     /**
-     * 扫描生成的 Token 序列（包含文件结束符 EOF）
+     * 扫描生成的 Token 序列（包含文件结束符 EOF）。
+     * 每个 Token 表示源代码中的一个词法单元。
      */
     private final List<Token> tokens = new ArrayList<>();
 
-    private final String absPath;
     /**
-     * 词法上下文，提供字符流读取与位置信息
+     * 当前源文件的绝对路径，用于错误信息定位。
+     */
+    private final String absPath;
+
+    /**
+     * 词法上下文，负责字符流读取与位置信息维护。
      */
     private final LexerContext context;
 
     /**
-     * Token 扫描器集合，按优先级顺序组织，用于识别不同类别的 Token
+     * Token 扫描器集合，按优先级顺序排列，
+     * 用于识别不同类别的 Token（如空白、注释、数字、标识符等）。
      */
     private final List<TokenScanner> scanners;
 
+    /**
+     * 词法分析过程中收集到的全部词法错误。
+     */
     private final List<LexicalError> errors = new ArrayList<>();
 
     /**
-     * 构造词法分析器（假定输入源自标准输入，文件名默认为 <stdin>）
+     * 构造词法分析器（假定输入源自标准输入，文件名默认为 &lt;stdin&gt;）。
      *
      * @param source 源代码文本
      */
@@ -48,10 +57,9 @@ public class LexerEngine {
         this(source, "<stdin>");
     }
 
-
     /**
      * 构造词法分析器，并指定源文件名（用于诊断信息）。
-     * 构造时立即进行全量扫描。
+     * 构造时立即进行全量扫描，扫描结束后打印所有 Token 并报告词法错误。
      *
      * @param source     源代码文本
      * @param sourceName 文件名或来源描述（如"Main.snow"）
@@ -90,7 +98,12 @@ public class LexerEngine {
     }
 
     /**
-     * 静态报告方法
+     * 静态报告方法。
+     * <p>
+     * 打印所有词法分析过程中收集到的错误信息。
+     * 如果无错误，输出词法分析通过的提示。
+     *
+     * @param errors 词法错误列表
      */
     public static void report(List<LexicalError> errors) {
         if (errors != null && !errors.isEmpty()) {
@@ -102,9 +115,11 @@ public class LexerEngine {
     }
 
     /**
-     * 主扫描循环，将源代码转为 Token 序列
-     * 依次尝试每个扫描器，直到找到可处理当前字符的扫描器为止
-     * 扫描到结尾后补充 EOF Token
+     * 主扫描循环，将源代码转为 Token 序列。
+     * <p>
+     * 依次尝试每个扫描器，直到找到可处理当前字符的扫描器为止。
+     * 扫描到结尾后补充 EOF Token。
+     * 若遇到词法异常则收集错误并跳过当前字符，避免死循环。
      */
     private void scanAllTokens() {
         while (!context.isAtEnd()) {
@@ -135,7 +150,7 @@ public class LexerEngine {
     }
 
     /**
-     * 获取全部 Token（包含 EOF），返回只读列表
+     * 获取全部 Token（包含 EOF），返回只读列表。
      *
      * @return 词法分析结果 Token 列表
      */
@@ -144,7 +159,9 @@ public class LexerEngine {
     }
 
     /**
-     * 返回全部词法错误
+     * 返回全部词法错误（返回只读列表）。
+     *
+     * @return 词法错误列表
      */
     public List<LexicalError> getErrors() {
         return List.copyOf(errors);
