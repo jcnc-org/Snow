@@ -49,15 +49,6 @@ public class LexerEngine {
     private final List<LexicalError> errors = new ArrayList<>();
 
     /**
-     * 构造词法分析器（假定输入源自标准输入，文件名默认为 &lt;stdin&gt;）。
-     *
-     * @param source 源代码文本
-     */
-    public LexerEngine(String source) {
-        this(source, "<stdin>");
-    }
-
-    /**
      * 构造词法分析器，并指定源文件名（用于诊断信息）。
      * 构造时立即进行全量扫描，扫描结束后打印所有 Token 并报告词法错误。
      *
