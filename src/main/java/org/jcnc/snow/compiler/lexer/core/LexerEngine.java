@@ -86,6 +86,9 @@ public class LexerEngine {
         }
         TokenPrinter.print(this.tokens);
         LexerEngine.report(this.getErrors());
+        if (!errors.isEmpty()) {
+            throw new LexicalException("Lexing failed with " + errors.size() + " error(s).", this.context.getLine(), this.context.getCol());
+        }
     }
 
     /**
