@@ -28,7 +28,7 @@ public final class SemanticAnalysisReporter {
             System.err.println("语义分析发现 " + errors.size() + " 个错误：");
             errors.forEach(err -> System.err.println("  " + err));
         } else {
-//            System.out.println("## 语义分析通过，没有发现错误\n");
+            System.out.println("\n## 语义分析通过，没有发现错误\n");
         }
     }
 

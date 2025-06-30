@@ -19,6 +19,8 @@ public class LexicalException extends RuntimeException {
     private final int line;
     /** 错误发生的列号（从1开始） */
     private final int column;
+    /** 错误原因 */
+    private final String reason;
 
     /**
      * 构造词法异常
@@ -27,12 +29,13 @@ public class LexicalException extends RuntimeException {
      * @param column  出错列号
      */
     public LexicalException(String reason, int line, int column) {
-        // 构造出错消息，并禁止异常堆栈打印
-        super(String.format("Lexical error: %s at %d:%d", reason, line, column),
-                null, false, false);
+        // 错误描述直接为 reason，禁止异常堆栈打印
+        super(reason, null, false, false);
+        this.reason = reason;
         this.line   = line;
         this.column = column;
     }
+
 
     /**
      * 屏蔽异常堆栈填充（始终不打印堆栈信息）
@@ -51,4 +54,10 @@ public class LexicalException extends RuntimeException {
      * @return 列号
      */
     public int getColumn() { return column; }
+
+    /**
+     * 获取出错的描述
+     * @return 出错描述
+     */
+    public String getReason() { return reason; }
 }

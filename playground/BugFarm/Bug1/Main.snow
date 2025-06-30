@@ -1,7 +1,7 @@
 function: main
     return_type: int
     body:
-        3 L
-        return 65537
+       declare num1 :int =  3.1 G
+       return 65537
     end body
 end function

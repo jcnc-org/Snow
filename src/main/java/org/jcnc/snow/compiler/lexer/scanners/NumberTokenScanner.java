@@ -35,51 +35,56 @@ import org.jcnc.snow.compiler.lexer.token.TokenType;
  */
 public class NumberTokenScanner extends AbstractTokenScanner {
 
-    /** 合法类型后缀字符集合 */
+    /** 合法类型后缀字符集合（单字符，大小写均可） */
     private static final String SUFFIX_CHARS = "bslfdBSLFD";
 
     @Override
     public boolean canHandle(char c, LexerContext ctx) {
+        // 仅当遇到数字时，本扫描器才处理
         return Character.isDigit(c);
     }
 
     @Override
     protected Token scanToken(LexerContext ctx, int line, int col) {
         StringBuilder literal = new StringBuilder();
-        boolean hasDot = false; // 是否已遇到小数点
+        boolean hasDot = false; // 标记是否已出现过小数点
 
-        /* 1. 读取数字主体（整数 / 小数） */
+        /* 1. 读取数字主体部分（包括整数、小数） */
         while (!ctx.isAtEnd()) {
             char c = ctx.peek();
             if (c == '.' && !hasDot) {
+                // 遇到第一个小数点
                 hasDot = true;
                 literal.append(ctx.advance());
             } else if (Character.isDigit(c)) {
+                // 吸收数字字符
                 literal.append(ctx.advance());
             } else {
+                // 非数字/非小数点，终止主体读取
                 break;
             }
         }
 
-        /* 2. 处理后缀或非法跟随字符 */
+        /* 2. 检查数字字面量后的字符，决定是否继续吸收或抛出异常 */
         if (!ctx.isAtEnd()) {
             char next = ctx.peek();
 
-            /* 2-A: 合法类型后缀，直接吸收 */
+            /* 2-A: 合法类型后缀，直接吸收（如 42L、3.0F） */
             if (SUFFIX_CHARS.indexOf(next) >= 0) {
                 literal.append(ctx.advance());
             }
-            /* 2-B: 未知字母紧邻 → 抛异常 */
+            /* 2-B: 若紧跟未知字母（如 42X），抛出词法异常 */
             else if (Character.isLetter(next)) {
                 throw new LexicalException(
-                        "Unknown numeric suffix '" + next + "'",
+                        "未知的数字类型后缀 '" + next + "'",
                         line, col
                 );
             }
-            /* 2-C: 数字后空白（非换行）→ 若空白后跟字母，抛异常 */
+            /* 2-C: 若数字后有空白，且空白后紧跟字母（如 3 L），也为非法 */
             else if (Character.isWhitespace(next) && next != '\n') {
                 int off = 1;
                 char look;
+                // 跳过所有空白字符，找到第一个非空白字符
                 do {
                     look = ctx.peekAhead(off);
                     if (look == '\n' || look == '\0') break;
@@ -88,20 +93,21 @@ public class NumberTokenScanner extends AbstractTokenScanner {
                 } while (true);
 
                 if (Character.isLetter(look)) {
+                    // 抛出：数字字面量与位宽符号之间不允许有空白符
                     throw new LexicalException(
-                            "Whitespace between numeric literal and an alphabetic character is not allowed",
+                            "数字字面量与位宽符号之间不允许有空白符",
                             line, col
                     );
                 }
             }
-            /* 2-D: 紧邻字符为 '/' → 抛异常以避免死循环 */
+            /* 2-D: 若紧跟 '/'，抛出异常防止死循环 */
             else if (next == '/') {
                 throw new LexicalException(
-                        "Unexpected '/' after numeric literal",
+                        "数字字面量后不允许直接出现 '/'",
                         line, col
                 );
             }
-            /* 其余字符（运算符、分隔符等）留给后续扫描器处理 */
+            // 其余情况（如分号、括号、运算符），交由其他扫描器处理
         }
 
         /* 3. 返回 NUMBER_LITERAL Token */

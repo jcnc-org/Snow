@@ -4,6 +4,7 @@ import org.jcnc.snow.compiler.lexer.base.TokenScanner;
 import org.jcnc.snow.compiler.lexer.scanners.*;
 import org.jcnc.snow.compiler.lexer.token.Token;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +25,7 @@ public class LexerEngine {
      */
     private final List<Token> tokens = new ArrayList<>();
 
+    private final String absPath;
     /**
      * 词法上下文，提供字符流读取与位置信息
      */
@@ -34,6 +36,8 @@ public class LexerEngine {
      */
     private final List<TokenScanner> scanners;
 
+    private final List<LexicalError> errors = new ArrayList<>();
+
     /**
      * 构造词法分析器（假定输入源自标准输入，文件名默认为 <stdin>）
      *
@@ -43,6 +47,7 @@ public class LexerEngine {
         this(source, "<stdin>");
     }
 
+
     /**
      * 构造词法分析器，并指定源文件名（用于诊断信息）。
      * 构造时立即进行全量扫描。
@@ -51,6 +56,7 @@ public class LexerEngine {
      * @param sourceName 文件名或来源描述（如"Main.snow"）
      */
     public LexerEngine(String source, String sourceName) {
+        this.absPath = new File(sourceName).getAbsolutePath();
         this.context = new LexerContext(source);
         this.scanners = List.of(
                 new WhitespaceTokenScanner(), // 跳过空格、制表符等
@@ -68,15 +74,28 @@ public class LexerEngine {
         try {
             scanAllTokens();
         } catch (LexicalException le) {
-            // 输出：文件名:行:列: 错误信息，简洁明了
+            // 输出：绝对路径: 行 x, 列 y: 错误信息
             System.err.printf(
-                    "%s:%d:%d: %s%n",
-                    sourceName,
-                    le.getLine(),      // 获取出错行号
-                    le.getColumn(),    // 获取出错列号
-                    le.getMessage()    // 错误描述
+                    "%s: 行 %d, 列 %d: %s%n",
+                    absPath,
+                    le.getLine(),
+                    le.getColumn(),
+                    le.getReason()
             );
-            System.exit(65); // 65 = EX_DATAERR，标准数据错误退出码
+            System.exit(65); // 65 = EX_DATAERR
+        }
+        LexerEngine.report(this.getErrors());
+    }
+
+    /**
+     * 静态报告方法
+     */
+    public static void report(List<LexicalError> errors) {
+        if (errors != null && !errors.isEmpty()) {
+            System.err.println("\n词法分析发现 " + errors.size() + " 个错误：");
+            errors.forEach(err -> System.err.println("  " + err));
+        } else {
+            System.out.println("## 词法分析通过，没有发现错误\n");
         }
     }
 
@@ -88,15 +107,28 @@ public class LexerEngine {
     private void scanAllTokens() {
         while (!context.isAtEnd()) {
             char currentChar = context.peek();
-            // 依次查找能处理当前字符的扫描器
+            boolean handled = false;
             for (TokenScanner scanner : scanners) {
                 if (scanner.canHandle(currentChar, context)) {
-                    scanner.handle(context, tokens);
-                    break; // 已处理，跳到下一个字符
+                    try {
+                        scanner.handle(context, tokens);
+                    } catch (LexicalException le) {
+                        // 收集词法错误，不直接退出
+                        errors.add(new LexicalError(
+                                absPath, le.getLine(), le.getColumn(), le.getReason()
+                        ));
+                        // 跳过当前字符，防止死循环
+                        context.advance();
+                    }
+                    handled = true;
+                    break;
                 }
             }
+            if (!handled) {
+                // 万一没有任何扫描器能处理，跳过一个字符防止死循环
+                context.advance();
+            }
         }
-        // 末尾补一个 EOF 标记
         tokens.add(Token.eof(context.getLine()));
     }
 
@@ -107,5 +139,12 @@ public class LexerEngine {
      */
     public List<Token> getAllTokens() {
         return List.copyOf(tokens);
+    }
+
+    /**
+     * 返回全部词法错误
+     */
+    public List<LexicalError> getErrors() {
+        return List.copyOf(errors);
     }
 }
