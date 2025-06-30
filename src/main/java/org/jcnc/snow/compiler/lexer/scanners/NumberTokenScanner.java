@@ -71,10 +71,12 @@ public class NumberTokenScanner extends AbstractTokenScanner {
      * 按照有限状态机读取完整数字字面量，并对尾随字符进行合法性校验。
      * <p>
      * 主体流程：
-     * 1. 整数部分、可选小数点和小数部分扫描。
-     * 2. 检查合法的类型后缀。
-     * 3. 检查非法尾随字符，如未知字母、空白后缀或非法 '/'。
-     * 4. 生成并返回 NUMBER_LITERAL Token。
+     * <ol>
+     * <li>整数部分、可选小数点和小数部分扫描。</li>
+     * <li>检查合法的类型后缀。</li>
+     * <li>检查非法尾随字符，如未知字母、空白后缀或非法 '/'。</li>
+     * <li>生成并返回 NUMBER_LITERAL Token。</li>
+     * </ol>
      *
      * @param ctx  当前 LexerContext（提供游标、前瞻等功能）
      * @param line 源码起始行号（1 基）
