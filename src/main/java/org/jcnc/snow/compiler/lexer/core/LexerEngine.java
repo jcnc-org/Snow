@@ -3,6 +3,7 @@ package org.jcnc.snow.compiler.lexer.core;
 import org.jcnc.snow.compiler.lexer.base.TokenScanner;
 import org.jcnc.snow.compiler.lexer.scanners.*;
 import org.jcnc.snow.compiler.lexer.token.Token;
+import org.jcnc.snow.compiler.lexer.utils.TokenPrinter;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -84,6 +85,7 @@ public class LexerEngine {
             );
             System.exit(65); // 65 = EX_DATAERR
         }
+        TokenPrinter.print(this.tokens);
         LexerEngine.report(this.getErrors());
     }
 
@@ -95,7 +97,7 @@ public class LexerEngine {
             System.err.println("\n词法分析发现 " + errors.size() + " 个错误：");
             errors.forEach(err -> System.err.println("  " + err));
         } else {
-            System.out.println("## 词法分析通过，没有发现错误\n");
+            System.out.println("\n## 词法分析通过，没有发现错误\n");
         }
     }
 
