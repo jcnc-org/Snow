@@ -25,9 +25,6 @@ import org.jcnc.snow.compiler.lexer.token.TokenType;
  *      |
  *      v
  *   DEC_POINT  --digit--> FRAC_PART
- *                         |
- *                         v
- *                     else--> END
  * </pre>
  * 状态说明：
  * <ul>
@@ -139,17 +136,21 @@ public class NumberTokenScanner extends AbstractTokenScanner {
             else if (Character.isLetter(next)) {
                 throw new LexicalException("未知的数字类型后缀 '" + next + "'", line, col);
             }
-            // 2‑C. 数字后出现空白 + 字母（如 3 L）
+            // 2‑C. 数字后出现空白 + 类型后缀（如 3 f） —— 不允许
             else if (Character.isWhitespace(next) && next != '\n') {
+                // 允许数字后与普通标识符/关键字间存在空白；
+                // 仅当空白后的首个非空字符是合法的类型后缀时才报错。
                 int off = 1;
                 char look;
+                // 跳过任意空白（不含换行）
                 while (true) {
                     look = ctx.peekAhead(off);
                     if (look == '\n' || look == '\0') break; // 行尾或 EOF
                     if (!Character.isWhitespace(look)) break;
                     off++;
                 }
-                if (Character.isLetter(look)) {
+                // 如果紧跟类型后缀字符，中间存在空白则视为非法
+                if (SUFFIX_CHARS.indexOf(look) >= 0) {
                     throw new LexicalException("数字字面量与类型后缀之间不允许有空白符", line, col);
                 }
             }
@@ -162,24 +163,15 @@ public class NumberTokenScanner extends AbstractTokenScanner {
 
     /**
      * FSM 内部状态。
-     * 每次读取一个字符后，根据“当前状态 + 当前字符”决定转移。
      */
     private enum State {
-        /**
-         * 整数部分（尚未读到小数点）
-         */
+        /** 整数部分（小数点左侧） */
         INT_PART,
-        /**
-         * 已读到小数点，但还未读到第一位小数数字
-         */
+        /** 已读到小数点，但还未读到第一位小数数字 */
         DEC_POINT,
-        /**
-         * 小数部分（小数点右侧）
-         */
+        /** 小数部分（小数点右侧） */
         FRAC_PART,
-        /**
-         * 主体结束，准备处理后缀或交还控制权
-         */
+        /** 主体结束，准备处理后缀或交还控制权 */
         END
     }
 }
