@@ -3,6 +3,7 @@ package org.jcnc.snow.compiler.lexer.core;
 import org.jcnc.snow.compiler.lexer.base.TokenScanner;
 import org.jcnc.snow.compiler.lexer.scanners.*;
 import org.jcnc.snow.compiler.lexer.token.Token;
+import org.jcnc.snow.compiler.lexer.token.TokenType;
 import org.jcnc.snow.compiler.lexer.utils.TokenPrinter;
 
 import java.io.File;
@@ -10,154 +11,144 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * {@code LexerEngine} 是编译器前端的词法分析器核心实现。
- * <p>
- * 负责将源代码字符串按顺序扫描并转换为一系列 {@link Token} 实例，
- * 每个 Token 表示语法上可识别的最小单位（如标识符、关键字、常量、运算符等）。
- * <p>
- * 分析流程通过注册多个 {@link TokenScanner} 扫描器实现类型识别，
- * 并由 {@link LexerContext} 提供字符流与位置信息支持。
- * 支持文件名传递，遇到非法字符时会以“文件名:行:列:错误信息”输出简洁诊断。
- * </p>
+ * Snow 语言词法分析器核心实现。
+ * <p>采用“<b>先扫描 → 后批量校验 → 统一报告</b>”策略：
+ * <ol>
+ *   <li>{@link #scanAllTokens()}— 用扫描器链把字符流拆成 {@link Token}</li>
+ *   <li>{@link #validateTokens()}— 基于 token 序列做轻量上下文校验</li>
+ *   <li>{@link #report(List)}— 一次性输出所有词法错误</li>
+ * </ol></p>
  */
 public class LexerEngine {
-    /**
-     * 扫描生成的 Token 序列（包含文件结束符 EOF）。
-     * 每个 Token 表示源代码中的一个词法单元。
-     */
-    private final List<Token> tokens = new ArrayList<>();
+
+    private final List<Token> tokens  = new ArrayList<>();   // 扫描结果
+    private final List<LexicalError> errors  = new ArrayList<>();
+    private final String  absPath;                           // 绝对路径
+    private final LexerContext context;                      // 字符流
+    private final List<TokenScanner> scanners;               // 扫描器链
 
     /**
-     * 当前源文件的绝对路径，用于错误信息定位。
-     */
-    private final String absPath;
-
-    /**
-     * 词法上下文，负责字符流读取与位置信息维护。
-     */
-    private final LexerContext context;
-
-    /**
-     * Token 扫描器集合，按优先级顺序排列，
-     * 用于识别不同类别的 Token（如空白、注释、数字、标识符等）。
-     */
-    private final List<TokenScanner> scanners;
-
-    /**
-     * 词法分析过程中收集到的全部词法错误。
-     */
-    private final List<LexicalError> errors = new ArrayList<>();
-
-    /**
-     * 构造词法分析器，并指定源文件名（用于诊断信息）。
-     * 构造时立即进行全量扫描，扫描结束后打印所有 Token 并报告词法错误。
-     *
+     * 创建并立即执行扫描-校验-报告流程。
      * @param source     源代码文本
-     * @param sourceName 文件名或来源描述（如"Main.snow"）
+     * @param sourceName 文件名（诊断用）
      */
     public LexerEngine(String source, String sourceName) {
-        this.absPath = new File(sourceName).getAbsolutePath();
-        this.context = new LexerContext(source);
+        this.absPath  = new File(sourceName).getAbsolutePath();
+        this.context  = new LexerContext(source);
         this.scanners = List.of(
-                new WhitespaceTokenScanner(), // 跳过空格、制表符等
-                new NewlineTokenScanner(),    // 处理换行符，生成 NEWLINE Token
-                new CommentTokenScanner(),    // 处理单行/多行注释
-                new NumberTokenScanner(),     // 识别整数与浮点数字面量
-                new IdentifierTokenScanner(), // 识别标识符和关键字
-                new StringTokenScanner(),     // 处理字符串常量
-                new OperatorTokenScanner(),   // 识别运算符
-                new SymbolTokenScanner(),     // 识别括号、分号等符号
-                new UnknownTokenScanner()     // 捕捉无法识别的字符，最后兜底
+                new WhitespaceTokenScanner(),
+                new NewlineTokenScanner(),
+                new CommentTokenScanner(),
+                new NumberTokenScanner(),
+                new IdentifierTokenScanner(),
+                new StringTokenScanner(),
+                new OperatorTokenScanner(),
+                new SymbolTokenScanner(),
+                new UnknownTokenScanner()
         );
 
-        // 主扫描流程，遇到非法字符立即输出错误并终止进程
-        try {
-            scanAllTokens();
-        } catch (LexicalException le) {
-            // 输出：绝对路径: 行 x, 列 y: 错误信息
-            System.err.printf(
-                    "%s: 行 %d, 列 %d: %s%n",
-                    absPath,
-                    le.getLine(),
-                    le.getColumn(),
-                    le.getReason()
-            );
-            System.exit(65); // 65 = EX_DATAERR
-        }
-        TokenPrinter.print(this.tokens);
-        LexerEngine.report(this.getErrors());
+        /* 1. 扫描 */
+        scanAllTokens();
+        /* 2. 后置整体校验 */
+        validateTokens();
+        /* 3. 打印 token */
+        TokenPrinter.print(tokens);
+        /* 4. 统一报告错误 */
+        report(errors);
         if (!errors.isEmpty()) {
-            throw new LexicalException("Lexing failed with " + errors.size() + " error(s).", this.context.getLine(), this.context.getCol());
+            throw new LexicalException(
+                    "Lexing failed with " + errors.size() + " error(s).",
+                    context.getLine(), context.getCol()
+            );
         }
     }
 
-    /**
-     * 静态报告方法。
-     * <p>
-     * 打印所有词法分析过程中收集到的错误信息。
-     * 如果无错误，输出词法分析通过的提示。
-     *
-     * @param errors 词法错误列表
-     */
     public static void report(List<LexicalError> errors) {
-        if (errors != null && !errors.isEmpty()) {
-            System.err.println("\n词法分析发现 " + errors.size() + " 个错误：");
-            errors.forEach(err -> System.err.println("  " + err));
-        } else {
+        if (errors == null || errors.isEmpty()) {
             System.out.println("\n## 词法分析通过，没有发现错误\n");
+            return;
         }
+        System.err.println("\n词法分析发现 " + errors.size() + " 个错误：");
+        errors.forEach(e -> System.err.println("  " + e));
     }
 
+    public List<Token> getAllTokens() { return List.copyOf(tokens); }
+    public List<LexicalError> getErrors() { return List.copyOf(errors); }
+
     /**
-     * 主扫描循环，将源代码转为 Token 序列。
-     * <p>
-     * 依次尝试每个扫描器，直到找到可处理当前字符的扫描器为止。
-     * 扫描到结尾后补充 EOF Token。
-     * 若遇到词法异常则收集错误并跳过当前字符，避免死循环。
+     * 逐字符扫描：依次尝试各扫描器；扫描器抛出的
+     * {@link LexicalException} 被捕获并转为 {@link LexicalError}。
      */
     private void scanAllTokens() {
         while (!context.isAtEnd()) {
-            char currentChar = context.peek();
+            char ch = context.peek();
             boolean handled = false;
-            for (TokenScanner scanner : scanners) {
-                if (scanner.canHandle(currentChar, context)) {
-                    try {
-                        scanner.handle(context, tokens);
-                    } catch (LexicalException le) {
-                        // 收集词法错误，不直接退出
-                        errors.add(new LexicalError(
-                                absPath, le.getLine(), le.getColumn(), le.getReason()
-                        ));
-                        // 跳过当前字符，防止死循环
-                        context.advance();
-                    }
-                    handled = true;
-                    break;
+
+            for (TokenScanner s : scanners) {
+                if (!s.canHandle(ch, context)) continue;
+
+                try {
+                    s.handle(context, tokens);
+                } catch (LexicalException le) {
+                    errors.add(new LexicalError(
+                            absPath, le.getLine(), le.getColumn(), le.getReason()
+                    ));
+                    context.advance();           // 跳过问题字符
                 }
+                handled = true;
+                break;
             }
-            if (!handled) {
-                // 没有任何扫描器能处理，跳过一个字符防止死循环
-                context.advance();
-            }
+
+            if (!handled) context.advance();     // 理论不会走到，保险
         }
         tokens.add(Token.eof(context.getLine()));
     }
 
     /**
-     * 获取全部 Token（包含 EOF），返回只读列表。
-     *
-     * @return 词法分析结果 Token 列表
+     * 目前包含三条规则：<br>
+     * 1. Dot-Prefix'.' 不能作标识符前缀<br>
+     * 2. Declare-Ident declare 后必须紧跟合法标识符，并且只能一个<br>
+     * 3. Double-Ident declare 后若出现第二个 IDENTIFIER 视为多余<br>
+     * <p>发现问题仅写入 {@link #errors}，不抛异常。</p>
      */
-    public List<Token> getAllTokens() {
-        return List.copyOf(tokens);
+    private void validateTokens() {
+        for (int i = 0; i < tokens.size(); i++) {
+            Token tok = tokens.get(i);
+
+            /* ---------- declare 规则 ---------- */
+            if (tok.getType() == TokenType.KEYWORD
+                    && "declare".equalsIgnoreCase(tok.getLexeme())) {
+
+                // 第一个非 NEWLINE token
+                Token id1 = findNextNonNewline(i);
+                if (id1 == null || id1.getType() != TokenType.IDENTIFIER) {
+                    errors.add(err(
+                            (id1 == null ? tok : id1),
+                            "declare 后必须跟合法标识符 (以字母或 '_' 开头)"
+                    ));
+                    continue; // 若首标识符就错，后续检查可略
+                }
+
+                // 检查是否有第二个 IDENTIFIER
+                Token id2 = findNextNonNewline(tokens.indexOf(id1));
+                if (id2 != null && id2.getType() == TokenType.IDENTIFIER) {
+                    errors.add(err(id2, "declare 声明中出现多余的标识符"));
+                }
+            }
+        }
     }
 
-    /**
-     * 返回全部词法错误（返回只读列表）。
-     *
-     * @return 词法错误列表
-     */
-    public List<LexicalError> getErrors() {
-        return List.copyOf(errors);
+    /** index 右侧最近非 NEWLINE token；无则 null */
+    private Token findNextNonNewline(int index) {
+        for (int j = index + 1; j < tokens.size(); j++) {
+            Token t = tokens.get(j);
+            if (t.getType() != TokenType.NEWLINE) return t;
+        }
+        return null;
+    }
+
+    /** 构造统一的 LexicalError */
+    private LexicalError err(Token t, String msg) {
+        return new LexicalError(absPath, t.getLine(), t.getCol(), "非法的标记序列：" + msg);
     }
 }
