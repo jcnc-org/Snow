@@ -10,7 +10,6 @@ import java.util.List;
  *
  * <p>提供前瞻（peek）、消费（next）、匹配（match）、断言（expect）等常用操作，
  * 支持前向查看和异常处理，适用于递归下降解析等常见语法构建策略。</p>
- *
  */
 public class TokenStream {
 
@@ -136,7 +135,7 @@ public class TokenStream {
      * @return 若当前位置 Token 为 EOF，则返回 true，否则返回 false
      */
     public boolean isAtEnd() {
-        return peek().getType() == TokenType.EOF;
+        return peek().getType() != TokenType.EOF;
     }
 
     /**
