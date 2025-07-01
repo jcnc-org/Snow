@@ -1,7 +1,6 @@
 function: main
     return_type: int
     body:
-        3 L
         return 65537
     end body
 end function
