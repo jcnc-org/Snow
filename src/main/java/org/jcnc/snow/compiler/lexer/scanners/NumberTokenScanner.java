@@ -40,7 +40,6 @@ import org.jcnc.snow.compiler.lexer.token.TokenType;
  * <ol>
  *   <li>数字后跟未知字母（如 42X）—— 抛出 LexicalException</li>
  *   <li>数字与合法后缀间有空白（如 3 L）—— 抛出 LexicalException</li>
- *   <li>数字后直接出现 '/'（如 3/ 或 3/*）—— 抛出 LexicalException，避免死循环</li>
  *   <li>小数点后缺失数字（如 1.）—— 抛出 LexicalException</li>
  * </ol>
  * 支持的单字符类型后缀包括：b, s, l, f, d 及其大写形式。若需支持多字符后缀，可将该集合扩展为 Set<String>。
@@ -153,10 +152,6 @@ public class NumberTokenScanner extends AbstractTokenScanner {
                 if (Character.isLetter(look)) {
                     throw new LexicalException("数字字面量与类型后缀之间不允许有空白符", line, col);
                 }
-            }
-            // 2‑D. 紧跟 '/'（如 3/ 或 3/*）
-            else if (next == '/') {
-                throw new LexicalException("数字字面量后不允许直接出现 '/'", line, col);
             }
             // 其他字符（分号、运算符、括号等）留给外层扫描流程处理
         }

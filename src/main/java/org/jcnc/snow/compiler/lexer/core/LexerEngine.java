@@ -136,7 +136,7 @@ public class LexerEngine {
                 }
             }
             if (!handled) {
-                // 万一没有任何扫描器能处理，跳过一个字符防止死循环
+                // 没有任何扫描器能处理，跳过一个字符防止死循环
                 context.advance();
             }
         }
