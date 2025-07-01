@@ -92,7 +92,7 @@ public class PrattExpressionParser implements ExpressionParser {
 
         ExpressionNode left = prefix.parse(ctx, token);
 
-        while (!ctx.getTokens().isAtEnd()
+        while (ctx.getTokens().isAtEnd()
                 && prec.ordinal() < nextPrecedence(ctx)) {
             String lex = ctx.getTokens().peek().getLexeme();
             InfixParselet infix = infixes.get(lex);
