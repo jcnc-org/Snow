@@ -24,6 +24,6 @@ public class NumberLiteralParselet implements PrefixParselet {
      */
     @Override
     public ExpressionNode parse(ParserContext ctx, Token token) {
-        return new NumberLiteralNode(token.getLexeme());
+        return new NumberLiteralNode(token.getLexeme(), token.getLine(), token.getCol(), ctx.getSourceName());
     }
 }

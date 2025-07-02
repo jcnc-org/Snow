@@ -9,9 +9,17 @@ import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
  * 节点内部仅保存不带引号的字符串内容，便于后续语义处理或编码。
  * </p>
  *
- * @param value 字符串常量的内容，原始值中不包含双引号
+ * @param value    字符串常量的内容，原始值中不包含双引号
+ * @param line     当前节点所在的行号
+ * @param column   当前节点所在的列号
+ * @param file     当前节点所在的文件
  */
-public record StringLiteralNode(String value) implements ExpressionNode {
+public record StringLiteralNode(
+        String value,
+        int line,
+        int column,
+        String file
+) implements ExpressionNode {
 
     /**
      * 返回字符串字面量的带引号表示，适用于语法树调试或文本输出。

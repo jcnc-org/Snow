@@ -42,18 +42,9 @@ public record SemanticError(Node node, String message) {
         String file = null;
 
         if (node != null) {
-            try {
-                line = (int) node.getClass().getMethod("line").invoke(node);
-            } catch (Exception ignored) {
-            }
-            try {
-                col = (int) node.getClass().getMethod("column").invoke(node);
-            } catch (Exception ignored) {
-            }
-            try {
-                file = (String) node.getClass().getMethod("file").invoke(node);
-            } catch (Exception ignored) {
-            }
+            line = node.line();
+            col = node.column();
+            file = node.file();
         }
 
         StringBuilder sb = new StringBuilder();

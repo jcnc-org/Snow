@@ -194,15 +194,15 @@ public class ASTJsonSerializer {
                             "operand", exprToMap(operand)
                     );
             // 布尔字面量
-            case BoolLiteralNode(boolean value) -> exprMap("BoolLiteral", "value", value);
+            case BoolLiteralNode(boolean value, int _, int _, String _) -> exprMap("BoolLiteral", "value", value);
             // 标识符
             case IdentifierNode(String name, int _, int _, String _) -> exprMap("Identifier", "name", name);
             // 数字字面量
-            case NumberLiteralNode(String value) -> exprMap("NumberLiteral", "value", value);
+            case NumberLiteralNode(String value, int _, int _, String _) -> exprMap("NumberLiteral", "value", value);
             // 字符串字面量
-            case StringLiteralNode(String value) -> exprMap("StringLiteral", "value", value);
+            case StringLiteralNode(String value, int _, int _, String _) -> exprMap("StringLiteral", "value", value);
             // 调用表达式
-            case CallExpressionNode(ExpressionNode callee, List<ExpressionNode> arguments, _, _, _) -> {
+            case CallExpressionNode(ExpressionNode callee, List<ExpressionNode> arguments, int _, int _, String _) -> {
                 List<Object> args = new ArrayList<>(arguments.size());
                 for (ExpressionNode arg : arguments) args.add(exprToMap(arg));
                 yield exprMap("CallExpression", "callee", exprToMap(callee), "arguments", args);

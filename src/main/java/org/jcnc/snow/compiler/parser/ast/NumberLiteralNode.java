@@ -10,9 +10,17 @@ import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
  * 在语义分析或类型推导阶段再行解析为具体数值类型。
  * </p>
  *
- * @param value 数字字面量的原始字符串表示
+ * @param value    数字字面量的原始字符串表示
+ * @param line     当前节点所在的行号
+ * @param column   当前节点所在的列号
+ * @param file     当前节点所在的文件
  */
-public record NumberLiteralNode(String value) implements ExpressionNode {
+public record NumberLiteralNode(
+        String value,
+        int line,
+        int column,
+        String file
+) implements ExpressionNode {
 
     /**
      * 返回数字字面量的字符串形式。

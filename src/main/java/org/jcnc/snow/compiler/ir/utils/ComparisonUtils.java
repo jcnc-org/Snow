@@ -41,7 +41,7 @@ public final class ComparisonUtils {
     /* ------------ 内部工具 ------------ */
 
     private static boolean isLongLiteral(ExpressionNode node) {
-        if (node instanceof NumberLiteralNode(String value)) {
+        if (node instanceof NumberLiteralNode(String value, int _, int _, String _)) {
             return value.endsWith("L") || value.endsWith("l");
         }
         return false;                   // 变量暂不处理（后续可扩展符号表查询）
