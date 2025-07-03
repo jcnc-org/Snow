@@ -4,6 +4,7 @@ import org.jcnc.snow.compiler.lexer.token.Token;
 import org.jcnc.snow.compiler.lexer.token.TokenType;
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
+import org.jcnc.snow.compiler.parser.context.UnsupportedFeature;
 import org.jcnc.snow.compiler.parser.expression.base.ExpressionParser;
 import org.jcnc.snow.compiler.parser.expression.base.InfixParselet;
 import org.jcnc.snow.compiler.parser.expression.base.PrefixParselet;
@@ -87,7 +88,7 @@ public class PrattExpressionParser implements ExpressionParser {
         Token token = ctx.getTokens().next();
         PrefixParselet prefix = prefixes.get(token.getType().name());
         if (prefix == null) {
-            throw new IllegalStateException("没有为该 Token 类型注册前缀解析器: " + token.getType());
+            throw new UnsupportedFeature("没有为该 Token 类型注册前缀解析器: " + token.getType());
         }
 
         ExpressionNode left = prefix.parse(ctx, token);
@@ -96,7 +97,10 @@ public class PrattExpressionParser implements ExpressionParser {
                 && prec.ordinal() < nextPrecedence(ctx)) {
             String lex = ctx.getTokens().peek().getLexeme();
             InfixParselet infix = infixes.get(lex);
-            if (infix == null) break;
+            if (infix == null) {
+                throw new UnsupportedFeature(
+                        "没有为该 Token 类型注册中缀解析器: " + token.getType());
+            }
             left = infix.parse(ctx, left);
         }
         return left;

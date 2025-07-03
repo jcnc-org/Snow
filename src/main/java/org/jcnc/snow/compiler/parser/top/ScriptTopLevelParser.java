@@ -19,7 +19,6 @@ public class ScriptTopLevelParser implements TopLevelParser {
     public Node parse(ParserContext ctx) {
         String first = ctx.getTokens().peek().getLexeme();
         StatementParser sp = StatementParserFactory.get(first);
-        StatementNode stmt = sp.parse(ctx);
-        return stmt;   // StatementNode 亦是 Node
+        return sp.parse(ctx);
     }
 }

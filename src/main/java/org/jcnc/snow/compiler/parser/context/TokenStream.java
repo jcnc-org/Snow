@@ -31,7 +31,7 @@ public class TokenStream {
      */
     public TokenStream(List<Token> tokens) {
         if (tokens == null) {
-            throw new NullPointerException("Token list cannot be null.");
+            throw new NullPointerException("Token 列表不能为空");
         }
         this.tokens = tokens;
     }
@@ -103,8 +103,8 @@ public class TokenStream {
         Token t = peek();
         if (!t.getLexeme().equals(lexeme)) {
             throw new ParseException(
-                    "Expected lexeme '" + lexeme + "' but got '" + t.getLexeme() +
-                            "' at " + t.getLine() + ":" + t.getCol()
+                    "期望的词素是'" + lexeme + "'，但得到的是'" + t.getLexeme() +
+                            "在" + t.getLine() + ":" + t.getCol()
             );
         }
         return next();
@@ -122,8 +122,8 @@ public class TokenStream {
         Token t = peek();
         if (t.getType() != type) {
             throw new ParseException(
-                    "Expected token type " + type + " but got " + t.getType() +
-                            " ('" + t.getLexeme() + "') at " + t.getLine() + ":" + t.getCol()
+                    "期望的标记类型为 " + type + " 但实际得到的是 " + t.getType() +
+                            " ('" + t.getLexeme() + "') 在 " + t.getLine() + ":" + t.getCol()
             );
         }
         return next();

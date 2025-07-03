@@ -7,6 +7,7 @@ import org.jcnc.snow.compiler.parser.context.TokenStream;
 import org.jcnc.snow.compiler.parser.ast.ImportNode;
 import org.jcnc.snow.compiler.parser.ast.ModuleNode;
 import org.jcnc.snow.compiler.parser.ast.FunctionNode;
+import org.jcnc.snow.compiler.parser.context.UnexpectedToken;
 import org.jcnc.snow.compiler.parser.function.FunctionParser;
 
 import java.util.ArrayList;
@@ -33,7 +34,7 @@ public class ModuleParser implements TopLevelParser {
      *
      * @param ctx 当前解析器上下文，包含词法流、状态信息等。
      * @return 返回一个 {@link ModuleNode} 实例，表示完整模块的语法结构。
-     * @throws IllegalStateException 当模块体中出现未识别的语句时抛出。
+     * @throws UnexpectedToken 当模块体中出现未识别的语句时抛出。
      */
     @Override
     public ModuleNode parse(ParserContext ctx) {
@@ -86,7 +87,7 @@ public class ModuleParser implements TopLevelParser {
                 functions.add(funcParser.parse(ctx));
             } else {
                 // 遇到无法识别的语句开头，抛出异常并提供详细提示
-                throw new IllegalStateException("Unexpected token in module: " + lex);
+                throw new UnexpectedToken("Unexpected token in module: " + lex);
             }
         }
 

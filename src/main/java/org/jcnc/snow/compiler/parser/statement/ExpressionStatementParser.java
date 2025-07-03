@@ -7,6 +7,7 @@ import org.jcnc.snow.compiler.parser.ast.ExpressionStatementNode;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
 import org.jcnc.snow.compiler.parser.context.TokenStream;
+import org.jcnc.snow.compiler.parser.context.UnexpectedToken;
 import org.jcnc.snow.compiler.parser.expression.PrattExpressionParser;
 
 /**
@@ -39,7 +40,7 @@ public class ExpressionStatementParser implements StatementParser {
      *
      * @param ctx 当前解析上下文，提供词法流与状态信息。
      * @return 返回 {@link AssignmentNode} 或 {@link ExpressionStatementNode} 表示的语法节点。
-     * @throws IllegalStateException 若表达式起始为关键字或语法非法。
+     * @throws UnexpectedToken 若表达式起始为关键字或语法非法。
      */
     @Override
     public StatementNode parse(ParserContext ctx) {
@@ -47,7 +48,7 @@ public class ExpressionStatementParser implements StatementParser {
 
         // 快速检查：若遇空行或关键字开头，不可作为表达式语句
         if (ts.peek().getType() == TokenType.NEWLINE || ts.peek().getType() == TokenType.KEYWORD) {
-            throw new IllegalStateException("Cannot parse expression starting with keyword: " + ts.peek().getLexeme());
+            throw new UnexpectedToken("无法解析以关键字开头的表达式: " + ts.peek().getLexeme());
         }
 
         // 获取当前 token 的行号、列号和文件名

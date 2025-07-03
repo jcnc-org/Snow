@@ -3,6 +3,7 @@ package org.jcnc.snow.compiler.parser.utils;
 import org.jcnc.snow.compiler.lexer.token.TokenType;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
 import org.jcnc.snow.compiler.parser.context.TokenStream;
+import org.jcnc.snow.compiler.parser.context.UnexpectedToken;
 
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -45,7 +46,7 @@ public class FlexibleSectionParser {
      * @param ctx                当前解析上下文，提供语法环境与作用域信息
      * @param tokens             当前 token 流
      * @param sectionDefinitions 各个区块的定义映射（key 为关键字，value 为判断 + 解析逻辑组合）
-     * @throws RuntimeException 若出现无法识别的关键字或未满足的匹配条件
+     * @throws UnexpectedToken 若出现无法识别的关键字或未满足的匹配条件
      */
     public static void parse(ParserContext ctx,
                              TokenStream tokens,
@@ -70,7 +71,7 @@ public class FlexibleSectionParser {
             if (definition != null && definition.condition().test(tokens)) {
                 definition.parser().accept(ctx, tokens); // 执行解析逻辑
             } else {
-                throw new RuntimeException("未识别的关键字或条件不满足: " + keyword);
+                throw new UnexpectedToken("未识别的关键字或条件不满足: " + keyword);
             }
         }
     }

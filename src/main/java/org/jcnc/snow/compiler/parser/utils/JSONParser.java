@@ -1,5 +1,7 @@
 package org.jcnc.snow.compiler.parser.utils;
 
+import org.jcnc.snow.compiler.parser.context.UnexpectedToken;
+
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -10,26 +12,28 @@ import java.util.Map.Entry;
  * - 序列化：将 Java 原生对象转换为符合 JSON 标准的字符串
  * <p>
  * 设计要点：
- *  1. 使用静态方法作为唯一入口，避免状态共享导致的线程安全问题
- *  2. 解析器内部使用 char[] 缓冲区，提高访问性能
- *  3. 维护行列号信息，抛出异常时能精确定位错误位置
- *  4. 序列化器基于 StringBuilder，预分配容量，减少中间字符串创建
+ * 1. 使用静态方法作为唯一入口，避免状态共享导致的线程安全问题
+ * 2. 解析器内部使用 char[] 缓冲区，提高访问性能
+ * 3. 维护行列号信息，抛出异常时能精确定位错误位置
+ * 4. 序列化器基于 StringBuilder，预分配容量，减少中间字符串创建
  */
 public class JSONParser {
 
-    private JSONParser() {}
+    private JSONParser() {
+    }
 
     /**
      * 将 JSON 文本解析为对应的 Java 对象
+     *
      * @param input JSON 格式字符串
      * @return 对应的 Java 原生对象：
-     *         - JSON 对象 -> Map<String, Object>
-     *         - JSON 数组 -> List<Object>
-     *         - JSON 字符串 -> String
-     *         - JSON 数值 -> Long 或 Double
-     *         - JSON 布尔 -> Boolean
-     *         - JSON null -> null
-     * @throws RuntimeException 如果遇到语法错误或多余字符，异常消息中包含行列信息
+     * - JSON 对象 -> Map<String, Object>
+     * - JSON 数组 -> List<Object>
+     * - JSON 字符串 -> String
+     * - JSON 数值 -> Long 或 Double
+     * - JSON 布尔 -> Boolean
+     * - JSON null -> null
+     * @throws UnexpectedToken 如果遇到语法错误或多余字符，异常消息中包含行列信息
      */
     public static Object parse(String input) {
         return new Parser(input).parseInternal();
@@ -37,6 +41,7 @@ public class JSONParser {
 
     /**
      * 将 Java 原生对象序列化为 JSON 字符串
+     *
      * @param obj 支持的类型：Map、Collection、String、Number、Boolean 或 null
      * @return 符合 JSON 规范的字符串
      */
@@ -45,21 +50,31 @@ public class JSONParser {
     }
 
     // ======= 内部解析器 =======
+
     /**
      * 负责将 char[] 缓冲区中的 JSON 文本解析为 Java 对象
      */
     private static class Parser {
-        /** 输入缓冲区 */
+        /**
+         * 输入缓冲区
+         */
         private final char[] buf;
-        /** 当前解析到的位置索引 */
+        /**
+         * 当前解析到的位置索引
+         */
         private int pos;
-        /** 当前字符所在行号，从 1 开始 */
+        /**
+         * 当前字符所在行号，从 1 开始
+         */
         private int line;
-        /** 当前字符所在列号，从 1 开始 */
+        /**
+         * 当前字符所在列号，从 1 开始
+         */
         private int col;
 
         /**
          * 构造解析器，初始化缓冲区和行列信息
+         *
          * @param input 待解析的 JSON 文本
          */
         Parser(String input) {
@@ -115,7 +130,9 @@ public class JSONParser {
             while (true) {
                 skipWhitespace();
                 String key = parseString(); // 解析键
-                skipWhitespace(); expect(':'); skipWhitespace();
+                skipWhitespace();
+                expect(':');
+                skipWhitespace();
                 Object val = parseValue(); // 解析值
                 map.put(key, val);
                 skipWhitespace();
@@ -123,7 +140,8 @@ public class JSONParser {
                     advance(); // 跳过 '}'
                     break;
                 }
-                expect(','); skipWhitespace();
+                expect(',');
+                skipWhitespace();
             }
             return map;
         }
@@ -149,7 +167,8 @@ public class JSONParser {
                     advance();
                     break;
                 }
-                expect(','); skipWhitespace();
+                expect(',');
+                skipWhitespace();
             }
             return list;
         }
@@ -170,18 +189,35 @@ public class JSONParser {
                     advance(); // 跳过 '\'
                     c = currentChar();
                     switch (c) {
-                        case '"': sb.append('"'); break;
-                        case '\\': sb.append('\\'); break;
-                        case '/': sb.append('/'); break;
-                        case 'b': sb.append('\b'); break;
-                        case 'f': sb.append('\f'); break;
-                        case 'n': sb.append('\n'); break;
-                        case 'r': sb.append('\r'); break;
-                        case 't': sb.append('\t'); break;
+                        case '"':
+                            sb.append('"');
+                            break;
+                        case '\\':
+                            sb.append('\\');
+                            break;
+                        case '/':
+                            sb.append('/');
+                            break;
+                        case 'b':
+                            sb.append('\b');
+                            break;
+                        case 'f':
+                            sb.append('\f');
+                            break;
+                        case 'n':
+                            sb.append('\n');
+                            break;
+                        case 'r':
+                            sb.append('\r');
+                            break;
+                        case 't':
+                            sb.append('\t');
+                            break;
                         case 'u': // 解析 Unicode 转义
-                            String hex = new String(buf, pos+1, 4);
+                            String hex = new String(buf, pos + 1, 4);
                             sb.append((char) Integer.parseInt(hex, 16));
-                            pos += 4; col += 4;
+                            pos += 4;
+                            col += 4;
                             break;
                         default:
                             error("无效转义字符 '\\" + c + "'");
@@ -250,7 +286,8 @@ public class JSONParser {
         private void advance() {
             if (pos < buf.length) {
                 if (buf[pos] == '\n') {
-                    line++; col = 1;
+                    line++;
+                    col = 1;
                 } else {
                     col++;
                 }
@@ -292,16 +329,19 @@ public class JSONParser {
          * 抛出带行列定位的解析错误
          */
         private void error(String msg) {
-            throw new RuntimeException("Error at line " + line + ", column " + col + ": " + msg);
+            throw new UnexpectedToken("在第 " + line + " 行，第 " + col + " 列出现错误: " + msg);
         }
     }
 
     // ======= 内部序列化器 =======
+
     /**
      * 负责高效地将 Java 对象写为 JSON 文本
      */
     private static class Writer {
-        /** 默认 StringBuilder 初始容量，避免频繁扩容 */
+        /**
+         * 默认 StringBuilder 初始容量，避免频繁扩容
+         */
         private static final int DEFAULT_CAPACITY = 1024;
 
         /**
@@ -344,8 +384,8 @@ public class JSONParser {
                 }
                 sb.append(']');
             } else {
-                // 其他类型，使用 toString 并加引号
-                quote(obj.toString(), sb);
+                throw new UnsupportedOperationException(
+                        "不支持的 JSON 字符串化类型: " + obj.getClass());
             }
         }
 
@@ -356,12 +396,23 @@ public class JSONParser {
             sb.append('"');
             for (char c : s.toCharArray()) {
                 switch (c) {
-                    case '\\': sb.append("\\\\"); break;
-                    case '"': sb.append("\\\""); break;
-                    case '\n': sb.append("\\n");    break;
-                    case '\r': sb.append("\\r");    break;
-                    case '\t': sb.append("\\t");    break;
-                    default:     sb.append(c);
+                    case '\\':
+                        sb.append("\\\\");
+                        break;
+                    case '"':
+                        sb.append("\\\"");
+                        break;
+                    case '\n':
+                        sb.append("\\n");
+                        break;
+                    case '\r':
+                        sb.append("\\r");
+                        break;
+                    case '\t':
+                        sb.append("\\t");
+                        break;
+                    default:
+                        sb.append(c);
                 }
             }
             sb.append('"');
