@@ -30,10 +30,8 @@ public final class CleanTask implements Task {
      */
     @Override
     public void run() throws IOException {
-        Path build = Path.of("build");
-        Path dist = Path.of("dist");
-        deleteDir(build, false);
-        deleteDir(dist, false);
+        deleteDir(Path.of("build"), false);
+        deleteDir(Path.of("dist"), false);
 
         System.out.println("[clean] done.");
     }
