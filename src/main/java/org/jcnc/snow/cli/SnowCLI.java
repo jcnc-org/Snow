@@ -91,7 +91,7 @@ public class SnowCLI {
             System.exit(exitCode);
         } catch (Exception e) {
             // 捕获命令执行过程中的异常并打印错误消息
-//            System.err.println("Error: " + e.getMessage());
+            System.err.println(e.getMessage());
             System.exit(1);
         }
     }

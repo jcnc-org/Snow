@@ -2,8 +2,8 @@ package org.jcnc.snow.compiler.parser.statement;
 
 import org.jcnc.snow.compiler.lexer.token.TokenType;
 import org.jcnc.snow.compiler.parser.ast.AssignmentNode;
-import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.ExpressionStatementNode;
+import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
 import org.jcnc.snow.compiler.parser.context.TokenStream;
@@ -11,66 +11,57 @@ import org.jcnc.snow.compiler.parser.context.UnexpectedToken;
 import org.jcnc.snow.compiler.parser.expression.PrattExpressionParser;
 
 /**
- * {@code ExpressionStatementParser} 负责解析通用表达式语句，包括赋值语句和单一表达式语句。
+ * {@code ExpressionStatementParser} 用于解析通用表达式语句（赋值或普通表达式）。
  * <p>
- * 支持的语法结构如下：
+ * 支持以下两种语法结构：
  * <pre>{@code
  * x = 1 + 2        // 赋值语句
- * doSomething()    // 函数调用等普通表达式语句
+ * doSomething()    // 一般表达式语句
  * }</pre>
  * <ul>
- *     <li>若以标识符开头，且后接等号 {@code =}，则视为赋值语句，解析为 {@link AssignmentNode}。</li>
+ *     <li>以标识符开头且后接 {@code =} 时，解析为 {@link AssignmentNode}。</li>
  *     <li>否则视为普通表达式，解析为 {@link ExpressionStatementNode}。</li>
- *     <li>所有表达式语句必须以换行符 {@code NEWLINE} 结束。</li>
+ *     <li>所有表达式语句必须以换行符（{@code NEWLINE}）结尾。</li>
  * </ul>
- * 不允许以关键字或空行作为表达式的起始，若遇到非法开头，将抛出解析异常。
+ * 若语句起始为关键字或空行，将直接抛出异常，防止非法语法进入表达式解析流程。
  */
 public class ExpressionStatementParser implements StatementParser {
 
     /**
-     * 解析一个表达式语句，根据上下文决定其为赋值或一般表达式。
-     * <p>
-     * 具体逻辑如下：
-     * <ol>
-     *     <li>若当前行为标识符后接等号，则作为赋值处理。</li>
-     *     <li>否则解析整个表达式作为单独语句。</li>
-     *     <li>所有语句都必须以换行符结束。</li>
-     *     <li>若表达式以关键字或空行开头，将立即抛出异常，避免非法解析。</li>
-     * </ol>
+     * 解析单行表达式语句，根据上下文判断其为赋值语句或普通表达式语句。
      *
-     * @param ctx 当前解析上下文，提供词法流与状态信息。
-     * @return 返回 {@link AssignmentNode} 或 {@link ExpressionStatementNode} 表示的语法节点。
-     * @throws UnexpectedToken 若表达式起始为关键字或语法非法。
+     * @param ctx 当前解析上下文，提供词法流与环境信息
+     * @return {@link AssignmentNode} 或 {@link ExpressionStatementNode} 语法节点
+     * @throws UnexpectedToken 若遇到非法起始（关键字、空行等）
      */
     @Override
     public StatementNode parse(ParserContext ctx) {
         TokenStream ts = ctx.getTokens();
 
-        // 快速检查：若遇空行或关键字开头，不可作为表达式语句
         if (ts.peek().getType() == TokenType.NEWLINE || ts.peek().getType() == TokenType.KEYWORD) {
-            throw new UnexpectedToken("无法解析以关键字开头的表达式: " + ts.peek().getLexeme());
+            throw new UnexpectedToken(
+                    "无法解析以关键字开头的表达式: " + ts.peek().getLexeme(),
+                    ts.peek().getLine(),
+                    ts.peek().getCol()
+            );
         }
 
-        // 获取当前 token 的行号、列号和文件名
-        int line = ctx.getTokens().peek().getLine();
-        int column = ctx.getTokens().peek().getCol();
+        int line = ts.peek().getLine();
+        int column = ts.peek().getCol();
         String file = ctx.getSourceName();
 
-        // 处理赋值语句：格式为 identifier = expression
-        if (ts.peek().getType() == TokenType.IDENTIFIER
-                && ts.peek(1).getLexeme().equals("=")) {
-
-            String varName = ts.next().getLexeme(); // 消耗标识符
-            ts.expect("=");                         // 消耗等号
-            ExpressionNode value = new PrattExpressionParser().parse(ctx); // 解析表达式
-            ts.expectType(TokenType.NEWLINE);       // 语句必须以换行符结束
-            return new AssignmentNode(varName, value, line, column, file); // 返回赋值节点
+        // 赋值语句：IDENTIFIER = expr
+        if (ts.peek().getType() == TokenType.IDENTIFIER && "=".equals(ts.peek(1).getLexeme())) {
+            String varName = ts.next().getLexeme();
+            ts.expect("=");
+            ExpressionNode value = new PrattExpressionParser().parse(ctx);
+            ts.expectType(TokenType.NEWLINE);
+            return new AssignmentNode(varName, value, line, column, file);
         }
 
-        // 处理普通表达式语句，如函数调用、字面量、运算表达式等
+        // 普通表达式语句
         ExpressionNode expr = new PrattExpressionParser().parse(ctx);
-        ts.expectType(TokenType.NEWLINE);           // 语句必须以换行符结束
-        return new ExpressionStatementNode(expr, line, column, file);   // 返回表达式语句节点
+        ts.expectType(TokenType.NEWLINE);
+        return new ExpressionStatementNode(expr, line, column, file);
     }
-
 }
