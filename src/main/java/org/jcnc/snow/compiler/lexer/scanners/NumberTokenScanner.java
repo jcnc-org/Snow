@@ -128,33 +128,30 @@ public class NumberTokenScanner extends AbstractTokenScanner {
         if (!ctx.isAtEnd()) {
             char next = ctx.peek();
 
-            // 2‑A. 合法单字符后缀
+            // 2-A. 合法单字符后缀（紧邻，不允许空格）
             if (SUFFIX_CHARS.indexOf(next) >= 0) {
                 literal.append(ctx.advance());
             }
-            // 2‑B. 紧跟未知字母（如 42X）
+            // 未知单字符后缀 —— 直接报错
             else if (Character.isLetter(next)) {
                 throw new LexicalException("未知的数字类型后缀 '" + next + "'", line, col);
             }
-            // 2‑C. 数字后出现空白 + 类型后缀（如 3 f） —— 不允许
+            // “数字 + 空格 + 字母” —— 一律非法
             else if (Character.isWhitespace(next) && next != '\n') {
-                // 允许数字后与普通标识符/关键字间存在空白；
-                // 仅当空白后的首个非空字符是合法的类型后缀时才报错。
                 int off = 1;
                 char look;
-                // 跳过任意空白（不含换行）
+                // 跳过空白（不含换行）
                 while (true) {
                     look = ctx.peekAhead(off);
-                    if (look == '\n' || look == '\0') break; // 行尾或 EOF
+                    if (look == '\n' || look == '\0') break;
                     if (!Character.isWhitespace(look)) break;
                     off++;
                 }
-                // 如果紧跟类型后缀字符，中间存在空白则视为非法
-                if (SUFFIX_CHARS.indexOf(look) >= 0) {
-                    throw new LexicalException("数字字面量与类型后缀之间不允许有空白符", line, col);
+                if (Character.isLetter(look)) {
+                    throw new LexicalException("数字字面量后不允许出现空格再跟标识符/后缀", line, col);
                 }
             }
-            // 其他字符（分号、运算符、括号等）留给外层扫描流程处理
+            // 其他符号由外层扫描器处理
         }
 
         // 3. 生成并返回 Token
@@ -165,13 +162,21 @@ public class NumberTokenScanner extends AbstractTokenScanner {
      * FSM 内部状态。
      */
     private enum State {
-        /** 整数部分（小数点左侧） */
+        /**
+         * 整数部分（小数点左侧）
+         */
         INT_PART,
-        /** 已读到小数点，但还未读到第一位小数数字 */
+        /**
+         * 已读到小数点，但还未读到第一位小数数字
+         */
         DEC_POINT,
-        /** 小数部分（小数点右侧） */
+        /**
+         * 小数部分（小数点右侧）
+         */
         FRAC_PART,
-        /** 主体结束，准备处理后缀或交还控制权 */
+        /**
+         * 主体结束，准备处理后缀或交还控制权
+         */
         END
     }
 }

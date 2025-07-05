@@ -14,61 +14,34 @@ import java.util.StringJoiner;
 
 /**
  * 语法解析引擎（ParserEngine）。
- * <p>
- * 负责驱动 Snow 源码的顶层语法结构解析，将源码 TokenStream
- * 递交给各类 TopLevelParser，并收集语法树节点与异常。
- * 支持容错解析，能够批量报告所有语法错误，并提供同步恢复功能。
- * </p>
- *
- * <p>
- * 典型用法：
- * <pre>
- *     ParserEngine engine = new ParserEngine(context);
- *     List&lt;Node&gt; ast = engine.parse();
- * </pre>
- * </p>
- *
- * @param ctx 解析器上下文，负责持有 TokenStream 及所有全局状态。
+ * <p>驱动顶层解析，并在捕获异常后通过同步机制恢复，防止死循环。</p>
  */
 public record ParserEngine(ParserContext ctx) {
 
-    /**
-     * 解析输入 TokenStream，生成语法树节点列表。
-     *
-     * <p>
-     * 调用各类顶级语句解析器（如 module, func, import），
-     * 遇到错误时会自动跳过到下一行或已知结构关键字，继续后续分析，
-     * 最终汇总所有错误。如果解析出现错误，将以
-     * {@link UnexpectedToken} 抛出所有语法错误信息。
-     * </p>
-     *
-     * @return AST 节点列表，每个节点对应一个顶层语法结构
-     * @throws UnexpectedToken 如果解析期间发现语法错误
-     */
+    /** 解析整份 TokenStream，返回顶层 AST 节点列表。 */
     public List<Node> parse() {
         List<Node> nodes = new ArrayList<>();
-        List<String> errs = new ArrayList<>();
-        TokenStream ts = ctx.getTokens();
+        List<String> errs  = new ArrayList<>();
+        TokenStream   ts   = ctx.getTokens();
 
-        // 主循环：直到全部 token 处理完毕
+        // 主循环至 EOF
         while (ts.isAtEnd()) {
-            // 跳过所有空行
+            // 跳过空行
             if (ts.peek().getType() == TokenType.NEWLINE) {
                 ts.next();
                 continue;
             }
 
             TopLevelParser parser = TopLevelParserFactory.get(ts.peek().getLexeme());
-
             try {
                 nodes.add(parser.parse(ctx));
             } catch (Exception ex) {
                 errs.add(ex.getMessage());
-                synchronize(ts);         // 错误恢复：同步到下一个语句
+                synchronize(ts);                 // 出错后同步恢复
             }
         }
 
-        // 批量报告所有解析错误
+        // 聚合并抛出全部语法错误
         if (!errs.isEmpty()) {
             StringJoiner sj = new StringJoiner("\n - ", "", "");
             errs.forEach(sj::add);
@@ -79,27 +52,21 @@ public record ParserEngine(ParserContext ctx) {
     }
 
     /**
-     * 错误同步机制：跳过当前 TokenStream，直到遇到下一行
-     * 或下一个可识别的顶级结构关键字，以保证后续解析不会被卡住。
-     * <p>
-     * 同时会跳过连续空行。
-     * </p>
-     *
-     * @param ts 当前 TokenStream
+     * 同步：跳过当前行或直到遇到 **显式注册** 的顶层关键字。
+     * 这样可避免因默认脚本解析器导致指针停滞而进入死循环。
      */
     private void synchronize(TokenStream ts) {
-        // 跳到下一行或下一个顶层结构关键字
         while (ts.isAtEnd()) {
             if (ts.peek().getType() == TokenType.NEWLINE) {
                 ts.next();
                 break;
             }
-            if (TopLevelParserFactory.get(ts.peek().getLexeme()) != null) {
-                break;
+            if (TopLevelParserFactory.isRegistered(ts.peek().getLexeme())) {
+                break;                           // 仅在已注册关键字处停下
             }
-            ts.next();
+            ts.next();                          // 继续丢弃 token
         }
-        // 吃掉后续所有空行
+        // 清掉后续连续空行
         while (ts.isAtEnd() && ts.peek().getType() == TokenType.NEWLINE) {
             ts.next();
         }
