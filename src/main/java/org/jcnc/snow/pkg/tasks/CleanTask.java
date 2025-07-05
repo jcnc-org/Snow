@@ -38,7 +38,7 @@ public final class CleanTask implements Task {
 
     /**
      * 递归删除指定目录下的所有子文件和子目录。
-     * 如需删除指定目录本身可将第二个参数 <span>containSelf</span> 设置为 true
+     * 如需删除指定目录本身可将第二个参数 {@code containSelf} 设置为 true
      * <p>
      * 若目录不存在，则直接返回。
      * </p>
