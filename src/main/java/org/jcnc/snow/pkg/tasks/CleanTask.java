@@ -32,16 +32,15 @@ public final class CleanTask implements Task {
     public void run() throws IOException {
         Path build = Path.of("build");
         Path dist = Path.of("dist");
-        deleteDir(build);
-        deleteDir(dist);
-        Files.createDirectories(build);
-        Files.createDirectories(dist);
+        deleteDir(build, false);
+        deleteDir(dist, false);
 
         System.out.println("[clean] done.");
     }
 
     /**
-     * 递归删除指定目录及其所有子文件和子目录。
+     * 递归删除指定目录下的所有子文件和子目录。
+     * 如需删除指定目录本身可将第二个参数 <span>containSelf</span> 设置为 true
      * <p>
      * 若目录不存在，则直接返回。
      * </p>
@@ -50,14 +49,18 @@ public final class CleanTask implements Task {
      * </p>
      *
      * @param dir 需要删除的目录路径
+     * @param containSelf 是否删除指定目录本身
      * @throws IOException 删除目录或文件过程中发生 IO 错误时抛出
      */
-    private void deleteDir(Path dir) throws IOException {
+    private void deleteDir(Path dir, boolean containSelf) throws IOException {
         if (Files.notExists(dir)) return;
         try (var stream = Files.walk(dir)) {
             stream.sorted(Comparator.reverseOrder()) // 先删子文件，后删父目录
                     .forEach(p -> {
                         try {
+                            if (!containSelf && p == dir) {
+                                return;
+                            }
                             Files.delete(p);
                         } catch (IOException e) {
                             throw new RuntimeException(e);
