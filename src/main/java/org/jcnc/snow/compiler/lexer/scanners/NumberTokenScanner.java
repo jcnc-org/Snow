@@ -14,8 +14,9 @@ import org.jcnc.snow.compiler.lexer.token.TokenType;
  *   <li>十进制小数（如 3.14，0.5）</li>
  *   <li>单字符类型后缀（如 2.0f，255B，合法集合见 SUFFIX_CHARS）</li>
  * </ol>
- * <p>
+ *
  * 如果后续需要支持科学计数法、下划线分隔符、不同进制等，只需扩展现有状态机的转移规则。
+ *
  * <pre>
  * 状态机简述：
  *   INT_PART   --'.'-->  DEC_POINT
@@ -33,12 +34,14 @@ import org.jcnc.snow.compiler.lexer.token.TokenType;
  *   <li>FRAC_PART  ：读取小数部分，遇非法字符则结束主体。</li>
  *   <li>END        ：主体扫描结束，进入后缀/尾随字符判定。</li>
  * </ul>
+ *
  * 错误处理策略：
  * <ol>
  *   <li>数字后跟未知字母（如 42X）—— 抛出 LexicalException</li>
  *   <li>数字与合法后缀间有空白（如 3 L）—— 抛出 LexicalException</li>
  *   <li>小数点后缺失数字（如 1.）—— 抛出 LexicalException</li>
  * </ol>
+ *
  * 支持的单字符类型后缀包括：b, s, l, f, d 及其大写形式。若需支持多字符后缀，可将该集合扩展为 Set<String>。
  */
 public class NumberTokenScanner extends AbstractTokenScanner {
@@ -55,7 +58,7 @@ public class NumberTokenScanner extends AbstractTokenScanner {
      * 仅当首字符为数字时，NumberTokenScanner 介入处理。
      *
      * @param c   当前待判断字符
-     * @param ctx 当前 LexerContext（可用于进一步判断）
+     * @param ctx 当前 LexerContext
      * @return 如果为数字返回 true，否则返回 false
      */
     @Override
@@ -65,31 +68,24 @@ public class NumberTokenScanner extends AbstractTokenScanner {
 
     /**
      * 按照有限状态机读取完整数字字面量，并对尾随字符进行合法性校验。
-     * <p>
-     * 主体流程：
-     * <ol>
-     * <li>整数部分、可选小数点和小数部分扫描。</li>
-     * <li>检查合法的类型后缀。</li>
-     * <li>检查非法尾随字符，如未知字母、空白后缀或非法 '/'。</li>
-     * <li>生成并返回 NUMBER_LITERAL Token。</li>
-     * </ol>
      *
-     * @param ctx  当前 LexerContext（提供游标、前瞻等功能）
+     * @param ctx  当前 LexerContext
      * @param line 源码起始行号（1 基）
      * @param col  源码起始列号（1 基）
      * @return NUMBER_LITERAL 类型的 Token
      * @throws LexicalException 如果遇到非法格式或未受支持的尾随字符
      */
     @Override
-    protected Token scanToken(LexerContext ctx, int line, int col) {
+    protected Token scanToken(LexerContext ctx, int line, int col) throws LexicalException {
         StringBuilder literal = new StringBuilder();
         State state = State.INT_PART;
 
-        // 1. 主体扫描 —— 整数 / 小数
+        /* ───── 1. 主体扫描 —— 整数 / 小数 ───── */
         mainLoop:
         while (!ctx.isAtEnd() && state != State.END) {
             char ch = ctx.peek();
             switch (state) {
+                /* 整数部分 */
                 case INT_PART:
                     if (Character.isDigit(ch)) {
                         literal.append(ctx.advance());
@@ -97,86 +93,62 @@ public class NumberTokenScanner extends AbstractTokenScanner {
                         state = State.DEC_POINT;
                         literal.append(ctx.advance());
                     } else {
-                        state = State.END; // 整数已结束
+                        state = State.END;
                     }
                     break;
 
+                /* 已读到小数点，下一字符必须是数字 */
                 case DEC_POINT:
                     if (Character.isDigit(ch)) {
                         state = State.FRAC_PART;
                         literal.append(ctx.advance());
                     } else {
-                        // 如 "1." —— 语言规范不允许尾点数字
                         throw new LexicalException("小数点后必须跟数字", line, col);
                     }
                     break;
 
+                /* 小数部分 */
                 case FRAC_PART:
                     if (Character.isDigit(ch)) {
                         literal.append(ctx.advance());
                     } else {
-                        state = State.END; // 小数字符串结束
+                        state = State.END;
                     }
                     break;
 
                 default:
-                    break mainLoop; // 理论不会到达
+                    break mainLoop;
             }
         }
 
-        // 2. 后缀及非法尾随字符检查
+        /* ───── 2. 后缀及非法尾随字符检查 ───── */
         if (!ctx.isAtEnd()) {
             char next = ctx.peek();
 
-            // 2-A. 合法单字符后缀（紧邻，不允许空格）
+            /* 2-A. 合法单字符后缀（紧邻数字，不允许空格） */
             if (SUFFIX_CHARS.indexOf(next) >= 0) {
                 literal.append(ctx.advance());
             }
-            // 未知单字符后缀 —— 直接报错
+            /* 2-B. 未知紧邻字母后缀 —— 报错 */
             else if (Character.isLetter(next)) {
                 throw new LexicalException("未知的数字类型后缀 '" + next + "'", line, col);
             }
-            // “数字 + 空格 + 字母” —— 一律非法
-            else if (Character.isWhitespace(next) && next != '\n') {
-                int off = 1;
-                char look;
-                // 跳过空白（不含换行）
-                while (true) {
-                    look = ctx.peekAhead(off);
-                    if (look == '\n' || look == '\0') break;
-                    if (!Character.isWhitespace(look)) break;
-                    off++;
-                }
-                if (Character.isLetter(look)) {
-                    throw new LexicalException("数字字面量后不允许出现空格再跟标识符/后缀", line, col);
-                }
-            }
-            // 其他符号由外层扫描器处理
+            /* 其余情况交由外层扫描器处理（包括空白及其它符号） */
         }
 
-        // 3. 生成并返回 Token
+        /* ───── 3. 生成并返回 Token ───── */
         return new Token(TokenType.NUMBER_LITERAL, literal.toString(), line, col);
     }
 
-    /**
-     * FSM 内部状态。
-     */
+    /** FSM 内部状态定义 */
     private enum State {
-        /**
-         * 整数部分（小数点左侧）
-         */
+        /** 整数部分 */
         INT_PART,
-        /**
-         * 已读到小数点，但还未读到第一位小数数字
-         */
+        /** 已读到小数点，但还未读到第一位小数数字 */
         DEC_POINT,
-        /**
-         * 小数部分（小数点右侧）
-         */
+        /** 小数部分 */
         FRAC_PART,
-        /**
-         * 主体结束，准备处理后缀或交还控制权
-         */
+        /** 主体结束，准备处理后缀或交还控制权 */
         END
     }
 }
