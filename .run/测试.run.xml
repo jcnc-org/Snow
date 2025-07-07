@@ -1,0 +1,15 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="测试" type="CompoundRunConfigurationType">
+    <toRun name="Demo1" type="Application" />
+    <toRun name="Demo10" type="Application" />
+    <toRun name="Demo11" type="Application" />
+    <toRun name="Demo2" type="Application" />
+    <toRun name="Demo3" type="Application" />
+    <toRun name="Demo4" type="Application" />
+    <toRun name="Demo6" type="Application" />
+    <toRun name="Demo7" type="Application" />
+    <toRun name="Demo8" type="Application" />
+    <toRun name="Demo9" type="Application" />
+    <method v="2" />
+  </configuration>
+</component>

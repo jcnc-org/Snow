@@ -14,7 +14,9 @@ import org.jcnc.snow.vm.module.*;
  */
 public class RetCommand implements Command {
 
-    /** Sentinel value that tells the VM loop to terminate gracefully. */
+    /**
+     * Sentinel value that tells the VM loop to terminate gracefully.
+     */
     private static final int PROGRAM_END = Integer.MAX_VALUE;
 
     @Override
@@ -32,8 +34,8 @@ public class RetCommand implements Command {
         StackFrame topFrame = callStack.peekFrame();
 
         /* ----- Root frame: do NOT pop, just end program ----- */
-        if (topFrame.getReturnAddress() == 0) {
-            System.out.println("Return 0");
+        if (topFrame.getReturnAddress() == PROGRAM_END) {
+            System.out.println("Return <root>");
             return PROGRAM_END;          // VM main loop should break
         }
 

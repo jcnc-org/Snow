@@ -7,9 +7,18 @@ import org.jcnc.snow.compiler.lexer.token.TokenType;
 /**
  * 换行符扫描器：将源代码中的换行符（\n）识别为 {@code NEWLINE} 类型的 Token。
  * <p>
- * 通常用于记录行的分界，辅助语法分析阶段进行行敏感的判断或保持结构清晰。
+ * 用于记录行的分界，辅助语法分析阶段进行行敏感的判断或保持结构清晰。
  */
 public class NewlineTokenScanner extends AbstractTokenScanner {
+
+    // 定义状态枚举
+    private enum State {
+        INITIAL,
+        NEWLINE
+    }
+
+    // 当前状态
+    private State currentState = State.INITIAL;
 
     /**
      * 判断是否可以处理当前位置的字符。
@@ -21,7 +30,8 @@ public class NewlineTokenScanner extends AbstractTokenScanner {
      */
     @Override
     public boolean canHandle(char c, LexerContext ctx) {
-        return c == '\n';
+        // 只有当处于 INITIAL 状态，并且遇到换行符时，才可以处理
+        return currentState == State.INITIAL && c == '\n';
     }
 
     /**
@@ -35,7 +45,16 @@ public class NewlineTokenScanner extends AbstractTokenScanner {
      */
     @Override
     protected Token scanToken(LexerContext ctx, int line, int col) {
+        // 状态转换为 NEWLINE
+        currentState = State.NEWLINE;
+
+        // 执行换行符扫描，生成 token
         ctx.advance();
-        return new Token(TokenType.NEWLINE, "\n", line, col);
+        Token newlineToken = new Token(TokenType.NEWLINE, "\n", line, col);
+
+        // 扫描完成后，恢复状态为 INITIAL
+        currentState = State.INITIAL;
+
+        return newlineToken;
     }
 }

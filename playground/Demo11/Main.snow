@@ -1,0 +1,6 @@
+function: main
+    return_type: int
+    body:
+        return 65537
+    end body
+end function
