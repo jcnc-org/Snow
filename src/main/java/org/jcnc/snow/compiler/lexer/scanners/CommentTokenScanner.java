@@ -1,29 +1,30 @@
 package org.jcnc.snow.compiler.lexer.scanners;
 
 import org.jcnc.snow.compiler.lexer.core.LexerContext;
+import org.jcnc.snow.compiler.lexer.core.LexicalException;
 import org.jcnc.snow.compiler.lexer.token.Token;
 import org.jcnc.snow.compiler.lexer.token.TokenType;
 
 /**
- * 注释扫描器：处理源代码中的注释部分，包括：
+ * {@code CommentTokenScanner} —— 注释解析器，基于有限状态机（FSM）。
+ *
+ * <p>负责将源码中的两种注释形式切分为 {@link TokenType#COMMENT COMMENT} token：</p>
+ * <ol>
+ *   <li>单行注释：以 {@code //} 开头，直至行尾或文件末尾。</li>
+ *   <li>多行注释：以 {@code /*} 开头，以 <code>*&#47;</code> 结束，可跨多行。</li>
+ * </ol>
+ *
+ * <p>本扫描器遵循“发现即捕获”原则：注释文本被完整保留在 Token 中，供后续的文档提取、源映射等分析使用。</p>
+ *
+ * <p>错误处理策略</p>
  * <ul>
- *     <li>单行注释（以 "//" 开头，直到行尾）</li>
- *     <li>多行注释（以 "/*" 开头，以 "*&#47;" 结尾）</li>
+ *   <li>未终止的多行注释：若文件结束时仍未遇到 <code>*&#47;</code>，抛出 {@link LexicalException}。</li>
  * </ul>
- * <p>
- * 本扫描器会识别注释并生成 {@code TokenType.COMMENT} 类型的 Token，
- * 不会丢弃注释内容，而是将完整注释文本保留在 Token 中，便于后续分析（如文档提取、保留注释等场景）。
- * </p>
  */
 public class CommentTokenScanner extends AbstractTokenScanner {
 
     /**
-     * 判断是否可以处理当前位置的字符。
-     * <p>当当前位置字符为 '/' 且下一个字符为 '/' 或 '*' 时，表示可能是注释的起始。</p>
-     *
-     * @param c   当前字符
-     * @param ctx 当前词法上下文
-     * @return 如果是注释的起始符，则返回 true
+     * 仅当当前字符为 {@code '/'} 且下一个字符为 {@code '/'} 或 {@code '*'} 时，由本扫描器处理。
      */
     @Override
     public boolean canHandle(char c, LexerContext ctx) {
@@ -31,44 +32,75 @@ public class CommentTokenScanner extends AbstractTokenScanner {
     }
 
     /**
-     * 实现注释的扫描逻辑。
-     * <p>支持两种注释格式：</p>
-     * <ul>
-     *     <li><b>单行注释：</b> 以 "//" 开头，直到遇到换行符</li>
-     *     <li><b>多行注释：</b> 以 "/*" 开头，直到遇到 "*&#47;" 结束</li>
-     * </ul>
+     * 执行注释扫描，生成 {@code COMMENT} Token。
      *
      * @param ctx  词法上下文
-     * @param line 当前行号（用于 Token 位置信息）
-     * @param col  当前列号（用于 Token 位置信息）
-     * @return 包含完整注释内容的 COMMENT 类型 Token
+     * @param line 起始行号（1 基）
+     * @param col  起始列号（1 基）
+     * @return 包含完整注释文本的 Token
+     * @throws LexicalException 若遇到未终止的多行注释
      */
     @Override
     protected Token scanToken(LexerContext ctx, int line, int col) {
-        // 消费第一个 '/' 字符
-        ctx.advance();
-        StringBuilder sb = new StringBuilder("/");
+        StringBuilder literal = new StringBuilder();
+        State currentState = State.INITIAL;
 
-        // 处理单行注释 //
-        if (ctx.match('/')) {
-            sb.append('/');
-            while (!ctx.isAtEnd() && ctx.peek() != '\n') {
-                sb.append(ctx.advance());
-            }
-        }
-        // 处理多行注释 /* ... */
-        else if (ctx.match('*')) {
-            sb.append('*');
-            while (!ctx.isAtEnd()) {
-                char ch = ctx.advance();
-                sb.append(ch);
-                if (ch == '*' && ctx.peek() == '/') {
-                    sb.append(ctx.advance()); // 消费 '/'
+        // 读取注释起始符
+        literal.append(ctx.advance()); // 消费首个 '/'
+
+        while (!ctx.isAtEnd()) {
+            switch (currentState) {
+                case INITIAL:
+                    if (ctx.match('/')) {
+                        literal.append('/');
+                        currentState = State.SINGLE_LINE;
+                    } else if (ctx.match('*')) {
+                        literal.append('*');
+                        currentState = State.MULTI_LINE;
+                    }
                     break;
-                }
+
+                case SINGLE_LINE:
+                    // 单行注释处理：读取直到行尾
+                    if (ctx.isAtEnd() || ctx.peek() == '\n') {
+                        // 如果遇到换行符，停止读取并返回注释内容
+                        return new Token(TokenType.COMMENT, literal.toString(), line, col);
+                    } else {
+                        literal.append(ctx.advance());  // 继续读取注释内容
+                    }
+                    break;
+
+
+                case MULTI_LINE:
+                    // 多行注释处理
+                    char ch = ctx.advance();
+                    literal.append(ch);
+                    if (ch == '*' && ctx.peek() == '/') {
+                        literal.append(ctx.advance()); // 追加 '/'
+                        currentState = State.MULTI_LINE_END;
+                    }
+                    break;
+
+                case MULTI_LINE_END:
+                    // 已经读取了闭合的 "*/"
+                    return new Token(TokenType.COMMENT, literal.toString(), line, col);
             }
         }
 
-        return new Token(TokenType.COMMENT, sb.toString(), line, col);
+        // 如果未终止的多行注释，抛出异常
+        if (currentState == State.MULTI_LINE) {
+            throw new LexicalException("未终止的多行注释", line, col);
+        }
+
+        // 在正常情况下返回生成的注释 Token
+        return new Token(TokenType.COMMENT, literal.toString(), line, col);
+    }
+
+    // 定义状态
+    private enum State {
+        INITIAL,    // 初始状态
+        SINGLE_LINE, // 单行注释状态
+        MULTI_LINE,  // 多行注释状态
+        MULTI_LINE_END // 多行注释结束状态
     }
 }

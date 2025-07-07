@@ -15,10 +15,14 @@ import java.util.List;
  */
 public class ParserContext {
 
-    /** 当前语法分析所使用的 Token 流 */
+    /**
+     * 当前语法分析所使用的 Token 流
+     */
     private final TokenStream tokens;
 
-    /** 当前语法分析所使用的资源文件名 */
+    /**
+     * 当前语法分析所使用的资源文件名
+     */
     private final String sourceName;
 
 
