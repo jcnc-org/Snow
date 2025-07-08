@@ -1,6 +1,7 @@
 package org.jcnc.snow.compiler.parser.ast;
 
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 
 /**
  * {@code StringLiteralNode} 表示抽象语法树（AST）中的字符串字面量表达式节点。
@@ -10,15 +11,11 @@ import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
  * </p>
  *
  * @param value    字符串常量的内容，原始值中不包含双引号
- * @param line     当前节点所在的行号
- * @param column   当前节点所在的列号
- * @param file     当前节点所在的文件
+ * @param context  节点上下文信息（包含行号、列号等）
  */
 public record StringLiteralNode(
         String value,
-        int line,
-        int column,
-        String file
+        NodeContext context
 ) implements ExpressionNode {
 
     /**

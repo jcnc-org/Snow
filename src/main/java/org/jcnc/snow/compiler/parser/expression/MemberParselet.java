@@ -3,6 +3,7 @@ package org.jcnc.snow.compiler.parser.expression;
 import org.jcnc.snow.compiler.lexer.token.TokenType;
 import org.jcnc.snow.compiler.parser.ast.MemberExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
 import org.jcnc.snow.compiler.parser.context.TokenStream;
 import org.jcnc.snow.compiler.parser.expression.base.InfixParselet;
@@ -34,7 +35,7 @@ public class MemberParselet implements InfixParselet {
         String file = ctx.getSourceName();
 
         String member = ts.expectType(TokenType.IDENTIFIER).getLexeme();
-        return new MemberExpressionNode(left, member, line, column, file);
+        return new MemberExpressionNode(left, member, new NodeContext(line, column, file));
     }
 
     /**

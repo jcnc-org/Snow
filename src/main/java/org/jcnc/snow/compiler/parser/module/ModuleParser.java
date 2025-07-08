@@ -4,6 +4,7 @@ import org.jcnc.snow.compiler.lexer.token.TokenType;
 import org.jcnc.snow.compiler.parser.ast.FunctionNode;
 import org.jcnc.snow.compiler.parser.ast.ImportNode;
 import org.jcnc.snow.compiler.parser.ast.ModuleNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.base.TopLevelParser;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
 import org.jcnc.snow.compiler.parser.context.TokenStream;
@@ -93,6 +94,6 @@ public class ModuleParser implements TopLevelParser {
         ts.expect("end");
         ts.expect("module");
 
-        return new ModuleNode(name, imports, functions, line, column, file);
+        return new ModuleNode(name, imports, functions, new NodeContext(line, column, file));
     }
 }

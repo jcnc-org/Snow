@@ -3,6 +3,7 @@ package org.jcnc.snow.compiler.parser.statement;
 import org.jcnc.snow.compiler.lexer.token.TokenType;
 import org.jcnc.snow.compiler.parser.ast.DeclarationNode;
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
 import org.jcnc.snow.compiler.parser.expression.PrattExpressionParser;
 
@@ -74,6 +75,6 @@ public class DeclarationStatementParser implements StatementParser {
         ctx.getTokens().expectType(TokenType.NEWLINE);
 
         // 返回构建好的声明语法树节点
-        return new DeclarationNode(name, type, init, line, column, file);
+        return new DeclarationNode(name, type, init, new NodeContext(line, column, file));
     }
 }

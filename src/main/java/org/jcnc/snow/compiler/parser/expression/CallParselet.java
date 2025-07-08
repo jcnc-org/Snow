@@ -2,6 +2,7 @@ package org.jcnc.snow.compiler.parser.expression;
 
 import org.jcnc.snow.compiler.parser.ast.CallExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
 import org.jcnc.snow.compiler.parser.expression.base.InfixParselet;
 
@@ -45,7 +46,8 @@ public class CallParselet implements InfixParselet {
         ctx.getTokens().expect(")"); // 消费并验证 ")"
 
         // 创建 CallExpressionNode 并传递位置信息
-        return new CallExpressionNode(left, args, line, column, file);
+        return new CallExpressionNode(left, args, new NodeContext(line, column, file));
+
     }
 
     /**
