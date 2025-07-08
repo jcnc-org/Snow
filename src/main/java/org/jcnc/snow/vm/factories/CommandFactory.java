@@ -207,26 +207,41 @@ public class CommandFactory {
         // endregion
 
         // region Type Conversion (0x00C0-0x00DF)
-        COMMANDS[VMOpCode.I2L] = new I2LCommand();
-        COMMANDS[VMOpCode.I2S] = new I2SCommand();
+        COMMANDS[VMOpCode.B2S] = new B2SCommand();
+        COMMANDS[VMOpCode.B2I] = new B2ICommand();
+        COMMANDS[VMOpCode.B2L] = new B2LCommand();
+        COMMANDS[VMOpCode.B2F] = new B2FCommand();
+        COMMANDS[VMOpCode.B2D] = new B2DCommand();
+
+        COMMANDS[VMOpCode.S2B] = new S2BCommand();
+        COMMANDS[VMOpCode.S2I] = new S2ICommand();
+        COMMANDS[VMOpCode.S2L] = new S2LCommand();
+        COMMANDS[VMOpCode.S2F] = new S2FCommand();
+        COMMANDS[VMOpCode.S2D] = new S2DCommand();
+
         COMMANDS[VMOpCode.I2B] = new I2BCommand();
-        COMMANDS[VMOpCode.I2D] = new I2DCommand();
+        COMMANDS[VMOpCode.I2S] = new I2SCommand();
+        COMMANDS[VMOpCode.I2L] = new I2LCommand();
         COMMANDS[VMOpCode.I2F] = new I2FCommand();
+        COMMANDS[VMOpCode.I2D] = new I2DCommand();
 
+        COMMANDS[VMOpCode.L2B] = new L2BCommand();
+        COMMANDS[VMOpCode.L2S] = new L2SCommand();
         COMMANDS[VMOpCode.L2I] = new L2ICommand();
-        COMMANDS[VMOpCode.L2D] = new L2DCommand();
         COMMANDS[VMOpCode.L2F] = new L2FCommand();
+        COMMANDS[VMOpCode.L2D] = new L2DCommand();
 
+        COMMANDS[VMOpCode.F2B] = new F2BCommand();
+        COMMANDS[VMOpCode.F2S] = new F2SCommand();
         COMMANDS[VMOpCode.F2I] = new F2ICommand();
         COMMANDS[VMOpCode.F2L] = new F2LCommand();
         COMMANDS[VMOpCode.F2D] = new F2DCommand();
 
+        COMMANDS[VMOpCode.D2B] = new D2BCommand();
+        COMMANDS[VMOpCode.D2S] = new D2SCommand();
         COMMANDS[VMOpCode.D2I] = new D2ICommand();
         COMMANDS[VMOpCode.D2L] = new D2LCommand();
         COMMANDS[VMOpCode.D2F] = new D2FCommand();
-
-        COMMANDS[VMOpCode.S2I] = new S2ICommand();
-        COMMANDS[VMOpCode.B2I] = new B2ICommand();
         // endregion
 
         // region Stack Control (0x0100-0x01FF)
