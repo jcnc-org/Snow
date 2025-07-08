@@ -2,6 +2,7 @@ package org.jcnc.snow.compiler.parser.function;
 
 import org.jcnc.snow.compiler.lexer.token.Token;
 import org.jcnc.snow.compiler.lexer.token.TokenType;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.base.TopLevelParser;
 import org.jcnc.snow.compiler.parser.ast.FunctionNode;
 import org.jcnc.snow.compiler.parser.ast.ParameterNode;
@@ -74,7 +75,7 @@ public class FunctionParser implements TopLevelParser {
 
         parseFunctionFooter(ts);
 
-        return new FunctionNode(functionName, parameters, returnType[0], body, line, column, file);
+        return new FunctionNode(functionName, parameters, returnType[0], body, new NodeContext(line, column, file));
     }
 
     /**
@@ -194,7 +195,7 @@ public class FunctionParser implements TopLevelParser {
             String ptype = ts.expectType(TokenType.TYPE).getLexeme();
             skipComments(ts);
             ts.expectType(TokenType.NEWLINE);
-            list.add(new ParameterNode(pname, ptype, line, column, file));
+            list.add(new ParameterNode(pname, ptype, new NodeContext(line, column, file)));
         }
         return list;
     }

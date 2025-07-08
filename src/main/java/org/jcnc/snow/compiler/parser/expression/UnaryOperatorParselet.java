@@ -3,6 +3,7 @@ package org.jcnc.snow.compiler.parser.expression;
 import org.jcnc.snow.compiler.lexer.token.Token;
 import org.jcnc.snow.compiler.parser.ast.UnaryExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
 import org.jcnc.snow.compiler.parser.expression.base.PrefixParselet;
 
@@ -55,6 +56,6 @@ public class UnaryOperatorParselet implements PrefixParselet {
         /* ------------------------------------------------------------
          * 2. 封装成 AST 节点并返回。
          * ------------------------------------------------------------ */
-        return new UnaryExpressionNode(token.getLexeme(), operand, line, column, file);
+        return new UnaryExpressionNode(token.getLexeme(), operand, new NodeContext(line, column, file));
     }
 }

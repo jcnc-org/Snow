@@ -2,6 +2,7 @@ package org.jcnc.snow.compiler.parser.ast;
 
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 
 import java.util.Optional;
 
@@ -23,14 +24,8 @@ public class DeclarationNode implements StatementNode {
     /** 可选的初始化表达式 */
     private final Optional<ExpressionNode> initializer;
 
-    /** 当前节点所在的行号 **/
-    private final int line;
-
-    /** 当前节点所在的列号 **/
-    private final int column;
-
-    /** 当前节点所在的文件 **/
-    private final String file;
+    /** 节点上下文信息（包含行号、列号等） */
+    private final NodeContext context;
 
     /**
      * 构造一个 {@code DeclarationNode} 实例。
@@ -38,14 +33,13 @@ public class DeclarationNode implements StatementNode {
      * @param name        变量名称
      * @param type        变量类型字符串（如 "int"、"string"）
      * @param initializer 可选初始化表达式，若为 {@code null} 表示未初始化
+     * @param context     节点上下文信息（包含行号、列号等）
      */
-    public DeclarationNode(String name, String type, ExpressionNode initializer, int line, int column, String file) {
+    public DeclarationNode(String name, String type, ExpressionNode initializer, NodeContext context) {
         this.name = name;
         this.type = type;
         this.initializer = Optional.ofNullable(initializer);
-        this.line = line;
-        this.column = column;
-        this.file = file;
+        this.context = context;
     }
 
     /**
@@ -76,27 +70,12 @@ public class DeclarationNode implements StatementNode {
     }
 
     /**
-     * 获取当前表达式所在的行号。
+     * 获取节点上下文信息（包含行号、列号等）。
      *
-     * @return 当前表达式的行号。
+     * @return NodeContext 实例
      */
-    public int line() {
-        return line;
+    @Override
+    public NodeContext context() {
+        return context;
     }
-
-    /**
-     * 获取当前表达式所在的列号。
-     *
-     * @return 当前表达式的列号。
-     */
-    public int column() {
-        return column;
-    }
-
-    /**
-     * 获取当前表达式所在的文件名。
-     *
-     * @return 当前表达式所在的文件名。
-     */
-    public String file()   { return file;   }
 }

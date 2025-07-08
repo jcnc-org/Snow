@@ -1,6 +1,7 @@
 package org.jcnc.snow.compiler.parser.ast;
 
 import org.jcnc.snow.compiler.parser.ast.base.Node;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 
 /**
  * {@code ImportNode} 表示抽象语法树（AST）中的 import 语句节点。
@@ -14,14 +15,10 @@ import org.jcnc.snow.compiler.parser.ast.base.Node;
  * </p>
  *
  * @param moduleName 被导入的模块名称，通常为点分层次结构（如 "core.utils"）
- * @param line     当前节点所在的行号
- * @param column   当前节点所在的列号
- * @param file     当前节点所在的文件
+ * @param context    节点上下文信息（包含行号、列号等）
  */
 public record ImportNode(
         String moduleName,
-        int line,
-        int column,
-        String file
+        NodeContext context
 ) implements Node {
 }

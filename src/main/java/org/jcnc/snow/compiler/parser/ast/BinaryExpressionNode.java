@@ -1,6 +1,7 @@
 package org.jcnc.snow.compiler.parser.ast;
 
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 
 /**
  * {@code BinaryExpressionNode} 表示抽象语法树（AST）中的二元运算表达式节点。
@@ -12,17 +13,13 @@ import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
  * @param left     左操作数（子表达式）
  * @param operator 运算符字符串（如 "+", "-", "*", "/" 等）
  * @param right    右操作数（子表达式）
- * @param line     当前节点所在的行号
- * @param column   当前节点所在的列号
- * @param file     当前节点所在的文件
+ * @param context  节点上下文（包含行号、列号等信息）
  */
 public record BinaryExpressionNode(
         ExpressionNode left,
         String operator,
         ExpressionNode right,
-        int line,
-        int column,
-        String file
+        NodeContext context
 ) implements ExpressionNode {
 
     /**

@@ -3,6 +3,7 @@ package org.jcnc.snow.compiler.parser.expression;
 import org.jcnc.snow.compiler.lexer.token.Token;
 import org.jcnc.snow.compiler.parser.ast.BinaryExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
 import org.jcnc.snow.compiler.parser.expression.base.InfixParselet;
 
@@ -46,12 +47,9 @@ public record BinaryOperatorParselet(Precedence precedence, boolean leftAssoc) i
         int prec = precedence.ordinal();
 
         // 右侧表达式根据结合性确定优先级绑定
-        ExpressionNode right = new PrattExpressionParser().parseExpression(
-                ctx,
-                leftAssoc ? Precedence.values()[prec] : Precedence.values()[prec - 1]
-        );
+        ExpressionNode right = new PrattExpressionParser().parseExpression(ctx, leftAssoc ? Precedence.values()[prec] : Precedence.values()[prec - 1]);
 
-        return new BinaryExpressionNode(left, op.getLexeme(), right, line, column, file);
+        return new BinaryExpressionNode(left, op.getLexeme(), right, new NodeContext(line, column, file));
     }
 
     /**

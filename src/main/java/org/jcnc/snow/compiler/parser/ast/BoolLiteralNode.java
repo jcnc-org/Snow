@@ -1,6 +1,7 @@
 package org.jcnc.snow.compiler.parser.ast;
 
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 
 /**
  * 表示布尔字面量（boolean literal）的抽象语法树（AST）节点。
@@ -9,16 +10,12 @@ import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
  * 表达布尔类型的字面量常量（如 "true" 或 "false"）。
  * </p>
  *
- * @param value    字面量的布尔值
- * @param line     当前节点所在的行号
- * @param column   当前节点所在的列号
- * @param file     当前节点所在的文件
+ * @param value   字面量的布尔值
+ * @param context 节点上下文信息（行号、列号等）
  */
 public record BoolLiteralNode(
         boolean value,
-        int line,
-        int column,
-        String file
+        NodeContext context
 ) implements ExpressionNode {
 
     /**
@@ -28,10 +25,11 @@ public record BoolLiteralNode(
      * 如果传入的字符串为 "true"（忽略大小写），则解析结果为 {@code true}；否则为 {@code false}。
      * </p>
      *
-     * @param lexeme 布尔字面量的字符串表示
+     * @param lexeme  布尔字面量的字符串表示
+     * @param context 节点上下文信息（行号、列号等）
      */
-    public BoolLiteralNode(String lexeme, int line, int column, String file) {
-        this(Boolean.parseBoolean(lexeme), line, column, file);
+    public BoolLiteralNode(String lexeme, NodeContext context) {
+        this(Boolean.parseBoolean(lexeme), context);
     }
 
     /**
