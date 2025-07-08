@@ -2,6 +2,7 @@ package org.jcnc.snow.compiler.parser.ast;
 
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 
 /**
  * {@code ExpressionStatementNode} 表示抽象语法树（AST）中的表达式语句节点。
@@ -11,14 +12,10 @@ import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
  * </p>
  *
  * @param expression 表达式主体，通常为函数调用、赋值、方法链式调用等可求值表达式。
- * @param line     当前节点所在的行号
- * @param column   当前节点所在的列号
- * @param file     当前节点所在的文件
+ * @param context    节点上下文信息（包含行号、列号等）
  */
 public record ExpressionStatementNode(
         ExpressionNode expression,
-        int line,
-        int column,
-        String file
+        NodeContext context
 ) implements StatementNode {
 }

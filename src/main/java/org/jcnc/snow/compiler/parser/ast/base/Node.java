@@ -17,23 +17,7 @@ package org.jcnc.snow.compiler.parser.ast.base;
  */
 public interface Node {
     /**
-     * 获取当前表达式所在的行号。
-     *
-     * @return 当前表达式的行号。
+     * 获取节点的上下文（行/列/文件等信息）。
      */
-    int line();
-
-    /**
-     * 获取当前表达式所在的列号。
-     *
-     * @return 当前表达式的列号。
-     */
-    int column();
-
-    /**
-     * 获取当前表达式所在的文件名。
-     *
-     * @return 当前表达式所在的文件名。
-     */
-    String file();
+    NodeContext context();
 }

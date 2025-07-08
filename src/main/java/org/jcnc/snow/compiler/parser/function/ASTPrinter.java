@@ -3,6 +3,7 @@ package org.jcnc.snow.compiler.parser.function;
 import org.jcnc.snow.compiler.parser.ast.*;
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.base.Node;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
 import org.jcnc.snow.compiler.parser.utils.ASTJsonSerializer;
 import org.jcnc.snow.compiler.parser.utils.JsonFormatter;
@@ -66,8 +67,8 @@ public class ASTPrinter {
                 }
             }
             case FunctionNode(
-                    String name, List<ParameterNode> parameters, String returnType, List<StatementNode> body
-                    , int _, int _, String _
+                    String name, List<ParameterNode> parameters, String returnType, List<StatementNode> body,
+                    NodeContext _
             ) -> {
                 System.out.println(pad + "function " + name
                         + "(params=" + parameters + ", return=" + returnType + ")");
@@ -82,11 +83,10 @@ public class ASTPrinter {
                         .orElse("");
                 System.out.println(pad + "declare " + d.getName() + ":" + d.getType() + init);
             }
-            case AssignmentNode(String variable, ExpressionNode value, int _, int _, String _) ->
+            case AssignmentNode(String variable, ExpressionNode value, NodeContext _) ->
                     System.out.println(pad + variable + " = " + value);
             case IfNode(
-                    ExpressionNode condition, List<StatementNode> thenBranch, List<StatementNode> elseBranch, int _,
-                    int _, String _
+                    ExpressionNode condition, List<StatementNode> thenBranch, List<StatementNode> elseBranch, NodeContext _
             ) -> {
                 System.out.println(pad + "if " + condition);
                 for (StatementNode stmt : thenBranch) {
@@ -100,8 +100,8 @@ public class ASTPrinter {
                 }
             }
             case LoopNode(
-                    StatementNode initializer, ExpressionNode condition, StatementNode update, List<StatementNode> body
-                    , int _, int _, String _
+                    StatementNode initializer, ExpressionNode condition, StatementNode update, List<StatementNode> body,
+                    NodeContext _
             ) -> {
                 System.out.println(pad + "loop {");
                 print(initializer, indent + 1);
@@ -116,7 +116,7 @@ public class ASTPrinter {
             }
             case ReturnNode r -> System.out.println(pad + "return" +
                     r.getExpression().map(e -> " " + e).orElse(""));
-            case ExpressionStatementNode(ExpressionNode expression, int _, int _, String _) ->
+            case ExpressionStatementNode(ExpressionNode expression, NodeContext _) ->
                     System.out.println(pad + expression);
             case null, default -> System.out.println(pad + n);  // 回退处理
         }

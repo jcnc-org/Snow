@@ -1,6 +1,7 @@
 package org.jcnc.snow.compiler.parser.ast;
 
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 
 /**
  * {@code UnaryExpressionNode} —— 前缀一元运算 AST 节点。
@@ -15,16 +16,12 @@ import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
  *
  * @param operator 一元运算符（仅 "-" 或 "!"）
  * @param operand  运算对象 / 右操作数
- * @param line     当前节点所在的行号
- * @param column   当前节点所在的列号
- * @param file     当前节点所在的文件
+ * @param context  节点上下文信息（包含行号、列号等）
  */
 public record UnaryExpressionNode(
         String operator,
         ExpressionNode operand,
-        int line,
-        int column,
-        String file
+        NodeContext context
 ) implements ExpressionNode {
 
     /**

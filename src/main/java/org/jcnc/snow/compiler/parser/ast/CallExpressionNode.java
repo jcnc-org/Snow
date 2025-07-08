@@ -1,6 +1,7 @@
 package org.jcnc.snow.compiler.parser.ast;
 
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 
 import java.util.List;
 
@@ -12,16 +13,12 @@ import java.util.List;
  *
  * @param callee    被调用的表达式节点，通常为函数标识符或成员访问表达式，表示函数名或方法名等。
  * @param arguments 参数表达式列表，表示函数调用中传递给函数的实际参数。参数的顺序与调用顺序一致。
- * @param line      当前表达式所在的行号，方便调试和错误定位。
- * @param column    当前表达式所在的列号，用于精确定位错误位置。
- * @param file      当前表达式所在的文件，用于错误定位。
+ * @param context   节点上下文信息（包含行号、列号等）。
  */
 public record CallExpressionNode(
         ExpressionNode callee,           // 被调用的表达式节点，表示函数或方法名
         List<ExpressionNode> arguments,  // 函数调用的参数表达式列表
-        int line,                        // 当前节点所在的行号
-        int column,                      // 当前节点所在的列号
-        String file                      // 当前节点所在的文件
+        NodeContext context              // 节点上下文信息（包含行号、列号等）
 ) implements ExpressionNode {
 
     /**
@@ -42,32 +39,5 @@ public record CallExpressionNode(
         }
         sb.append(")");  // 拼接右括号
         return sb.toString();  // 返回拼接好的字符串
-    }
-
-    /**
-     * 获取当前表达式所在的行号。
-     *
-     * @return 当前表达式的行号。
-     */
-    public int line() {
-        return line;
-    }
-
-    /**
-     * 获取当前表达式所在的列号。
-     *
-     * @return 当前表达式的列号。
-     */
-    public int column() {
-        return column;
-    }
-
-    /**
-     * 获取当前表达式所在的文件名。
-     *
-     * @return 当前表达式所在的文件名。
-     */
-    public String file() {
-        return file;
     }
 }

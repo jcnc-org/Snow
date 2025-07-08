@@ -5,6 +5,7 @@ import org.jcnc.snow.compiler.ir.core.IRProgram;
 import org.jcnc.snow.compiler.parser.ast.FunctionNode;
 import org.jcnc.snow.compiler.parser.ast.ModuleNode;
 import org.jcnc.snow.compiler.parser.ast.base.Node;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
 
 import java.util.List;
@@ -81,9 +82,7 @@ public final class IRProgramBuilder {
                 null,
                 String.valueOf(List.of()),
                 List.of(stmt),
-                -1,
-                -1,
-                ""
+                new NodeContext(-1, -1, "")
         );
     }
 }
