@@ -3,7 +3,7 @@ package org.jcnc.snow.compiler.parser.ast.base;
 /**
  * {@code Node} 是抽象语法树（AST）中所有语法节点的统一根接口。
  * <p>
- * 作为标记接口（Marker Interface），该接口不定义任何方法，
+ * 作为标记接口（Marker Interface），该接口定义 3 个方法：line()、column() 和 file() 用于定位错误，
  * 主要用于统一标识并组织 AST 体系中的各种语法构件节点，包括：
  * </p>
  * <ul>
@@ -15,4 +15,25 @@ package org.jcnc.snow.compiler.parser.ast.base;
  * 所有 AST 处理逻辑（如遍历、分析、代码生成）均可基于该接口实现统一调度和类型判定。
  * </p>
  */
-public interface Node {}
+public interface Node {
+    /**
+     * 获取当前表达式所在的行号。
+     *
+     * @return 当前表达式的行号。
+     */
+    int line();
+
+    /**
+     * 获取当前表达式所在的列号。
+     *
+     * @return 当前表达式的列号。
+     */
+    int column();
+
+    /**
+     * 获取当前表达式所在的文件名。
+     *
+     * @return 当前表达式所在的文件名。
+     */
+    String file();
+}

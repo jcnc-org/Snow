@@ -127,7 +127,7 @@ public final class ExpressionUtils {
 
     /** 递归推断单个表达式节点的类型后缀（b/s/i/l/f/d）。 */
     private static char typeChar(ExpressionNode node) {
-        if (node instanceof NumberLiteralNode(String value)) {
+        if (node instanceof NumberLiteralNode(String value, int _, int _, String _)) {
             char last = Character.toLowerCase(value.charAt(value.length() - 1));
             return switch (last) {
                 case 'b','s','i','l','f','d' -> last;

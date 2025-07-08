@@ -67,7 +67,7 @@ public class ASTPrinter {
             }
             case FunctionNode(
                     String name, List<ParameterNode> parameters, String returnType, List<StatementNode> body
-                    , _, _, _
+                    , int _, int _, String _
             ) -> {
                 System.out.println(pad + "function " + name
                         + "(params=" + parameters + ", return=" + returnType + ")");
@@ -82,7 +82,7 @@ public class ASTPrinter {
                         .orElse("");
                 System.out.println(pad + "declare " + d.getName() + ":" + d.getType() + init);
             }
-            case AssignmentNode(String variable, ExpressionNode value, _, int _, String _) ->
+            case AssignmentNode(String variable, ExpressionNode value, int _, int _, String _) ->
                     System.out.println(pad + variable + " = " + value);
             case IfNode(
                     ExpressionNode condition, List<StatementNode> thenBranch, List<StatementNode> elseBranch, int _,

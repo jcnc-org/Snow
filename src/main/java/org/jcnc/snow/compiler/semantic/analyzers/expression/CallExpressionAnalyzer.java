@@ -51,8 +51,8 @@ public class CallExpressionAnalyzer implements ExpressionAnalyzer<CallExpression
         ExpressionNode callee = call.callee();
 
         // 支持模块调用形式：ModuleName.FunctionName(...)
-        if (callee instanceof MemberExpressionNode(var obj, String member, _, _, _)
-                && obj instanceof IdentifierNode(String mod, _, _, _)) {
+        if (callee instanceof MemberExpressionNode(var obj, String member, int _, int _, String _)
+                && obj instanceof IdentifierNode(String mod, int _, int _, String _)) {
             // 验证模块是否存在并已导入
             if (!ctx.getModules().containsKey(mod)
                     || (!mi.getImports().contains(mod) && !mi.getName().equals(mod))) {
@@ -65,7 +65,7 @@ public class CallExpressionAnalyzer implements ExpressionAnalyzer<CallExpression
             functionName = member;
 
             // 简单函数名形式：func(...)
-        } else if (callee instanceof IdentifierNode(String name, _, _, _)) {
+        } else if (callee instanceof IdentifierNode(String name, int _, int _, String _)) {
             functionName = name;
 
             // 不支持的 callee 形式
