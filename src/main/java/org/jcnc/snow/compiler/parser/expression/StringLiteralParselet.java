@@ -3,6 +3,7 @@ package org.jcnc.snow.compiler.parser.expression;
 import org.jcnc.snow.compiler.lexer.token.Token;
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.StringLiteralNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
 import org.jcnc.snow.compiler.parser.expression.base.PrefixParselet;
 
@@ -27,6 +28,6 @@ public class StringLiteralParselet implements PrefixParselet {
     public ExpressionNode parse(ParserContext ctx, Token token) {
         String raw = token.getRaw();
         String content = raw.substring(1, raw.length() - 1);
-        return new StringLiteralNode(content, token.getLine(), token.getCol(), ctx.getSourceName());
+        return new StringLiteralNode(content, new NodeContext(token.getLine(), token.getCol(), ctx.getSourceName()));
     }
 }

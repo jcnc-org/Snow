@@ -42,10 +42,11 @@ public record SemanticError(Node node, String message) {
         String file = null;
 
         if (node != null) {
-            line = node.line();
-            col = node.column();
-            file = node.file();
+            line = node.context().line();
+            col = node.context().column();
+            file = node.context().file();
         }
+
 
         StringBuilder sb = new StringBuilder();
         if (file != null && !file.isBlank()) sb.append(file).append(": ");

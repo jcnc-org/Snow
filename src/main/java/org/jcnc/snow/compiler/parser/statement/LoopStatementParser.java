@@ -4,6 +4,7 @@ import org.jcnc.snow.compiler.lexer.token.TokenType;
 import org.jcnc.snow.compiler.parser.ast.AssignmentNode;
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.LoopNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
 import org.jcnc.snow.compiler.parser.context.TokenStream;
@@ -116,7 +117,7 @@ public class LoopStatementParser implements StatementParser {
                     ts1.expect("=");
                     ExpressionNode expr = new PrattExpressionParser().parse(ctx1);
                     ts1.expectType(TokenType.NEWLINE);
-                    update[0] = new AssignmentNode(varName, expr, line, column, file);
+                    update[0] = new AssignmentNode(varName, expr, new NodeContext(line, column, file));
                     ParserUtils.skipNewlines(ts1);
                 }
         ));
@@ -150,6 +151,6 @@ public class LoopStatementParser implements StatementParser {
         ParserUtils.matchFooter(ts, "loop");
 
         // 返回构造完成的 LoopNode
-        return new LoopNode(initializer[0], condition[0], update[0], body, loop_line, loop_column, file);
+        return new LoopNode(initializer[0], condition[0], update[0], body, new NodeContext(loop_line, loop_column, file));
     }
 }

@@ -1,6 +1,7 @@
 package org.jcnc.snow.compiler.parser.module;
 
 import org.jcnc.snow.compiler.lexer.token.TokenType;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
 import org.jcnc.snow.compiler.parser.ast.ImportNode;
 
@@ -57,7 +58,7 @@ public class ImportParser {
                     .getLexeme();
 
             // 创建 ImportNode 节点并加入列表
-            imports.add(new ImportNode(mod, line, column, file));
+            imports.add(new ImportNode(mod, new NodeContext(line, column, file)));
         } while (ctx.getTokens().match(",")); // 如果匹配到逗号，继续解析下一个模块名
 
         // 最后必须匹配换行符，标志 import 语句的结束

@@ -3,6 +3,7 @@ package org.jcnc.snow.compiler.parser.statement;
 import org.jcnc.snow.compiler.lexer.token.Token;
 import org.jcnc.snow.compiler.lexer.token.TokenType;
 import org.jcnc.snow.compiler.parser.ast.IfNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
 import org.jcnc.snow.compiler.parser.expression.PrattExpressionParser;
@@ -125,6 +126,6 @@ public class IfStatementParser implements StatementParser {
         ts.expectType(TokenType.NEWLINE);
 
         // 构建并返回 IfNode，包含条件、then 分支和 else 分支
-        return new IfNode(condition, thenBranch, elseBranch, line, column, file);
+        return new IfNode(condition, thenBranch, elseBranch, new NodeContext(line, column, file));
     }
 }

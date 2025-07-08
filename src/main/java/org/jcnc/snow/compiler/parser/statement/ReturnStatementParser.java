@@ -3,6 +3,7 @@ package org.jcnc.snow.compiler.parser.statement;
 import org.jcnc.snow.compiler.lexer.token.TokenType;
 import org.jcnc.snow.compiler.parser.ast.ReturnNode;
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
 import org.jcnc.snow.compiler.parser.expression.PrattExpressionParser;
 
@@ -54,6 +55,6 @@ public class ReturnStatementParser implements StatementParser {
         ctx.getTokens().expectType(TokenType.NEWLINE);
 
         // 构建并返回 ReturnNode（可能为空表达式）
-        return new ReturnNode(expr, line, column, file);
+        return new ReturnNode(expr, new NodeContext(line, column, file));
     }
 }

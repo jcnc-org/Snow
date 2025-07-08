@@ -1,6 +1,7 @@
 package org.jcnc.snow.compiler.parser.ast;
 
 import org.jcnc.snow.compiler.parser.ast.base.Node;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 
 import java.util.List;
 import java.util.StringJoiner;
@@ -8,22 +9,17 @@ import java.util.StringJoiner;
 /**
  * 表示模块定义的 AST 节点。
  * 一个模块通常由模块名、导入语句列表和函数定义列表组成。
- * }
  *
  * @param name      模块名称。
  * @param imports   模块导入列表，每个导入是一个 {@link ImportNode}。
  * @param functions 模块中的函数列表，每个函数是一个 {@link FunctionNode}。
- * @param line     当前节点所在的行号
- * @param column   当前节点所在的列号
- * @param file     当前节点所在的文件
+ * @param context   节点上下文信息（包含行号、列号等）
  */
 public record ModuleNode(
         String name,
         List<ImportNode> imports,
         List<FunctionNode> functions,
-        int line,
-        int column,
-        String file
+        NodeContext context
 ) implements Node {
 
     /**
