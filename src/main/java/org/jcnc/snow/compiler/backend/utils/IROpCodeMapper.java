@@ -82,34 +82,66 @@ public final class IROpCodeMapper {
         opcodeMap.put(IROpCode.NEG_D64, "D_NEG");
 
         // 比较运算映射
-        // 整形32位比较运算映射
-        opcodeMap.put(IROpCode.CMP_IEQ, "IC_E");   // 相等
-        opcodeMap.put(IROpCode.CMP_INE, "IC_NE");   // 不等
-        opcodeMap.put(IROpCode.CMP_ILT, "IC_L");    // 小于
-        opcodeMap.put(IROpCode.CMP_IGT, "IC_G");    // 大于
-        opcodeMap.put(IROpCode.CMP_ILE, "IC_LE");   // 小于等于
-        opcodeMap.put(IROpCode.CMP_IGE, "IC_GE");   // 大于等于
+        // 8位整数比较运算映射
+        opcodeMap.put(IROpCode.CMP_BEQ, "B_CE");    // 相等
+        opcodeMap.put(IROpCode.CMP_BNE, "B_CNE");   // 不等
+        opcodeMap.put(IROpCode.CMP_BLT, "B_CL");    // 小于
+        opcodeMap.put(IROpCode.CMP_BGT, "B_CG");    // 大于
+        opcodeMap.put(IROpCode.CMP_BLE, "B_CLE");   // 小于等于
+        opcodeMap.put(IROpCode.CMP_BGE, "B_CGE");   // 大于等于
 
-        // 整形64位比较运算映射
-        opcodeMap.put(IROpCode.CMP_LEQ, "LC_E");   // 相等
-        opcodeMap.put(IROpCode.CMP_LNE, "LC_NE");   // 不等
-        opcodeMap.put(IROpCode.CMP_LLT, "LC_L");    // 小于
-        opcodeMap.put(IROpCode.CMP_LGT, "LC_G");    // 大于
-        opcodeMap.put(IROpCode.CMP_LLE, "LC_LE");   // 小于等于
-        opcodeMap.put(IROpCode.CMP_LGE, "LC_GE");   // 大于等于
+        // 16位整数比较运算映射
+        opcodeMap.put(IROpCode.CMP_SEQ, "S_CE");    // 相等
+        opcodeMap.put(IROpCode.CMP_SNE, "S_CNE");   // 不等
+        opcodeMap.put(IROpCode.CMP_SLT, "S_CL");    // 小于
+        opcodeMap.put(IROpCode.CMP_SGT, "S_CG");    // 大于
+        opcodeMap.put(IROpCode.CMP_SLE, "S_CLE");   // 小于等于
+        opcodeMap.put(IROpCode.CMP_SGE, "S_CGE");   // 大于等于
+
+        // 32位整数比较运算映射
+        opcodeMap.put(IROpCode.CMP_IEQ, "I_CE");    // 相等
+        opcodeMap.put(IROpCode.CMP_INE, "I_CNE");   // 不等
+        opcodeMap.put(IROpCode.CMP_ILT, "I_CL");    // 小于
+        opcodeMap.put(IROpCode.CMP_IGT, "I_CG");    // 大于
+        opcodeMap.put(IROpCode.CMP_ILE, "I_CLE");   // 小于等于
+        opcodeMap.put(IROpCode.CMP_IGE, "I_CGE");   // 大于等于
+
+        // 64位整数比较运算映射
+        opcodeMap.put(IROpCode.CMP_LEQ, "L_CE");    // 相等
+        opcodeMap.put(IROpCode.CMP_LNE, "L_CNE");   // 不等
+        opcodeMap.put(IROpCode.CMP_LLT, "L_CL");    // 小于
+        opcodeMap.put(IROpCode.CMP_LGT, "L_CG");    // 大于
+        opcodeMap.put(IROpCode.CMP_LLE, "L_CLE");   // 小于等于
+        opcodeMap.put(IROpCode.CMP_LGE, "L_CGE");   // 大于等于
+
+        // 32位浮点比较运算映射
+        opcodeMap.put(IROpCode.CMP_FEQ, "F_CE");    // 相等
+        opcodeMap.put(IROpCode.CMP_FNE, "F_CNE");   // 不等
+        opcodeMap.put(IROpCode.CMP_FLT, "F_CL");    // 小于
+        opcodeMap.put(IROpCode.CMP_FGT, "F_CG");    // 大于
+        opcodeMap.put(IROpCode.CMP_FLE, "F_CLE");   // 小于等于
+        opcodeMap.put(IROpCode.CMP_FGE, "F_CGE");   // 大于等于
+
+        // 64位浮点比较运算映射
+        opcodeMap.put(IROpCode.CMP_DEQ, "D_CE");    // 相等
+        opcodeMap.put(IROpCode.CMP_DNE, "D_CNE");   // 不等
+        opcodeMap.put(IROpCode.CMP_DLT, "D_CL");    // 小于
+        opcodeMap.put(IROpCode.CMP_DGT, "D_CG");    // 大于
+        opcodeMap.put(IROpCode.CMP_DLE, "D_CLE");   // 小于等于
+        opcodeMap.put(IROpCode.CMP_DGE, "D_CGE");   // 大于等于
 
         // 加载与存储
-        opcodeMap.put(IROpCode.LOAD, "I_LOAD");  // 加载
-        opcodeMap.put(IROpCode.STORE, "I_STORE"); // 存储
-        opcodeMap.put(IROpCode.CONST, "I_PUSH");  // 常量入栈
+        opcodeMap.put(IROpCode.LOAD, "I_LOAD");     // 加载
+        opcodeMap.put(IROpCode.STORE, "I_STORE");   // 存储
+        opcodeMap.put(IROpCode.CONST, "I_PUSH");    // 常量入栈
 
         // 跳转与标签
-        opcodeMap.put(IROpCode.JUMP, "JMP");     // 无条件跳转
-        opcodeMap.put(IROpCode.LABEL, "LABEL");   // 标签
+        opcodeMap.put(IROpCode.JUMP, "JMP");        // 无条件跳转
+        opcodeMap.put(IROpCode.LABEL, "LABEL");     // 标签
 
         // 函数相关
-        opcodeMap.put(IROpCode.CALL, "CALL");    // 调用
-        opcodeMap.put(IROpCode.RET, "RET");     // 返回
+        opcodeMap.put(IROpCode.CALL, "CALL");       // 调用
+        opcodeMap.put(IROpCode.RET, "RET");         // 返回
     }
 
     /**
