@@ -9,9 +9,17 @@ import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
  * 表达布尔类型的字面量常量（如 "true" 或 "false"）。
  * </p>
  *
- * @param value 字面量的布尔值
+ * @param value    字面量的布尔值
+ * @param line     当前节点所在的行号
+ * @param column   当前节点所在的列号
+ * @param file     当前节点所在的文件
  */
-public record BoolLiteralNode(boolean value) implements ExpressionNode {
+public record BoolLiteralNode(
+        boolean value,
+        int line,
+        int column,
+        String file
+) implements ExpressionNode {
 
     /**
      * 使用布尔字面量字符串构造一个 {@code BoolLiteralNode} 实例。
@@ -22,8 +30,8 @@ public record BoolLiteralNode(boolean value) implements ExpressionNode {
      *
      * @param lexeme 布尔字面量的字符串表示
      */
-    public BoolLiteralNode(String lexeme) {
-        this(Boolean.parseBoolean(lexeme));
+    public BoolLiteralNode(String lexeme, int line, int column, String file) {
+        this(Boolean.parseBoolean(lexeme), line, column, file);
     }
 
     /**

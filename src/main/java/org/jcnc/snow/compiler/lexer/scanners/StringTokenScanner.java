@@ -29,7 +29,7 @@ public class StringTokenScanner extends AbstractTokenScanner {
      */
     @Override
     public boolean canHandle(char c, LexerContext ctx) {
-        return c == '"';
+        return c == '"';  // 只处理字符串开始符号
     }
 
     /**
@@ -45,19 +45,51 @@ public class StringTokenScanner extends AbstractTokenScanner {
     @Override
     protected Token scanToken(LexerContext ctx, int line, int col) {
         StringBuilder sb = new StringBuilder();
-        sb.append(ctx.advance()); // 起始双引号
+        // 当前状态
+        State currentState = State.START;  // 初始状态为开始扫描字符串
 
+        // 开始扫描字符串
         while (!ctx.isAtEnd()) {
             char c = ctx.advance();
             sb.append(c);
 
-            if (c == '\\') {
-                sb.append(ctx.advance()); // 添加转义字符后的实际字符
-            } else if (c == '"') {
-                break;
+            switch (currentState) {
+                case START:
+                    // 开始状态，遇到第一个双引号
+                    currentState = State.STRING;
+                    break;
+
+                case STRING:
+                    if (c == '\\') {
+                        // 遇到转义字符，进入 ESCAPE 状态
+                        currentState = State.ESCAPE;
+                    } else if (c == '"') {
+                        // 遇到结束的双引号，结束扫描
+                        currentState = State.END;
+                    }
+                    break;
+
+                case ESCAPE:
+                    // 在转义状态下，处理转义字符
+                    sb.append(ctx.advance());  // 加入转义字符后的字符
+                    currentState = State.STRING;  // 返回字符串状态
+                    break;
+
+                case END:
+                    // 结束状态，字符串扫描完成
+                    return new Token(TokenType.STRING_LITERAL, sb.toString(), line, col);
             }
         }
 
+        // 如果没有结束的双引号，则表示错误，或者未正确处理
         return new Token(TokenType.STRING_LITERAL, sb.toString(), line, col);
+    }
+
+    // 定义状态枚举
+    private enum State {
+        START,    // 开始状态，寻找字符串的开始双引号
+        STRING,   // 字符串扫描状态，处理字符串中的字符
+        ESCAPE,   // 处理转义字符状态
+        END       // 字符串结束状态
     }
 }

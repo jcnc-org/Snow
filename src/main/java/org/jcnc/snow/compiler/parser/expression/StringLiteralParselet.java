@@ -27,6 +27,6 @@ public class StringLiteralParselet implements PrefixParselet {
     public ExpressionNode parse(ParserContext ctx, Token token) {
         String raw = token.getRaw();
         String content = raw.substring(1, raw.length() - 1);
-        return new StringLiteralNode(content);
+        return new StringLiteralNode(content, token.getLine(), token.getCol(), ctx.getSourceName());
     }
 }

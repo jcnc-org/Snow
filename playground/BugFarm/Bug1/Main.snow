@@ -1,0 +1,17 @@
+module: Main
+    function: main
+        parameter:
+        return_type: int
+        body:
+           declare n1: int =1
+           declare n2: int =2
+           declare n3: int =1
+           if n1 ==1 then
+              if n2 ==2 then
+              n3 =3
+              end if
+           end if
+        return n3
+        end body
+    end function
+end module

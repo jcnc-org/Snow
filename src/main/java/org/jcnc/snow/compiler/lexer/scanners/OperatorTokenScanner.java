@@ -45,80 +45,84 @@ public class OperatorTokenScanner extends AbstractTokenScanner {
     @Override
     protected Token scanToken(LexerContext ctx, int line, int col) {
         char c = ctx.advance();
-        String lexeme;
-        TokenType type;
+        String lexeme = String.valueOf(c);
+        TokenType type = TokenType.UNKNOWN;
+
+        // 当前状态
+        State currentState = State.OPERATOR;
 
         switch (c) {
             case '=':
                 if (ctx.match('=')) {
                     lexeme = "==";
-                    type   = TokenType.DOUBLE_EQUALS;
+                    type = TokenType.DOUBLE_EQUALS;
                 } else {
-                    lexeme = "=";
-                    type   = TokenType.EQUALS;
+                    type = TokenType.EQUALS;
                 }
                 break;
 
             case '!':
                 if (ctx.match('=')) {
                     lexeme = "!=";
-                    type   = TokenType.NOT_EQUALS;
+                    type = TokenType.NOT_EQUALS;
                 } else {
-                    lexeme = "!";
-                    type   = TokenType.NOT;
+                    type = TokenType.NOT;
                 }
                 break;
 
             case '>':
                 if (ctx.match('=')) {
                     lexeme = ">=";
-                    type   = TokenType.GREATER_EQUAL;
+                    type = TokenType.GREATER_EQUAL;
                 } else {
-                    lexeme = ">";
-                    type   = TokenType.GREATER_THAN;
+                    type = TokenType.GREATER_THAN;
                 }
                 break;
 
             case '<':
                 if (ctx.match('=')) {
                     lexeme = "<=";
-                    type   = TokenType.LESS_EQUAL;
+                    type = TokenType.LESS_EQUAL;
                 } else {
-                    lexeme = "<";
-                    type   = TokenType.LESS_THAN;
+                    type = TokenType.LESS_THAN;
                 }
                 break;
 
             case '%':
-                lexeme = "%";
-                type   = TokenType.MODULO;
+                type = TokenType.MODULO;
                 break;
 
             case '&':
                 if (ctx.match('&')) {
                     lexeme = "&&";
-                    type   = TokenType.AND;
-                } else {
-                    lexeme = "&";
-                    type   = TokenType.UNKNOWN;
+                    type = TokenType.AND;
                 }
                 break;
 
             case '|':
                 if (ctx.match('|')) {
                     lexeme = "||";
-                    type   = TokenType.OR;
-                } else {
-                    lexeme = "|";
-                    type   = TokenType.UNKNOWN;
+                    type = TokenType.OR;
                 }
                 break;
 
             default:
-                lexeme = String.valueOf(c);
-                type   = TokenType.UNKNOWN;
+                currentState = State.UNKNOWN;
+                break;
+        }
+
+        // 执行完扫描后，重置状态为初始状态
+        if (currentState != State.UNKNOWN) {
+            currentState = State.START;
         }
 
         return new Token(type, lexeme, line, col);
+    }
+
+    // 定义状态枚举
+    private enum State {
+        START,        // 初始状态
+        OPERATOR,     // 当前字符是运算符的一部分
+        UNKNOWN       // 无法识别的状态
     }
 }
