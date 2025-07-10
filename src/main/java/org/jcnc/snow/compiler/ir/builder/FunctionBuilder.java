@@ -1,5 +1,6 @@
 package org.jcnc.snow.compiler.ir.builder;
 
+import org.jcnc.snow.compiler.ir.common.GlobalFunctionTable;
 import org.jcnc.snow.compiler.ir.core.IRFunction;
 import org.jcnc.snow.compiler.ir.utils.ExpressionUtils;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
@@ -31,6 +32,10 @@ public class FunctionBuilder {
      * @return 构建得到的 IRFunction 对象
      */
     public IRFunction build(FunctionNode functionNode) {
+
+        // 在全局函数表中注册函数信息
+        GlobalFunctionTable.register(functionNode.name(), functionNode.returnType());
+
 
         // 0) 基本初始化：创建 IRFunction 实例与对应上下文
         IRFunction irFunction = new IRFunction(functionNode.name());
