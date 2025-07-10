@@ -4,6 +4,7 @@ import org.jcnc.snow.compiler.backend.utils.IROpCodeMapper;
 import org.jcnc.snow.compiler.backend.utils.OpHelper;
 import org.jcnc.snow.compiler.backend.builder.VMProgramBuilder;
 import org.jcnc.snow.compiler.backend.core.InstructionGenerator;
+import org.jcnc.snow.compiler.backend.utils.TypePromoteUtils;
 import org.jcnc.snow.compiler.ir.instruction.IRCompareJumpInstruction;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 
@@ -37,85 +38,6 @@ public class CmpJumpGenerator implements InstructionGenerator<IRCompareJumpInstr
     }
 
     /**
-     * <b>类型宽度优先级</b>：D > F > L > I > S > B
-     * <ul>
-     *     <li>D（double）：6</li>
-     *     <li>F（float）：5</li>
-     *     <li>L（long）：4</li>
-     *     <li>I（int）：3</li>
-     *     <li>S（short）：2</li>
-     *     <li>B（byte）：1</li>
-     *     <li>未识别类型：0</li>
-     * </ul>
-     *
-     * @param p 类型标记字符
-     * @return 优先级数值（越大类型越宽）
-     */
-    private static int rank(char p) {
-        return switch (p) {
-            case 'D' -> 6;
-            case 'F' -> 5;
-            case 'L' -> 4;
-            case 'I' -> 3;
-            case 'S' -> 2;
-            case 'B' -> 1;
-            default  -> 0;
-        };
-    }
-
-    /**
-     * 返回更“宽”的公共类型（即优先级高的类型）。
-     *
-     * @param a 类型标记字符 1
-     * @param b 类型标记字符 2
-     * @return 宽度更高的类型标记字符
-     */
-    private static char promote(char a, char b) {
-        return rank(a) >= rank(b) ? a : b;
-    }
-
-    /**
-     * 单字符类型标记转字符串。
-     *
-     * @param p 类型标记字符
-     * @return 类型字符串
-     */
-    private static String str(char p) {
-        return String.valueOf(p);
-    }
-
-    /**
-     * 获取 {@code from → to} 的类型转换指令名（如不需转换则返回 {@code null}）。
-     * <p>
-     * 仅覆盖目前常见的整数与浮点类型提升与转换，后续有新类型可补充。
-     * </p>
-     *
-     * @param from 源类型标记字符
-     * @param to   目标类型标记字符
-     * @return 转换指令名，如“L2I”；无转换返回 {@code null}
-     */
-    private static String convert(char from, char to) {
-        if (from == to) return null;
-        return switch ("" + from + to) {
-            case "IL" -> "I2L";
-            case "ID" -> "I2D";
-            case "IF" -> "I2F";
-            case "LI" -> "L2I";
-            case "LD" -> "L2D";
-            case "LF" -> "L2F";
-            case "FI" -> "F2I";
-            case "FL" -> "F2L";
-            case "FD" -> "F2D";
-            case "DI" -> "D2I";
-            case "DL" -> "D2L";
-            case "DF" -> "D2F";
-            case "SI" -> "S2I";
-            case "BI" -> "B2I";
-            default   -> null;
-        };
-    }
-
-    /**
      * 生成 IR 条件比较跳转指令的 VM 指令序列。
      * <ol>
      *     <li>确定左右操作数的槽位及静态类型</li>
@@ -140,19 +62,19 @@ public class CmpJumpGenerator implements InstructionGenerator<IRCompareJumpInstr
         int  rightSlot = slotMap.get(ins.right());
         char lType     = out.getSlotType(leftSlot);   // 若未登记则默认 'I'
         char rType     = out.getSlotType(rightSlot);
-        char tType     = promote(lType, rType);        // 公共类型提升
+        char tType     = TypePromoteUtils.promote(lType, rType);        // 公共类型提升
 
         // 2. 加载左右操作数并按需类型转换
         // 左操作数
-        out.emit(OpHelper.opcode(str(lType) + "_LOAD") + " " + leftSlot);
-        String cvt = convert(lType, tType);
+        out.emit(OpHelper.opcode(TypePromoteUtils.str(lType) + "_LOAD") + " " + leftSlot);
+        String cvt = TypePromoteUtils.convert(lType, tType);
         if (cvt != null) {
             out.emit(OpHelper.opcode(cvt));
         }
 
         // 右操作数
-        out.emit(OpHelper.opcode(str(rType) + "_LOAD") + " " + rightSlot);
-        cvt = convert(rType, tType);
+        out.emit(OpHelper.opcode(TypePromoteUtils.str(rType) + "_LOAD") + " " + rightSlot);
+        cvt = TypePromoteUtils.convert(rType, tType);
         if (cvt != null) {
             out.emit(OpHelper.opcode(cvt));
         }
