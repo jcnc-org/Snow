@@ -82,12 +82,12 @@ public class CmpJumpGenerator implements InstructionGenerator<IRCompareJumpInstr
         // 3. 选择正确的比较指令前缀
         String cmpOp = IROpCodeMapper.toVMOp(ins.op());
         /*
-         * 指令前缀（如 int 类型要用 IC_*, long 类型要用 LC_*）
+         * 指令前缀（如 int 类型要用 I_C*, long 类型要用 L_C*）
          */
-        if (tType == 'I' && cmpOp.startsWith("LC_")) {
-            cmpOp = "IC_" + cmpOp.substring(3);
-        } else if (tType == 'L' && cmpOp.startsWith("IC_")) {
-            cmpOp = "LC_" + cmpOp.substring(3);
+        if (tType == 'I' && cmpOp.startsWith("L_C")) {
+            cmpOp = "I_C" + cmpOp.substring(3);
+        } else if (tType == 'L' && cmpOp.startsWith("I_C")) {
+            cmpOp = "L_C" + cmpOp.substring(3);
         }
 
         // 4. 发出比较与跳转指令
