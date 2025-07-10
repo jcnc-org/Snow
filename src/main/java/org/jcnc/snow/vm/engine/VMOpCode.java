@@ -2057,15 +2057,75 @@ public class VMOpCode {
     // endregion Byte8
 
     // region Short16  (0x00C5-0xC9)
-
+    /**
+     * S2B Opcode: Represents the type conversion operation from short16 to byte8 in the virtual machine.
+     * <p>This opcode is implemented by the {@link S2BCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top short16 value from the operand stack.</li>
+     *     <li>Convert the short16 value to a byte8 value (this may involve truncation).</li>
+     *     <li>Push the converted byte8 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to narrow a short16 value to a byte8 type, suitable when a smaller numeric type is required.</p>
+     */
     public static final int S2B = 0x00C5;
-
+    /**
+     * S2I Opcode: Represents the type conversion operation from short16 to int32 in the virtual machine.
+     * <p>This opcode is implemented by the {@link S2ICommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top short16 value from the operand stack.</li>
+     *     <li>Convert the short16 value to an int32 value.</li>
+     *     <li>Push the converted int32 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used to widen a short16 value to an int32 type to accommodate larger numeric ranges.</p>
+     */
     public static final int S2I = 0x00C6;
-
+    /**
+     * S2L Opcode: Represents the type conversion operation from short16 to long64 in the virtual machine.
+     * <p>This opcode is implemented by the {@link S2LCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top short16 value from the operand stack.</li>
+     *     <li>Convert the short16 value to a long64 value.</li>
+     *     <li>Push the converted long64 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used to widen a short16 value to a long64 type to accommodate larger numeric ranges.</p>
+     */
     public static final int S2L = 0x00C7;
-
+    /**
+     * S2F Opcode: Represents the type conversion operation from short16 to float32 in the virtual machine.
+     * <p>This opcode is implemented by the {@link S2FCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top short16 value from the operand stack.</li>
+     *     <li>Convert the short16 value to a float32 value.</li>
+     *     <li>Push the converted float32 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to convert a short16 value to a float32 type when floating-point arithmetic is required.</p>
+     */
     public static final int S2F = 0x00C8;
-
+    /**
+     * S2D Opcode: Represents the type conversion operation from short16 to double64 in the virtual machine.
+     * <p>This opcode is implemented by the {@link S2DCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top short16 value from the operand stack.</li>
+     *     <li>Convert the short16 value to a double64 value.</li>
+     *     <li>Push the converted double64 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to widen a short16 value to a double64 type, providing high-precision floating-point calculations.</p>
+     */
     public static final int S2D = 0x00C9;
     // endregion Short16
 
@@ -2099,7 +2159,6 @@ public class VMOpCode {
      * <p>This opcode is typically used to narrow an int32 value to a short16 type when a smaller data representation is needed.</p>
      */
     public static final int I2S = 0x00CB;
-
     /**
      * I2L Opcode: Represents the type conversion operation from int32 to long64 in the virtual machine.
      * <p>This opcode is implemented by the {@link I2LCommand} class, which defines its specific execution logic.</p>
