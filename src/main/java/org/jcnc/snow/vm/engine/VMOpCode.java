@@ -2268,9 +2268,33 @@ public class VMOpCode {
     // endregion Float32
 
     // region Double64  (0x00D9-0xDD)
-
+    /**
+     * D2B Opcode: Represents the type conversion operation from double64 to byte8 in the virtual machine.
+     * <p>This opcode is implemented by the {@link D2BCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top double64 value from the operand stack.</li>
+     *     <li>Convert the double64 value to a byte8 value (this may involve truncation).</li>
+     *     <li>Push the converted byte8 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to narrow a double64 value to a byte8 type for further integer-based processing.</p>
+     */
     public static final int D2B = 0x00D9;
-
+    /**
+     * D2I Opcode: Represents the type conversion operation from double64 to short16 in the virtual machine.
+     * <p>This opcode is implemented by the {@link D2ICommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top double64 value from the operand stack.</li>
+     *     <li>Convert the double64 value to a short16 value (this may involve truncation).</li>
+     *     <li>Push the converted short16 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to narrow a double64 value to a short16 type for further integer-based processing.</p>
+     */
     public static final int D2S = 0x00DA;
 
     /**
