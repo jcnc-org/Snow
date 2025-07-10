@@ -2145,11 +2145,34 @@ public class VMOpCode {
     // endregion Int32
 
     // region Long64  (0x00CF-0xD3)
-
+    /**
+     * L2B Opcode: Represents the type conversion operation from long64 to byte8 in the virtual machine.
+     * <p>This opcode is implemented by the {@link L2BCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top long64 value from the operand stack.</li>
+     *     <li>Convert the long64 value to a byte8 value (this may involve truncation).</li>
+     *     <li>Push the converted byte8 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to narrow a long64 value to a byte8 type, suitable when a smaller numeric type is required.</p>
+     */
     public static final int L2B = 0x00CF;
-
+    /**
+     * L2S Opcode: Represents the type conversion operation from long64 to short16 in the virtual machine.
+     * <p>This opcode is implemented by the {@link L2SCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top long64 value from the operand stack.</li>
+     *     <li>Convert the long64 value to a short16 value (this may involve truncation).</li>
+     *     <li>Push the converted short16 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to narrow a long64 value to a short16 type, suitable when a smaller numeric type is required.</p>
+     */
     public static final int L2S = 0x00D0;
-
     /**
      * L2I Opcode: Represents the type conversion operation from long64 to int32 in the virtual machine.
      * <p>This opcode is implemented by the {@link L2ICommand} class, which defines its specific execution logic.</p>
