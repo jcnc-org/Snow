@@ -13,7 +13,7 @@ import java.util.Map;
  * <ul>
  *   <li>维护在当前作用域中已声明变量的寄存器分配信息；</li>
  *   <li>支持将已有虚拟寄存器与变量名重新绑定；</li>
- *   <li>根据变量名查找对应的虚拟寄存器实例。</li>
+ *   <li>根据变量名查找对应的虚拟寄存器实例或类型。</li>
  * </ul>
  */
 final class IRBuilderScope {
@@ -103,5 +103,13 @@ final class IRBuilderScope {
      */
     String lookupType(String name) {
         return varTypes.get(name);
+    }
+
+    /**
+     * 获取 变量->类型的映射 的不可变副本
+     * @return 变量->类型的映射 的不可变副本
+     */
+    Map<String, String> getVarTypes() {
+        return Map.copyOf(varTypes);
     }
 }

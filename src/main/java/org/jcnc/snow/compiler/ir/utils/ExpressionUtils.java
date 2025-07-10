@@ -120,8 +120,8 @@ public final class ExpressionUtils {
     /**
      * 推荐调用：根据左右表达式类型自动选择 int / long 比较指令。
      */
-    public static IROpCode cmpOp(String op, ExpressionNode left, ExpressionNode right) {
-        return ComparisonUtils.cmpOp(op, left, right);
+    public static IROpCode cmpOp(Map<String, String> variables, String op, ExpressionNode left, ExpressionNode right) {
+        return ComparisonUtils.cmpOp(variables, op, left, right);
     }
 
     /* ──────────────── 类型推断 & 算术操作码匹配 ──────────────── */

@@ -2,6 +2,7 @@ package org.jcnc.snow.compiler.ir.utils;
 
 import org.jcnc.snow.compiler.ir.core.IROpCode;
 import org.jcnc.snow.compiler.ir.core.IROpCodeMappings;
+import org.jcnc.snow.compiler.parser.ast.IdentifierNode;
 import org.jcnc.snow.compiler.parser.ast.NumberLiteralNode;
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
@@ -26,25 +27,107 @@ public final class ComparisonUtils {
     }
 
     /**
+     * <b>类型宽度优先级</b>：D > F > L > I > S > B
+     * <ul>
+     *     <li>D（double）：6</li>
+     *     <li>F（float）：5</li>
+     *     <li>L（long）：4</li>
+     *     <li>I（int）：3</li>
+     *     <li>S（short）：2</li>
+     *     <li>B（byte）：1</li>
+     *     <li>未识别类型：0</li>
+     * </ul>
+     *
+     * @param p 类型标记字符
+     * @return 优先级数值（越大类型越宽）
+     */
+    private static int rank(char p) {
+        return switch (p) {
+            case 'D' -> 6;
+            case 'F' -> 5;
+            case 'L' -> 4;
+            case 'I' -> 3;
+            case 'S' -> 2;
+            case 'B' -> 1;
+            default -> 0;
+        };
+    }
+
+    /**
+     * 返回更“宽”的公共类型（即优先级高的类型）。
+     *
+     * @param a 类型标记字符 1
+     * @param b 类型标记字符 2
+     * @return 宽度更高的类型标记字符
+     */
+    public static char promote(char a, char b) {
+        return rank(a) >= rank(b) ? a : b;
+    }
+
+    /**
      * 返回符合操作数位宽的比较 IROpCode。
      *
-     * @param op    比较符号（==, !=, <, >, <=, >=）
-     * @param left  左操作数 AST
-     * @param right 右操作数 AST
+     * @param variables  变量->类型的映射
+     * @param op         比较符号（==, !=, <, >, <=, >=）
+     * @param left       左操作数 AST
+     * @param right      右操作数 AST
      */
-    public static IROpCode cmpOp(String op, ExpressionNode left, ExpressionNode right) {
-        boolean useLong = isLongLiteral(left) || isLongLiteral(right);
-        Map<String, IROpCode> table = useLong ? IROpCodeMappings.CMP_L64
-                : IROpCodeMappings.CMP_I32;
+    public static IROpCode cmpOp(Map<String, String> variables, String op, ExpressionNode left, ExpressionNode right) {
+        char typeLeft = analysisType(variables, left);
+        char typeRight = analysisType(variables, right);
+        char type = promote(typeLeft, typeRight);
+
+        Map<String, IROpCode> table = switch (type) {
+            case 'B' -> IROpCodeMappings.CMP_B8;
+            case 'S' -> IROpCodeMappings.CMP_S16;
+            case 'I' -> IROpCodeMappings.CMP_I32;
+            case 'L' -> IROpCodeMappings.CMP_L64;
+            case 'F' -> IROpCodeMappings.CMP_F32;
+            case 'D' -> IROpCodeMappings.CMP_D64;
+            default -> throw new IllegalStateException("Unexpected value: " + type);
+        };
+        
         return table.get(op);
     }
 
     /* ------------ 内部工具 ------------ */
 
-    private static boolean isLongLiteral(ExpressionNode node) {
+    private static char analysisType(Map<String, String> variables, ExpressionNode node) {
         if (node instanceof NumberLiteralNode(String value, NodeContext _)) {
-            return value.endsWith("L") || value.endsWith("l");
+            char suffix = Character.toUpperCase(value.charAt(value.length() - 1));
+            if ("BSILFD".indexOf(suffix) != -1) {
+                return suffix;
+            }
+            if (value.indexOf('.') != -1) {
+                return 'D';
+            }
+
+            return 'I';  // 默认为 'I'
         }
-        return false;                   // 变量暂不处理（后续可扩展符号表查询）
+        if (node instanceof IdentifierNode(String name, NodeContext _)) {
+            final String type = variables.get(name);
+            switch (type) {
+                case "byte" -> {
+                    return 'B';
+                }
+                case "short" -> {
+                    return 'S';
+                }
+                case "int" -> {
+                    return 'I';
+                }
+                case "long" -> {
+                    return 'L';
+                }
+                case "float" -> {
+                    return 'F';
+                }
+                case "double" -> {
+                    return 'D';
+                }
+            }
+        }
+
+        return 'I'; // 默认为 'I'
     }
 }
