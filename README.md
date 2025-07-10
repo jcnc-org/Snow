@@ -452,6 +452,7 @@ end module
 ## 版权声明
 
 版权所有 © 2025 许轲（Luke），代表 SnowLang 项目。  
+仓库地址：<https://gitee.com/jcnc-org/snow>  
 本项目依据 [Apache 2.0 许可证](LICENSE) 进行许可和发布。
 
 “SnowLang 项目”为由许轲（Luke）发起的独立开源项目。  
