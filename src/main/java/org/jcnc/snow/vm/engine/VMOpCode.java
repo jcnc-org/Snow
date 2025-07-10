@@ -2306,8 +2306,8 @@ public class VMOpCode {
      */
     public static final int D2B = 0x00D9;
     /**
-     * D2I Opcode: Represents the type conversion operation from double64 to short16 in the virtual machine.
-     * <p>This opcode is implemented by the {@link D2ICommand} class, which defines its specific execution logic.</p>
+     * D2S Opcode: Represents the type conversion operation from double64 to short16 in the virtual machine.
+     * <p>This opcode is implemented by the {@link D2SCommand} class, which defines its specific execution logic.</p>
      *
      * <p>Execution Steps:</p>
      * <ol>
