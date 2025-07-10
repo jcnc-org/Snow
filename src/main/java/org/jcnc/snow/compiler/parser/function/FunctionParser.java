@@ -8,16 +8,14 @@ import org.jcnc.snow.compiler.parser.base.TopLevelParser;
 import org.jcnc.snow.compiler.parser.ast.FunctionNode;
 import org.jcnc.snow.compiler.parser.ast.ParameterNode;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
+import org.jcnc.snow.compiler.parser.context.ParseException;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
 import org.jcnc.snow.compiler.parser.context.TokenStream;
 import org.jcnc.snow.compiler.parser.factory.StatementParserFactory;
 import org.jcnc.snow.compiler.parser.utils.FlexibleSectionParser;
 import org.jcnc.snow.compiler.parser.utils.FlexibleSectionParser.SectionDefinition;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * {@code FunctionParser} 是顶层函数定义的语法解析器，
@@ -76,6 +74,17 @@ public class FunctionParser implements TopLevelParser {
         if (body.isEmpty() && returnType[0].equals("void")) {
             body.add(new ReturnNode(null, new NodeContext(line, column, file)));
         }
+
+        Set<String> set = new HashSet<>();
+        parameters.forEach((node) -> {
+            final String name = node.name();
+            if (set.contains(name)) {
+                throw new ParseException(String.format("参数 `%s` 重定义", name),
+                        node.context().line(), node.context().column());
+            }
+
+            set.add(name);
+        });
 
         parseFunctionFooter(ts);
 
