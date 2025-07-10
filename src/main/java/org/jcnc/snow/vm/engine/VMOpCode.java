@@ -2218,11 +2218,34 @@ public class VMOpCode {
     // endregion Long64
 
     // region Float32  (0x00D4-0xD8)
-
+    /**
+     * F2B Opcode: Represents the type conversion operation from float32 to byte8 in the virtual machine.
+     * <p>This opcode is implemented by the {@link F2BCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top float32 value from the operand stack.</li>
+     *     <li>Convert the float32 value to a byte8 value (this may involve truncation).</li>
+     *     <li>Push the converted byte8 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to convert a float32 value to a byte8 type for further integer-based operations or comparisons.</p>
+     */
     public static final int F2B = 0x00D4;
-
+    /**
+     * F2S Opcode: Represents the type conversion operation from float32 to short16 in the virtual machine.
+     * <p>This opcode is implemented by the {@link F2SCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top float32 value from the operand stack.</li>
+     *     <li>Convert the float32 value to a short16 value (this may involve truncation).</li>
+     *     <li>Push the converted short16 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to convert a float32 value to a short16 type for further integer-based operations or comparisons.</p>
+     */
     public static final int F2S = 0x00D5;
-
     /**
      * F2I Opcode: Represents the type conversion operation from float32 to int32 in the virtual machine.
      * <p>This opcode is implemented by the {@link F2ICommand} class, which defines its specific execution logic.</p>
@@ -2296,7 +2319,6 @@ public class VMOpCode {
      * <p>This opcode is used to narrow a double64 value to a short16 type for further integer-based processing.</p>
      */
     public static final int D2S = 0x00DA;
-
     /**
      * D2I Opcode: Represents the type conversion operation from double64 to int32 in the virtual machine.
      * <p>This opcode is implemented by the {@link D2ICommand} class, which defines its specific execution logic.</p>
