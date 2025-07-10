@@ -1,6 +1,7 @@
 package org.jcnc.snow.compiler.parser.ast;
 
 import org.jcnc.snow.compiler.parser.ast.base.Node;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 
 /**
  * {@code ParameterNode} 表示抽象语法树（AST）中的函数参数定义节点。
@@ -9,18 +10,14 @@ import org.jcnc.snow.compiler.parser.ast.base.Node;
  * 用于构成函数签名并参与类型检查与函数调用匹配。
  * </p>
  *
- * @param name 参数名称标识符
- * @param type 参数类型字符串（如 "int"、"string"）
- * @param line     当前节点所在的行号
- * @param column   当前节点所在的列号
- * @param file     当前节点所在的文件
+ * @param name    参数名称标识符
+ * @param type    参数类型字符串（如 "int"、"string"）
+ * @param context 节点上下文信息（包含行号、列号等）
  */
 public record ParameterNode(
         String name,
         String type,
-        int line,
-        int column,
-        String file
+        NodeContext context
 ) implements Node {
 
     /**

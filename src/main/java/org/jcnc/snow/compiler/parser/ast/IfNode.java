@@ -2,6 +2,7 @@ package org.jcnc.snow.compiler.parser.ast;
 
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 
 import java.util.List;
 
@@ -16,29 +17,16 @@ import java.util.List;
  * 若 condition 为假，则执行 else 分支（如果提供）。
  * </p>
  * <p>
- * 示例语法结构：
- * </p>
- * <pre>{@code
- * if (x > 0) {
- *     print("Positive");
- * } else {
- *     print("Negative");
- * }
- * }</pre>
  *
  * @param condition  控制分支执行的条件表达式
  * @param thenBranch 条件为 true 时执行的语句块
  * @param elseBranch 条件为 false 时执行的语句块（可为空）
- * @param line     当前节点所在的行号
- * @param column   当前节点所在的列号
- * @param file     当前节点所在的文件
+ * @param context    节点上下文信息（包含行号、列号等）
  */
 public record IfNode(
         ExpressionNode condition,
         List<StatementNode> thenBranch,
         List<StatementNode> elseBranch,
-        int line,
-        int column,
-        String file
+        NodeContext context
 ) implements StatementNode {
 }

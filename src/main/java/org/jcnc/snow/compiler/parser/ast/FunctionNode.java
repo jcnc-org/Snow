@@ -1,6 +1,7 @@
 package org.jcnc.snow.compiler.parser.ast;
 
 import org.jcnc.snow.compiler.parser.ast.base.Node;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
 
 import java.util.List;
@@ -17,17 +18,13 @@ import java.util.List;
  * @param parameters 参数列表，每项为 {@link ParameterNode} 表示一个形参定义
  * @param returnType 函数的返回类型（如 "int"、"void" 等）
  * @param body       函数体语句块，由一组 {@link StatementNode} 构成
- * @param line     当前节点所在的行号
- * @param column   当前节点所在的列号
- * @param file     当前节点所在的文件
+ * @param context    节点上下文信息（包含行号、列号等）
  */
 public record FunctionNode(
         String name,
         List<ParameterNode> parameters,
         String returnType,
         List<StatementNode> body,
-        int line,
-        int column,
-        String file
+        NodeContext context
 ) implements Node {
 }

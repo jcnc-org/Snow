@@ -1,6 +1,7 @@
 package org.jcnc.snow.compiler.parser.ast;
 
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 
 /**
  * {@code IdentifierNode} 表示抽象语法树（AST）中的标识符表达式节点。
@@ -9,16 +10,12 @@ import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
  * 在语义分析中，通常需要将此类节点绑定到其声明位置或符号表项。
  * </p>
  *
- * @param name 标识符的文本名称（如变量名 "x"，函数名 "foo"）
- * @param line     当前节点所在的行号
- * @param column   当前节点所在的列号
- * @param file     当前节点所在的文件
+ * @param name    标识符的文本名称（如变量名 "x"，函数名 "foo"）
+ * @param context 节点上下文信息（包含行号、列号等）
  */
 public record IdentifierNode(
         String name,
-        int line,
-        int column,
-        String file
+        NodeContext context
 ) implements ExpressionNode {
 
     /**

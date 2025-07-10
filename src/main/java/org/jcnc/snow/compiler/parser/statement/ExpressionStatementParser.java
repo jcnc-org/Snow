@@ -4,6 +4,7 @@ import org.jcnc.snow.compiler.lexer.token.TokenType;
 import org.jcnc.snow.compiler.parser.ast.AssignmentNode;
 import org.jcnc.snow.compiler.parser.ast.ExpressionStatementNode;
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
 import org.jcnc.snow.compiler.parser.context.TokenStream;
@@ -56,12 +57,12 @@ public class ExpressionStatementParser implements StatementParser {
             ts.expect("=");
             ExpressionNode value = new PrattExpressionParser().parse(ctx);
             ts.expectType(TokenType.NEWLINE);
-            return new AssignmentNode(varName, value, line, column, file);
+            return new AssignmentNode(varName, value, new NodeContext(line, column, file));
         }
 
         // 普通表达式语句
         ExpressionNode expr = new PrattExpressionParser().parse(ctx);
         ts.expectType(TokenType.NEWLINE);
-        return new ExpressionStatementNode(expr, line, column, file);
+        return new ExpressionStatementNode(expr, new NodeContext(line, column, file));
     }
 }

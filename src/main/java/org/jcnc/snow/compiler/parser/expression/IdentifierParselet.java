@@ -3,6 +3,7 @@ package org.jcnc.snow.compiler.parser.expression;
 import org.jcnc.snow.compiler.lexer.token.Token;
 import org.jcnc.snow.compiler.parser.ast.IdentifierNode;
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
 import org.jcnc.snow.compiler.parser.expression.base.PrefixParselet;
 
@@ -29,6 +30,6 @@ public class IdentifierParselet implements PrefixParselet {
         int column = ctx.getTokens().peek(-1).getCol();
         String file = ctx.getSourceName();
 
-        return new IdentifierNode(token.getLexeme(), line, column, file);
+        return new IdentifierNode(token.getLexeme(), new NodeContext(line, column, file));
     }
 }
