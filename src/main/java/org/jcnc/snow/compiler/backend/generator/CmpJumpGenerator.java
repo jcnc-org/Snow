@@ -11,14 +11,14 @@ import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 import java.util.Map;
 
 /**
- * <b>条件比较跳转指令生成器</b>
+ * 条件比较跳转指令生成器
  * <p>
  * 该类实现了 {@link InstructionGenerator} 接口，
  * 负责将 IR 中的 {@link IRCompareJumpInstruction}（条件比较并跳转指令）
  * 转换为目标虚拟机（VM）可执行的指令序列。
  * </p>
  *
- * <b>主要功能</b>
+ * 主要功能
  * <ul>
  *     <li>根据 IR 比较指令左右操作数的类型，自动进行类型提升与转换</li>
  *     <li>生成相应的 VM 加载、类型转换、比较与跳转指令</li>
@@ -60,7 +60,7 @@ public class CmpJumpGenerator implements InstructionGenerator<IRCompareJumpInstr
         // 1. 获取左右操作数的槽位与静态类型
         int  leftSlot  = slotMap.get(ins.left());
         int  rightSlot = slotMap.get(ins.right());
-        char lType     = out.getSlotType(leftSlot);   // 若未登记则默认 'I'
+        char lType     = out.getSlotType(leftSlot);
         char rType     = out.getSlotType(rightSlot);
         char tType     = TypePromoteUtils.promote(lType, rType);        // 公共类型提升
 
