@@ -67,10 +67,10 @@ public final class ComparisonUtils {
     /**
      * 返回符合操作数位宽的比较 IROpCode。
      *
-     * @param variables  变量->类型的映射
-     * @param op         比较符号（==, !=, <, >, <=, >=）
-     * @param left       左操作数 AST
-     * @param right      右操作数 AST
+     * @param variables 变量->类型的映射
+     * @param op        比较符号（==, !=, <, >, <=, >=）
+     * @param left      左操作数 AST
+     * @param right     右操作数 AST
      */
     public static IROpCode cmpOp(Map<String, String> variables, String op, ExpressionNode left, ExpressionNode right) {
         char typeLeft = analysisType(variables, left);
@@ -84,9 +84,9 @@ public final class ComparisonUtils {
             case 'L' -> IROpCodeMappings.CMP_L64;
             case 'F' -> IROpCodeMappings.CMP_F32;
             case 'D' -> IROpCodeMappings.CMP_D64;
-            default -> throw new IllegalStateException("Unexpected value: " + type);
+            default -> throw new IllegalStateException("意外的值: " + type);
         };
-        
+
         return table.get(op);
     }
 
