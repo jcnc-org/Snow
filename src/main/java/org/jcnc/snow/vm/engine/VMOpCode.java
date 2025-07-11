@@ -2055,7 +2055,7 @@ public class VMOpCode {
      *     <li>Push the converted short16 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is commonly used to widen a byte8 value to a short16 type to accommodate larger numeric ranges.</p>
+     * <p>This opcode is commonly used to widen a byte8 value to a short16 type.</p>
      */
     public static final int B2S = 0x00C0;
     /**
@@ -2069,7 +2069,7 @@ public class VMOpCode {
      *     <li>Push the converted int32 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is commonly used to widen a byte8 value to an int32 type to accommodate larger numeric ranges.</p>
+     * <p>This opcode is commonly used to widen a byte8 value to an int32 type.</p>
      */
     public static final int B2I = 0x00C1;
     /**
@@ -2083,7 +2083,7 @@ public class VMOpCode {
      *     <li>Push the converted long64 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is commonly used to widen a byte8 value to a long64 type to accommodate larger numeric ranges.</p>
+     * <p>This opcode is commonly used to widen a byte8 value to a long64 type.</p>
      */
     public static final int B2L = 0x00C2;
     /**
@@ -2097,7 +2097,7 @@ public class VMOpCode {
      *     <li>Push the converted float32 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is used to convert a byte8 value to a float32 type when floating-point arithmetic is required.</p>
+     * <p>This opcode is used to convert a byte8 value to a float32 type.</p>
      */
     public static final int B2F = 0x00C3;
     /**
@@ -2111,7 +2111,7 @@ public class VMOpCode {
      *     <li>Push the converted double64 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is used to widen a byte8 value to a double64 type, providing high-precision floating-point calculations.</p>
+     * <p>This opcode is used to widen a byte8 value to a double64 type.</p>
      */
     public static final int B2D = 0x00C4;
     // endregion Byte8
@@ -2128,7 +2128,7 @@ public class VMOpCode {
      *     <li>Push the converted byte8 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is used to narrow a short16 value to a byte8 type, suitable when a smaller numeric type is required.</p>
+     * <p>This opcode is used to narrow a short16 value to a byte8 type.</p>
      */
     public static final int S2B = 0x00C5;
     /**
@@ -2142,7 +2142,7 @@ public class VMOpCode {
      *     <li>Push the converted int32 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is commonly used to widen a short16 value to an int32 type to accommodate larger numeric ranges.</p>
+     * <p>This opcode is commonly used to widen a short16 value to an int32 type.</p>
      */
     public static final int S2I = 0x00C6;
     /**
@@ -2156,7 +2156,7 @@ public class VMOpCode {
      *     <li>Push the converted long64 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is commonly used to widen a short16 value to a long64 type to accommodate larger numeric ranges.</p>
+     * <p>This opcode is commonly used to widen a short16 value to a long64 type.</p>
      */
     public static final int S2L = 0x00C7;
     /**
@@ -2170,7 +2170,7 @@ public class VMOpCode {
      *     <li>Push the converted float32 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is used to convert a short16 value to a float32 type when floating-point arithmetic is required.</p>
+     * <p>This opcode is used to convert a short16 value to a float32 type.</p>
      */
     public static final int S2F = 0x00C8;
     /**
@@ -2184,7 +2184,7 @@ public class VMOpCode {
      *     <li>Push the converted double64 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is used to widen a short16 value to a double64 type, providing high-precision floating-point calculations.</p>
+     * <p>This opcode is used to widen a short16 value to a double64 type.</p>
      */
     public static final int S2D = 0x00C9;
     // endregion Short16
@@ -2201,7 +2201,7 @@ public class VMOpCode {
      *     <li>Push the converted byte8 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is used to narrow an int32 value to a byte8 type, suitable when a smaller numeric type is required.</p>
+     * <p>This opcode is used to narrow an int32 value to a byte8 type.</p>
      */
     public static final int I2B = 0x00CA;
     /**
@@ -2215,7 +2215,7 @@ public class VMOpCode {
      *     <li>Push the converted short16 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is typically used to narrow an int32 value to a short16 type when a smaller data representation is needed.</p>
+     * <p>This opcode is typically used to narrow an int32 value to a short16 type.</p>
      */
     public static final int I2S = 0x00CB;
     /**
@@ -2229,7 +2229,7 @@ public class VMOpCode {
      *     <li>Push the converted long64 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is commonly used to widen an int32 value to a long64 type to accommodate larger numeric ranges.</p>
+     * <p>This opcode is commonly used to widen an int32 value to a long64 type.</p>
      */
     public static final int I2L = 0x00CC;
     /**
@@ -2243,7 +2243,7 @@ public class VMOpCode {
      *     <li>Push the converted float32 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is used to convert an int32 value to a float32 type when floating-point arithmetic is required.</p>
+     * <p>This opcode is used to convert an int32 value to a float32 type.</p>
      */
     public static final int I2F = 0x00CD;
     /**
@@ -2257,7 +2257,7 @@ public class VMOpCode {
      *     <li>Push the converted double64 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is used to widen an int32 value to a double64 type, providing high-precision floating-point calculations.</p>
+     * <p>This opcode is used to widen an int32 value to a double64 type.</p>
      */
     public static final int I2D = 0x00CE;
     // endregion Int32
@@ -2274,7 +2274,7 @@ public class VMOpCode {
      *     <li>Push the converted byte8 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is used to narrow a long64 value to a byte8 type, suitable when a smaller numeric type is required.</p>
+     * <p>This opcode is used to narrow a long64 value to a byte8 type.</p>
      */
     public static final int L2B = 0x00CF;
     /**
@@ -2288,7 +2288,7 @@ public class VMOpCode {
      *     <li>Push the converted short16 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is used to narrow a long64 value to a short16 type, suitable when a smaller numeric type is required.</p>
+     * <p>This opcode is used to narrow a long64 value to a short16 type.</p>
      */
     public static final int L2S = 0x00D0;
     /**
@@ -2302,7 +2302,7 @@ public class VMOpCode {
      *     <li>Push the converted int32 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is typically used to narrow a long64 value to an int32 type for further integer operations.</p>
+     * <p>This opcode is typically used to narrow a long64 value.</p>
      */
     public static final int L2I = 0x00D1;
     /**
@@ -2316,7 +2316,7 @@ public class VMOpCode {
      *     <li>Push the converted float32 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is used to convert a long64 value to a float32 type, typically for floating-point arithmetic involving long values.</p>
+     * <p>This opcode is used to convert a long64 value to a float32 type.</p>
      */
     public static final int L2F = 0x00D2;
     /**
@@ -2330,7 +2330,7 @@ public class VMOpCode {
      *     <li>Push the converted double64 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is used to widen a long64 value to a double64 type for high-precision floating-point computations.</p>
+     * <p>This opcode is used to widen a long64 value to a double64 type.</p>
      */
     public static final int L2D = 0x00D3;
     // endregion Long64
@@ -2347,7 +2347,7 @@ public class VMOpCode {
      *     <li>Push the converted byte8 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is used to convert a float32 value to a byte8 type for further integer-based operations or comparisons.</p>
+     * <p>This opcode is used to convert a float32 value to a byte8 type.</p>
      */
     public static final int F2B = 0x00D4;
     /**
@@ -2361,7 +2361,7 @@ public class VMOpCode {
      *     <li>Push the converted short16 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is used to convert a float32 value to a short16 type for further integer-based operations or comparisons.</p>
+     * <p>This opcode is used to convert a float32 value to a short16 type.</p>
      */
     public static final int F2S = 0x00D5;
     /**
@@ -2375,7 +2375,7 @@ public class VMOpCode {
      *     <li>Push the converted int32 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is used to convert a float32 value to an int32 type for further integer-based operations or comparisons.</p>
+     * <p>This opcode is used to convert a float32 value to an int32 type.</p>
      */
     public static final int F2I = 0x00D6;
     /**
@@ -2389,7 +2389,7 @@ public class VMOpCode {
      *     <li>Push the converted long64 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is used to widen a float32 value to a long64 type, which is useful when operations require a larger numeric range.</p>
+     * <p>This opcode is used to widen a float32 value to a long64 type.</p>
      */
     public static final int F2L = 0x00D7;
     /**
@@ -2403,7 +2403,7 @@ public class VMOpCode {
      *     <li>Push the converted double64 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is used to promote a float32 value to a double64 type, thereby increasing precision for floating-point computations.</p>
+     * <p>This opcode is used to promote a float32 value to a double64 type.</p>
      */
     public static final int F2D = 0x00D8;
     // endregion Float32
@@ -2420,7 +2420,7 @@ public class VMOpCode {
      *     <li>Push the converted byte8 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is used to narrow a double64 value to a byte8 type for further integer-based processing.</p>
+     * <p>This opcode is used to narrow a double64 value to a byte8 type.</p>
      */
     public static final int D2B = 0x00D9;
     /**
@@ -2434,7 +2434,7 @@ public class VMOpCode {
      *     <li>Push the converted short16 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is used to narrow a double64 value to a short16 type for further integer-based processing.</p>
+     * <p>This opcode is used to narrow a double64 value to a short16 type.</p>
      */
     public static final int D2S = 0x00DA;
     /**
@@ -2448,7 +2448,7 @@ public class VMOpCode {
      *     <li>Push the converted int32 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is used to narrow a double64 value to an int32 type for further integer-based processing.</p>
+     * <p>This opcode is used to narrow a double64 value to an int32 type.</p>
      */
     public static final int D2I = 0x00DB;
     /**
@@ -2462,7 +2462,7 @@ public class VMOpCode {
      *     <li>Push the converted long64 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is used to narrow a double64 value to a long64 type, which can then be used for integer operations.</p>
+     * <p>This opcode is used to narrow a double64 value to a long64 type.</p>
      */
     public static final int D2L = 0x00DC;
     /**
@@ -2476,7 +2476,7 @@ public class VMOpCode {
      *     <li>Push the converted float32 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is used to narrow a double64 value to a float32 type when lower precision floating-point arithmetic is acceptable.</p>
+     * <p>This opcode is used to narrow a double64 value to a float32 type.</p>
      */
     public static final int D2F = 0x00DD;
     // endregion Double64
