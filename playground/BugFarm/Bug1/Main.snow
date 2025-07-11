@@ -9,13 +9,9 @@ module: Main
     end function
 
     function: foo
-        return_type: int
+        return_type: void
         body:
-            if false then
-                return 1
-            end if
 
-            return 0
         end body
     end function
 end module
