@@ -4,6 +4,7 @@ import org.jcnc.snow.compiler.backend.builder.VMProgramBuilder;
 import org.jcnc.snow.compiler.backend.core.InstructionGenerator;
 import org.jcnc.snow.compiler.backend.utils.IROpCodeMapper;
 import org.jcnc.snow.compiler.backend.utils.OpHelper;
+import org.jcnc.snow.compiler.backend.utils.TypePromoteUtils;
 import org.jcnc.snow.compiler.ir.core.IRValue;
 import org.jcnc.snow.compiler.ir.instruction.BinaryOperationInstruction;
 import org.jcnc.snow.compiler.ir.value.IRConstant;
@@ -42,37 +43,11 @@ public class BinaryOpGenerator implements InstructionGenerator<BinaryOperationIn
     }
 
     /**
-     * 类型优先级：D &gt; F &gt; L &gt; I &gt; S &gt; B
-     */
-    private static int rank(char p) {
-        return switch (p) {
-            case 'D' -> 6;
-            case 'F' -> 5;
-            case 'L' -> 4;
-            case 'I' -> 3;
-            case 'S' -> 2;
-            case 'B' -> 1;
-            default -> 0;
-        };
-    }
-
-    /**
-     * 返回优先级更高的类型字符
-     */
-    private static char promote(char a, char b) {
-        return rank(a) >= rank(b) ? a : b;
-    }
-
-    /**
-     * 单字符转字符串
-     */
-    private static String str(char p) {
-        return String.valueOf(p);
-    }
-
-    /**
      * 判断常量值是否等于 0。
      * 仅支持 Java 原生数值类型。
+     *
+     * @param v 常量值
+     * @return 等于 0 返回 true，否则 false
      */
     private static boolean isZero(Object v) {
         if (v == null) return false;
@@ -84,31 +59,6 @@ public class BinaryOpGenerator implements InstructionGenerator<BinaryOperationIn
             case Float f -> f == 0.0f;
             case Double d -> d == 0.0;
             default -> false;
-        };
-    }
-
-    /**
-     * 获取从类型 {@code from} 到 {@code to} 的转换指令名。
-     * 相同类型或无显式转换需求返回 {@code null}。
-     */
-    private static String convert(char from, char to) {
-        if (from == to) return null;
-        return switch ("" + from + to) {
-            case "IL" -> "I2L";
-            case "ID" -> "I2D";
-            case "IF" -> "I2F";
-            case "LI" -> "L2I";
-            case "LD" -> "L2D";
-            case "LF" -> "L2F";
-            case "FI" -> "F2I";
-            case "FL" -> "F2L";
-            case "FD" -> "F2D";
-            case "DI" -> "D2I";
-            case "DL" -> "D2L";
-            case "DF" -> "D2F";
-            case "SI" -> "S2I";
-            case "BI" -> "B2I";
-            default -> null;
         };
     }
 
@@ -161,16 +111,16 @@ public class BinaryOpGenerator implements InstructionGenerator<BinaryOperationIn
         char lType = out.getSlotType(lSlot); // 未登记默认 'I'
         char rType = out.getSlotType(rSlot);
 
-        char tType = promote(lType, rType); // 类型提升结果
-        String tPre = str(tType);
+        char tType = TypePromoteUtils.promote(lType, rType); // 类型提升结果
+        String tPre = TypePromoteUtils.str(tType);
 
         /* ---------- 2. 加载并做类型转换 ---------- */
-        out.emit(OpHelper.opcode(str(lType) + "_LOAD") + " " + lSlot);
-        String cvt = convert(lType, tType);
+        out.emit(OpHelper.opcode(TypePromoteUtils.str(lType) + "_LOAD") + " " + lSlot);
+        String cvt = TypePromoteUtils.convert(lType, tType);
         if (cvt != null) out.emit(OpHelper.opcode(cvt));
 
-        out.emit(OpHelper.opcode(str(rType) + "_LOAD") + " " + rSlot);
-        cvt = convert(rType, tType);
+        out.emit(OpHelper.opcode(TypePromoteUtils.str(rType) + "_LOAD") + " " + rSlot);
+        cvt = TypePromoteUtils.convert(rType, tType);
         if (cvt != null) out.emit(OpHelper.opcode(cvt));
 
         /* ---------- 3. 区分算术 / 比较 ---------- */
@@ -186,7 +136,7 @@ public class BinaryOpGenerator implements InstructionGenerator<BinaryOperationIn
         }
 
         /* === 3-B. CMP_* —— 生成布尔结果 === */
-        String branchOp = OpHelper.opcode(IROpCodeMapper.toVMOp(ins.op())); // IC_E / IC_NE …
+        String branchOp = OpHelper.opcode(IROpCodeMapper.toVMOp(ins.op())); // I_CE / I_CNE …
         String lblTrue = fresh(currentFn, "true");
         String lblEnd = fresh(currentFn, "end");
 

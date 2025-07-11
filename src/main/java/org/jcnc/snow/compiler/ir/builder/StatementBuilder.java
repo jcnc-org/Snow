@@ -218,7 +218,7 @@ public class StatementBuilder {
             IRVirtualRegister b = expr.build(right);
 
             // 使用适配后位宽正确的比较指令
-            IROpCode cmp = ComparisonUtils.cmpOp(operator, left, right);
+            IROpCode cmp = ComparisonUtils.cmpOp(ctx.getScope().getVarTypes(), operator, left, right);
             IROpCode falseOp = IROpCodeUtils.invert(cmp);
 
             InstructionFactory.cmpJump(ctx, falseOp, a, b, falseLabel);

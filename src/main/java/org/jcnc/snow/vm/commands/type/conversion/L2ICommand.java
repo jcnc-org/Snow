@@ -16,7 +16,7 @@ import org.jcnc.snow.vm.module.OperandStack;
  *     <li>Push the converted int32 value back onto the operand stack for subsequent operations.</li>
  * </ol>
  *
- * <p>This opcode is typically used to narrow a long64 value to an int32 type for further integer operations.</p>
+ * <p>This opcode is typically used to narrow a long64 value to an int32 typ.</p>
  */
 public class L2ICommand implements Command {
 

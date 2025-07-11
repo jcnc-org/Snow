@@ -16,7 +16,7 @@ import org.jcnc.snow.vm.module.OperandStack;
  *     <li>Push the converted float32 value back onto the operand stack for subsequent operations.</li>
  * </ol>
  *
- * <p>This opcode is used to narrow a double64 value to a float32 type when lower precision floating-point arithmetic is acceptable.</p>
+ * <p>This opcode is used to narrow a double64 value to a float32 type.</p>
  */
 public class D2FCommand implements Command {
 

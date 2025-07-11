@@ -1,0 +1,69 @@
+module: Main
+    function: main
+        return_type: int
+        body:
+            5 == 7
+            5 == 7s
+            5 == 7b
+            5 == 7l
+            5 == 7f
+            5 == 7d
+
+            5b == 5b
+            5b == 5s
+            5b == 5l
+            5b == 5f
+            5b == 5d
+
+            5s == 5s
+            5s == 5l
+            5s == 5f
+            5s == 5d
+
+            5l == 5l
+            5l == 5f
+            5l == 5d
+
+            5f == 5f
+            5f == 5d
+
+            5d == 5d
+
+            declare b: byte = 8b
+            declare s: short = 8s
+            declare i: int = 8
+            declare l: long = 8l
+            declare f: float = 8f
+            declare d: double = 8d
+
+            b == b
+            b == s
+            b == i
+            b == l
+            b == f
+            b == d
+
+            s == s
+            s == i
+            s == l
+            s == f
+            s == d
+
+            i == i
+            i == l
+            i == f
+            i == d
+
+            l == l
+            l == f
+            l == d
+
+            f == f
+            f == d
+
+            d == d
+
+            return 65537
+        end body
+    end function
+end module

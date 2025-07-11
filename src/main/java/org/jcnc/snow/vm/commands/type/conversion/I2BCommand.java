@@ -16,7 +16,7 @@ import org.jcnc.snow.vm.module.OperandStack;
  *     <li>Push the converted byte8 value back onto the operand stack for subsequent operations.</li>
  * </ol>
  *
- * <p>This opcode is used to narrow an int32 value to a byte8 type when a smaller numeric representation is required.</p>
+ * <p>This opcode is used to narrow an int32 value to a byte8 type.</p>
  */
 public class I2BCommand implements Command {
 

@@ -16,7 +16,7 @@ import org.jcnc.snow.vm.module.OperandStack;
  *     <li>Push the converted short16 value back onto the operand stack for subsequent operations.</li>
  * </ol>
  *
- * <p>This opcode is typically used to narrow an int32 value to a short16 type when a smaller data representation is required.</p>
+ * <p>This opcode is typically used to narrow an int32 value to a short16 type.</p>
  */
 public class I2SCommand implements Command {
 

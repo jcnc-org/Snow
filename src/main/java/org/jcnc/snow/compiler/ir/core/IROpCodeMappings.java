@@ -40,6 +40,26 @@ public final class IROpCodeMappings {
     );
 
     /* ────── 比较运算符映射 ────── */
+    /** 8-bit（byte）比较 */
+    public static final Map<String, IROpCode> CMP_B8 = Map.of(
+            "==", IROpCode.CMP_BEQ,
+            "!=", IROpCode.CMP_BNE,
+            "<",  IROpCode.CMP_BLT,
+            ">",  IROpCode.CMP_BGT,
+            "<=", IROpCode.CMP_BLE,
+            ">=", IROpCode.CMP_BGE
+    );
+
+    /** 16-bit（short）比较 */
+    public static final Map<String, IROpCode> CMP_S16 = Map.of(
+            "==", IROpCode.CMP_SEQ,
+            "!=", IROpCode.CMP_SNE,
+            "<",  IROpCode.CMP_SLT,
+            ">",  IROpCode.CMP_SGT,
+            "<=", IROpCode.CMP_SLE,
+            ">=", IROpCode.CMP_SGE
+    );
+
     /** 32-bit（int）比较 */
     public static final Map<String, IROpCode> CMP_I32 = Map.of(
             "==", IROpCode.CMP_IEQ,
@@ -60,5 +80,23 @@ public final class IROpCodeMappings {
             ">=", IROpCode.CMP_LGE
     );
 
-    
+    /** 32-bit（float）比较 */
+    public static final Map<String, IROpCode> CMP_F32 = Map.of(
+            "==", IROpCode.CMP_FEQ,
+            "!=", IROpCode.CMP_FNE,
+            "<",  IROpCode.CMP_FLT,
+            ">",  IROpCode.CMP_FGT,
+            "<=", IROpCode.CMP_FLE,
+            ">=", IROpCode.CMP_FGE
+    );
+
+    /** 64-bit（double）比较 */
+    public static final Map<String, IROpCode> CMP_D64 = Map.of(
+            "==", IROpCode.CMP_DEQ,
+            "!=", IROpCode.CMP_DNE,
+            "<",  IROpCode.CMP_DLT,
+            ">",  IROpCode.CMP_DGT,
+            "<=", IROpCode.CMP_DLE,
+            ">=", IROpCode.CMP_DGE
+    );
 }

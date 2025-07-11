@@ -6,29 +6,29 @@ import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
 /**
- * I2LCommand Opcode: Represents the type conversion operation from int32 to long64 in the virtual machine.
- * <p>This opcode is implemented by the {@link I2LCommand} class, which defines its specific execution logic.</p>
+ * F2SCommand Opcode: Represents the type conversion operation from float32 to short16 in the virtual machine.
+ * <p>This opcode is implemented by the {@link F2SCommand} class, which defines its specific execution logic.</p>
  *
  * <p>Execution Steps:</p>
  * <ol>
- *     <li>Pop the top int32 value from the operand stack.</li>
- *     <li>Convert the int32 value to a long64 value.</li>
- *     <li>Push the converted long64 value back onto the operand stack for subsequent operations.</li>
+ *     <li>Pop the top float32 value from the operand stack.</li>
+ *     <li>Convert the float32 value to a short16 value (this may involve truncation).</li>
+ *     <li>Push the converted short16 value back onto the operand stack for subsequent operations.</li>
  * </ol>
  *
- * <p>This opcode is commonly used to widen an int32 value to a long64 type.</p>
+ * <p>This opcode is used to convert a float32 value to a short16 type.</p>
  */
-public class I2LCommand implements Command {
+public class F2SCommand implements Command {
 
     /**
-     * Default constructor for creating an instance of I2LCommand.
+     * Default constructor for creating an instance of F2SCommand.
      */
-    public I2LCommand() {
+    public F2SCommand() {
         // Empty constructor
     }
 
     /**
-     * Executes the int32 to long64 conversion operation.
+     * Executes the float32 to short16 conversion operation.
      *
      * @param parts              The array of instruction parameters, which is not used in this operation.
      * @param currentPC          The current program counter, representing the instruction address.
@@ -40,7 +40,8 @@ public class I2LCommand implements Command {
     @Override
     public int execute(String[] parts, int currentPC, OperandStack operandStack,
                        LocalVariableStore localVariableStore, CallStack callStack) {
-        long convertedValue = (int) operandStack.pop();
+        float value = (float) operandStack.pop();
+        short convertedValue = (short) value;
         operandStack.push(convertedValue);
         return currentPC + 1;
     }
