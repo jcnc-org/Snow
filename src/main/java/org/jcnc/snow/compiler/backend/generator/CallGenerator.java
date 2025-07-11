@@ -44,7 +44,7 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
         /* 3. 发出 CALL 指令 */
         out.emitCall(ins.getFunctionName(), ins.getArguments().size());
 
-        /* -- 3.5 若被调用函数返回 void，则无需保存返回值 -- */
+        /* 3.5 若被调用函数返回 void，则无需保存返回值 */
         String rt = GlobalFunctionTable.getReturnType(ins.getFunctionName());
         if ("void".equals(rt)) {
             return;   // 直接结束，无 _STORE

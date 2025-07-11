@@ -48,7 +48,7 @@ public final class GlobalFunctionTable {
      */
     public static void register(String name, String returnType) {
         if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Function name must not be null or empty");
+            throw new IllegalArgumentException("函数名不能为空或 null");
         }
         RETURN_TYPES.put(
                 name,
@@ -69,7 +69,7 @@ public final class GlobalFunctionTable {
      */
     public static String getReturnType(String name) {
         if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Function name must not be null or empty");
+            throw new IllegalArgumentException("函数名不能为空或 null");
         }
         return RETURN_TYPES.get(name);
     }
