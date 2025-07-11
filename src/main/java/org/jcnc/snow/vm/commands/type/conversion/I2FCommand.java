@@ -16,7 +16,7 @@ import org.jcnc.snow.vm.module.OperandStack;
  *     <li>Push the converted float32 value back onto the operand stack for subsequent operations.</li>
  * </ol>
  *
- * <p>This opcode is used to convert an int32 value to a float32 type when floating-point arithmetic is required.</p>
+ * <p>This opcode is used to convert an int32 value to a float32 type.</p>
  */
 public class I2FCommand implements Command {
 

@@ -16,7 +16,7 @@ import org.jcnc.snow.vm.module.OperandStack;
  *     <li>Push the converted double64 value back onto the operand stack for subsequent operations.</li>
  * </ol>
  *
- * <p>This opcode is used to widen a byte8 value to a double64 type to ensure compatibility with integer-based operations.</p>
+ * <p>This opcode is used to widen a byte8 value to a double64 type.</p>
  */
 public class B2DCommand implements Command {
 

@@ -16,7 +16,7 @@ import org.jcnc.snow.vm.module.OperandStack;
  *     <li>Push the converted double64 value back onto the operand stack for subsequent operations.</li>
  * </ol>
  *
- * <p>This opcode is used to widen an int32 value to a double64 type, providing high-precision floating-point calculations.</p>
+ * <p>This opcode is used to widen an int32 value to a double64 type.</p>
  */
 public class I2DCommand implements Command {
 

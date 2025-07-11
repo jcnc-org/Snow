@@ -16,7 +16,7 @@ import org.jcnc.snow.vm.module.OperandStack;
  *     <li>Push the converted byte8 value back onto the operand stack for subsequent operations.</li>
  * </ol>
  *
- * <p>This opcode is used to widen a long64 value to a byte8 type for high-precision floating-point computations.</p>
+ * <p>This opcode is used to widen a long64 value to a byte8 type.</p>
  */
 public class L2BCommand implements Command {
 

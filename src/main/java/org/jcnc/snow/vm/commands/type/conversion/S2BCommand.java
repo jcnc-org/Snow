@@ -16,7 +16,7 @@ import org.jcnc.snow.vm.module.OperandStack;
  *     <li>Push the converted byte8 value back onto the operand stack for subsequent operations.</li>
  * </ol>
  *
- * <p>This opcode is used to widen a short16 value to a byte8 type, facilitating subsequent integer arithmetic or comparison operations.</p>
+ * <p>This opcode is used to widen a short16 value to a byte8 type.</p>
  */
 public class S2BCommand implements Command {
 

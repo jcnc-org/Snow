@@ -16,7 +16,7 @@ import org.jcnc.snow.vm.module.OperandStack;
  *     <li>Push the converted byte8 value back onto the operand stack for subsequent operations.</li>
  * </ol>
  *
- * <p>This opcode is used to narrow a double64 value to a byte8 type for further integer-based operations.</p>
+ * <p>This opcode is used to narrow a double64 value to a byte8 type.</p>
  */
 public class D2BCommand implements Command {
 

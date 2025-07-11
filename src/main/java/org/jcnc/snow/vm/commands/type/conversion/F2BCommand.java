@@ -16,7 +16,7 @@ import org.jcnc.snow.vm.module.OperandStack;
  *     <li>Push the converted byte8 value back onto the operand stack for subsequent operations.</li>
  * </ol>
  *
- * <p>This opcode is used to convert a float32 value to a byte8 type for further integer operations or comparisons.</p>
+ * <p>This opcode is used to convert a float32 value to a byte8 type.</p>
  */
 public class F2BCommand implements Command {
 
