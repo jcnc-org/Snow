@@ -145,7 +145,7 @@ public record ExpressionBuilder(IRContext ctx) {
         if (ComparisonUtils.isComparisonOperator(op)) {
             return InstructionFactory.binOp(
                     ctx,
-                    ComparisonUtils.cmpOp(op, bin.left(), bin.right()),
+                    ComparisonUtils.cmpOp(ctx.getScope().getVarTypes(), op, bin.left(), bin.right()),
                     left, right);
         }
 
@@ -171,7 +171,7 @@ public record ExpressionBuilder(IRContext ctx) {
         if (ComparisonUtils.isComparisonOperator(op)) {
             InstructionFactory.binOpInto(
                     ctx,
-                    ComparisonUtils.cmpOp(op, bin.left(), bin.right()),
+                    ComparisonUtils.cmpOp(ctx.getScope().getVarTypes(), op, bin.left(), bin.right()),
                     a, b, dest);
         } else {
             IROpCode code = ExpressionUtils.resolveOpCode(op, bin.left(), bin.right());

@@ -1,0 +1,48 @@
+package org.jcnc.snow.vm.commands.type.conversion;
+
+import org.jcnc.snow.vm.interfaces.Command;
+import org.jcnc.snow.vm.module.CallStack;
+import org.jcnc.snow.vm.module.LocalVariableStore;
+import org.jcnc.snow.vm.module.OperandStack;
+
+/**
+ * F2BCommand Opcode: Represents the type conversion operation from float32 to byte8 in the virtual machine.
+ * <p>This opcode is implemented by the {@link F2BCommand} class, which defines its specific execution logic.</p>
+ *
+ * <p>Execution Steps:</p>
+ * <ol>
+ *     <li>Pop the top float32 value from the operand stack.</li>
+ *     <li>Convert the float32 value to a byte8 value (this may involve truncation).</li>
+ *     <li>Push the converted byte8 value back onto the operand stack for subsequent operations.</li>
+ * </ol>
+ *
+ * <p>This opcode is used to convert a float32 value to a byte8 type.</p>
+ */
+public class F2BCommand implements Command {
+
+    /**
+     * Default constructor for creating an instance of F2BCommand.
+     */
+    public F2BCommand() {
+        // Empty constructor
+    }
+
+    /**
+     * Executes the float32 to byte8 conversion operation.
+     *
+     * @param parts              The array of instruction parameters, which is not used in this operation.
+     * @param currentPC          The current program counter, representing the instruction address.
+     * @param operandStack       The operand stack of the virtual machine.
+     * @param localVariableStore The local variable store for managing method-local variables.
+     * @param callStack          The call stack of the virtual machine.
+     * @return The updated program counter after execution.
+     */
+    @Override
+    public int execute(String[] parts, int currentPC, OperandStack operandStack,
+                       LocalVariableStore localVariableStore, CallStack callStack) {
+        float value = (float) operandStack.pop();
+        byte convertedValue = (byte) value;
+        operandStack.push(convertedValue);
+        return currentPC + 1;
+    }
+}

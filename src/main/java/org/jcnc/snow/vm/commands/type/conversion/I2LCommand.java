@@ -16,7 +16,7 @@ import org.jcnc.snow.vm.module.OperandStack;
  *     <li>Push the converted long64 value back onto the operand stack for subsequent operations.</li>
  * </ol>
  *
- * <p>This opcode is commonly used to widen an int32 value to a long64 type to accommodate larger numeric ranges.</p>
+ * <p>This opcode is commonly used to widen an int32 value to a long64 type.</p>
  */
 public class I2LCommand implements Command {
 

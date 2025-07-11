@@ -16,7 +16,7 @@ import org.jcnc.snow.vm.module.OperandStack;
  *     <li>Push the converted int32 value back onto the operand stack for subsequent operations.</li>
  * </ol>
  *
- * <p>This opcode is used to narrow a double64 value to an int32 type for further integer-based operations.</p>
+ * <p>This opcode is used to narrow a double64 value to an int32 type.</p>
  */
 public class D2ICommand implements Command {
 

@@ -16,7 +16,7 @@ import org.jcnc.snow.vm.module.OperandStack;
  *     <li>Push the converted long64 value back onto the operand stack for subsequent operations.</li>
  * </ol>
  *
- * <p>This opcode is used to widen a float32 value to a long64 type for operations requiring a larger numeric range.</p>
+ * <p>This opcode is used to widen a float32 value to a long64 type.</p>
  */
 public class F2LCommand implements Command {
 

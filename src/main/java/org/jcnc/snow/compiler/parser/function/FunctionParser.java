@@ -2,20 +2,20 @@ package org.jcnc.snow.compiler.parser.function;
 
 import org.jcnc.snow.compiler.lexer.token.Token;
 import org.jcnc.snow.compiler.lexer.token.TokenType;
+import org.jcnc.snow.compiler.parser.ast.ReturnNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.base.TopLevelParser;
 import org.jcnc.snow.compiler.parser.ast.FunctionNode;
 import org.jcnc.snow.compiler.parser.ast.ParameterNode;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
+import org.jcnc.snow.compiler.parser.context.ParseException;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
 import org.jcnc.snow.compiler.parser.context.TokenStream;
 import org.jcnc.snow.compiler.parser.factory.StatementParserFactory;
 import org.jcnc.snow.compiler.parser.utils.FlexibleSectionParser;
 import org.jcnc.snow.compiler.parser.utils.FlexibleSectionParser.SectionDefinition;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * {@code FunctionParser} 是顶层函数定义的语法解析器，
@@ -55,26 +55,55 @@ public class FunctionParser implements TopLevelParser {
      */
     @Override
     public FunctionNode parse(ParserContext ctx) {
+        // 获取当前解析上下文中的 token 流
         TokenStream ts = ctx.getTokens();
 
-        // 获取当前 token 的行号、列号和文件名
+        // 记录当前 token 的行号、列号和源文件名，用于错误报告或生成节点上下文
         int line = ctx.getTokens().peek().getLine();
         int column = ctx.getTokens().peek().getCol();
         String file = ctx.getSourceName();
 
+        // 解析函数头（例如可能是 `function` 关键字等）
         parseFunctionHeader(ts);
+
+        // 解析函数名
         String functionName = parseFunctionName(ts);
 
+        // 用于存放解析出来的参数列表
         List<ParameterNode> parameters = new ArrayList<>();
+        // 用于存放返回类型，这里用数组是为了在闭包中修改其值
         String[] returnType = new String[1];
+        // 用于存放函数体语句列表
         List<StatementNode> body = new ArrayList<>();
 
+        // 获取函数可以包含的可选节（如参数、返回类型、主体等）的定义映射
         Map<String, SectionDefinition> sections = getSectionDefinitions(parameters, returnType, body);
+
+        // 调用通用的多节解析器，实际根据 sections 中注册的规则解析各部分内容
         FlexibleSectionParser.parse(ctx, ts, sections);
 
+        // 如果函数体为空且返回类型为 void，自动补充一个空的 return 语句
+        if (body.isEmpty() && returnType[0].equals("void")) {
+            body.add(new ReturnNode(null, new NodeContext(line, column, file)));
+        }
+
+        // 检查参数名称是否重复
+        Set<String> set = new HashSet<>();
+        parameters.forEach((node) -> {
+            final String name = node.name();
+            if (set.contains(name)) {
+                // 如果参数名重复，抛出带具体行列信息的解析异常
+                throw new ParseException(String.format("参数 `%s` 重定义", name),
+                        node.context().line(), node.context().column());
+            }
+            set.add(name);
+        });
+
+        // 解析函数的尾部（例如右大括号或者 end 标志）
         parseFunctionFooter(ts);
 
-        return new FunctionNode(functionName, parameters, returnType[0], body, line, column, file);
+        // 返回完整的函数节点，包含函数名、参数、返回类型、函数体以及源位置信息
+        return new FunctionNode(functionName, parameters, returnType[0], body, new NodeContext(line, column, file));
     }
 
     /**
@@ -194,7 +223,7 @@ public class FunctionParser implements TopLevelParser {
             String ptype = ts.expectType(TokenType.TYPE).getLexeme();
             skipComments(ts);
             ts.expectType(TokenType.NEWLINE);
-            list.add(new ParameterNode(pname, ptype, line, column, file));
+            list.add(new ParameterNode(pname, ptype, new NodeContext(line, column, file)));
         }
         return list;
     }

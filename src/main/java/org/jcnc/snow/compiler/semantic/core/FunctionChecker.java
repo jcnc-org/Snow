@@ -2,11 +2,13 @@ package org.jcnc.snow.compiler.semantic.core;
 
 import org.jcnc.snow.compiler.parser.ast.FunctionNode;
 import org.jcnc.snow.compiler.parser.ast.ModuleNode;
+import org.jcnc.snow.compiler.parser.ast.ReturnNode;
 import org.jcnc.snow.compiler.semantic.analyzers.base.StatementAnalyzer;
 import org.jcnc.snow.compiler.semantic.error.SemanticError;
 import org.jcnc.snow.compiler.semantic.symbol.Symbol;
 import org.jcnc.snow.compiler.semantic.symbol.SymbolKind;
 import org.jcnc.snow.compiler.semantic.symbol.SymbolTable;
+import org.jcnc.snow.compiler.semantic.type.BuiltinType;
 
 /**
  * {@code FunctionChecker} 是语义分析阶段中用于检查函数体语句合法性的调度器。
@@ -76,6 +78,19 @@ public record FunctionChecker(Context ctx) {
                         ctx.errors().add(new SemanticError(
                                 stmt,
                                 "不支持的语句类型: " + stmt
+                        ));
+                    }
+                }
+
+                // 检查非 void 函数是否至少包含一条 return 语句
+                var returnType = ctx.parseType(fn.returnType());
+                if (returnType != BuiltinType.VOID) {
+                    boolean hasReturn = fn.body().stream()
+                            .anyMatch(stmtNode -> stmtNode instanceof ReturnNode);
+                    if (!hasReturn) {
+                        ctx.errors().add(new SemanticError(
+                                fn,
+                                "非 void 函数必须包含至少一条 return 语句"
                         ));
                     }
                 }

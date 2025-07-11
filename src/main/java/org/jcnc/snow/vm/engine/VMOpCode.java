@@ -2043,216 +2043,21 @@ public class VMOpCode {
     // endregion
 
     // region Type Conversion (0x00C0-0x00DF)
+    // region Byte8  (0x00C0-0xC4)
     /**
-     * I2L Opcode: Represents the type conversion operation from int32 to long64 in the virtual machine.
-     * <p>This opcode is implemented by the {@link I2LCommand} class, which defines its specific execution logic.</p>
+     * B2S Opcode: Represents the type conversion operation from byte8 to short16 in the virtual machine.
+     * <p>This opcode is implemented by the {@link B2SCommand} class, which defines its specific execution logic.</p>
      *
      * <p>Execution Steps:</p>
      * <ol>
-     *     <li>Pop the top int32 value from the operand stack.</li>
-     *     <li>Convert the int32 value to a long64 value.</li>
-     *     <li>Push the converted long64 value back onto the operand stack for subsequent operations.</li>
-     * </ol>
-     *
-     * <p>This opcode is commonly used to widen an int32 value to a long64 type to accommodate larger numeric ranges.</p>
-     */
-    public static final int I2L = 0x00C0;
-    /**
-     * I2S Opcode: Represents the type conversion operation from int32 to short16 in the virtual machine.
-     * <p>This opcode is implemented by the {@link I2SCommand} class, which defines its specific execution logic.</p>
-     *
-     * <p>Execution Steps:</p>
-     * <ol>
-     *     <li>Pop the top int32 value from the operand stack.</li>
-     *     <li>Convert the int32 value to a short16 value (this may involve truncation).</li>
+     *     <li>Pop the top byte8 value from the operand stack.</li>
+     *     <li>Convert the byte8 value to a short16 value.</li>
      *     <li>Push the converted short16 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is typically used to narrow an int32 value to a short16 type when a smaller data representation is needed.</p>
+     * <p>This opcode is commonly used to widen a byte8 value to a short16 type.</p>
      */
-    public static final int I2S = 0x00C1;
-    /**
-     * I2B Opcode: Represents the type conversion operation from int32 to byte8 in the virtual machine.
-     * <p>This opcode is implemented by the {@link I2BCommand} class, which defines its specific execution logic.</p>
-     *
-     * <p>Execution Steps:</p>
-     * <ol>
-     *     <li>Pop the top int32 value from the operand stack.</li>
-     *     <li>Convert the int32 value to a byte8 value (this may involve truncation).</li>
-     *     <li>Push the converted byte8 value back onto the operand stack for subsequent operations.</li>
-     * </ol>
-     *
-     * <p>This opcode is used to narrow an int32 value to a byte8 type, suitable when a smaller numeric type is required.</p>
-     */
-    public static final int I2B = 0x00C2;
-    /**
-     * I2D Opcode: Represents the type conversion operation from int32 to double64 in the virtual machine.
-     * <p>This opcode is implemented by the {@link I2DCommand} class, which defines its specific execution logic.</p>
-     *
-     * <p>Execution Steps:</p>
-     * <ol>
-     *     <li>Pop the top int32 value from the operand stack.</li>
-     *     <li>Convert the int32 value to a double64 value.</li>
-     *     <li>Push the converted double64 value back onto the operand stack for subsequent operations.</li>
-     * </ol>
-     *
-     * <p>This opcode is used to widen an int32 value to a double64 type, providing high-precision floating-point calculations.</p>
-     */
-    public static final int I2D = 0x00C3;
-    /**
-     * I2F Opcode: Represents the type conversion operation from int32 to float32 in the virtual machine.
-     * <p>This opcode is implemented by the {@link I2FCommand} class, which defines its specific execution logic.</p>
-     *
-     * <p>Execution Steps:</p>
-     * <ol>
-     *     <li>Pop the top int32 value from the operand stack.</li>
-     *     <li>Convert the int32 value to a float32 value.</li>
-     *     <li>Push the converted float32 value back onto the operand stack for subsequent operations.</li>
-     * </ol>
-     *
-     * <p>This opcode is used to convert an int32 value to a float32 type when floating-point arithmetic is required.</p>
-     */
-    public static final int I2F = 0x00C4;
-    /**
-     * L2I Opcode: Represents the type conversion operation from long64 to int32 in the virtual machine.
-     * <p>This opcode is implemented by the {@link L2ICommand} class, which defines its specific execution logic.</p>
-     *
-     * <p>Execution Steps:</p>
-     * <ol>
-     *     <li>Pop the top long64 value from the operand stack.</li>
-     *     <li>Convert the long64 value to an int32 value (this may involve truncation).</li>
-     *     <li>Push the converted int32 value back onto the operand stack for subsequent operations.</li>
-     * </ol>
-     *
-     * <p>This opcode is typically used to narrow a long64 value to an int32 type for further integer operations.</p>
-     */
-    public static final int L2I = 0x00C5;
-    /**
-     * L2D Opcode: Represents the type conversion operation from long64 to double64 in the virtual machine.
-     * <p>This opcode is implemented by the {@link L2DCommand} class, which defines its specific execution logic.</p>
-     *
-     * <p>Execution Steps:</p>
-     * <ol>
-     *     <li>Pop the top long64 value from the operand stack.</li>
-     *     <li>Convert the long64 value to a double64 value.</li>
-     *     <li>Push the converted double64 value back onto the operand stack for subsequent operations.</li>
-     * </ol>
-     *
-     * <p>This opcode is used to widen a long64 value to a double64 type for high-precision floating-point computations.</p>
-     */
-    public static final int L2D = 0x00C6;
-    /**
-     * L2F Opcode: Represents the type conversion operation from long64 to float32 in the virtual machine.
-     * <p>This opcode is implemented by the {@link L2FCommand} class, which defines its specific execution logic.</p>
-     *
-     * <p>Execution Steps:</p>
-     * <ol>
-     *     <li>Pop the top long64 value from the operand stack.</li>
-     *     <li>Convert the long64 value to a float32 value.</li>
-     *     <li>Push the converted float32 value back onto the operand stack for subsequent operations.</li>
-     * </ol>
-     *
-     * <p>This opcode is used to convert a long64 value to a float32 type, typically for floating-point arithmetic involving long values.</p>
-     */
-    public static final int L2F = 0x00C7;
-    /**
-     * F2I Opcode: Represents the type conversion operation from float32 to int32 in the virtual machine.
-     * <p>This opcode is implemented by the {@link F2ICommand} class, which defines its specific execution logic.</p>
-     *
-     * <p>Execution Steps:</p>
-     * <ol>
-     *     <li>Pop the top float32 value from the operand stack.</li>
-     *     <li>Convert the float32 value to an int32 value (this may involve truncation).</li>
-     *     <li>Push the converted int32 value back onto the operand stack for subsequent operations.</li>
-     * </ol>
-     *
-     * <p>This opcode is used to convert a float32 value to an int32 type for further integer-based operations or comparisons.</p>
-     */
-    public static final int F2I = 0x00C8;
-    /**
-     * F2L Opcode: Represents the type conversion operation from float32 to long64 in the virtual machine.
-     * <p>This opcode is implemented by the {@link F2LCommand} class, which defines its specific execution logic.</p>
-     *
-     * <p>Execution Steps:</p>
-     * <ol>
-     *     <li>Pop the top float32 value from the operand stack.</li>
-     *     <li>Convert the float32 value to a long64 value.</li>
-     *     <li>Push the converted long64 value back onto the operand stack for subsequent operations.</li>
-     * </ol>
-     *
-     * <p>This opcode is used to widen a float32 value to a long64 type, which is useful when operations require a larger numeric range.</p>
-     */
-    public static final int F2L = 0x00C9;
-    /**
-     * F2D Opcode: Represents the type conversion operation from float32 to double64 in the virtual machine.
-     * <p>This opcode is implemented by the {@link F2DCommand} class, which defines its specific execution logic.</p>
-     *
-     * <p>Execution Steps:</p>
-     * <ol>
-     *     <li>Pop the top float32 value from the operand stack.</li>
-     *     <li>Convert the float32 value to a double64 value.</li>
-     *     <li>Push the converted double64 value back onto the operand stack for subsequent operations.</li>
-     * </ol>
-     *
-     * <p>This opcode is used to promote a float32 value to a double64 type, thereby increasing precision for floating-point computations.</p>
-     */
-    public static final int F2D = 0x00CA;
-    /**
-     * D2I Opcode: Represents the type conversion operation from double64 to int32 in the virtual machine.
-     * <p>This opcode is implemented by the {@link D2ICommand} class, which defines its specific execution logic.</p>
-     *
-     * <p>Execution Steps:</p>
-     * <ol>
-     *     <li>Pop the top double64 value from the operand stack.</li>
-     *     <li>Convert the double64 value to an int32 value (this may involve truncation).</li>
-     *     <li>Push the converted int32 value back onto the operand stack for subsequent operations.</li>
-     * </ol>
-     *
-     * <p>This opcode is used to narrow a double64 value to an int32 type for further integer-based processing.</p>
-     */
-    public static final int D2I = 0x00CB;
-    /**
-     * D2L Opcode: Represents the type conversion operation from double64 to long64 in the virtual machine.
-     * <p>This opcode is implemented by the {@link D2LCommand} class, which defines its specific execution logic.</p>
-     *
-     * <p>Execution Steps:</p>
-     * <ol>
-     *     <li>Pop the top double64 value from the operand stack.</li>
-     *     <li>Convert the double64 value to a long64 value (this may involve truncation).</li>
-     *     <li>Push the converted long64 value back onto the operand stack for subsequent operations.</li>
-     * </ol>
-     *
-     * <p>This opcode is used to narrow a double64 value to a long64 type, which can then be used for integer operations.</p>
-     */
-    public static final int D2L = 0x00CC;
-    /**
-     * D2F Opcode: Represents the type conversion operation from double64 to float32 in the virtual machine.
-     * <p>This opcode is implemented by the {@link D2FCommand} class, which defines its specific execution logic.</p>
-     *
-     * <p>Execution Steps:</p>
-     * <ol>
-     *     <li>Pop the top double64 value from the operand stack.</li>
-     *     <li>Convert the double64 value to a float32 value.</li>
-     *     <li>Push the converted float32 value back onto the operand stack for subsequent operations.</li>
-     * </ol>
-     *
-     * <p>This opcode is used to narrow a double64 value to a float32 type when lower precision floating-point arithmetic is acceptable.</p>
-     */
-    public static final int D2F = 0x00CD;
-    /**
-     * S2I Opcode: Represents the type conversion operation from short16 to int32 in the virtual machine.
-     * <p>This opcode is implemented by the {@link S2ICommand} class, which defines its specific execution logic.</p>
-     *
-     * <p>Execution Steps:</p>
-     * <ol>
-     *     <li>Pop the top short16 value from the operand stack.</li>
-     *     <li>Convert the short16 value to an int32 value.</li>
-     *     <li>Push the converted int32 value back onto the operand stack for subsequent operations.</li>
-     * </ol>
-     *
-     * <p>This opcode is used to widen a short16 value to an int32 type, facilitating subsequent integer arithmetic or comparison operations.</p>
-     */
-    public static final int S2I = 0x00CE;
+    public static final int B2S = 0x00C0;
     /**
      * B2I Opcode: Represents the type conversion operation from byte8 to int32 in the virtual machine.
      * <p>This opcode is implemented by the {@link B2ICommand} class, which defines its specific execution logic.</p>
@@ -2264,10 +2069,418 @@ public class VMOpCode {
      *     <li>Push the converted int32 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is used to widen a byte8 value to an int32 type to ensure compatibility with integer-based operations.</p>
+     * <p>This opcode is commonly used to widen a byte8 value to an int32 type.</p>
      */
-    public static final int B2I = 0x00CF;
-    // endregion
+    public static final int B2I = 0x00C1;
+    /**
+     * B2L Opcode: Represents the type conversion operation from byte8 to long64 in the virtual machine.
+     * <p>This opcode is implemented by the {@link B2LCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top byte8 value from the operand stack.</li>
+     *     <li>Convert the byte8 value to a long64 value.</li>
+     *     <li>Push the converted long64 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used to widen a byte8 value to a long64 type.</p>
+     */
+    public static final int B2L = 0x00C2;
+    /**
+     * B2F Opcode: Represents the type conversion operation from byte8 to float32 in the virtual machine.
+     * <p>This opcode is implemented by the {@link B2FCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top byte8 value from the operand stack.</li>
+     *     <li>Convert the byte8 value to a float32 value.</li>
+     *     <li>Push the converted float32 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to convert a byte8 value to a float32 type.</p>
+     */
+    public static final int B2F = 0x00C3;
+    /**
+     * B2D Opcode: Represents the type conversion operation from byte8 to double64 in the virtual machine.
+     * <p>This opcode is implemented by the {@link B2DCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top byte8 value from the operand stack.</li>
+     *     <li>Convert the byte8 value to a double64 value.</li>
+     *     <li>Push the converted double64 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to widen a byte8 value to a double64 type.</p>
+     */
+    public static final int B2D = 0x00C4;
+    // endregion Byte8
+
+    // region Short16  (0x00C5-0xC9)
+    /**
+     * S2B Opcode: Represents the type conversion operation from short16 to byte8 in the virtual machine.
+     * <p>This opcode is implemented by the {@link S2BCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top short16 value from the operand stack.</li>
+     *     <li>Convert the short16 value to a byte8 value (this may involve truncation).</li>
+     *     <li>Push the converted byte8 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to narrow a short16 value to a byte8 type.</p>
+     */
+    public static final int S2B = 0x00C5;
+    /**
+     * S2I Opcode: Represents the type conversion operation from short16 to int32 in the virtual machine.
+     * <p>This opcode is implemented by the {@link S2ICommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top short16 value from the operand stack.</li>
+     *     <li>Convert the short16 value to an int32 value.</li>
+     *     <li>Push the converted int32 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used to widen a short16 value to an int32 type.</p>
+     */
+    public static final int S2I = 0x00C6;
+    /**
+     * S2L Opcode: Represents the type conversion operation from short16 to long64 in the virtual machine.
+     * <p>This opcode is implemented by the {@link S2LCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top short16 value from the operand stack.</li>
+     *     <li>Convert the short16 value to a long64 value.</li>
+     *     <li>Push the converted long64 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used to widen a short16 value to a long64 type.</p>
+     */
+    public static final int S2L = 0x00C7;
+    /**
+     * S2F Opcode: Represents the type conversion operation from short16 to float32 in the virtual machine.
+     * <p>This opcode is implemented by the {@link S2FCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top short16 value from the operand stack.</li>
+     *     <li>Convert the short16 value to a float32 value.</li>
+     *     <li>Push the converted float32 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to convert a short16 value to a float32 type.</p>
+     */
+    public static final int S2F = 0x00C8;
+    /**
+     * S2D Opcode: Represents the type conversion operation from short16 to double64 in the virtual machine.
+     * <p>This opcode is implemented by the {@link S2DCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top short16 value from the operand stack.</li>
+     *     <li>Convert the short16 value to a double64 value.</li>
+     *     <li>Push the converted double64 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to widen a short16 value to a double64 type.</p>
+     */
+    public static final int S2D = 0x00C9;
+    // endregion Short16
+
+    // region Int32  (0x00CA-0xCE)
+    /**
+     * I2B Opcode: Represents the type conversion operation from int32 to byte8 in the virtual machine.
+     * <p>This opcode is implemented by the {@link I2BCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top int32 value from the operand stack.</li>
+     *     <li>Convert the int32 value to a byte8 value (this may involve truncation).</li>
+     *     <li>Push the converted byte8 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to narrow an int32 value to a byte8 type.</p>
+     */
+    public static final int I2B = 0x00CA;
+    /**
+     * I2S Opcode: Represents the type conversion operation from int32 to short16 in the virtual machine.
+     * <p>This opcode is implemented by the {@link I2SCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top int32 value from the operand stack.</li>
+     *     <li>Convert the int32 value to a short16 value (this may involve truncation).</li>
+     *     <li>Push the converted short16 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is typically used to narrow an int32 value to a short16 type.</p>
+     */
+    public static final int I2S = 0x00CB;
+    /**
+     * I2L Opcode: Represents the type conversion operation from int32 to long64 in the virtual machine.
+     * <p>This opcode is implemented by the {@link I2LCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top int32 value from the operand stack.</li>
+     *     <li>Convert the int32 value to a long64 value.</li>
+     *     <li>Push the converted long64 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used to widen an int32 value to a long64 type.</p>
+     */
+    public static final int I2L = 0x00CC;
+    /**
+     * I2F Opcode: Represents the type conversion operation from int32 to float32 in the virtual machine.
+     * <p>This opcode is implemented by the {@link I2FCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top int32 value from the operand stack.</li>
+     *     <li>Convert the int32 value to a float32 value.</li>
+     *     <li>Push the converted float32 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to convert an int32 value to a float32 type.</p>
+     */
+    public static final int I2F = 0x00CD;
+    /**
+     * I2D Opcode: Represents the type conversion operation from int32 to double64 in the virtual machine.
+     * <p>This opcode is implemented by the {@link I2DCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top int32 value from the operand stack.</li>
+     *     <li>Convert the int32 value to a double64 value.</li>
+     *     <li>Push the converted double64 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to widen an int32 value to a double64 type.</p>
+     */
+    public static final int I2D = 0x00CE;
+    // endregion Int32
+
+    // region Long64  (0x00CF-0xD3)
+    /**
+     * L2B Opcode: Represents the type conversion operation from long64 to byte8 in the virtual machine.
+     * <p>This opcode is implemented by the {@link L2BCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top long64 value from the operand stack.</li>
+     *     <li>Convert the long64 value to a byte8 value (this may involve truncation).</li>
+     *     <li>Push the converted byte8 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to narrow a long64 value to a byte8 type.</p>
+     */
+    public static final int L2B = 0x00CF;
+    /**
+     * L2S Opcode: Represents the type conversion operation from long64 to short16 in the virtual machine.
+     * <p>This opcode is implemented by the {@link L2SCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top long64 value from the operand stack.</li>
+     *     <li>Convert the long64 value to a short16 value (this may involve truncation).</li>
+     *     <li>Push the converted short16 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to narrow a long64 value to a short16 type.</p>
+     */
+    public static final int L2S = 0x00D0;
+    /**
+     * L2I Opcode: Represents the type conversion operation from long64 to int32 in the virtual machine.
+     * <p>This opcode is implemented by the {@link L2ICommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top long64 value from the operand stack.</li>
+     *     <li>Convert the long64 value to an int32 value (this may involve truncation).</li>
+     *     <li>Push the converted int32 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is typically used to narrow a long64 value to an int32 type .</p>
+     */
+    public static final int L2I = 0x00D1;
+    /**
+     * L2F Opcode: Represents the type conversion operation from long64 to float32 in the virtual machine.
+     * <p>This opcode is implemented by the {@link L2FCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top long64 value from the operand stack.</li>
+     *     <li>Convert the long64 value to a float32 value.</li>
+     *     <li>Push the converted float32 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to convert a long64 value to a float32 type.</p>
+     */
+    public static final int L2F = 0x00D2;
+    /**
+     * L2D Opcode: Represents the type conversion operation from long64 to double64 in the virtual machine.
+     * <p>This opcode is implemented by the {@link L2DCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top long64 value from the operand stack.</li>
+     *     <li>Convert the long64 value to a double64 value.</li>
+     *     <li>Push the converted double64 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to widen a long64 value to a double64 type.</p>
+     */
+    public static final int L2D = 0x00D3;
+    // endregion Long64
+
+    // region Float32  (0x00D4-0xD8)
+    /**
+     * F2B Opcode: Represents the type conversion operation from float32 to byte8 in the virtual machine.
+     * <p>This opcode is implemented by the {@link F2BCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top float32 value from the operand stack.</li>
+     *     <li>Convert the float32 value to a byte8 value (this may involve truncation).</li>
+     *     <li>Push the converted byte8 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to convert a float32 value to a byte8 type.</p>
+     */
+    public static final int F2B = 0x00D4;
+    /**
+     * F2S Opcode: Represents the type conversion operation from float32 to short16 in the virtual machine.
+     * <p>This opcode is implemented by the {@link F2SCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top float32 value from the operand stack.</li>
+     *     <li>Convert the float32 value to a short16 value (this may involve truncation).</li>
+     *     <li>Push the converted short16 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to convert a float32 value to a short16 type.</p>
+     */
+    public static final int F2S = 0x00D5;
+    /**
+     * F2I Opcode: Represents the type conversion operation from float32 to int32 in the virtual machine.
+     * <p>This opcode is implemented by the {@link F2ICommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top float32 value from the operand stack.</li>
+     *     <li>Convert the float32 value to an int32 value (this may involve truncation).</li>
+     *     <li>Push the converted int32 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to convert a float32 value to an int32 type.</p>
+     */
+    public static final int F2I = 0x00D6;
+    /**
+     * F2L Opcode: Represents the type conversion operation from float32 to long64 in the virtual machine.
+     * <p>This opcode is implemented by the {@link F2LCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top float32 value from the operand stack.</li>
+     *     <li>Convert the float32 value to a long64 value.</li>
+     *     <li>Push the converted long64 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to widen a float32 value to a long64 type.</p>
+     */
+    public static final int F2L = 0x00D7;
+    /**
+     * F2D Opcode: Represents the type conversion operation from float32 to double64 in the virtual machine.
+     * <p>This opcode is implemented by the {@link F2DCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top float32 value from the operand stack.</li>
+     *     <li>Convert the float32 value to a double64 value.</li>
+     *     <li>Push the converted double64 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to promote a float32 value to a double64 type.</p>
+     */
+    public static final int F2D = 0x00D8;
+    // endregion Float32
+
+    // region Double64  (0x00D9-0xDD)
+    /**
+     * D2B Opcode: Represents the type conversion operation from double64 to byte8 in the virtual machine.
+     * <p>This opcode is implemented by the {@link D2BCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top double64 value from the operand stack.</li>
+     *     <li>Convert the double64 value to a byte8 value (this may involve truncation).</li>
+     *     <li>Push the converted byte8 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to narrow a double64 value to a byte8 type.</p>
+     */
+    public static final int D2B = 0x00D9;
+    /**
+     * D2S Opcode: Represents the type conversion operation from double64 to short16 in the virtual machine.
+     * <p>This opcode is implemented by the {@link D2SCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top double64 value from the operand stack.</li>
+     *     <li>Convert the double64 value to a short16 value (this may involve truncation).</li>
+     *     <li>Push the converted short16 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to narrow a double64 value to a short16 type.</p>
+     */
+    public static final int D2S = 0x00DA;
+    /**
+     * D2I Opcode: Represents the type conversion operation from double64 to int32 in the virtual machine.
+     * <p>This opcode is implemented by the {@link D2ICommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top double64 value from the operand stack.</li>
+     *     <li>Convert the double64 value to an int32 value (this may involve truncation).</li>
+     *     <li>Push the converted int32 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to narrow a double64 value to an int32 type.</p>
+     */
+    public static final int D2I = 0x00DB;
+    /**
+     * D2L Opcode: Represents the type conversion operation from double64 to long64 in the virtual machine.
+     * <p>This opcode is implemented by the {@link D2LCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top double64 value from the operand stack.</li>
+     *     <li>Convert the double64 value to a long64 value (this may involve truncation).</li>
+     *     <li>Push the converted long64 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to narrow a double64 value to a long64 type.</p>
+     */
+    public static final int D2L = 0x00DC;
+    /**
+     * D2F Opcode: Represents the type conversion operation from double64 to float32 in the virtual machine.
+     * <p>This opcode is implemented by the {@link D2FCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pop the top double64 value from the operand stack.</li>
+     *     <li>Convert the double64 value to a float32 value.</li>
+     *     <li>Push the converted float32 value back onto the operand stack for subsequent operations.</li>
+     * </ol>
+     *
+     * <p>This opcode is used to narrow a double64 value to a float32 type.</p>
+     */
+    public static final int D2F = 0x00DD;
+    // endregion Double64
+    // endregion Conversion
 
     // region Stack Control (0x0100-0x01FF)
     /**

@@ -6,6 +6,7 @@ import org.jcnc.snow.compiler.ir.utils.IROpCodeUtils;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 import org.jcnc.snow.compiler.parser.ast.*;
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
 
 import java.util.Locale;
@@ -66,12 +67,12 @@ public class StatementBuilder {
             buildIf(ifNode);
             return;
         }
-        if (stmt instanceof ExpressionStatementNode(ExpressionNode exp, int _, int _, String _)) {
+        if (stmt instanceof ExpressionStatementNode(ExpressionNode exp, NodeContext _)) {
             // 纯表达式语句，如 foo();
             expr.build(exp);
             return;
         }
-        if (stmt instanceof AssignmentNode(String var, ExpressionNode rhs, int _, int _, String _)) {
+        if (stmt instanceof AssignmentNode(String var, ExpressionNode rhs, NodeContext _)) {
             // 赋值语句，如 a = b + 1;
 
             final String type = ctx.getScope().lookupType(var);
@@ -209,9 +210,7 @@ public class StatementBuilder {
                 ExpressionNode left,
                 String operator,
                 ExpressionNode right,
-                _,
-                _,
-                _
+                NodeContext _
         )
                 && ComparisonUtils.isComparisonOperator(operator)) {
 
@@ -219,7 +218,7 @@ public class StatementBuilder {
             IRVirtualRegister b = expr.build(right);
 
             // 使用适配后位宽正确的比较指令
-            IROpCode cmp = ComparisonUtils.cmpOp(operator, left, right);
+            IROpCode cmp = ComparisonUtils.cmpOp(ctx.getScope().getVarTypes(), operator, left, right);
             IROpCode falseOp = IROpCodeUtils.invert(cmp);
 
             InstructionFactory.cmpJump(ctx, falseOp, a, b, falseLabel);

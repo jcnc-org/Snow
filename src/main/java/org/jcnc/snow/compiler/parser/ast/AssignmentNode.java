@@ -2,6 +2,7 @@ package org.jcnc.snow.compiler.parser.ast;
 
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 
 /**
  * {@code AssignmentNode} 表示抽象语法树（AST）中的赋值语句节点。
@@ -16,16 +17,12 @@ import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
  *
  * @param variable 左值变量名（即赋值目标）
  * @param value    表达式右值（即赋值来源）
- * @param line     当前节点所在的行号
- * @param column   当前节点所在的列号
- * @param file     当前节点所在的文件
+ * @param context  节点的上下文信息（包含行号、列号等）
  */
 public record AssignmentNode(
         String variable,
         ExpressionNode value,
-        int line,
-        int column,
-        String file
+        NodeContext context
 ) implements StatementNode {
 
     /**

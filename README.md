@@ -11,8 +11,8 @@
     <a href="https://gitee.com/jcnc-org/snow/blob/main/LICENSE">
         <img src="https://img.shields.io/badge/%20license-Apache--2.0%20-blue" alt="">
     </a>
-    <a href="https://gitee.com/jcnc-org/snow/tree/v0.4.0/">
-        <img src="https://img.shields.io/badge/version-v0.4.0-blue" alt="">
+    <a href="https://gitee.com/jcnc-org/snow/tree/v0.4.2/">
+        <img src="https://img.shields.io/badge/version-v0.4.2-blue" alt="">
     </a>
 </p>
 
@@ -69,6 +69,7 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
 [https://gitee.com/jcnc-org/snow/releases](https://gitee.com/jcnc-org/snow/releases)
 
 ## 相关文档
+[Snow-Lang 语法](docs/Snow-Lang-Syntax/Snow-Lang-Syntax.md)
 
 [Git 管理规范](docs/Snow-Lang-Git-Management/Snow-Lang-Git-Management.md)
 
