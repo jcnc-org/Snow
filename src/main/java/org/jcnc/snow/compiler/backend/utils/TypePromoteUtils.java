@@ -1,25 +1,35 @@
 package org.jcnc.snow.compiler.backend.utils;
 
 /**
- * 基本数值类型提升工具：
- * 类型优先级低的类型转为优先级高的类型，去参与比较、计算等等,
- * 比如 int + long，那么结果的类型应为 long
+ * 工具类：提供基本数值类型的提升与类型转换辅助功能。
+ * <p>
+ * 在进行数值类型运算、比较等操作时，低优先级的类型会被提升为高优先级类型参与运算。
+ * 例如 int + long 运算，int 会被提升为 long，最终运算结果类型为 long。
+ * <p>
+ * 类型优先级从高到低依次为：
+ * D（double）：6
+ * F（float） ：5
+ * L（long）  ：4
+ * I（int）   ：3
+ * S（short） ：2
+ * B（byte）  ：1
+ * 未识别类型 ：0
  */
 public class TypePromoteUtils {
+
     /**
-     * <b>类型宽度优先级</b>：D > F > L > I > S > B
-     * <ul>
-     *     <li>D（double）：6</li>
-     *     <li>F（float）：5</li>
-     *     <li>L（long）：4</li>
-     *     <li>I（int）：3</li>
-     *     <li>S（short）：2</li>
-     *     <li>B（byte）：1</li>
-     *     <li>未识别类型：0</li>
-     * </ul>
+     * 返回数值类型的宽度优先级，数值越大类型越宽。
+     * 类型及优先级映射如下：
+     * D（double）: 6
+     * F（float） : 5
+     * L（long）  : 4
+     * I（int）   : 3
+     * S（short） : 2
+     * B（byte）  : 1
+     * 未知类型    : 0
      *
-     * @param p 类型标记字符
-     * @return 优先级数值（越大类型越宽）
+     * @param p 类型标记字符（B/S/I/L/F/D）
+     * @return 优先级数值（0 表示未知类型）
      */
     private static int rank(char p) {
         return switch (p) {
@@ -34,32 +44,43 @@ public class TypePromoteUtils {
     }
 
     /**
-     * 返回更“宽”的公共类型（即优先级高的类型）。
+     * 返回两个类型中较“宽”的公共类型（即优先级较高的类型）。
+     * 若优先级相等，返回第一个参数的类型。
      *
-     * @param a 类型标记字符 1
-     * @param b 类型标记字符 2
-     * @return 宽度更高的类型标记字符
+     * @param a 类型标记字符1
+     * @param b 类型标记字符2
+     * @return 优先级较高的类型标记字符
      */
     public static char promote(char a, char b) {
         return rank(a) >= rank(b) ? a : b;
     }
 
     /**
-     * 单字符类型标记转字符串。
+     * 将单个字符的类型标记转为字符串。
      *
      * @param p 类型标记字符
-     * @return 类型字符串
+     * @return 类型标记的字符串形式
      */
     public static String str(char p) {
         return String.valueOf(p);
     }
 
     /**
-     * 获取 {@code from → to} 的类型转换指令名（如不需转换则返回 {@code null}）。
+     * 获取类型转换指令名（例如 "I2L", "F2D"），表示从源类型到目标类型的转换操作。
+     * 如果源类型和目标类型相同，则返回 null，表示无需转换。
+     * <p>
+     * 支持的类型标记字符包括：B（byte）、S（short）、I（int）、L（long）、F（float）、D（double）。
+     * 所有可能的类型转换均已覆盖，如下所示：
+     * B → S/I/L/F/D
+     * S → B/I/L/F/D
+     * I → B/S/L/F/D
+     * L → B/S/I/F/D
+     * F → B/S/I/L/D
+     * D → B/S/I/L/F
      *
      * @param from 源类型标记字符
      * @param to   目标类型标记字符
-     * @return 转换指令名，如“L2I”；无转换返回 {@code null}
+     * @return 类型转换指令名（如 "L2I"），如无须转换则返回 null
      */
     public static String convert(char from, char to) {
         if (from == to) return null;
