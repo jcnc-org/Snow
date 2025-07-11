@@ -2302,7 +2302,7 @@ public class VMOpCode {
      *     <li>Push the converted int32 value back onto the operand stack for subsequent operations.</li>
      * </ol>
      *
-     * <p>This opcode is typically used to narrow a long64 value.</p>
+     * <p>This opcode is typically used to narrow a long64 value to an int32 type .</p>
      */
     public static final int L2I = 0x00D1;
     /**
