@@ -86,9 +86,9 @@ public class ASTPrinter {
             case AssignmentNode(String variable, ExpressionNode value, NodeContext _) ->
                     System.out.println(pad + variable + " = " + value);
             case IfNode(
-                    ExpressionNode condition, List<StatementNode> thenBranch, List<StatementNode> elseBranch, NodeContext _
+                    ExpressionNode cond, List<StatementNode> thenBranch, List<StatementNode> elseBranch, NodeContext _
             ) -> {
-                System.out.println(pad + "if " + condition);
+                System.out.println(pad + "if " + cond);
                 for (StatementNode stmt : thenBranch) {
                     print(stmt, indent + 1);
                 }
@@ -100,13 +100,13 @@ public class ASTPrinter {
                 }
             }
             case LoopNode(
-                    StatementNode initializer, ExpressionNode condition, StatementNode update, List<StatementNode> body,
+                    StatementNode init, ExpressionNode cond, StatementNode step, List<StatementNode> body,
                     NodeContext _
             ) -> {
                 System.out.println(pad + "loop {");
-                print(initializer, indent + 1);
-                System.out.println(pad + "  condition: " + condition);
-                System.out.println(pad + "  update:    " + update);
+                print(init, indent + 1);
+                System.out.println(pad + "  cond: " + cond);
+                System.out.println(pad + "  step:    " + step);
                 System.out.println(pad + "  body {");
                 for (StatementNode stmt : body) {
                     print(stmt, indent + 2);
