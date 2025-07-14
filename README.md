@@ -69,7 +69,10 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
 [https://gitee.com/jcnc-org/snow/releases](https://gitee.com/jcnc-org/snow/releases)
 
 ## 相关文档
-[Snow-Lang 语法](docs/Snow-Lang-Syntax/Snow-Lang-Syntax.md)
+[Snow-Lang 指南](docs/Snow-Lang-Syntax/Snow-Lang-Syntax.md)
+
+[Snow-Lang 语法规范](docs/Snow-Lang-Syntax/Snow-Lang-Grammar-Specification.md)
+
 
 [Git 管理规范](docs/Snow-Lang-Git-Management/Snow-Lang-Git-Management.md)
 
