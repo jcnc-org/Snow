@@ -5,11 +5,11 @@ module: Main
         body:
             declare b1: boolean = true
             loop:
-                initializer:
+                init:
                     declare i:int = 0
-                condition:
+                cond:
                     b1
-                update:
+                step:
                     i = i + 1
                 body:
 
