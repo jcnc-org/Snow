@@ -391,11 +391,11 @@ module: Math
         body:
             declare num1:int = 1
             loop:
-                initializer:
+                init:
                     declare counter:int = 1
-                condition:
+                cond:
                     counter <= n
-                update:
+                step:
                     counter = counter + 1
                 body:
                     num1 = num1 * counter

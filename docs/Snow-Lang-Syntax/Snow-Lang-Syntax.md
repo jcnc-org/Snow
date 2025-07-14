@@ -102,14 +102,14 @@ x = y + 1
 if 语句的形式如下，else 是可选的：
 
 ```snow
-if condition then
+if cond then
     // 条件成立执行的代码
 else
     // 以上条件不成立执行的代码
 end if
 ```
 
-condition 可以是表达式（结果为 bool 类型）或者 bool 字面量
+cond 可以是表达式（结果为 bool 类型）或者 bool 字面量
 
 例：
 
@@ -134,14 +134,14 @@ end module
 loop 语句的形式如下：
 ```snow
 loop:
-    initializer:
+    init:
         // 循环开始前可声明循环变量，有且只能声明一个
         declare i: int = 1
-    condition:
+    cond:
         // 循环条件，成立则执行 body 的代码，
         // 不成立则退出循环，有且只能写一条
         i <= 100
-    update:
+    step:
         // 循环体执行完后执行的代码，有且只能写一条
         i = i + 1
     body:
@@ -158,11 +158,11 @@ module: Main
         body:
             declare sum: int = 0
             loop:
-                initializer:
+                init:
                     declare i: int = 1
-                condition:
+                cond:
                     i <= 100
-                update:
+                step:
                     i = i + 1
                 body:
                     sum = sum + i
