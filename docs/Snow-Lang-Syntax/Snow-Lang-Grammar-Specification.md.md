@@ -421,8 +421,8 @@ declare a: Point = Point(1, 2)
 
 ## 9 · 错误分类
 
-| 编译期错误代码                | 产生条件                       |
-| ---------------------- | -------------------------- |
+| 编译期错误代码              | 产生条件                       |
+|----------------------|----------------------------|
 | DuplicateName        | 违反唯一性规则；结构体内有参数签名完全相同的构造函数 |
 | UnresolvedIdentifier | 名字无法解析                     |
 | ReturnMissing        | 非 void 函数缺少 return         |
@@ -430,7 +430,7 @@ declare a: Point = Point(1, 2)
 | ImportCycle          | （可选）检测到循环依赖                |
 | CtorAmbiguous        | 构造函数重载时参数匹配不唯一             |
 | CtorNotFound         | 构造函数重载时无匹配参数签名             |
-|AccessDenied          | 访问了以 `_` 开头的私有变量或方法但不在允许范围|
+| AccessDenied         | 访问了以 `_` 开头的私有变量或方法但不在允许范围 |
 
 ---
 
@@ -517,10 +517,10 @@ module: RectExample
 
     function: main
         returns: int
-        declare rect1: Rectangle = Rectangle(0, 0, 10, 10)
-        declare rect2: Rectangle = Rectangle(5, 6)
-        declare result: int = 0
         body:
+            declare rect1: Rectangle = Rectangle(0, 0, 10, 10)
+            declare rect2: Rectangle = Rectangle(5, 6)
+            declare result: int = 0
             if rect1.area() > 50 then
                 loop:
                     init:
