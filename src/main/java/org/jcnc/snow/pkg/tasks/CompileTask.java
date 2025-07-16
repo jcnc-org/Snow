@@ -168,6 +168,11 @@ public final class CompileTask implements Task {
 
             // 词法、语法分析
             LexerEngine lexer = new LexerEngine(code, p.toString());
+            // 若词法阶段存在错误，立即终止编译，避免进入后续的语法及语义分析
+            if (!lexer.getErrors().isEmpty()) {
+                return 1;
+            }
+
             ParserContext ctx = new ParserContext(lexer.getAllTokens(), p.toString());
             allAst.addAll(new ParserEngine(ctx).parse());
         }
