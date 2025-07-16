@@ -87,7 +87,7 @@ public class LexerEngine {
                     errors.add(new LexicalError(
                             absPath, le.getLine(), le.getColumn(), le.getReason()
                     ));
-                    context.advance();           // 跳过问题字符
+                    skipInvalidLexeme();
                 }
                 handled = true;
                 break;
@@ -96,6 +96,20 @@ public class LexerEngine {
             if (!handled) context.advance();     // 理论不会走到，保险
         }
         tokens.add(Token.eof(context.getLine()));
+    }
+    /**
+     * 跳过当前位置起连续的“标识符 / 数字 / 下划线 / 点”字符。
+     * <p>这样可以把诸如 {@code 1abc} 的残余 {@code abc}、{@code _}、
+     * {@code .999} 等一次性忽略，避免后续被误识别为新的 token。</p>
+     */
+    private void skipInvalidLexeme() {
+        while (!context.isAtEnd()) {
+            char c = context.peek();
+            if (Character.isWhitespace(c)) break;           // 空白 / 换行
+            if (!Character.isLetterOrDigit(c)
+                    && c != '_' && c != '.') break;         // 符号分隔
+            context.advance();                              // 否则继续吞掉
+        }
     }
 
     /**
