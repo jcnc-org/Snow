@@ -50,6 +50,6 @@ public class UnknownTokenScanner extends AbstractTokenScanner {
         if (lexeme.isEmpty())
             lexeme = String.valueOf(ctx.advance());
         // 抛出词法异常，并带上错误片段与具体位置
-        throw new LexicalException("词法错误: 非法字符序列 '" + lexeme + "'", line, col);
+        throw new LexicalException("非法字符序列 '" + lexeme + "'", line, col);
     }
 }
