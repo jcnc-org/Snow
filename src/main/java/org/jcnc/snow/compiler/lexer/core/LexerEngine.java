@@ -55,12 +55,6 @@ public class LexerEngine {
         TokenPrinter.print(tokens);
         /* 4. 统一报告错误 */
         report(errors);
-        if (!errors.isEmpty()) {
-            throw new LexicalException(
-                    "",
-                    context.getLine(), context.getCol()
-            );
-        }
     }
 
     public static void report(List<LexicalError> errors) {
