@@ -11,7 +11,7 @@ package org.jcnc.snow.compiler.lexer.core;
  * </ul>
  * <pre>
  * 例：
- *     main.s:2:19: Lexical error: Illegal character sequence '@' at 2:19
+ *     main.s:2:19: 词法错误：非法字符序列 '@' at 2:19
  * </pre>
  */
 public class LexicalException extends RuntimeException {
