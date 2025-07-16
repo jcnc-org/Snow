@@ -36,7 +36,6 @@ public class LexicalException extends RuntimeException {
         this.column = column;
     }
 
-
     /**
      * 屏蔽异常堆栈填充（始终不打印堆栈信息）
      */
