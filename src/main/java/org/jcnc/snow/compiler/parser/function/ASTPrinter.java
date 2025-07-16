@@ -106,7 +106,7 @@ public class ASTPrinter {
                 System.out.println(pad + "loop {");
                 print(init, indent + 1);
                 System.out.println(pad + "  cond: " + cond);
-                System.out.println(pad + "  step:    " + step);
+                System.out.println(pad + "  step: " + step);
                 System.out.println(pad + "  body {");
                 for (StatementNode stmt : body) {
                     print(stmt, indent + 2);
