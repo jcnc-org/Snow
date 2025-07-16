@@ -155,18 +155,18 @@ public class StatementBuilder {
      * @param loop 循环节点
      */
     private void buildLoop(LoopNode loop) {
-        if (loop.initializer() != null) build(loop.initializer());
+        if (loop.init() != null) build(loop.init());
         String lblStart = ctx.newLabel();
         String lblEnd = ctx.newLabel();
         // 循环开始标签
         InstructionFactory.label(ctx, lblStart);
 
         // 条件不满足则跳出循环
-        emitConditionalJump(loop.condition(), lblEnd);
+        emitConditionalJump(loop.cond(), lblEnd);
         // 构建循环体
         buildStatements(loop.body());
         // 更新部分（如 for 的 i++）
-        if (loop.update() != null) build(loop.update());
+        if (loop.step() != null) build(loop.step());
 
         // 跳回循环起点
         InstructionFactory.jmp(ctx, lblStart);

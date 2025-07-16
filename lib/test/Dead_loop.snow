@@ -3,11 +3,11 @@ function: main
     return_type: int
     body:
         loop:
-            initializer:
+            init:
                 declare i:int = 0
-            condition:
+            cond:
                 1 == 1
-            update:
+            step:
                 i = i + 1
             body:
 
