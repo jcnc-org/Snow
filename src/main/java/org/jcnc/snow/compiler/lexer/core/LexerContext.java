@@ -9,7 +9,7 @@ import org.jcnc.snow.compiler.lexer.base.TokenScanner;
  * 是 {@link TokenScanner} 实现进行词法识别的基础设施。
  * </p>
  * <p>
- * 设计要点：
+ * 设计要点:
  * <ul>
  *     <li>构造时统一将 Windows 换行符 (<code>\r\n</code>) 转换为 Unix 风格 (<code>\n</code>)。</li>
  *     <li>所有坐标均以 <strong>1</strong> 为起始行／列号，更贴合人类直觉。</li>

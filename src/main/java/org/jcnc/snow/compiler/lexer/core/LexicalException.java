@@ -10,8 +10,8 @@ package org.jcnc.snow.compiler.lexer.core;
  *   <li>完全禁止 Java 堆栈信息输出，使命令行输出保持整洁。</li>
  * </ul>
  * <pre>
- * 例：
- *     Main.snow: 行 7, 列 20: 词法错误：非法字符序列 '@'
+ * 例: 
+ *     Main.snow: 行 7, 列 20: 词法错误: 非法字符序列 '@'
  * </pre>
  */
 public class LexicalException extends RuntimeException {
@@ -24,7 +24,7 @@ public class LexicalException extends RuntimeException {
 
     /**
      * 构造词法异常
-     * @param reason  错误原因（如：非法字符描述）
+     * @param reason  错误原因（如: 非法字符描述）
      * @param line    出错行号
      * @param column  出错列号
      */

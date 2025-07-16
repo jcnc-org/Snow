@@ -6,13 +6,13 @@ import org.jcnc.snow.pkg.lifecycle.LifecyclePhase;
 import org.jcnc.snow.pkg.tasks.CleanTask;
 
 /**
- * CLI 命令：清理构建输出和本地缓存目录。
+ * CLI 命令: 清理构建输出和本地缓存目录。
  * <p>
  * 用于清除项目生成的 build、dist 等中间产物，保持工作区整洁。
  * </p>
  *
  * <pre>
- * 用法示例：
+ * 用法示例:
  * $ snow clean
  * </pre>
  */

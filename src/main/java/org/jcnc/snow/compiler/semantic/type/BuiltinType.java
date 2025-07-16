@@ -6,7 +6,7 @@ package org.jcnc.snow.compiler.semantic.type;
  * 类型涵盖整数、浮点、字符串及 void 类型，广泛应用于变量声明、
  * 表达式类型推导、函数签名、类型检查等语义分析环节。
  *
- * <p>支持的类型包括：
+ * <p>支持的类型包括: 
  * <ul>
  *   <li>{@link #BYTE}   - 8 位整数</li>
  *   <li>{@link #SHORT}  - 16 位整数</li>
@@ -19,7 +19,7 @@ package org.jcnc.snow.compiler.semantic.type;
  *   <li>{@link #VOID}   - 空类型，用于表示无返回值的函数</li>
  * </ul>
  *
- * <p>每个枚举实例实现了 {@link Type} 接口，提供以下语义特性：
+ * <p>每个枚举实例实现了 {@link Type} 接口，提供以下语义特性: 
  * <ul>
  *   <li>数值类型判断 {@link #isNumeric()}；</li>
  *   <li>类型兼容性判断 {@link #isCompatible(Type)}；</li>
@@ -41,7 +41,7 @@ public enum BuiltinType implements Type {
     /**
      * 判断当前类型是否与指定类型兼容。
      * <p>
-     * 兼容判断规则：
+     * 兼容判断规则: 
      * <ul>
      *   <li>类型完全相同，视为兼容；</li>
      *   <li>对于数值类型，若目标类型为宽类型（如 int → double），视为兼容；</li>
@@ -64,7 +64,7 @@ public enum BuiltinType implements Type {
     /**
      * 判断当前类型是否为数值类型。
      * <p>
-     * 数值类型包括：
+     * 数值类型包括: 
      * {@link #BYTE}、{@link #SHORT}、{@link #INT}、{@link #LONG}、
      * {@link #FLOAT}、{@link #DOUBLE}。
      *

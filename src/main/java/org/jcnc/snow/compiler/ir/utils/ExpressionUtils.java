@@ -14,7 +14,7 @@ import java.util.Map;
 /**
  * 表达式分析与操作符选择工具类。
  * <p>
- * 主要功能：
+ * 主要功能:
  *   - 解析字面量常量，自动推断类型
  *   - 自动匹配并选择适合的算术/比较操作码
  *   - 表达式类型的合并与类型提升
@@ -138,7 +138,7 @@ public final class ExpressionUtils {
     }
 
     /**
-     * 兼容旧逻辑：仅凭操作符直接返回 int32 比较指令。
+     * 兼容旧逻辑: 仅凭操作符直接返回 int32 比较指令。
      *
      * @param op 比较操作符
      * @return int32 类型的比较操作码
@@ -148,7 +148,7 @@ public final class ExpressionUtils {
     }
 
     /**
-     * 推荐调用：根据左右表达式类型自动选择 int/long/float/double 等合适的比较操作码。
+     * 推荐调用: 根据左右表达式类型自动选择 int/long/float/double 等合适的比较操作码。
      *
      * @param variables 变量名到类型的映射
      * @param op        比较符号
@@ -196,7 +196,7 @@ public final class ExpressionUtils {
 
     /**
      * 返回两个类型后缀中的最大类型（宽度优先）。
-     * 优先级：d > f > l > i > s > b > '\0'
+     * 优先级: d > f > l > i > s > b > '\0'
      *
      * @param l 类型后缀1
      * @param r 类型后缀2

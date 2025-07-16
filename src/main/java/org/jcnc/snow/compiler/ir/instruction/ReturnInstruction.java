@@ -9,11 +9,11 @@ import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 import java.util.List;
 
 /**
- * ReturnInstruction —— 表示函数返回指令，格式：RET 或 RET <value>
+ * ReturnInstruction —— 表示函数返回指令，格式: RET 或 RET <value>
  * <p>
- * 此类用于描述函数执行完毕后的返回操作。支持两种返回形式：
- * - 无返回值（void）：生成无参的 RET 指令
- * - 有返回值：将指定虚拟寄存器中的值返回给调用者
+ * 此类用于描述函数执行完毕后的返回操作。支持两种返回形式: 
+ * - 无返回值（void）: 生成无参的 RET 指令
+ * - 有返回值: 将指定虚拟寄存器中的值返回给调用者
  * <p>
  * 与 {@link IRReturnInstruction} 类似，但更通用，适配多种函数返回风格。
  */
@@ -36,7 +36,7 @@ public final class ReturnInstruction extends IRInstruction {
     }
 
     /**
-     * 返回该指令的操作码类型：RET。
+     * 返回该指令的操作码类型: RET。
      *
      * @return IROpCode.RET
      */
@@ -68,8 +68,8 @@ public final class ReturnInstruction extends IRInstruction {
 
     /**
      * 转换为字符串形式，便于调试与输出。
-     * - 无返回值：RET
-     * - 有返回值：RET v1
+     * - 无返回值: RET
+     * - 有返回值: RET v1
      *
      * @return 字符串表示的返回指令
      */

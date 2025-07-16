@@ -7,7 +7,7 @@ package org.jcnc.snow.pkg.model;
  * </p>
  *
  * <pre>
- * 示例用法：
+ * 示例用法:
  * Repository repo = new Repository("central", "https://");
  * </pre>
  *

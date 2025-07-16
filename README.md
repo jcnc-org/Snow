@@ -86,11 +86,11 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
 
 ## 开发环境安装
 
-1. **开发环境准备**：
+1. **开发环境准备**: 
     1. 安装集成开发环境 [IntelliJ IDEA](https://www.jetbrains.com/idea/download)
     2. 安装 Java 开发工具 [Graalvm-jdk-24](https://www.graalvm.org/downloads/)
 
-2. **获取源码**：
+2. **获取源码**: 
    将项目源码下载或克隆到本地目录。
     ```bash
     git clone https://gitee.com/jcnc-org/snow.git
@@ -285,37 +285,37 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
 
 独立编译不依赖 `.cloud` 文件，而是直接使用 `Snow` 编译器进行 `.snow` 文件的编译和执行。
 
-#### 独立编译步骤：
+#### 独立编译步骤: 
 
-1. **运行编译器：**
+1. **运行编译器: **
    你可以通过以下命令来编译单个或多个 `.snow` 文件，或者递归编译一个目录中的所有 `.snow` 源文件为`.water`虚拟机指令。
 
-    * **单个文件编译：**
+    * **单个文件编译: **
 
       ```bash
       Snow complete [SnowCode].snow
       ```
 
-    * **多个文件编译：**
+    * **多个文件编译: **
 
       ```bash
       Snow complete [SnowCode1].snow [SnowCode2].snow [SnowCode3].snow -o [Name]
       ```
 
-    * **目录递归编译：**
+    * **目录递归编译: **
 
       ```bash
       Snow -d path/to/source_dir
       ```
 
-2. **查看编译输出：**
-   编译过程会输出源代码、抽象语法树（AST）、中间表示（IR）以及虚拟机指令等内容。你可以看到如下几个分段输出：
+2. **查看编译输出: **
+   编译过程会输出源代码、抽象语法树（AST）、中间表示（IR）以及虚拟机指令等内容。你可以看到如下几个分段输出: 
 
     * **AST**（抽象语法树）部分以 JSON 格式输出。
     * **IR**（中间表示）部分会列出逐行的中间代码。
     * **VM code**（虚拟机指令）会展示虚拟机的字节码指令。
 
-3. **默认执行模式：**
+3. **默认执行模式: **
    编译器会在 **DEBUG 模式** 下运行，显示详细的执行过程和状态，并且在虚拟机中执行编译后的代码，最后会打印出所有局部变量的值。
 
 ---
@@ -324,30 +324,30 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
 
 集成编译需要使用 `.cloud` 文件来指定项目的配置和结构，适用于项目标准化、依赖管理、构建管理和项目分发等场景。
 
-#### 集成编译命令：
+#### 集成编译命令: 
 
-1. **基本用法：**
+1. **基本用法: **
 
    ```bash
      snow [OPTIONS] <command>
    ```
 
-2. **命令选项：**
+2. **命令选项: **
 
-    * `-h, --help`：显示帮助信息并退出。
-    * `-v, --version`：打印 Snow 编程语言的版本并退出。
+    * `-h, --help`: 显示帮助信息并退出。
+    * `-v, --version`: 打印 Snow 编程语言的版本并退出。
 
-3. **可用命令：**
+3. **可用命令: **
 
-    * `compile`：将 `.snow` 源文件编译成虚拟机字节码文件（`.water`）。此命令会使用 `.cloud` 文件来指导编译过程。
-    * `clean`：清理构建输出和本地缓存，移除中间产物，释放磁盘空间。
-    * `version`：打印 Snow 的版本。
-    * `run`：运行已编译的虚拟机字节码文件（`.water`）。
-    * `init`：初始化一个新项目，生成 `project.cloud` 文件。
-    * `generate`：根据 `project.cloud` 生成项目目录结构。
-    * `build`：构建当前项目，按顺序解析依赖、编译和打包。
+    * `compile`: 将 `.snow` 源文件编译成虚拟机字节码文件（`.water`）。此命令会使用 `.cloud` 文件来指导编译过程。
+    * `clean`: 清理构建输出和本地缓存，移除中间产物，释放磁盘空间。
+    * `version`: 打印 Snow 的版本。
+    * `run`: 运行已编译的虚拟机字节码文件（`.water`）。
+    * `init`: 初始化一个新项目，生成 `project.cloud` 文件。
+    * `generate`: 根据 `project.cloud` 生成项目目录结构。
+    * `build`: 构建当前项目，按顺序解析依赖、编译和打包。
 
-4. **例如，执行集成编译命令：**
+4. **例如，执行集成编译命令: **
 
    ```bash
    snow compile [SnowCode].snow
@@ -355,14 +355,14 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
 
     * 此命令会使用 `.cloud` 文件中的配置信息来指导编译过程，并生成 `.water`。
 
-5. **使用帮助：**
-   如果你需要了解某个命令的详细选项，可以使用：
+5. **使用帮助: **
+   如果你需要了解某个命令的详细选项，可以使用: 
 
    ```bash
    snow <command> --help
    ```
 
-   例如，查看 `compile` 命令的具体选项：
+   例如，查看 `compile` 命令的具体选项: 
 
    ```bash
    snow compile --help
@@ -372,7 +372,7 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
 
 ## 示例代码片段
 
-以下是一个简单的 Snow 代码示例,演示模块定义,导入和函数声明的基本语法：
+以下是一个简单的 Snow 代码示例,演示模块定义,导入和函数声明的基本语法: 
 
 ```snow
 module: Math
@@ -407,10 +407,10 @@ module: Math
 end module
 ```
 
-上述代码定义了一个名为 `Math` 的模块，其中包含两个函数：
+上述代码定义了一个名为 `Math` 的模块，其中包含两个函数: 
 
-* `main`：不接收任何参数，返回类型为 `int`。在函数体内调用了 `Math.factorial(6)`，然后返回 `0`。
-* `factorial`：接收一个 `int` 类型的参数 `n`，返回类型为 `int`。函数体内先声明并初始化局部变量 `num1` 为 `1`，然后通过一个
+* `main`: 不接收任何参数，返回类型为 `int`。在函数体内调用了 `Math.factorial(6)`，然后返回 `0`。
+* `factorial`: 接收一个 `int` 类型的参数 `n`，返回类型为 `int`。函数体内先声明并初始化局部变量 `num1` 为 `1`，然后通过一个
   `loop` 循环（从 `counter = 1` 到 `counter <= n`）依次将 `num1` 乘以 `counter`，循环结束后返回 `num1`，即 `n` 的阶乘值。
 
 
@@ -418,45 +418,45 @@ end module
 
 ## 项目结构说明
 
-* `compiler/`：Snow 编译器源代码目录
+* `compiler/`: Snow 编译器源代码目录
 
-    * `lexer/`：词法分析模块，负责将源码切分为 Token
-    * `parser/`：语法分析模块，将 Token 流解析为 AST（含模块/函数/语句解析）
-    * `semantic/`：语义分析模块，负责符号表管理、类型检查等
-    * `ir/`：中间表示（IR）模块，生成并管理三地址码形式的中间代码
-    * `backend/`：编译器后端模块，将 IR 翻译为虚拟机指令，包含寄存器分配和指令生成器
+    * `lexer/`: 词法分析模块，负责将源码切分为 Token
+    * `parser/`: 语法分析模块，将 Token 流解析为 AST（含模块/函数/语句解析）
+    * `semantic/`: 语义分析模块，负责符号表管理、类型检查等
+    * `ir/`: 中间表示（IR）模块，生成并管理三地址码形式的中间代码
+    * `backend/`: 编译器后端模块，将 IR 翻译为虚拟机指令，包含寄存器分配和指令生成器
 
-* `vm/`：虚拟机相关源代码目录
+* `vm/`: 虚拟机相关源代码目录
 
-    * `commands/`：定义 SnowVM 指令集的具体实现
-    * `engine/`：核心执行引擎，提供指令执行和寄存器/栈管理
-    * `execution/`：执行流程控制（按指令顺序执行、分支跳转等）
-    * `io/`：输入输出辅助类（加载指令、文件解析等）
-    * `gui/`：Swing 可视化调试面板，实时展示局部变量表
-    * `factories/`、`utils/`：指令创建、日志调试等公共工具
+    * `commands/`: 定义 SnowVM 指令集的具体实现
+    * `engine/`: 核心执行引擎，提供指令执行和寄存器/栈管理
+    * `execution/`: 执行流程控制（按指令顺序执行、分支跳转等）
+    * `io/`: 输入输出辅助类（加载指令、文件解析等）
+    * `gui/`: Swing 可视化调试面板，实时展示局部变量表
+    * `factories/`、`utils/`: 指令创建、日志调试等公共工具
 
-* `pkg/`：内置构建与包管理器 **snow pkg**
+* `pkg/`: 内置构建与包管理器 **snow pkg**
 
-    * `dsl/`：`.cloud` 描述文件解析器
-    * `tasks/`：预设任务实现（`clean · compile · run · package · publish` 等）
-    * `resolver/`：本地/远程仓库解析与缓存
-    * `lifecycle/`：任务生命周期钩子（pre/post 脚本等）
-    * `model/`：项目、依赖、版本等模型
-    * `utils/`：文件、日志、校验和等通用工具
-    * `doc/`：开发者文档与示例 `.cloud` 配置
+    * `dsl/`: `.cloud` 描述文件解析器
+    * `tasks/`: 预设任务实现（`clean · compile · run · package · publish` 等）
+    * `resolver/`: 本地/远程仓库解析与缓存
+    * `lifecycle/`: 任务生命周期钩子（pre/post 脚本等）
+    * `model/`: 项目、依赖、版本等模型
+    * `utils/`: 文件、日志、校验和等通用工具
+    * `doc/`: 开发者文档与示例 `.cloud` 配置
 
-* `cli/`：独立的命令行前端
+* `cli/`: 独立的命令行前端
 
-    * `commands/`：`compile` / `run` / `pkg` 等子命令实现
-    * `api/`：公共选项解析、终端交互抽象
-    * `utils/`：终端颜色、进度条、异常格式化等
-    * `SnowCLI.java`：CLI 主入口
+    * `commands/`: `compile` / `run` / `pkg` 等子命令实现
+    * `api/`: 公共选项解析、终端交互抽象
+    * `utils/`: 终端颜色、进度条、异常格式化等
+    * `SnowCLI.java`: CLI 主入口
 
 
 ## 版权声明
 
 版权所有 © 2025 许轲（Luke），代表 SnowLang 项目。  
-仓库地址：<https://gitee.com/jcnc-org/snow>  
+仓库地址: <https://gitee.com/jcnc-org/snow>  
 本项目依据 [Apache 2.0 许可证](LICENSE) 进行许可和发布。
 
 “SnowLang 项目”为由许轲（Luke）发起的独立开源项目。  
@@ -464,7 +464,7 @@ end module
 
 ## 加入我们
 
-- 微信：`xuxiaolankaka`
-- QQ：`1399528359`
-- 邮箱：`luke.k.xu [at] hotmail.com`
+- 微信: `xuxiaolankaka`
+- QQ: `1399528359`
+- 邮箱: `luke.k.xu [at] hotmail.com`
 

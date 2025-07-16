@@ -35,7 +35,7 @@ public abstract class AbstractTokenScanner implements TokenScanner {
     }
 
     /**
-     * 抽象方法：由子类实现具体的扫描逻辑。
+     * 抽象方法: 由子类实现具体的扫描逻辑。
      * <p>
      * 实现应消费一定字符并根据规则构造 Token。
      * 若无需生成 Token，可返回 null。
@@ -49,7 +49,7 @@ public abstract class AbstractTokenScanner implements TokenScanner {
     protected abstract Token scanToken(LexerContext ctx, int line, int col);
 
     /**
-     * 工具方法：连续读取字符直到遇到不满足指定条件的字符。
+     * 工具方法: 连续读取字符直到遇到不满足指定条件的字符。
      *
      * @param ctx       当前词法上下文
      * @param predicate 字符匹配条件

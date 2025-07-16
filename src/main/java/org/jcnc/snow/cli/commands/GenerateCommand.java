@@ -12,19 +12,19 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * CLI 命令：根据 project.cloud 生成项目目录结构。
+ * CLI 命令: 根据 project.cloud 生成项目目录结构。
  * <p>
  * 负责解析云项目描述文件，并通过 {@link GenerateTask}
  * 在 INIT 生命周期阶段内生成基础目录结构。
  * </p>
  *
  * <pre>
- * 用法示例：
+ * 用法示例:
  * $ snow generate
  * </pre>
  *
  * <p>
- * 注意事项：
+ * 注意事项:
  * - 若当前目录不存在 project.cloud，则提示用户先执行 `snow init`。
  * - 执行成功后，会输出已创建的目录/文件。
  * </p>

@@ -1,17 +1,8 @@
 module: Main
     function: main
-        return_type: int
-        body:
-            foo()
-
-            return 0
-        end body
-    end function
-
-    function: foo
         return_type: void
         body:
-
+            declare 1sum :int =1
         end body
     end function
 end module

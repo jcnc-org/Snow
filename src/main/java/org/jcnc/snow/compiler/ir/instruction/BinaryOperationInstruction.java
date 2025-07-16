@@ -9,7 +9,7 @@ import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 import java.util.List;
 
 /**
- * BinaryOperationInstruction —— 表示一个二元运算指令，格式为：dest = lhs OP rhs
+ * BinaryOperationInstruction —— 表示一个二元运算指令，格式为: dest = lhs OP rhs
  * <p>
  * 该类用于描述形如 a = b + c 或 a = x * y 的二元运算指令。
  * 运算类型（OP）由 {@link IROpCode} 指定，包括加法、减法、乘法、除法等。
@@ -76,7 +76,7 @@ public final class BinaryOperationInstruction extends IRInstruction {
 
     /**
      * 转换为字符串格式，便于调试与打印。
-     * 例：v1 = ADD_I32 v2, v3
+     * 例: v1 = ADD_I32 v2, v3
      *
      * @return 指令的字符串表示形式
      */

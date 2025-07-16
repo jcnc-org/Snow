@@ -14,7 +14,7 @@ import java.util.*;
  * 并可借助 {@code JSONParser.toJson(Object)} 方法将其序列化为 JSON 字符串，用于调试、
  * 可视化或跨语言数据传输。
  * <p>
- * 支持的节点类型包括（新增对 {@code BoolLiteralNode}、{@code UnaryExpressionNode} 的完整支持）：
+ * 支持的节点类型包括（新增对 {@code BoolLiteralNode}、{@code UnaryExpressionNode} 的完整支持）: 
  * <ul>
  *   <li>{@link ModuleNode}</li>
  *   <li>{@link FunctionNode}</li>
@@ -213,7 +213,7 @@ public class ASTJsonSerializer {
                             "object", exprToMap(object),
                             "member", member
                     );
-            // 默认兜底处理：只写类型
+            // 默认兜底处理: 只写类型
             default -> Map.of("type", expr.getClass().getSimpleName());
         };
     }

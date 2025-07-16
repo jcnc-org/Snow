@@ -22,8 +22,8 @@ public final class GlobalFunctionTable {
     /**
      * 存储全局函数返回类型映射表。
      * <ul>
-     *   <li>Key：函数名（不含模块限定）</li>
-     *   <li>Value：返回类型，统一转换为小写字符串；若无返回值则为 {@code "void"}</li>
+     *   <li>Key: 函数名（不含模块限定）</li>
+     *   <li>Value: 返回类型，统一转换为小写字符串；若无返回值则为 {@code "void"}</li>
      * </ul>
      */
     private static final Map<String, String> RETURN_TYPES = new ConcurrentHashMap<>();

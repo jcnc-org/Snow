@@ -20,7 +20,7 @@ body:
     attributes:
       label: 已尝试方法
       description: 列出已尝试过的解决方案或思路
-      placeholder: "如：查阅文档、尝试示例代码…"
+      placeholder: "如: 查阅文档、尝试示例代码…"
     validations:
       required: false
 
@@ -29,6 +29,6 @@ body:
     attributes:
       label: 期望答案
       description: 描述希望获得的解答或帮助方向
-      placeholder: "如：最佳实践、配置示例…"
+      placeholder: "如: 最佳实践、配置示例…"
     validations:
       required: false

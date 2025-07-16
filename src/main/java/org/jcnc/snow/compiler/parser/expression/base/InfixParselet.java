@@ -11,7 +11,7 @@ import org.jcnc.snow.compiler.parser.expression.Precedence;
  * 是 Pratt 解析器架构中处理中缀操作的关键组件。
  * </p>
  * <p>
- * 每个中缀解析器负责：
+ * 每个中缀解析器负责: 
  * <ul>
  *     <li>根据左侧已解析的表达式，结合当前运算符继续解析右侧部分</li>
  *     <li>提供运算符优先级，用于判断是否继续嵌套解析</li>

@@ -10,10 +10,10 @@ import org.jcnc.snow.compiler.parser.expression.base.PrefixParselet;
 /**
  * {@code UnaryOperatorParselet} —— 前缀一元运算符的 Pratt 解析器。
  *
- * <p>当前 parselet 负责解析两种前缀运算：
+ * <p>当前 parselet 负责解析两种前缀运算: 
  * <ul>
- *   <li><b>取负</b>：{@code -x}</li>
- *   <li><b>逻辑非</b>：{@code !x}</li>
+ *   <li><b>取负</b>: {@code -x}</li>
+ *   <li><b>逻辑非</b>: {@code !x}</li>
  * </ul>
  *
  * 解析过程:
@@ -25,7 +25,7 @@ import org.jcnc.snow.compiler.parser.expression.base.PrefixParselet;
  *   <li>最终生成 {@link UnaryExpressionNode} AST 节点，记录运算符与操作数。</li>
  * </ol>
  *
- * <p>此类仅负责<strong>语法结构</strong>的构建：
+ * <p>此类仅负责<strong>语法结构</strong>的构建: 
  *  <ul>
  *    <li>类型正确性在 {@code UnaryExpressionAnalyzer} 中校验；</li>
  *    <li>IR 生成在 {@code ExpressionBuilder.buildUnary} 中完成。</li>

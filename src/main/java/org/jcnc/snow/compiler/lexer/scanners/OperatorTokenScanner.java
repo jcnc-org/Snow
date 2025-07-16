@@ -8,14 +8,14 @@ import org.jcnc.snow.compiler.lexer.token.TokenType;
  * 运算符扫描器（OperatorTokenScanner）
  *
  * <p>负责在词法分析阶段识别由 <b>= ! &lt; &gt; | &amp; %</b> 等字符
- * 起始的单字符或双字符运算符，并生成相应 {@link Token}：</p>
+ * 起始的单字符或双字符运算符，并生成相应 {@link Token}: </p>
  *
  * <ul>
- *   <li>赋值 / 比较：{@code =}, {@code ==}, {@code !=}</li>
- *   <li>关系运算：{@code >}, {@code >=}, {@code <}, {@code <=}</li>
- *   <li>逻辑运算：{@code &&}, {@code ||}</li>
- *   <li>取模运算：{@code %}</li>
- *   <li>逻辑非：{@code !}</li>
+ *   <li>赋值 / 比较: {@code =}, {@code ==}, {@code !=}</li>
+ *   <li>关系运算: {@code >}, {@code >=}, {@code <}, {@code <=}</li>
+ *   <li>逻辑运算: {@code &&}, {@code ||}</li>
+ *   <li>取模运算: {@code %}</li>
+ *   <li>逻辑非: {@code !}</li>
  * </ul>
  *
  * <p>如果无法匹配到合法组合，将返回 {@link TokenType#UNKNOWN}。</p>

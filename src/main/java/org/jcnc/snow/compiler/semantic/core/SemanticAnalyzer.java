@@ -12,20 +12,20 @@ import java.util.*;
  * 它负责统一协调模块注册、函数签名登记和函数体语义检查等子任务，构建并维护语义上下文 {@link Context}，
  * 并最终输出所有收集到的语义错误列表 {@link SemanticError}。
  * <p>
- * 语义分析流程分为三个阶段：
+ * 语义分析流程分为三个阶段: 
  * <ol>
- *   <li>模块注册：将所有用户模块的名称添加至全局模块表中，供后续导入检查与引用；</li>
- *   <li>函数签名注册：提取函数定义的签名（名称与类型），填入每个模块对应的 {@link ModuleInfo}；</li>
- *   <li>函数体检查：遍历每个函数体，对所有语句与表达式执行类型检查和语义验证。</li>
+ *   <li>模块注册: 将所有用户模块的名称添加至全局模块表中，供后续导入检查与引用；</li>
+ *   <li>函数签名注册: 提取函数定义的签名（名称与类型），填入每个模块对应的 {@link ModuleInfo}；</li>
+ *   <li>函数体检查: 遍历每个函数体，对所有语句与表达式执行类型检查和语义验证。</li>
  * </ol>
  * <p>
- * 内部使用组件：
+ * 内部使用组件: 
  * <ul>
- *   <li>{@link ModuleRegistry}：注册用户模块；</li>
- *   <li>{@link SignatureRegistrar}：提取函数签名；</li>
- *   <li>{@link FunctionChecker}：分析函数体内语句；</li>
- *   <li>{@link BuiltinTypeRegistry}：初始化内置模块和类型；</li>
- *   <li>{@link AnalyzerRegistrar}：注册语句和表达式分析器。</li>
+ *   <li>{@link ModuleRegistry}: 注册用户模块；</li>
+ *   <li>{@link SignatureRegistrar}: 提取函数签名；</li>
+ *   <li>{@link FunctionChecker}: 分析函数体内语句；</li>
+ *   <li>{@link BuiltinTypeRegistry}: 初始化内置模块和类型；</li>
+ *   <li>{@link AnalyzerRegistrar}: 注册语句和表达式分析器。</li>
  * </ul>
  */
 public class SemanticAnalyzer {

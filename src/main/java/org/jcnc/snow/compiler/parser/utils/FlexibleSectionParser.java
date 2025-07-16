@@ -18,7 +18,7 @@ import java.util.function.Predicate;
  * </p>
  *
  * <p>
- * 典型用途包括：
+ * 典型用途包括: 
  * <ul>
  *   <li>函数体解析中的 {@code params}、{@code returns}、{@code body} 等部分</li>
  *   <li>模块定义中的 {@code imports}、{@code functions} 等部分</li>
@@ -26,7 +26,7 @@ import java.util.function.Predicate;
  * </ul>
  * </p>
  *
- * <p>主要特性：</p>
+ * <p>主要特性: </p>
  * <ul>
  *   <li>自动跳过注释与空行</li>
  *   <li>区块入口通过关键字匹配和可选条件判断</li>

@@ -22,7 +22,7 @@ import java.util.*;
  * 实现 {@link TopLevelParser} 接口，用于将源代码中的函数块解析为抽象语法树（AST）中的 {@link FunctionNode}。
  *
  * <p>
- * 本类使用 {@link FlexibleSectionParser} 机制，按照语义区块结构对函数进行模块化解析，支持以下部分：
+ * 本类使用 {@link FlexibleSectionParser} 机制，按照语义区块结构对函数进行模块化解析，支持以下部分: 
  * </p>
  *
  * <ul>
@@ -110,7 +110,7 @@ public class FunctionParser implements TopLevelParser {
      * 构造函数定义中各区块的解析规则（parameter、return_type、body）。
      *
      * <p>
-     * 每个 {@link SectionDefinition} 包含两个部分：区块起始判断器（基于关键字）与具体的解析逻辑。
+     * 每个 {@link SectionDefinition} 包含两个部分: 区块起始判断器（基于关键字）与具体的解析逻辑。
      * </p>
      *
      * @param params 参数节点收集容器，解析结果将存入此列表。
@@ -180,7 +180,7 @@ public class FunctionParser implements TopLevelParser {
      * 解析函数参数列表。
      *
      * <p>
-     * 支持声明后附加注释，格式示例：
+     * 支持声明后附加注释，格式示例: 
      * <pre>
      * parameter:
      *   declare x: int   // 说明文字

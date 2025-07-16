@@ -11,7 +11,7 @@ import java.util.List;
  * <p>
  * 函数定义通常包含函数名、形参列表、返回类型以及函数体，
  * 在语义分析、类型检查与代码生成等阶段具有核心地位。
- * 示例：{@code int add(int a, int b) { return a + b; }}
+ * 示例: {@code int add(int a, int b) { return a + b; }}
  * </p>
  *
  * @param name       函数名称标识符

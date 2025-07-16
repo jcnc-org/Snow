@@ -5,7 +5,7 @@ import org.jcnc.snow.vm.engine.VMOpCode;
 import java.util.*;
 
 /**
- * VMProgramBuilder：构建线性 VM 程序（即按顺序存放所有 VM 指令）。
+ * VMProgramBuilder: 构建线性 VM 程序（即按顺序存放所有 VM 指令）。
  * <p>
  * 本类用于编译器后端，将所有生成的 VM 指令（包括分支和调用指令）统一存储、管理。
  * 支持符号（如函数入口、标签地址）的延迟解析与回填（fix-up）机制，
@@ -22,7 +22,7 @@ public final class VMProgramBuilder {
     /** 未解析目标的分支指令（JUMP/IC_* 等待修补） */
     private record BranchFix(int index, String label) {}
 
-    /** 占位符：用于表示尚未确定的符号地址 */
+    /** 占位符: 用于表示尚未确定的符号地址 */
     private static final String PLACEHOLDER = "-1";
 
     /** 按顺序存放的 VM 指令文本 */
@@ -102,7 +102,7 @@ public final class VMProgramBuilder {
 
     /**
      * 生成 CALL 指令。
-     * 支持延迟修补：若目标已知，直接写入地址；否则写入占位并登记 fix-up。
+     * 支持延迟修补: 若目标已知，直接写入地址；否则写入占位并登记 fix-up。
      * @param target 目标函数名
      * @param nArgs  参数个数
      */

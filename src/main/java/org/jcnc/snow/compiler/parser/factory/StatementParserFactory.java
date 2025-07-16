@@ -18,7 +18,7 @@ import java.util.HashMap;
  */
 public class StatementParserFactory {
 
-    /** 注册表：语句关键字 -> 对应语句解析器 */
+    /** 注册表: 语句关键字 -> 对应语句解析器 */
     private static final Map<String, StatementParser> registry = new HashMap<>();
 
     static {
@@ -28,7 +28,7 @@ public class StatementParserFactory {
         registry.put("loop",    new LoopStatementParser());
         registry.put("return",  new ReturnStatementParser());
 
-        // 默认处理器：表达式语句
+        // 默认处理器: 表达式语句
         registry.put("",        new ExpressionStatementParser());
     }
 

@@ -6,10 +6,10 @@ import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 /**
  * {@code UnaryExpressionNode} —— 前缀一元运算 AST 节点。
  *
- * <p>代表两种受支持的一元前缀表达式：
+ * <p>代表两种受支持的一元前缀表达式: 
  * <ul>
- *   <li><b>取负</b>：{@code -x}</li>
- *   <li><b>逻辑非</b>：{@code !x}</li>
+ *   <li><b>取负</b>: {@code -x}</li>
+ *   <li><b>逻辑非</b>: {@code !x}</li>
  * </ul>
  *
  * {@link #equals(Object)}、{@link #hashCode()} 等方法。</p>

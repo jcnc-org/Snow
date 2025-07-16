@@ -5,9 +5,9 @@ import org.jcnc.snow.compiler.lexer.token.Token;
 import org.jcnc.snow.compiler.lexer.token.TokenType;
 
 /**
- * 字符串扫描器：处理双引号包裹的字符串字面量，支持基本的转义字符。
+ * 字符串扫描器: 处理双引号包裹的字符串字面量，支持基本的转义字符。
  * <p>
- * 支持格式示例：
+ * 支持格式示例: 
  * <ul>
  *     <li>"hello"</li>
  *     <li>"line\\nbreak"</li>

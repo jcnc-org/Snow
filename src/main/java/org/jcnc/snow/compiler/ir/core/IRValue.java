@@ -11,11 +11,11 @@ import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
  * 实现该接口的类型可以作为 {@link IRInstruction} 中的操作数出现。
  * </p>
  *
- * <p>当前支持的 IR 值类型包括：</p>
+ * <p>当前支持的 IR 值类型包括: </p>
  * <ul>
- *     <li>{@link IRVirtualRegister}：虚拟寄存器，表示计算结果或中间变量</li>
- *     <li>{@link IRConstant}：常量值，表示不可变的字面量或数值</li>
- *     <li>{@link IRLabel}：标签，表示跳转指令的目标地址</li>
+ *     <li>{@link IRVirtualRegister}: 虚拟寄存器，表示计算结果或中间变量</li>
+ *     <li>{@link IRConstant}: 常量值，表示不可变的字面量或数值</li>
+ *     <li>{@link IRLabel}: 标签，表示跳转指令的目标地址</li>
  * </ul>
  *
  * <p>

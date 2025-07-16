@@ -9,7 +9,7 @@ import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 import java.util.List;
 
 /**
- * IRAddInstruction —— 表示一个加法指令，形如：dest = lhs + rhs
+ * IRAddInstruction —— 表示一个加法指令，形如: dest = lhs + rhs
  * <p>
  * 本类是一个具体的 IRInstruction 子类，表示将两个值相加，并将结果写入目标寄存器的操作。
  * 虽然功能与通用的 {@link BinaryOperationInstruction} 类似，但它作为更简化明确的指令实现，
@@ -40,7 +40,7 @@ public class IRAddInstruction extends IRInstruction {
     }
 
     /**
-     * 返回该指令的操作码：ADD_I32。
+     * 返回该指令的操作码: ADD_I32。
      *
      * @return 加法操作码
      */
@@ -81,7 +81,7 @@ public class IRAddInstruction extends IRInstruction {
 
     /**
      * 返回指令的字符串形式，方便调试。
-     * 例如：v1 = v2 + v3
+     * 例如: v1 = v2 + v3
      *
      * @return 字符串表示形式
      */

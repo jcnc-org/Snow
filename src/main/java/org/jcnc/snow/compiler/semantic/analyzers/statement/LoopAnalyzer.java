@@ -13,7 +13,7 @@ import org.jcnc.snow.compiler.semantic.type.Type;
 /**
  * {@code LoopAnalyzer} 用于分析 for/while 等循环结构的语义正确性。
  * <p>
- * 主要职责如下：
+ * 主要职责如下: 
  * <ul>
  *   <li>为整个循环体（包括初始化、条件、更新、循环体本身）创建独立的块级符号表（作用域），保证循环内变量与外部隔离。</li>
  *   <li>依次分析初始化语句、条件表达式、更新语句和循环体各语句，并递归检查嵌套的语法结构。</li>

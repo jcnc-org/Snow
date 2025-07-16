@@ -5,7 +5,7 @@ import org.jcnc.snow.compiler.lexer.token.Token;
 import org.jcnc.snow.compiler.lexer.token.TokenType;
 
 /**
- * 换行符扫描器：将源代码中的换行符（\n）识别为 {@code NEWLINE} 类型的 Token。
+ * 换行符扫描器: 将源代码中的换行符（\n）识别为 {@code NEWLINE} 类型的 Token。
  * <p>
  * 用于记录行的分界，辅助语法分析阶段进行行敏感的判断或保持结构清晰。
  */

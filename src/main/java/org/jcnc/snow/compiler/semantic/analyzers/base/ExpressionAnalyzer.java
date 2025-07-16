@@ -8,7 +8,7 @@ import org.jcnc.snow.compiler.semantic.symbol.SymbolTable;
 import org.jcnc.snow.compiler.semantic.type.Type;
 
 /**
- * 表达式分析器接口：定义了对 AST 中表达式节点进行语义分析的通用契约。
+ * 表达式分析器接口: 定义了对 AST 中表达式节点进行语义分析的通用契约。
  * <p>
  * 各种具体的表达式分析器（如调用、二元运算、标识符、字面量等）需实现此接口，
  * 在 {@link #analyze(Context, ModuleInfo, FunctionNode, SymbolTable, ExpressionNode)}
@@ -21,7 +21,7 @@ public interface ExpressionAnalyzer<E extends ExpressionNode> {
     /**
      * 对给定的表达式节点进行语义分析，并返回推导出的类型。
      * <p>
-     * 实现者应在分析过程中根据节点语义：
+     * 实现者应在分析过程中根据节点语义:
      * <ul>
      *   <li>校验子表达式类型并递归调用对应的分析器；</li>
      *   <li>检查函数调用、运算符合法性；</li>

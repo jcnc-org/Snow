@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
  * 仅负责根据指令类型分发到对应的 {@link InstructionGenerator} 子类完成实际生成。
  * </p>
  * <p>
- * 工作流程简述：
+ * 工作流程简述: 
  * <ol>
  *   <li>接收一组已注册的 IR 指令生成器，并建立类型到生成器的映射表。</li>
  *   <li>遍历 IR 函数体的每条指令，根据类型找到对应的生成器，调用其 generate 方法生成 VM 指令。</li>
@@ -28,8 +28,8 @@ public final class VMCodeGenerator {
     /**
      * 指令类型到生成器的注册表（调度表）。
      * <p>
-     * 键：IR 指令类型（Class对象），
-     * 值：对应的指令生成器实例。
+     * 键: IR 指令类型（Class对象），
+     * 值: 对应的指令生成器实例。
      * </p>
      */
     private final Map<Class<? extends IRInstruction>, InstructionGenerator<? extends IRInstruction>> registry;

@@ -12,7 +12,7 @@ import java.util.List;
 
 /**
  * Snow 语言词法分析器核心实现。
- * <p>采用“<b>先扫描 → 后批量校验 → 统一报告</b>”策略：
+ * <p>采用“<b>先扫描 → 后批量校验 → 统一报告</b>”策略:
  * <ol>
  *   <li>{@link #scanAllTokens()}— 用扫描器链把字符流拆成 {@link Token}</li>
  *   <li>{@link #validateTokens()}— 基于 token 序列做轻量上下文校验</li>
@@ -68,7 +68,7 @@ public class LexerEngine {
             System.out.println("\n## 词法分析通过，没有发现错误\n");
             return;
         }
-        System.err.println("\n词法分析发现 " + errors.size() + " 个错误：");
+        System.err.println("\n词法分析发现 " + errors.size() + " 个错误: ");
         errors.forEach(e -> System.err.println("  " + e));
     }
 
@@ -76,7 +76,7 @@ public class LexerEngine {
     public List<LexicalError> getErrors() { return List.copyOf(errors); }
 
     /**
-     * 逐字符扫描：依次尝试各扫描器；扫描器抛出的
+     * 逐字符扫描: 依次尝试各扫描器；扫描器抛出的
      * {@link LexicalException} 被捕获并转为 {@link LexicalError}。
      */
     private void scanAllTokens() {
@@ -105,7 +105,7 @@ public class LexerEngine {
     }
 
     /**
-     * 目前包含三条规则：<br>
+     * 目前包含三条规则: <br>
      * 1. Dot-Prefix'.' 不能作标识符前缀<br>
      * 2. Declare-Ident declare 后必须紧跟合法标识符，并且只能一个<br>
      * 3. Double-Ident declare 后若出现第二个 IDENTIFIER 视为多余<br>
@@ -149,6 +149,6 @@ public class LexerEngine {
 
     /** 构造统一的 LexicalError */
     private LexicalError err(Token t, String msg) {
-        return new LexicalError(absPath, t.getLine(), t.getCol(), "非法的标记序列：" + msg);
+        return new LexicalError(absPath, t.getLine(), t.getCol(), "非法的标记序列: " + msg);
     }
 }

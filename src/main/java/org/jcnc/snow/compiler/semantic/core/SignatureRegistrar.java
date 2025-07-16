@@ -16,7 +16,7 @@ import java.util.Optional;
 /**
  * {@code SignatureRegistrar} 负责函数签名登记与导入语义检查。
  * <p>
- * 在语义分析初期阶段，它遍历每个模块，完成以下任务：
+ * 在语义分析初期阶段，它遍历每个模块，完成以下任务: 
  * <ul>
  *   <li>验证所有 {@link ImportNode} 导入的模块是否存在于全局模块表 {@link Context#modules()} 中；</li>
  *   <li>将每个 {@link FunctionNode} 的函数签名（参数类型和返回类型）注册到对应 {@link ModuleInfo} 中；</li>

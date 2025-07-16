@@ -13,13 +13,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * CLI 命令：构建当前项目（包含依赖解析、编译、打包）。
+ * CLI 命令: 构建当前项目（包含依赖解析、编译、打包）。
  * <p>
  * 该命令会依次执行依赖解析、源码编译和产物打包阶段。
  * </p>
  *
  * <pre>
- * 用法示例：
+ * 用法示例:
  * $ snow build
  * </pre>
  */

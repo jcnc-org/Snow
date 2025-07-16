@@ -13,17 +13,17 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * CLI 命令：编译当前项目。
+ * CLI 命令: 编译当前项目。
  *
- * <p>工作模式说明：</p>
+ * <p>工作模式说明: </p>
  * <ul>
  *   <li><strong>Cloud 模式</strong>
  *       - 项目根目录存在 {@code project.cloud} 时触发；
  *       - 解析 build 区块，自动推导源码目录与输出文件名；
- *       - 用法：{@code snow compile [run]}</li>
+ *       - 用法: {@code snow compile [run]}</li>
  *   <li><strong>Local 模式</strong>
  *       - 未检测到 {@code project.cloud} 时回退；
- *       - 保持向后兼容：{@code snow compile [run] [-o <name>] [-d <srcDir>] [file.snow …]}</li>
+ *       - 保持向后兼容: {@code snow compile [run] [-o <name>] [-d <srcDir>] [file.snow …]}</li>
  * </ul>
  *
  * <p>两种模式均将最终参数交由 {@link CompileTask} 处理。</p>
@@ -67,12 +67,12 @@ public final class CompileCommand implements CLICommand {
                 }
             }
 
-            /* 源码目录：build.srcDir -> 默认 src */
+            /* 源码目录: build.srcDir -> 默认 src */
             String srcDir = project.getBuild().get("srcDir", "src");
             argList.add("-d");
             argList.add(srcDir);
 
-            /* 输出名称：build.output -> fallback to artifact */
+            /* 输出名称: build.output -> fallback to artifact */
             String output = project.getBuild().get("output", project.getArtifact());
             argList.add("-o");
             argList.add(output);

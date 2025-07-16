@@ -10,7 +10,7 @@ import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
  * 以及与之配套的作用域管理（IRBuilderScope），
  * 并简化虚拟寄存器分配与 IR 指令添加操作。
  *
- * <p>本类提供以下核心功能：
+ * <p>本类提供以下核心功能: 
  * <ul>
  *   <li>持有并操作当前 IRFunction 对象；</li>
  *   <li>管理变量名与虚拟寄存器的映射关系；</li>
@@ -62,7 +62,7 @@ public class IRContext {
     /**
      * 获取当前函数的变量与寄存器映射作用域。
      *
-     * <p>包内可见：仅限 builder 包内部使用。
+     * <p>包内可见: 仅限 builder 包内部使用。
      *
      * @return IRBuilderScope 实例
      */

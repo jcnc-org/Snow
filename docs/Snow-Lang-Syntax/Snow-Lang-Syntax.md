@@ -31,14 +31,14 @@ end module
 
 ### 数据类型
 
-bool 类型：
+bool 类型: 
 
-两种值：`true` 和 `false`
-
-
+两种值: `true` 和 `false`
 
 
-数值类型：
+
+
+数值类型: 
 
 | Number   | keyword |
 |----------|---------|
@@ -51,7 +51,7 @@ bool 类型：
 
 默认整数的类型为 int，浮点数的类型为 double。
 
-数值字面量后缀：
+数值字面量后缀: 
 
 | 数值字面量后缀 | 例子 |
 |---------|----|
@@ -64,7 +64,7 @@ bool 类型：
 
 
 ### 变量
-定义变量的形式如下，中括号表示可选：
+定义变量的形式如下，中括号表示可选: 
 
 ```snow
 declare name: type [= initial_value]
@@ -72,24 +72,24 @@ declare name: type [= initial_value]
 
 其中 `name` 是变量名，`type` 是变量类型，`initial_value` 是初始值
 
-例：
+例: 
 
 ```snow
 declare x: int
 declare y: long = 123456789
 ```
 
-读取变量值的方法，直接写变量的名字即可：
+读取变量值的方法，直接写变量的名字即可: 
 ```snow
 x
 ```
 
-设置变量值的方法，先写变量名，后面接 `=`，最后写一个表达式即可：
+设置变量值的方法，先写变量名，后面接 `=`，最后写一个表达式即可: 
 ```snow
 x = 10
 ```
 
-于是可以通过这种方式让变量参与计算并保存结果：
+于是可以通过这种方式让变量参与计算并保存结果: 
 ```snow
 x = y + 1
 ```
@@ -99,7 +99,7 @@ x = y + 1
 
 ## 流程控制
 ### if
-if 语句的形式如下，else 是可选的：
+if 语句的形式如下，else 是可选的: 
 
 ```snow
 if cond then
@@ -111,7 +111,7 @@ end if
 
 cond 可以是表达式（结果为 bool 类型）或者 bool 字面量
 
-例：
+例: 
 
 ```snow
 module: Main
@@ -131,7 +131,7 @@ end module
 ```
 
 ### loop
-loop 语句的形式如下：
+loop 语句的形式如下: 
 ```snow
 loop:
     init:
@@ -150,7 +150,7 @@ loop:
 end loop
 ```
 
-例子（求 1 ~ 100 的和）：
+例子（求 1 ~ 100 的和）: 
 ```snow
 module: Main
     function: main
@@ -176,7 +176,7 @@ end module
 ```
 
 ## 函数
-函数的形式如下：
+函数的形式如下: 
 ```snow
 function: add
     parameter:
@@ -197,7 +197,7 @@ end function
 通过 import 语句导入模块，
 snow 会自动将同名模块的函数合并。
 
-在我们最初的例子中，就用了 module 这个关键字。让我们回忆一下：
+在我们最初的例子中，就用了 module 这个关键字。让我们回忆一下: 
 
 ```snow
 module: Main
@@ -213,7 +213,7 @@ end module
 
 可以看到模块名是 Main，里面有函数 main。
 
-假如现在有一个模块 Math，代码如下：
+假如现在有一个模块 Math，代码如下: 
 ```snow
 // Math.snow
 module: Math
@@ -229,7 +229,7 @@ module: Math
 end module
 ```
 
-可以使用 import 来导入 Math 模块：
+可以使用 import 来导入 Math 模块: 
 ```snow
 // main.snow
 module: Main
@@ -244,7 +244,7 @@ module: Main
 end module
 ```
 
-可以同时导入多个模块，用逗号（半角）分隔模块名即可：
+可以同时导入多个模块，用逗号（半角）分隔模块名即可: 
 ```snow
 // main.snow
 module: Main

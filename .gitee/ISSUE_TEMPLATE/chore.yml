@@ -11,7 +11,7 @@ body:
     attributes:
       label: 任务标题
       description: 简要描述维护内容
-      placeholder: "如：升级 JDK 版本"
+      placeholder: "如: 升级 JDK 版本"
     validations:
       required: true
 
@@ -20,6 +20,6 @@ body:
     attributes:
       label: 任务详情
       description: 描述执行步骤或相关脚本命令
-      placeholder: "如：修改 pom.xml…"
+      placeholder: "如: 修改 pom.xml…"
     validations:
       required: false
