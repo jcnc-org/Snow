@@ -2,7 +2,8 @@ module: Main
     function: main
         return_type: void
         body:
-            declare 1sum :int =1
+            declare abc!:int =1
+
         end body
     end function
 end module
