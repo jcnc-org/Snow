@@ -57,7 +57,7 @@ public class LexerEngine {
         report(errors);
         if (!errors.isEmpty()) {
             throw new LexicalException(
-                    "Lexing failed with " + errors.size() + " error(s).",
+                    "",
                     context.getLine(), context.getCol()
             );
         }
