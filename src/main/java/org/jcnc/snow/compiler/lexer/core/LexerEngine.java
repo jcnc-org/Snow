@@ -69,7 +69,7 @@ public class LexerEngine {
             return;
         }
         System.err.println("\n词法分析发现 " + errors.size() + " 个错误: ");
-        errors.forEach(e -> System.err.println("  " + e));
+        errors.forEach(e -> System.err.println("\t" + e));
     }
 
     public List<Token> getAllTokens() { return List.copyOf(tokens); }
