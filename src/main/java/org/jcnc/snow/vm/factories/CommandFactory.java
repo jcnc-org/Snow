@@ -1,5 +1,6 @@
 package org.jcnc.snow.vm.factories;
 
+import org.jcnc.snow.vm.commands.system.control.SyscallCommand;
 import org.jcnc.snow.vm.commands.type.control.byte8.*;
 import org.jcnc.snow.vm.commands.type.control.double64.*;
 import org.jcnc.snow.vm.commands.type.control.float32.*;
@@ -262,7 +263,7 @@ public class CommandFactory {
 
         // region  System Control (0x0400-0x04FF)
         COMMANDS[VMOpCode.HALT]        = new HaltCommand();
-//        COMMANDS[VMOpCode.SYSCALL]     = new SyscallCommand();
+        COMMANDS[VMOpCode.SYSCALL]     = new SyscallCommand();
 //        COMMANDS[VMOpCode.DEBUG_TRAP]  = new DebugTrapCommand();
         // endregion
 
