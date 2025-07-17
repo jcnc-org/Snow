@@ -47,10 +47,6 @@ public class OperatorTokenScanner extends AbstractTokenScanner {
         char c = ctx.advance();
         String lexeme = String.valueOf(c);
         TokenType type = TokenType.UNKNOWN;
-
-        // 当前状态
-        State currentState = State.OPERATOR;
-
         switch (c) {
             case '=':
                 if (ctx.match('=')) {
@@ -107,22 +103,10 @@ public class OperatorTokenScanner extends AbstractTokenScanner {
                 break;
 
             default:
-                currentState = State.UNKNOWN;
                 break;
-        }
-
-        // 执行完扫描后，重置状态为初始状态
-        if (currentState != State.UNKNOWN) {
-            currentState = State.START;
         }
 
         return new Token(type, lexeme, line, col);
     }
 
-    // 定义状态枚举
-    private enum State {
-        START,        // 初始状态
-        OPERATOR,     // 当前字符是运算符的一部分
-        UNKNOWN       // 无法识别的状态
-    }
 }
