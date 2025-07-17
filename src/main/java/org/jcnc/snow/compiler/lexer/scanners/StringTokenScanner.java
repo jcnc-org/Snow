@@ -26,9 +26,6 @@ import org.jcnc.snow.compiler.lexer.token.TokenType;
  *   <li>STRING：扫描字符串内容</li>
  *   <li>ESCAPE：处理转义字符</li>
  * </ul>
- *
- * @author 你的名字
- * @since 2024
  */
 public class StringTokenScanner extends AbstractTokenScanner {
 
@@ -92,7 +89,6 @@ public class StringTokenScanner extends AbstractTokenScanner {
 
                 case ESCAPE:
                     // ESCAPE状态：下一个字符会作为转义内容，无论是"、n、t等
-                    // 注意advance已经处理，所以不需要再append
                     currentState = State.STRING;
                     break;
             }
