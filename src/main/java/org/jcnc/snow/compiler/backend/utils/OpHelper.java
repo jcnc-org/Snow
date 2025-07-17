@@ -176,7 +176,7 @@ public final class OpHelper {
         map.put("MOV", Integer.toString(VMOpCode.MOV));
         map.put("HALT", Integer.toString(VMOpCode.HALT));
         map.put("SYSCALL", Integer.toString(VMOpCode.SYSCALL));
-        map.put("DEBUG_TRAP", Integer.toString(VMOpCode.DEBUG_TRAP));
+//        map.put("DEBUG_TRAP", Integer.toString(VMOpCode.DEBUG_TRAP));
         OPCODE_MAP = Collections.unmodifiableMap(map);
 
         Map<Integer, String> revmap = new HashMap<>();  // reverse map
