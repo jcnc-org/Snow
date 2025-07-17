@@ -80,6 +80,9 @@ public class NumberTokenScanner extends AbstractTokenScanner {
         StringBuilder literal = new StringBuilder();
         State state = State.INT_PART;
 
+        boolean lastWasUnderscore = false; // 记录前一个是否是下划线
+        boolean sawDigit = false;          // 当前段落是否有数字（防止以下划线开头）
+
         /* ───── 1. 主体扫描 —— 整数 / 小数 ───── */
         mainLoop:
         while (!ctx.isAtEnd() && state != State.END) {
@@ -89,10 +92,25 @@ public class NumberTokenScanner extends AbstractTokenScanner {
                 case INT_PART:
                     if (Character.isDigit(ch)) {
                         literal.append(ctx.advance());
+                        lastWasUnderscore = false;
+                        sawDigit = true;
+                    } else if (ch == '_') {
+                        if (!sawDigit)
+                            throw new LexicalException("数字不能以下划线开头", line, col);
+                        if (lastWasUnderscore)
+                            throw new LexicalException("数字中下划线不能连续出现", line, col);
+                        literal.append(ctx.advance());
+                        lastWasUnderscore = true;
                     } else if (ch == '.') {
+                        if (lastWasUnderscore)
+                            throw new LexicalException("下划线不能出现在小数点前", line, col);
                         state = State.DEC_POINT;
                         literal.append(ctx.advance());
+                        // 不要重置sawDigit！
+                        // sawDigit = false;  // 移除此句
                     } else {
+                        if (lastWasUnderscore)
+                            throw new LexicalException("数字不能以下划线结尾", line, col);
                         state = State.END;
                     }
                     break;
@@ -100,18 +118,30 @@ public class NumberTokenScanner extends AbstractTokenScanner {
                 /* 已读到小数点，下一字符必须是数字 */
                 case DEC_POINT:
                     if (Character.isDigit(ch)) {
-                        state = State.FRAC_PART;
                         literal.append(ctx.advance());
+                        state = State.FRAC_PART;
+                        sawDigit = true;
+                    } else if (ch == '_') { // 防止小数点后直接跟下划线
+                        throw new LexicalException("小数点后不能直接跟下划线", line, col);
                     } else {
                         throw new LexicalException("小数点后必须跟数字", line, col);
                     }
                     break;
 
                 /* 小数部分 */
+
                 case FRAC_PART:
                     if (Character.isDigit(ch)) {
                         literal.append(ctx.advance());
+                        lastWasUnderscore = false;
+                    } else if (ch == '_') { // 小数部分下划线检查
+                        if (lastWasUnderscore)
+                            throw new LexicalException("数字中下划线不能连续出现", line, col);
+                        literal.append(ctx.advance());
+                        lastWasUnderscore = true;
                     } else {
+                        if (lastWasUnderscore)
+                            throw new LexicalException("数字不能以下划线结尾", line, col);
                         state = State.END;
                     }
                     break;
@@ -120,6 +150,10 @@ public class NumberTokenScanner extends AbstractTokenScanner {
                     break mainLoop;
             }
         }
+
+        // 主体结束后，下划线不能在末尾
+        if (lastWasUnderscore)
+            throw new LexicalException("数字不能以下划线结尾", line, col);
 
         /* ───── 2. 后缀及非法尾随字符检查 ───── */
         if (!ctx.isAtEnd()) {
@@ -141,11 +175,11 @@ public class NumberTokenScanner extends AbstractTokenScanner {
                     }
                 }
 
-            /* 2-B. **非法字母**（既不是后缀，也没有空白隔开） */
+                /* 2-B. **非法字母**（既不是后缀，也没有空白隔开） */
             } else if (Character.isLetter(next)) {
                 throw new LexicalException(
                         "数字后不能紧跟未知标识符 '" + next + "'", line, col);
-            /* 2-C. **非法下划线** */
+                /* 2-C. **非法下划线** */
             } else if (next == '_') {
                 throw new LexicalException(
                         "数字后不能紧跟下划线 '_'", line, col);
@@ -154,7 +188,7 @@ public class NumberTokenScanner extends AbstractTokenScanner {
         }
 
         /* ───── 3. 生成并返回 Token ───── */
-        return new Token(TokenType.NUMBER_LITERAL, literal.toString(), line, col);
+        return new Token(TokenType.NUMBER_LITERAL, literal.toString().replace("_", ""), line, col);
     }
 
     /**
