@@ -11,12 +11,6 @@ import org.jcnc.snow.compiler.lexer.token.TokenType;
  */
 public class NewlineTokenScanner extends AbstractTokenScanner {
 
-    // 定义状态枚举
-    private enum State {
-        INITIAL,
-        NEWLINE
-    }
-
     // 当前状态
     private State currentState = State.INITIAL;
 
@@ -31,7 +25,7 @@ public class NewlineTokenScanner extends AbstractTokenScanner {
     @Override
     public boolean canHandle(char c, LexerContext ctx) {
         // 只有当处于 INITIAL 状态，并且遇到换行符时，才可以处理
-        return currentState == State.INITIAL && c == '\n';
+        return currentState == State.INITIAL && (c == '\n' || c == '\r');
     }
 
     /**
@@ -45,16 +39,33 @@ public class NewlineTokenScanner extends AbstractTokenScanner {
      */
     @Override
     protected Token scanToken(LexerContext ctx, int line, int col) {
-        // 状态转换为 NEWLINE
         currentState = State.NEWLINE;
 
-        // 执行换行符扫描，生成 token
+        char first = ctx.peek();
+        String lexeme;
+
         ctx.advance();
-        Token newlineToken = new Token(TokenType.NEWLINE, "\n", line, col);
+        if (first == '\r') {
+            // 检查是否是 \r\n
+            if (!ctx.isAtEnd() && ctx.peek() == '\n') {
+                ctx.advance();
+                lexeme = "\r\n";
+            } else {
+                lexeme = "\r";
+            }
+        } else {
+            // 一定是 \n
+            lexeme = "\n";
+        }
 
-        // 扫描完成后，恢复状态为 INITIAL
+        Token newlineToken = new Token(TokenType.NEWLINE, lexeme, line, col);
         currentState = State.INITIAL;
-
         return newlineToken;
+    }
+
+    // 定义状态枚举
+    private enum State {
+        INITIAL,
+        NEWLINE
     }
 }
