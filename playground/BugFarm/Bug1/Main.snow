@@ -2,8 +2,7 @@ module: Main
     function: main
         return_type: void
         body:
-            declare abc!:int =1
-
+            declare abc:string ="0"
         end body
     end function
 end module
