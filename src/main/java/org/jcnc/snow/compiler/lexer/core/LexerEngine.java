@@ -21,20 +21,21 @@ import java.util.List;
  */
 public class LexerEngine {
 
-    private final List<Token> tokens  = new ArrayList<>();   // 扫描结果
-    private final List<LexicalError> errors  = new ArrayList<>();
-    private final String  absPath;                           // 绝对路径
+    private final List<Token> tokens = new ArrayList<>();   // 扫描结果
+    private final List<LexicalError> errors = new ArrayList<>();
+    private final String absPath;                           // 绝对路径
     private final LexerContext context;                      // 字符流
     private final List<TokenScanner> scanners;               // 扫描器链
 
     /**
      * 创建并立即执行扫描-校验-报告流程。
+     *
      * @param source     源代码文本
      * @param sourceName 文件名（诊断用）
      */
     public LexerEngine(String source, String sourceName) {
-        this.absPath  = new File(sourceName).getAbsolutePath();
-        this.context  = new LexerContext(source);
+        this.absPath = new File(sourceName).getAbsolutePath();
+        this.context = new LexerContext(source);
         this.scanners = List.of(
                 new WhitespaceTokenScanner(),
                 new NewlineTokenScanner(),
@@ -66,8 +67,13 @@ public class LexerEngine {
         errors.forEach(e -> System.err.println("\t" + e));
     }
 
-    public List<Token> getAllTokens() { return List.copyOf(tokens); }
-    public List<LexicalError> getErrors() { return List.copyOf(errors); }
+    public List<Token> getAllTokens() {
+        return List.copyOf(tokens);
+    }
+
+    public List<LexicalError> getErrors() {
+        return List.copyOf(errors);
+    }
 
     /**
      * 逐字符扫描: 依次尝试各扫描器；扫描器抛出的
@@ -97,6 +103,7 @@ public class LexerEngine {
         }
         tokens.add(Token.eof(context.getLine()));
     }
+
     /**
      * 跳过当前位置起连续的“标识符 / 数字 / 下划线 / 点”字符。
      * <p>这样可以把诸如 {@code 1abc} 的残余 {@code abc}、{@code _}、
@@ -113,10 +120,9 @@ public class LexerEngine {
     }
 
     /**
-     * 目前包含三条规则: <br>
-     * 1. Dot-Prefix'.' 不能作标识符前缀<br>
-     * 2. Declare-Ident declare 后必须紧跟合法标识符，并且只能一个<br>
-     * 3. Double-Ident declare 后若出现第二个 IDENTIFIER 视为多余<br>
+     * 目前包含2条规则: <br>
+     * 1. Declare-Ident declare 后必须紧跟合法标识符，并且只能一个<br>
+     * 2. Double-Ident declare 后若出现第二个 IDENTIFIER 视为多余<br>
      * <p>发现问题仅写入 {@link #errors}，不抛异常。</p>
      */
     private void validateTokens() {
@@ -146,7 +152,9 @@ public class LexerEngine {
         }
     }
 
-    /** index 右侧最近非 NEWLINE token；无则 null */
+    /**
+     * index 右侧最近非 NEWLINE token；无则 null
+     */
     private Token findNextNonNewline(int index) {
         for (int j = index + 1; j < tokens.size(); j++) {
             Token t = tokens.get(j);
@@ -155,8 +163,10 @@ public class LexerEngine {
         return null;
     }
 
-    /** 构造统一的 LexicalError */
+    /**
+     * 构造统一的 LexicalError
+     */
     private LexicalError err(Token t, String msg) {
-        return new LexicalError(absPath, t.getLine(), t.getCol(), "非法的标记序列: " + msg);
+        return new LexicalError(absPath, t.getLine(), t.getCol(), msg);
     }
 }
