@@ -1,5 +1,6 @@
 package org.jcnc.snow.vm.engine;
 
+import org.jcnc.snow.vm.commands.system.control.SyscallCommand;
 import org.jcnc.snow.vm.commands.type.control.byte8.*;
 import org.jcnc.snow.vm.commands.type.control.double64.*;
 import org.jcnc.snow.vm.commands.type.control.float32.*;
@@ -2646,8 +2647,18 @@ public class VMOpCode {
      * </ul>
      */
     public static final int HALT = 0x0400;
+    /**
+     * SYSCALL Opcode: Represents a system call operation that invokes a system-level function or service.
+     * <p>This opcode is implemented by the {@link SyscallCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the system call identifier from the instruction parameters.</li>
+     *     <li>Invokes the corresponding system-level function or service based on the system call identifier.</li>
+     *     <li>Returns the result of the system call operation.</li>
+     */
     public static final int SYSCALL = 0x0401;
-    public static final int DEBUG_TRAP = 0x0402;
+//    public static final int DEBUG_TRAP = 0x0402;
     // endregion
 
     /**
