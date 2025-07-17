@@ -553,8 +553,6 @@ end module
 
 ## 11 · 构造函数重载示例
 
-**示例: **
-
 ````snow
 struct: Point
     declare x: int
