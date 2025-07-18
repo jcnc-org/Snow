@@ -46,42 +46,7 @@ import static java.nio.file.StandardOpenOption.*;
  */
 public class SyscallCommand implements Command {
 
-    /*------------------------------------ 工具方法 ------------------------------------*/
 
-    /**
-     * <b>POSIX open 标志到 Java NIO OpenOption 的映射</b>
-     * <p>
-     * 将 Linux/UNIX 的 open 调用 flags 参数，转换为 Java NIO 的 OpenOption 集合。
-     * 目前仅支持 WRITE（0x1）、READ、CREATE（0x40）、TRUNCATE（0x200）、APPEND（0x400）等常用标志。
-     * </p>
-     *
-     * @param flags POSIX 风格 open 标志（如 O_WRONLY=0x1, O_CREAT=0x40 等）
-     * @return 映射后的 OpenOption 集合
-     */
-    private static Set<OpenOption> flagsToOptions(int flags) {
-        Set<OpenOption> opts = new HashSet<>();
-        // 0x1 = WRITE，否则默认 READ
-        if ((flags & 0x1) != 0) opts.add(WRITE);
-        else opts.add(READ);
-        if ((flags & 0x40) != 0) opts.add(CREATE);
-        if ((flags & 0x200) != 0) opts.add(TRUNCATE_EXISTING);
-        if ((flags & 0x400) != 0) opts.add(APPEND);
-        return opts;
-    }
-
-    /**
-     * <b>统一异常处理</b>：
-     * <p>
-     * 捕获 syscall 内部所有异常，将 -1 压入操作数栈，表示系统调用失败（暂不区分错误类型）。
-     * 常见异常如文件不存在、权限不足、通道类型不符、网络故障等。
-     * </p>
-     *
-     * @param stack 当前操作数栈
-     * @param e 捕获的异常对象
-     */
-    private static void pushErr(OperandStack stack, Exception e) {
-        stack.push(-1);  // 目前统一用 -1，后续可按异常类型/errno 映射
-    }
 
     /*--------------------------------------------------------------------------------*/
 
@@ -92,10 +57,10 @@ public class SyscallCommand implements Command {
      * 支持基础文件、网络、管道等 I/O 操作，并对异常统一处理。
      * </p>
      *
-     * @param parts 指令字符串数组，parts[1] 为子命令
-     * @param pc 当前指令计数器
-     * @param stack 操作数栈
-     * @param locals 局部变量表
+     * @param parts     指令字符串数组，parts[1] 为子命令
+     * @param pc        当前指令计数器
+     * @param stack     操作数栈
+     * @param locals    局部变量表
      * @param callStack 调用栈
      * @return 下一条指令的 pc 值（默认 pc+1）
      */
@@ -345,34 +310,23 @@ public class SyscallCommand implements Command {
 
                 /*
                  * PRINT —— 控制台输出（无换行）。
-                 * 入栈顺序: data（String 或 byte[]）
+                 * 入栈顺序: data（任意基本类型或其包装类型、String、byte[] 等）
                  * 出栈顺序: data
                  * 返回 0
                  */
                 case "PRINT" -> {
                     Object dataObj = stack.pop();
-                    if (dataObj instanceof byte[] b) {
-                        System.out.print(new String(b));
-                    } else {
-                        System.out.print(dataObj);
-                    }
-                    stack.push(0); // 表示成功
+                    output(dataObj, false);
+                    stack.push(0); // success
                 }
-                /*
-                 * PRINTLN —— 控制台输出（自动换行）。
-                 * 入栈顺序: data（String 或 byte[]）
-                 * 出栈顺序: data
-                 * 返回 0
-                 */
+
+                /* PRINTLN —— 控制台输出（自动换行）。*/
                 case "PRINTLN" -> {
                     Object dataObj = stack.pop();
-                    if (dataObj instanceof byte[] b) {
-                        System.out.println(new String(b));
-                    } else {
-                        System.out.println(dataObj);
-                    }
-                    stack.push(0); // 表示成功
+                    output(dataObj, true);
+                    stack.push(0); // success
                 }
+
 
                 /*==================== 其它未实现/扩展命令 ====================*/
 
@@ -388,5 +342,84 @@ public class SyscallCommand implements Command {
 
         // 默认：下一条指令
         return pc + 1;
+    }
+
+    /*------------------------------------ 工具方法 ------------------------------------*/
+
+    /**
+     * <b>POSIX open 标志到 Java NIO OpenOption 的映射</b>
+     * <p>
+     * 将 Linux/UNIX 的 open 调用 flags 参数，转换为 Java NIO 的 OpenOption 集合。
+     * 目前仅支持 WRITE（0x1）、READ、CREATE（0x40）、TRUNCATE（0x200）、APPEND（0x400）等常用标志。
+     * </p>
+     *
+     * @param flags POSIX 风格 open 标志（如 O_WRONLY=0x1, O_CREAT=0x40 等）
+     * @return 映射后的 OpenOption 集合
+     */
+    private static Set<OpenOption> flagsToOptions(int flags) {
+        Set<OpenOption> opts = new HashSet<>();
+        // 0x1 = WRITE，否则默认 READ
+        if ((flags & 0x1) != 0) opts.add(WRITE);
+        else opts.add(READ);
+        if ((flags & 0x40) != 0) opts.add(CREATE);
+        if ((flags & 0x200) != 0) opts.add(TRUNCATE_EXISTING);
+        if ((flags & 0x400) != 0) opts.add(APPEND);
+        return opts;
+    }
+
+    /**
+     * <b>统一异常处理</b>：
+     * <p>
+     * 捕获 syscall 内部所有异常，将 -1 压入操作数栈，表示系统调用失败（暂不区分错误类型）。
+     * 常见异常如文件不存在、权限不足、通道类型不符、网络故障等。
+     * </p>
+     *
+     * @param stack 当前操作数栈
+     * @param e     捕获的异常对象
+     */
+    private static void pushErr(OperandStack stack, Exception e) {
+        stack.push(-1);  // 目前统一用 -1，后续可按异常类型/errno 映射
+    }
+
+    /**
+     * 统一的控制台输出辅助方法，支持：
+     * <ul>
+     *   <li>所有基本类型及其包装类（int、double、long、float…）</li>
+     *   <li>String、byte[]、char[] 以及其他原生数组</li>
+     *   <li>任意 Object（调用 {@code toString}）</li>
+     * </ul>
+     *
+     * @param obj     要输出的对象
+     * @param newline 是否追加换行
+     */
+    private static void output(Object obj, boolean newline) {
+        String str;
+        if (obj == null) {
+            str = "null";
+        } else if (obj instanceof byte[] bytes) {
+            str = new String(bytes);
+        } else if (obj.getClass().isArray()) {
+            str = arrayToString(obj);
+        } else {
+            str = obj.toString();
+        }
+        if (newline) System.out.println(str);
+        else System.out.print(str);
+    }
+
+    /**
+     * 将各种原生数组转换成可读字符串。
+     */
+    private static String arrayToString(Object array) {
+        if (array instanceof int[] a) return Arrays.toString(a);
+        if (array instanceof long[] a) return Arrays.toString(a);
+        if (array instanceof double[] a) return Arrays.toString(a);
+        if (array instanceof float[] a) return Arrays.toString(a);
+        if (array instanceof short[] a) return Arrays.toString(a);
+        if (array instanceof char[] a) return Arrays.toString(a);
+        if (array instanceof byte[] a) return Arrays.toString(a);
+        if (array instanceof boolean[] a) return Arrays.toString(a);
+        if (array instanceof Object[] a) return Arrays.deepToString(a);
+        return "Unsupported array";
     }
 }
