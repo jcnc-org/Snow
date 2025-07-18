@@ -37,7 +37,7 @@ import static java.nio.file.StandardOpenOption.*;
  *
  * <b>支持的子命令（部分）：</b>
  * <ul>
- *   <li>PRINT / PRINTLN —— 控制台输出（<b>TODO: 代码未实现</b>）</li>
+ *   <li>PRINT / PRINTLN —— 控制台输出</li>
  *   <li>OPEN / CLOSE / READ / WRITE / SEEK —— 文件 I/O 操作</li>
  *   <li>PIPE / DUP —— 管道和 FD 复制</li>
  *   <li>SOCKET / CONNECT / BIND / LISTEN / ACCEPT —— 网络套接字</li>
@@ -377,7 +377,7 @@ public class SyscallCommand implements Command {
                 /*==================== 其它未实现/扩展命令 ====================*/
 
                 /*
-                 * TODO: PRINT / PRINTLN / 其它自定义 syscall 子命令未实现
+                 * 其它自定义 syscall 子命令未实现
                  */
                 default -> throw new UnsupportedOperationException("Unsupported SYSCALL: " + cmd);
             }
