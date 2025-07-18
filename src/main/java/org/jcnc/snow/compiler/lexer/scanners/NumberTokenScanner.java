@@ -177,8 +177,10 @@ public class NumberTokenScanner extends AbstractTokenScanner {
 
                 /* 2-B. **非法字母**（既不是后缀，也没有空白隔开） */
             } else if (Character.isLetter(next)) {
+                var its = new IdentifierTokenScanner();
+                var token = its.scanToken(ctx, line, col);
                 throw new LexicalException(
-                        "数字后不能紧跟未知标识符 '" + next + "'", line, col);
+                        "数字后不能紧跟未知标识符 '" + token.getLexeme() + "'", line, col);
                 /* 2-C. **非法下划线** */
             } else if (next == '_') {
                 throw new LexicalException(
