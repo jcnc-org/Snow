@@ -9,7 +9,7 @@ import org.jcnc.snow.compiler.lexer.token.TokenType;
 /**
  * {@code IdentifierTokenScanner} —— 标识符扫描器，负责识别源代码中的标识符（如变量名、函数名等）。
  *
- * <p>标识符的识别遵循以下规则：</p>
+ * <p>标识符的识别遵循以下规则: </p>
  * <ul>
  *     <li>标识符必须以字母（A-Z，a-z）或下划线（_）开头。</li>
  *     <li>标识符的后续字符可以是字母、数字（0-9）或下划线。</li>

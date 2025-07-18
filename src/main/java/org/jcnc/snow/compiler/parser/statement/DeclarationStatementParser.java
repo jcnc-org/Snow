@@ -10,12 +10,12 @@ import org.jcnc.snow.compiler.parser.expression.PrattExpressionParser;
 /**
  * {@code DeclarationStatementParser} 类负责解析变量声明语句，是语句级解析器的一部分。
  * <p>
- * 本解析器支持以下两种形式的声明语法：
+ * 本解析器支持以下两种形式的声明语法: 
  * <pre>{@code
  * declare myVar:Integer
  * declare myVar:Integer = 42 + 3
  * }</pre>
- * 其中：
+ * 其中: 
  * <ul>
  *   <li>{@code myVar} 为变量名（必须为标识符类型）；</li>
  *   <li>{@code Integer} 为类型标注（必须为类型标记）；</li>
@@ -29,7 +29,7 @@ public class DeclarationStatementParser implements StatementParser {
     /**
      * 解析一条 {@code declare} 声明语句，并返回对应的抽象语法树节点 {@link DeclarationNode}。
      * <p>
-     * 解析流程如下：
+     * 解析流程如下: 
      * <ol>
      *   <li>匹配关键字 {@code declare}；</li>
      *   <li>读取变量名称（标识符类型）；</li>

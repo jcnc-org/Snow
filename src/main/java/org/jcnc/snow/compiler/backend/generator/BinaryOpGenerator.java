@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 并自动进行类型提升。
  * 同时实现 "+0 → MOV" 的 Peephole 优化，避免多余的 PUSH/ADD 序列。
  * </p>
- * <p>类型提升优先级：D &gt; F &gt; L &gt; I &gt; S &gt; B</p>
+ * <p>类型提升优先级: D &gt; F &gt; L &gt; I &gt; S &gt; B</p>
  */
 public class BinaryOpGenerator implements InstructionGenerator<BinaryOperationInstruction> {
 
@@ -143,11 +143,11 @@ public class BinaryOpGenerator implements InstructionGenerator<BinaryOperationIn
         // ① 条件跳转；成立 → lblTrue
         out.emitBranch(branchOp, lblTrue);
 
-        // ② 不成立：压 0
+        // ② 不成立: 压 0
         out.emit(OpHelper.opcode("I_PUSH") + " 0");
         out.emitBranch(OpHelper.opcode("JUMP"), lblEnd);
 
-        // ③ 成立分支：压 1
+        // ③ 成立分支: 压 1
         out.emit(lblTrue + ":");
         out.emit(OpHelper.opcode("I_PUSH") + " 1");
 

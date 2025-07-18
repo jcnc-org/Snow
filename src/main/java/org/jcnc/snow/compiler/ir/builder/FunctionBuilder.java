@@ -19,7 +19,7 @@ public class FunctionBuilder {
     /**
      * 将 AST 中的 FunctionNode 构建为可执行的 IRFunction。
      * <p>
-     * 构建过程包括：
+     * 构建过程包括:
      * <ol>
      *     <li>初始化 IRFunction 实例和上下文</li>
      *     <li>根据函数返回类型，设置默认类型后缀，便于表达式推断</li>
@@ -37,7 +37,7 @@ public class FunctionBuilder {
         GlobalFunctionTable.register(functionNode.name(), functionNode.returnType());
 
 
-        // 0) 基本初始化：创建 IRFunction 实例与对应上下文
+        // 0) 基本初始化: 创建 IRFunction 实例与对应上下文
         IRFunction irFunction = new IRFunction(functionNode.name());
         IRContext  irContext  = new IRContext(irFunction);
 
@@ -53,14 +53,14 @@ public class FunctionBuilder {
         ExpressionUtils.setDefaultSuffix(_returnSuffix);
 
         try {
-            // 2) 声明形参：为每个参数分配虚拟寄存器并声明到作用域
+            // 2) 声明形参: 为每个参数分配虚拟寄存器并声明到作用域
             for (ParameterNode p : functionNode.parameters()) {
                 IRVirtualRegister reg = irFunction.newRegister(); // 新寄存器
                 irContext.getScope().declare(p.name(), p.type(), reg);      // 变量名→寄存器绑定
                 irFunction.addParameter(reg);                     // 添加到函数参数列表
             }
 
-            // 3) 生成函数体 IR：遍历每条语句，逐一转化
+            // 3) 生成函数体 IR: 遍历每条语句，逐一转化
             StatementBuilder stmtBuilder = new StatementBuilder(irContext);
             for (StatementNode stmt : functionNode.body()) {
                 stmtBuilder.build(stmt);

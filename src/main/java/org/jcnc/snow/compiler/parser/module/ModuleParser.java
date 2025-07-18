@@ -22,7 +22,7 @@ import java.util.List;
  * </p>
  *
  * <p>
- * 典型模块语法结构：
+ * 典型模块语法结构:
  * <pre>
  * module: mymod
  *   import ...
@@ -37,7 +37,7 @@ public class ModuleParser implements TopLevelParser {
     /**
      * 解析一个模块定义块，返回完整的 {@link ModuleNode} 语法树节点。
      * <p>
-     * 解析过程包括：
+     * 解析过程包括:
      * <ol>
      *     <li>匹配模块声明起始 {@code module: IDENTIFIER}。</li>
      *     <li>收集模块体内所有 import 和 function 语句，允许穿插空行。</li>

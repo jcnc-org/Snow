@@ -25,7 +25,7 @@ public class IRJumpInstruction extends IRInstruction {
     }
 
     /**
-     * 获取该指令对应的操作码：JUMP。
+     * 获取该指令对应的操作码: JUMP。
      *
      * @return IROpCode.JUMP
      */
@@ -55,7 +55,7 @@ public class IRJumpInstruction extends IRInstruction {
 
     /**
      * 将指令转为字符串形式，便于打印与调试。
-     * 例如：jump L1
+     * 例如: jump L1
      *
      * @return 指令的字符串表示
      */

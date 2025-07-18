@@ -15,7 +15,7 @@ import org.jcnc.snow.compiler.semantic.type.Type;
  * 负责分析源代码中的字符串字面量（例如 {@code "hello"}、{@code ""} 等），
  * 并确定其类型。根据语言规范，所有字符串字面量默认视为 {@link BuiltinType#STRING} 类型。
  * <p>
- * 特点如下：
+ * 特点如下:
  * <ul>
  *   <li>不依赖符号表、函数上下文或模块信息，属于上下文无关表达式分析器；</li>
  *   <li>恒定返回 {@code STRING} 类型；</li>

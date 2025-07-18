@@ -4,7 +4,7 @@ import org.jcnc.snow.compiler.lexer.core.LexerContext;
 import org.jcnc.snow.compiler.lexer.token.Token;
 
 /**
- * 空白符扫描器：跳过非换行的空白字符，不生成任何 Token。
+ * 空白符扫描器: 跳过非换行的空白字符，不生成任何 Token。
  * <p>
  * 支持的空白字符包括空格、制表符（Tab）等，但不包括换行符（由 {@link NewlineTokenScanner} 处理）。
  * <p>

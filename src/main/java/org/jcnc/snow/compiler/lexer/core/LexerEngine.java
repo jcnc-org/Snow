@@ -12,7 +12,7 @@ import java.util.List;
 
 /**
  * Snow 语言词法分析器核心实现。
- * <p>采用“<b>先扫描 → 后批量校验 → 统一报告</b>”策略：
+ * <p>采用“<b>先扫描 → 后批量校验 → 统一报告</b>”策略:
  * <ol>
  *   <li>{@link #scanAllTokens()}— 用扫描器链把字符流拆成 {@link Token}</li>
  *   <li>{@link #validateTokens()}— 基于 token 序列做轻量上下文校验</li>
@@ -21,20 +21,21 @@ import java.util.List;
  */
 public class LexerEngine {
 
-    private final List<Token> tokens  = new ArrayList<>();   // 扫描结果
-    private final List<LexicalError> errors  = new ArrayList<>();
-    private final String  absPath;                           // 绝对路径
+    private final List<Token> tokens = new ArrayList<>();   // 扫描结果
+    private final List<LexicalError> errors = new ArrayList<>();
+    private final String absPath;                           // 绝对路径
     private final LexerContext context;                      // 字符流
     private final List<TokenScanner> scanners;               // 扫描器链
 
     /**
      * 创建并立即执行扫描-校验-报告流程。
+     *
      * @param source     源代码文本
      * @param sourceName 文件名（诊断用）
      */
     public LexerEngine(String source, String sourceName) {
-        this.absPath  = new File(sourceName).getAbsolutePath();
-        this.context  = new LexerContext(source);
+        this.absPath = new File(sourceName).getAbsolutePath();
+        this.context = new LexerContext(source);
         this.scanners = List.of(
                 new WhitespaceTokenScanner(),
                 new NewlineTokenScanner(),
@@ -55,12 +56,6 @@ public class LexerEngine {
         TokenPrinter.print(tokens);
         /* 4. 统一报告错误 */
         report(errors);
-        if (!errors.isEmpty()) {
-            throw new LexicalException(
-                    "Lexing failed with " + errors.size() + " error(s).",
-                    context.getLine(), context.getCol()
-            );
-        }
     }
 
     public static void report(List<LexicalError> errors) {
@@ -68,15 +63,20 @@ public class LexerEngine {
             System.out.println("\n## 词法分析通过，没有发现错误\n");
             return;
         }
-        System.err.println("\n词法分析发现 " + errors.size() + " 个错误：");
-        errors.forEach(e -> System.err.println("  " + e));
+        System.err.println("\n词法分析发现 " + errors.size() + " 个错误: ");
+        errors.forEach(e -> System.err.println("\t" + e));
     }
 
-    public List<Token> getAllTokens() { return List.copyOf(tokens); }
-    public List<LexicalError> getErrors() { return List.copyOf(errors); }
+    public List<Token> getAllTokens() {
+        return List.copyOf(tokens);
+    }
+
+    public List<LexicalError> getErrors() {
+        return List.copyOf(errors);
+    }
 
     /**
-     * 逐字符扫描：依次尝试各扫描器；扫描器抛出的
+     * 逐字符扫描: 依次尝试各扫描器；扫描器抛出的
      * {@link LexicalException} 被捕获并转为 {@link LexicalError}。
      */
     private void scanAllTokens() {
@@ -93,7 +93,7 @@ public class LexerEngine {
                     errors.add(new LexicalError(
                             absPath, le.getLine(), le.getColumn(), le.getReason()
                     ));
-                    context.advance();           // 跳过问题字符
+                    skipInvalidLexeme();
                 }
                 handled = true;
                 break;
@@ -105,10 +105,24 @@ public class LexerEngine {
     }
 
     /**
-     * 目前包含三条规则：<br>
-     * 1. Dot-Prefix'.' 不能作标识符前缀<br>
-     * 2. Declare-Ident declare 后必须紧跟合法标识符，并且只能一个<br>
-     * 3. Double-Ident declare 后若出现第二个 IDENTIFIER 视为多余<br>
+     * 跳过当前位置起连续的“标识符 / 数字 / 下划线 / 点”字符。
+     * <p>这样可以把诸如 {@code 1abc} 的残余 {@code abc}、{@code _}、
+     * {@code .999} 等一次性忽略，避免后续被误识别为新的 token。</p>
+     */
+    private void skipInvalidLexeme() {
+        while (!context.isAtEnd()) {
+            char c = context.peek();
+            if (Character.isWhitespace(c)) break;           // 空白 / 换行
+            if (!Character.isLetterOrDigit(c)
+                    && c != '_' && c != '.') break;         // 符号分隔
+            context.advance();                              // 否则继续吞掉
+        }
+    }
+
+    /**
+     * 目前包含2条规则: <br>
+     * 1. Declare-Ident declare 后必须紧跟合法标识符，并且只能一个<br>
+     * 2. Double-Ident declare 后若出现第二个 IDENTIFIER 视为多余<br>
      * <p>发现问题仅写入 {@link #errors}，不抛异常。</p>
      */
     private void validateTokens() {
@@ -138,7 +152,9 @@ public class LexerEngine {
         }
     }
 
-    /** index 右侧最近非 NEWLINE token；无则 null */
+    /**
+     * index 右侧最近非 NEWLINE token；无则 null
+     */
     private Token findNextNonNewline(int index) {
         for (int j = index + 1; j < tokens.size(); j++) {
             Token t = tokens.get(j);
@@ -147,8 +163,10 @@ public class LexerEngine {
         return null;
     }
 
-    /** 构造统一的 LexicalError */
+    /**
+     * 构造统一的 LexicalError
+     */
     private LexicalError err(Token t, String msg) {
-        return new LexicalError(absPath, t.getLine(), t.getCol(), "非法的标记序列：" + msg);
+        return new LexicalError(absPath, t.getLine(), t.getCol(), msg);
     }
 }

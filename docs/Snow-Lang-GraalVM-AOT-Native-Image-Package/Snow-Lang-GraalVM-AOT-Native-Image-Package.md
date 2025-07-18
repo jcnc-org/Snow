@@ -6,7 +6,7 @@
 
 ## 2. 前置条件
 
-1. 操作系统：Linux/macOS/Windows
+1. 操作系统: Linux/macOS/Windows
 2. Java 项目（Maven）
 3. GraalVM（建议 24+ 版本）
 
@@ -14,10 +14,10 @@
 
 ### 3.1 安装 GraalVM
 
-1. 下载对应平台的 GraalVM Community 版本：[https://www.graalvm.org/downloads/](https://www.graalvm.org/downloads/)
-2. 解压并配置环境变量：
+1. 下载对应平台的 GraalVM Community 版本: [https://www.graalvm.org/downloads/](https://www.graalvm.org/downloads/)
+2. 解压并配置环境变量: 
 
-3. 验证安装：
+3. 验证安装: 
 
 ```bash
 java -version
@@ -44,12 +44,12 @@ Java HotSpot(TM) 64-Bit Server VM Oracle GraalVM 24.0.1+9.1 (build 24.0.1+9-jvmc
 
 ## 4. Maven 项目配置文件
 
-通过将以下配置文件添加到 `pom.xml` 中，为 Native Image 启用 Maven 插件：
+通过将以下配置文件添加到 `pom.xml` 中，为 Native Image 启用 Maven 插件: 
 
 ```xml
 <profiles>
     <!--
-        原生镜像构建：Linux 平台
+        原生镜像构建: Linux 平台
         - 使用 GraalVM 的 native-image 工具，生成静态链接的可执行文件
         - 依赖 musl libc，需提前安装并配置 musl-gcc 工具链
     -->
@@ -111,7 +111,7 @@ Java HotSpot(TM) 64-Bit Server VM Oracle GraalVM 24.0.1+9.1 (build 24.0.1+9-jvmc
     </profile>
 
     <!--
-        原生镜像构建：Windows 平台
+        原生镜像构建: Windows 平台
         - 使用 GraalVM 的 native-image 工具，生成 Windows 可执行文件
         - Windows 上不使用 musl，因此不配置静态链接
     -->
@@ -169,6 +169,6 @@ Java HotSpot(TM) 64-Bit Server VM Oracle GraalVM 24.0.1+9.1 (build 24.0.1+9-jvmc
 
     ![IMG_Maven_Package_1.png](img/IMG_Maven_Package_1.png)
 
-3. 等待 Native Image 构建完成：这个过程可能较慢（数分钟）。
+3. 等待 Native Image 构建完成: 这个过程可能较慢（数分钟）。
 4. 可执行文件即可直接运行，无需 JVM。
     > 生成的可执行文件位于 target/ 目录。

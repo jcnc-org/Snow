@@ -13,12 +13,12 @@ import org.jcnc.snow.compiler.semantic.type.Type;
 /**
  * {@code DeclarationAnalyzer} 是变量声明语句的语义分析器。
  * <p>
- * 它负责处理类似 {@code int x = 10;} 的声明语句，具体分析内容包括：
+ * 它负责处理类似 {@code int x = 10;} 的声明语句，具体分析内容包括: 
  * <ul>
- *   <li>类型解析：将声明中的类型字符串转换为语义层的 {@link Type} 对象；</li>
- *   <li>符号定义：将变量注册到当前作用域的 {@link SymbolTable} 中；</li>
- *   <li>重复定义检查：防止同一作用域下的变量名冲突；</li>
- *   <li>初始化表达式类型校验：检查类型兼容性，支持数值类型宽化（如 int → float）。</li>
+ *   <li>类型解析: 将声明中的类型字符串转换为语义层的 {@link Type} 对象；</li>
+ *   <li>符号定义: 将变量注册到当前作用域的 {@link SymbolTable} 中；</li>
+ *   <li>重复定义检查: 防止同一作用域下的变量名冲突；</li>
+ *   <li>初始化表达式类型校验: 检查类型兼容性，支持数值类型宽化（如 int → float）。</li>
  * </ul>
  * 若出现类型未识别、重复声明或类型不兼容等问题，将向语义错误列表添加对应错误信息。
  */
@@ -47,7 +47,7 @@ public class DeclarationAnalyzer implements StatementAnalyzer<DeclarationNode> {
                     "未知类型: " + decl.getType()));
             ctx.log("错误: 未知类型 " + decl.getType()
                     + " 在声明 " + decl.getName());
-            varType = BuiltinType.INT;  // 容错处理：默认降级为 int
+            varType = BuiltinType.INT;  // 容错处理: 默认降级为 int
         }
         ctx.log("声明变量: " + decl.getName()
                 + " 类型: " + varType);

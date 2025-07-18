@@ -27,14 +27,14 @@ import java.nio.file.Path;
 import java.util.*;
 
 /**
- * CLI 任务：编译 .snow 源文件为 VM 字节码（.water 文件）。
+ * CLI 任务: 编译 .snow 源文件为 VM 字节码（.water 文件）。
  * <p>
  * 支持单文件、多文件和目录递归编译，并可在编译后立即运行虚拟机。<br>
  * 命令行参数支持 run、-o、-d 及直接指定源文件。
  * </p>
  *
  * <pre>
- * 用法示例：
+ * 用法示例:
  * $ snow compile [run] [-o &lt;name&gt;] [-d &lt;srcDir&gt;] [file1.snow file2.snow ...]
  * </pre>
  */
@@ -168,6 +168,11 @@ public final class CompileTask implements Task {
 
             // 词法、语法分析
             LexerEngine lexer = new LexerEngine(code, p.toString());
+            // 若词法阶段存在错误，立即终止编译，避免进入后续的语法及语义分析
+            if (!lexer.getErrors().isEmpty()) {
+                return 1;
+            }
+
             ParserContext ctx = new ParserContext(lexer.getAllTokens(), p.toString());
             allAst.addAll(new ParserEngine(ctx).parse());
         }
@@ -211,7 +216,7 @@ public final class CompileTask implements Task {
         Files.write(outputFile, finalCode, StandardCharsets.UTF_8);
         System.out.println("Written to " + outputFile.toAbsolutePath());
 
-        // ---------------- 6. 可选：立即运行 VM ----------------
+        // ---------------- 6. 可选: 立即运行 VM ----------------
         if (runAfterCompile) {
             System.out.println("\n=== Launching VM ===");
             VMLauncher.main(new String[]{outputFile.toString()});

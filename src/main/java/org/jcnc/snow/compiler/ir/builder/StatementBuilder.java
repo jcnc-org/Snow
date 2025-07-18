@@ -150,7 +150,7 @@ public class StatementBuilder {
 
     /**
      * 构建循环语句（for/while）。
-     * 处理流程：初始语句 → 条件判断 → 循环体 → 更新语句 → 跳回条件。
+     * 处理流程: 初始语句 → 条件判断 → 循环体 → 更新语句 → 跳回条件。
      *
      * @param loop 循环节点
      */
@@ -176,7 +176,7 @@ public class StatementBuilder {
 
     /**
      * 构建分支语句（if/else）。
-     * 处理流程：条件判断 → then 分支 → else 分支（可选）。
+     * 处理流程: 条件判断 → then 分支 → else 分支（可选）。
      *
      * @param ifNode if 语句节点
      */

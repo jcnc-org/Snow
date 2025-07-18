@@ -25,7 +25,7 @@ public record BinaryExpressionNode(
     /**
      * 返回该二元运算表达式的字符串表示形式。
      * <p>
-     * 输出格式为：{@code left + " " + operator + " " + right}，
+     * 输出格式为: {@code left + " " + operator + " " + right}，
      * 适用于调试或打印语法树结构。
      * </p>
      *

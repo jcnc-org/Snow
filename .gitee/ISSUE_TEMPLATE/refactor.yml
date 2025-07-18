@@ -20,7 +20,7 @@ body:
     attributes:
       label: 重构原因
       description: 说明当前存在的痛点或待改进之处
-      placeholder: "如：变量命名不规范、函数职责过多…"
+      placeholder: "如: 变量命名不规范、函数职责过多…"
     validations:
       required: true
 
@@ -29,6 +29,6 @@ body:
     attributes:
       label: 预期效果
       description: 说明重构后带来的好处或验证方式
-      placeholder: "如：提高性能、增强可读性…"
+      placeholder: "如: 提高性能、增强可读性…"
     validations:
       required: false

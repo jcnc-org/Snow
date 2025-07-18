@@ -10,7 +10,7 @@ import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 import java.util.List;
 
 /**
- * LoadConstInstruction —— 表示一个常量加载指令，格式为：dest = CONST k
+ * LoadConstInstruction —— 表示一个常量加载指令，格式为: dest = CONST k
  * <p>
  * 该指令的功能是将一个常量（字面量或编译期已知值）加载到一个虚拟寄存器中，
  * 供后续指令使用。例如，在表达式计算、参数传递、初始化等场景中常用。
@@ -66,7 +66,7 @@ public final class LoadConstInstruction extends IRInstruction {
 
     /**
      * 返回该指令的字符串形式，便于调试或打印。
-     * 例如：v1 = CONST 42
+     * 例如: v1 = CONST 42
      *
      * @return 指令的字符串表示
      */

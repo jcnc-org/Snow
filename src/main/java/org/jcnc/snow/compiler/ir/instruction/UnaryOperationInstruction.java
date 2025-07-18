@@ -9,14 +9,14 @@ import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 import java.util.List;
 
 /**
- * UnaryOperationInstruction —— 表示一个一元运算指令，格式：dest = OP val
+ * UnaryOperationInstruction —— 表示一个一元运算指令，格式: dest = OP val
  * <p>
  * 用于对单个操作数 val 执行指定的一元运算 OP（例如取负 NEG），
  * 并将结果写入目标虚拟寄存器 dest。
  * <p>
- * 支持的操作由 {@link IROpCode} 定义，目前常见的一元操作包括：
+ * 支持的操作由 {@link IROpCode} 定义，目前常见的一元操作包括: 
  * <ul>
- *   <li>NEG_I32 —— 整数取负：dest = -val</li>
+ *   <li>NEG_I32 —— 整数取负: dest = -val</li>
  *   <li>（可扩展）逻辑非、按位非等</li>
  * </ul>
  */
@@ -76,7 +76,7 @@ public final class UnaryOperationInstruction extends IRInstruction {
 
     /**
      * 将该指令格式化为字符串，便于打印与调试。
-     * 形式：dest = OP val，例如：v1 = NEG v2
+     * 形式: dest = OP val，例如: v1 = NEG v2
      *
      * @return 字符串形式的指令
      */

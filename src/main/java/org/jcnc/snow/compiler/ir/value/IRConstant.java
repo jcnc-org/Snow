@@ -9,18 +9,18 @@ import org.jcnc.snow.compiler.ir.core.IRValue;
  * 与 {@link IRVirtualRegister} 不同，常量不需要通过寄存器存储，
  * 可直接作为 IR 指令的操作数使用。
  * <p>
- * 典型应用：
- * - 加载常量指令：v1 = CONST 42
- * - 计算表达式：v2 = ADD v1, 100
+ * 典型应用:
+ * - 加载常量指令: v1 = CONST 42
+ * - 计算表达式: v2 = ADD v1, 100
  */
 public record IRConstant(Object value) implements IRValue {
 
     /**
      * 将常量值转换为字符串，用于打印 IR 指令或调试输出。
      * <p>
-     * 例如：
-     * - 整数常量：42
-     * - 字符串常量："hello"
+     * 例如:
+     * - 整数常量: 42
+     * - 字符串常量: "hello"
      *
      * @return 常量的字符串表示
      */

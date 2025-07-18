@@ -112,7 +112,7 @@ public class IRFunction {
     }
 
     /**
-     * 以IR代码表示，示例：
+     * 以IR代码表示，示例: 
      * <pre>
      * func 名称(%0, %1, ...) {
      *   指令0

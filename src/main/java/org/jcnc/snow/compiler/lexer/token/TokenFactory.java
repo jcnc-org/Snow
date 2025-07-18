@@ -12,7 +12,7 @@ import java.util.Set;
  * </p>
  *
  * <p>
- * 主要功能与特性：
+ * 主要功能与特性: 
  * <ul>
  *     <li>统一管理语言关键字和类型名集合，便于扩展与维护。</li>
  *     <li>自动推断 Token 类型，无需外部干预。</li>
@@ -35,7 +35,7 @@ public class TokenFactory {
     /**
      * 创建一个根据内容自动推断类型的 {@link Token} 实例。
      * <p>
-     * 优先级顺序为：类型（TYPE） &gt; 关键字（KEYWORD） &gt; 标识符（IDENTIFIER） &gt; 未知（UNKNOWN）。
+     * 优先级顺序为: 类型（TYPE） &gt; 关键字（KEYWORD） &gt; 标识符（IDENTIFIER） &gt; 未知（UNKNOWN）。
      * 若原始字符串同时属于多类，则按优先级最高者处理。
      * </p>
      *
@@ -52,7 +52,7 @@ public class TokenFactory {
     /**
      * 判断并推断给定字符串的 {@link TokenType} 类型。
      * <p>
-     * 优先级依次为：TYPE &gt; KEYWORD &gt; IDENTIFIER &gt; UNKNOWN。
+     * 优先级依次为: TYPE &gt; KEYWORD &gt; IDENTIFIER &gt; UNKNOWN。
      * </p>
      *
      * @param raw 原始词素字符串
@@ -106,7 +106,7 @@ public class TokenFactory {
      * <p>
      * 合法标识符需以字母（a-z/A-Z）或下划线（_）开头，
      * 后续可包含字母、数字或下划线。
-     * 例如：_abc, a1b2, name_123 均为合法标识符。
+     * 例如: _abc, a1b2, name_123 均为合法标识符。
      * </p>
      *
      * @param raw 输入的字符串

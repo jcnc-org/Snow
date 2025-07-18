@@ -14,7 +14,7 @@ import java.util.Comparator;
  * 本类为无状态实现，线程安全。
  * </p>
  *
- * <p><b>示例用法：</b></p>
+ * <p><b>示例用法: </b></p>
  * <pre>{@code
  * Task clean = new CleanTask();
  * clean.run();

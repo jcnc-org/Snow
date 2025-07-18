@@ -6,7 +6,7 @@ import org.jcnc.snow.compiler.ir.core.IRVisitor;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 
 /**
- * “比较 + 条件跳转” 复合指令：
+ * “比较 + 条件跳转” 复合指令: 
  *   if ( left <cmpOp> right ) jump targetLabel;
  * <p>
  * 其中 cmpOp 只能是 IROpCode.CMP_* 六种比较操作码。

@@ -46,7 +46,7 @@ public class CallInstruction extends IRInstruction {
         return isVoidReturn() ? null : dest;
     }
 
-    /** 操作数列表：void 调用不包含 dest */
+    /** 操作数列表: void 调用不包含 dest */
     @Override
     public List<IRValue> operands() {
         List<IRValue> ops = new ArrayList<>();

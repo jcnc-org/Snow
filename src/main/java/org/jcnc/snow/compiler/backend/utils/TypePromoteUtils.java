@@ -1,25 +1,25 @@
 package org.jcnc.snow.compiler.backend.utils;
 
 /**
- * 工具类：提供基本数值类型的提升与类型转换辅助功能。
+ * 工具类: 提供基本数值类型的提升与类型转换辅助功能。
  * <p>
  * 在进行数值类型运算、比较等操作时，低优先级的类型会被提升为高优先级类型参与运算。
  * 例如 int + long 运算，int 会被提升为 long，最终运算结果类型为 long。
  * <p>
- * 类型优先级从高到低依次为：
- * D（double）：6
- * F（float） ：5
- * L（long）  ：4
- * I（int）   ：3
- * S（short） ：2
- * B（byte）  ：1
- * 未识别类型 ：0
+ * 类型优先级从高到低依次为: 
+ * D（double）: 6
+ * F（float） : 5
+ * L（long）  : 4
+ * I（int）   : 3
+ * S（short） : 2
+ * B（byte）  : 1
+ * 未识别类型 : 0
  */
 public class TypePromoteUtils {
 
     /**
      * 返回数值类型的宽度优先级，数值越大类型越宽。
-     * 类型及优先级映射如下：
+     * 类型及优先级映射如下: 
      * D（double）: 6
      * F（float） : 5
      * L（long）  : 4
@@ -69,8 +69,8 @@ public class TypePromoteUtils {
      * 获取类型转换指令名（例如 "I2L", "F2D"），表示从源类型到目标类型的转换操作。
      * 如果源类型和目标类型相同，则返回 null，表示无需转换。
      * <p>
-     * 支持的类型标记字符包括：B（byte）、S（short）、I（int）、L（long）、F（float）、D（double）。
-     * 所有可能的类型转换均已覆盖，如下所示：
+     * 支持的类型标记字符包括: B（byte）、S（short）、I（int）、L（long）、F（float）、D（double）。
+     * 所有可能的类型转换均已覆盖，如下所示: 
      * B → S/I/L/F/D
      * S → B/I/L/F/D
      * I → B/S/L/F/D

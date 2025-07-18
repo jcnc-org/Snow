@@ -12,7 +12,7 @@ import org.jcnc.snow.compiler.semantic.analyzers.statement.*;
  * 本类为静态工具类，不可实例化，其唯一公开方法 {@link #registerAll(AnalyzerRegistry)}
  * 应在语义分析初始化阶段调用一次，确保所有节点类型都能正确分发到对应分析器。
  * <p>
- * 注册内容包括：
+ * 注册内容包括: 
  * <ul>
  *   <li>所有标准语句节点（如变量声明、赋值、条件、循环、返回等）的分析器；</li>
  *   <li>所有标准表达式节点（如字面量、标识符、函数调用、二元表达式等）的分析器；</li>
@@ -41,7 +41,7 @@ public final class AnalyzerRegistrar {
         registry.registerStatementAnalyzer(ReturnNode.class, new ReturnAnalyzer());
         registry.registerExpressionAnalyzer(BoolLiteralNode.class, new BoolLiteralAnalyzer());
 
-        // 特殊处理：表达式语句（如 "foo();"）作为语句包装表达式
+        // 特殊处理: 表达式语句（如 "foo();"）作为语句包装表达式
         registry.registerStatementAnalyzer(ExpressionStatementNode.class,
                 (ctx, mi, fn, locals, stmt) ->
                         registry.getExpressionAnalyzer(stmt.expression())

@@ -1,7 +1,7 @@
 package org.jcnc.snow.compiler.semantic.type;
 
 /**
- * 类型接口：所有类型（包括内置类型、函数类型等）均需实现此接口，
+ * 类型接口: 所有类型（包括内置类型、函数类型等）均需实现此接口，
  * 用于在语义分析中进行类型兼容性检查和统一表示。
  */
 public interface Type {

@@ -1,16 +1,8 @@
 module: Main
     function: main
-        return_type: int
-        body:
-            foo()
-
-            return 0
-        end body
-    end function
-
-    function: foo
         return_type: void
         body:
+            declare abc!:int =1
 
         end body
     end function

@@ -16,7 +16,7 @@ import java.util.List;
  * <code>main.snow</code>。
  *
  * <p>
- * 生成内容包括：
+ * 生成内容包括: 
  * <ul>
  *   <li><code>src/</code>                       —— 源码根目录</li>
  *   <li><code>src/{group package}/</code> —— 按 <code>project.group</code> 创建的包路径
@@ -66,7 +66,7 @@ public final class GenerateTask implements Task {
                 root.resolve("dist")
         ));
 
-        /* ---------- 2. 处理 group：追加包目录 ---------- */
+        /* ---------- 2. 处理 group: 追加包目录 ---------- */
         String group = project != null ? project.getGroup() : null;
         Path srcDir = root.resolve("src");
         Path packageDir = srcDir;  // 默认直接在 src 下

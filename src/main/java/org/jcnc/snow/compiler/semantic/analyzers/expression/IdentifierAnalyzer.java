@@ -15,7 +15,7 @@ import org.jcnc.snow.compiler.semantic.type.Type;
  * {@code IdentifierAnalyzer} 是用于分析标识符表达式（如变量名、常量名）的语义分析器。
  * <p>
  * 它的主要职责是在给定的局部作用域中查找标识符对应的符号定义，并返回其类型信息。
- * 如果标识符未在当前作用域内声明，则：
+ * 如果标识符未在当前作用域内声明，则: 
  * <ul>
  *   <li>向语义错误列表中添加一条 {@link SemanticError} 记录；</li>
  *   <li>为保证分析过程的连续性，默认返回 {@link BuiltinType#INT} 类型作为降级处理。</li>
@@ -46,7 +46,7 @@ public class IdentifierAnalyzer implements ExpressionAnalyzer<IdentifierNode> {
         // 在当前作用域中查找符号（变量或常量）
         Symbol sym = locals.resolve(id.name());
         if (sym == null) {
-            // 未声明标识符：记录语义错误，返回降级类型
+            // 未声明标识符: 记录语义错误，返回降级类型
             ctx.getErrors().add(new SemanticError(id,
                     "未声明的标识符: " + id.name()));
             ctx.log("错误: 未声明的标识符 " + id.name());

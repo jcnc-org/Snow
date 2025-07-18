@@ -3,7 +3,7 @@ package org.jcnc.snow.pkg.tasks;
 import org.jcnc.snow.vm.VMLauncher;
 
 /**
- * 任务：执行已编译的 VM 字节码文件（.water）。
+ * 任务: 执行已编译的 VM 字节码文件（.water）。
  * <p>
  * 作为 CLI、IDE 插件或其他宿主环境启动虚拟机的统一入口，<br>
  * 通过调用 {@link VMLauncher#main(String[])} 启动 VM 并执行指定程序。

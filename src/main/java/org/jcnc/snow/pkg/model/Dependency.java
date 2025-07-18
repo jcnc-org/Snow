@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * <pre>
- * 示例用法：
+ * 示例用法: 
  * Dependency dep = Dependency.fromString(
  *     "core", "com.example:core:@{version}",
  *     Map.of("version", "1.2.3")
@@ -62,8 +62,8 @@ public record Dependency(
     /**
      * 生成依赖对应的源码文件路径。
      * <p>
-     * 路径格式：groupId/artifactId/version/artifactId.snow
-     * 例如：com/example/core/1.2.3/core.snow
+     * 路径格式: groupId/artifactId/version/artifactId.snow
+     * 例如: com/example/core/1.2.3/core.snow
      * </p>
      *
      * @return 仓库源码文件的相对路径

@@ -4,14 +4,14 @@ import org.jcnc.snow.cli.api.CLICommand;
 import org.jcnc.snow.pkg.tasks.RunTask;
 
 /**
- * CLI 命令：运行已编译的 VM 字节码文件（.water）。
+ * CLI 命令: 运行已编译的 VM 字节码文件（.water）。
  * <p>
  * 仅解析参数并委托给 {@link RunTask}，
  * 将 VM 运行逻辑下沉至 pkg 层，保持 CLI 无状态、薄封装。
  * </p>
  *
  * <pre>
- * 用法示例：
+ * 用法示例: 
  * $ snow run main.water
  * </pre>
  */

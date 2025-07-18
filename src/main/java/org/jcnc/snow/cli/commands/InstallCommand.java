@@ -8,13 +8,13 @@ import org.jcnc.snow.pkg.resolver.DependencyResolver;
 import java.nio.file.Paths;
 
 /**
- * CLI 命令：解析并下载项目依赖到本地缓存。
+ * CLI 命令: 解析并下载项目依赖到本地缓存。
  * <p>
  * 适用于离线使用和依赖预热场景，会自动读取项目描述文件并处理依赖缓存。
  * </p>
  *
  * <pre>
- * 用法示例：
+ * 用法示例: 
  * $ snow install
  * </pre>
  */

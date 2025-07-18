@@ -31,7 +31,7 @@
 
         <plugins>
             <!--
-                Java 编译插件：
+                Java 编译插件:
                 - 使用 Maven 自带的 maven-compiler-plugin 进行源码编译
                 - <fork>true</fork> 表示在单独的进程中执行 javac，提高兼容性
             -->
@@ -45,7 +45,7 @@
             </plugin>
 
             <!--
-                Jar 打包插件：
+                Jar 打包插件:
                 - 使用 maven-jar-plugin 将编译产物打包成可执行 JAR
                 - 在 MANIFEST 中指定主类，支持命令行直接 java -jar 调用
             -->
@@ -71,7 +71,7 @@
 
     <profiles>
         <!--
-            原生镜像构建：Linux 平台
+            原生镜像构建: Linux 平台
             - 使用 GraalVM 的 native-image 工具，生成静态链接的可执行文件
             - 依赖 musl libc，需提前安装并配置 musl-gcc 工具链
         -->
@@ -133,7 +133,7 @@
         </profile>
 
         <!--
-            原生镜像构建：Windows 平台
+            原生镜像构建: Windows 平台
             - 使用 GraalVM 的 native-image 工具，生成 Windows 可执行文件
             - Windows 上不使用 musl，因此不配置静态链接
         -->

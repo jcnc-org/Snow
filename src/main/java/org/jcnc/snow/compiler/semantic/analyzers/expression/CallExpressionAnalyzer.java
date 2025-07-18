@@ -18,7 +18,7 @@ import java.util.List;
 /**
  * {@code CallExpressionAnalyzer} 是函数调用表达式的语义分析器。
  * <p>
- * 它负责处理类似 {@code callee(arg1, arg2, ...)} 形式的调用表达式，执行如下操作：
+ * 它负责处理类似 {@code callee(arg1, arg2, ...)} 形式的调用表达式，执行如下操作:
  * <ul>
  *   <li>识别调用目标（支持模块成员函数调用和当前模块函数调用）；</li>
  *   <li>根据被调用函数的参数签名检查实参数量和类型的兼容性；</li>
@@ -51,7 +51,7 @@ public class CallExpressionAnalyzer implements ExpressionAnalyzer<CallExpression
         String functionName;
         ExpressionNode callee = call.callee();
 
-        // 支持模块调用形式：ModuleName.FunctionName(...)
+        // 支持模块调用形式: ModuleName.FunctionName(...)
         if (callee instanceof MemberExpressionNode(var obj, String member, NodeContext _)
                 && obj instanceof IdentifierNode(String mod, NodeContext _)) {
             // 验证模块是否存在并已导入
@@ -65,7 +65,7 @@ public class CallExpressionAnalyzer implements ExpressionAnalyzer<CallExpression
             target = ctx.getModules().get(mod);
             functionName = member;
 
-            // 简单函数名形式：func(...)
+            // 简单函数名形式: func(...)
         } else if (callee instanceof IdentifierNode(String name, NodeContext _)) {
             functionName = name;
 

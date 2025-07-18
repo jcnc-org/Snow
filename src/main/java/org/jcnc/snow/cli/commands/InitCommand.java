@@ -8,13 +8,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * CLI 命令：初始化项目配置文件。
+ * CLI 命令: 初始化项目配置文件。
  * <p>
  * 用于快速生成 DSL 配置文件（project.cloud）。
  * </p>
  *
  * <pre>
- * 用法示例：
+ * 用法示例: 
  * $ snow init
  * </pre>
  */

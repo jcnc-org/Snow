@@ -8,14 +8,14 @@ import java.util.Map.Entry;
 /**
  * JSON 工具类，提供线程安全、可重用的 JSON 解析与序列化能力。
  * <p>
- * <b>主要功能：</b>
+ * <b>主要功能: </b>
  * <ul>
- *   <li>解析：将合法的 JSON 文本转换为 Java 原生对象（Map、List、String、Number、Boolean 或 null）</li>
- *   <li>序列化：将 Java 原生对象转换为符合 JSON 标准的字符串</li>
+ *   <li>解析: 将合法的 JSON 文本转换为 Java 原生对象（Map、List、String、Number、Boolean 或 null）</li>
+ *   <li>序列化: 将 Java 原生对象转换为符合 JSON 标准的字符串</li>
  * </ul>
  * </p>
  *
- * <b>设计要点：</b>
+ * <b>设计要点: </b>
  * <ol>
  *   <li>仅提供静态方法入口，无状态，线程安全</li>
  *   <li>解析器内部采用 char[] 缓冲区，支持高性能处理</li>

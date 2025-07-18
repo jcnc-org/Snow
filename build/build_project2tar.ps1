@@ -11,7 +11,7 @@ $parentDir = Split-Path -Parent $scriptDir
 $tarPath = Join-Path $parentDir $tarName
 
 # 输出开始创建 tar 包的消息
-Write-Output "开始创建 tar 包：$tarName 到 $parentDir ..."
+Write-Output "开始创建 tar 包: $tarName 到 $parentDir ..."
 
 # 如果存在旧 tar 包，先删除它
 if (Test-Path $tarPath) {
@@ -26,7 +26,7 @@ if (-not (Get-Command $tarCommand -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-# 执行打包操作：切换到 org\jcnc 目录下再压缩 snow 文件夹
+# 执行打包操作: 切换到 org\jcnc 目录下再压缩 snow 文件夹
 try {
     # 构建命令并执行
     $tarCommandArgs = "-cf", $tarPath, "-C", "$scriptDir\..\src\main\java\org\jcnc", "snow"
@@ -34,7 +34,7 @@ try {
 
     & $tarCommand @tarCommandArgs
 } catch {
-    Write-Error "❌ 创建 tar 包失败。错误信息：$_"
+    Write-Error "❌ 创建 tar 包失败。错误信息: $_"
     exit 1
 }
 

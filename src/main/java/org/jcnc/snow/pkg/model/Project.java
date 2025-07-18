@@ -73,7 +73,7 @@ public final class Project {
     }
 
     /**
-     * 通过扁平 Map 创建 Project 实例。key 格式约定如下：
+     * 通过扁平 Map 创建 Project 实例。key 格式约定如下: 
      * <ul>
      *   <li>project.*      —— 项目元数据</li>
      *   <li>properties.*   —— 额外属性</li>

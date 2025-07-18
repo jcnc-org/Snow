@@ -15,7 +15,7 @@ import java.util.Map;
  * 各虚拟寄存器实际对应的物理寄存器或栈槽号。采用简单的线性扫描分配策略。
  * </p>
  * <p>
- * 分配过程如下：
+ * 分配过程如下: 
  * <ol>
  *   <li>优先为函数参数分配槽号，从 0 开始，按参数顺序递增。</li>
  *   <li>遍历函数体的每条指令，为尚未分配的目标寄存器及其操作数分配新的槽号。</li>
@@ -28,8 +28,8 @@ public final class RegisterAllocator {
     /**
      * 虚拟寄存器到槽号的分配映射表。
      * <p>
-     * 键：虚拟寄存器 {@link IRVirtualRegister}；
-     * 值：对应分配的槽编号 {@link Integer}。
+     * 键: 虚拟寄存器 {@link IRVirtualRegister}；
+     * 值: 对应分配的槽编号 {@link Integer}。
      * </p>
      */
     private final Map<IRVirtualRegister, Integer> map = new HashMap<>();
@@ -37,7 +37,7 @@ public final class RegisterAllocator {
     /**
      * 为指定 IR 函数分配所有虚拟寄存器的槽号。
      * <p>
-     * 分配顺序说明：
+     * 分配顺序说明: 
      * <ol>
      *   <li>首先为所有参数分配槽号。</li>
      *   <li>然后线性遍历函数体，为每个指令涉及的虚拟寄存器（目标或操作数）分配槽号，
