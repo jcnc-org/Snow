@@ -42,7 +42,7 @@ import org.jcnc.snow.compiler.lexer.token.TokenType;
  *   <li>小数点后缺失数字（如 1.）—— 抛出 LexicalException</li>
  * </ol>
  * <p>
- * 支持的单字符类型后缀包括: b, s, l, f, d 及其大写形式。若需支持多字符后缀，可将该集合扩展为 Set<String>。
+ * 支持的单字符类型后缀包括: b, s, l, f 及其大写形式。若需支持多字符后缀，可将该集合扩展为 Set<String>。
  */
 public class NumberTokenScanner extends AbstractTokenScanner {
 
@@ -51,7 +51,7 @@ public class NumberTokenScanner extends AbstractTokenScanner {
      * 包含: b, s, l, f, d 及其大写形式。
      * 对于多字符后缀，可扩展为 Set<String> 并在扫描尾部做贪婪匹配。
      */
-    private static final String SUFFIX_CHARS = "bslfdBSLFD";
+    private static final String SUFFIX_CHARS = "bslfBSLF";
 
     /**
      * 判断是否由该扫描器处理。
