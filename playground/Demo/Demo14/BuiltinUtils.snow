@@ -1,0 +1,19 @@
+module: BuiltinUtils
+  function: print
+    parameter:
+      declare msg: int
+    return_type: void
+    body:
+      syscall("PRINT",1)
+    end body
+  end function
+
+  function: println
+    parameter:
+      declare msg: int
+    return_type: void
+    body:
+      syscall("PRINTLN",1)
+    end body
+  end function
+end module
