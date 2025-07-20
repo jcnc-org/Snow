@@ -42,29 +42,11 @@ public final class BuiltinTypeRegistry {
         /* ---------- BuiltinUtils ---------- */
         ModuleInfo utils = new ModuleInfo("BuiltinUtils");
 
-        // print(string): void
-        utils.getFunctions().put(
-                "print",
-                new FunctionType(
-                        Collections.singletonList(BuiltinType.STRING),
-                        BuiltinType.VOID
-                )
-        );
-
-        // println(string): void
-        utils.getFunctions().put(
-                "println",
-                new FunctionType(
-                        Collections.singletonList(BuiltinType.STRING),
-                        BuiltinType.VOID
-                )
-        );
-
-        // syscall(string, string): void   —— 供 BuiltinUtils 内部使用
+        // syscall(string, int): void   —— 供 BuiltinUtils 内部使用
         utils.getFunctions().put(
                 "syscall",
                 new FunctionType(
-                        Arrays.asList(BuiltinType.STRING, BuiltinType.STRING),
+                        Arrays.asList(BuiltinType.STRING, BuiltinType.INT),
                         BuiltinType.VOID
                 )
         );
