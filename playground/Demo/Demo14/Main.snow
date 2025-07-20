@@ -1,11 +1,10 @@
 module: Main
-  import: BuiltinUtils
+    import: BuiltinUtils
 
-  function: main
-    return_type: void
-    body:
-      BuiltinUtils.print(1)
-      BuiltinUtils.println(2)
-    end body
-  end function
+    function: main
+        return_type: void
+        body:
+            syscall("PRINT",1)
+        end body
+    end function
 end module
