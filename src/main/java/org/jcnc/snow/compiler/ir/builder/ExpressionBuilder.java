@@ -34,13 +34,14 @@ public record ExpressionBuilder(IRContext ctx) {
      * <p>会根据节点的实际类型分别处理: 
      * <ul>
      *   <li>数字字面量: 新建常量寄存器</li>
+     *   <li>字符串字面量: 新建常量寄存器（字符串类型）</li>
      *   <li>布尔字面量: 生成值为 0 或 1 的常量寄存器</li>
      *   <li>标识符: 查找当前作用域中的寄存器</li>
      *   <li>二元表达式: 递归处理子表达式并进行相应运算</li>
-     *   <li>一元运算符: 
+     *   <li>一元运算符:
      *     <ul>
      *        <li><code>-x</code>（取负，生成 <code>NEG_I32</code> 指令）与</li>
-     *        <li>code>!x</code>（逻辑非，转换为 <code>x == 0</code> 比较指令）</li>
+     *        <li><code>!x</code>（逻辑非，转换为 <code>x == 0</code> 比较指令）</li>
      *     </ul>
      *   </li>
      *   <li>函数调用: 生成对应的Call指令</li>
@@ -51,11 +52,12 @@ public record ExpressionBuilder(IRContext ctx) {
      * @return 该表达式的计算结果寄存器
      * @throws IllegalStateException 如果遇到未定义的标识符或不支持的表达式类型
      */
-
     public IRVirtualRegister build(ExpressionNode expr) {
         return switch (expr) {
             // 数字字面量
             case NumberLiteralNode n -> buildNumberLiteral(n.value());
+            // 字符串字面量
+            case StringLiteralNode s -> buildStringLiteral(s.value());
             // 布尔字面量
             case BoolLiteralNode b   -> buildBoolLiteral(b.getValue());
             // 标识符
@@ -69,6 +71,7 @@ public record ExpressionBuilder(IRContext ctx) {
             case BinaryExpressionNode bin -> buildBinary(bin);
             // 函数调用
             case CallExpressionNode call -> buildCall(call);
+            // 一元表达式
             case UnaryExpressionNode u  -> buildUnary(u);
             default -> throw new IllegalStateException(
                     "不支持的表达式类型: " + expr.getClass().getSimpleName());
@@ -111,6 +114,12 @@ public record ExpressionBuilder(IRContext ctx) {
             // 数字字面量，直接加载到目标寄存器
             case NumberLiteralNode n ->
                     InstructionFactory.loadConstInto(ctx, dest, ExpressionUtils.buildNumberConstant(ctx, n.value()));
+            // 字符串字面量，直接加载到目标寄存器
+            case StringLiteralNode s ->
+                    InstructionFactory.loadConstInto(ctx, dest, new IRConstant(s.value()));
+            // 布尔字面量，直接加载到目标寄存器
+            case BoolLiteralNode b ->
+                    InstructionFactory.loadConstInto(ctx, dest, new IRConstant(b.getValue() ? 1 : 0));
             // 标识符，查找并move到目标寄存器
             case IdentifierNode id -> {
                 IRVirtualRegister src = ctx.getScope().lookup(id.name());
@@ -218,6 +227,19 @@ public record ExpressionBuilder(IRContext ctx) {
      */
     private IRVirtualRegister buildNumberLiteral(String value) {
         IRConstant constant = ExpressionUtils.buildNumberConstant(ctx, value);
+        IRVirtualRegister reg = ctx.newRegister();
+        ctx.addInstruction(new LoadConstInstruction(reg, constant));
+        return reg;
+    }
+
+    /**
+     * 处理字符串字面量，生成常量寄存器和加载指令。
+     *
+     * @param value 字符串内容
+     * @return 存放该字符串常量的寄存器
+     */
+    private IRVirtualRegister buildStringLiteral(String value) {
+        IRConstant constant = new IRConstant(value);
         IRVirtualRegister reg = ctx.newRegister();
         ctx.addInstruction(new LoadConstInstruction(reg, constant));
         return reg;
