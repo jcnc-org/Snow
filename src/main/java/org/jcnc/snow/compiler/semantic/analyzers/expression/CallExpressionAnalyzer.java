@@ -20,7 +20,7 @@ import java.util.List;
  * <p>
  * 它负责处理类似 {@code callee(arg1, arg2, ...)} 形式的调用表达式，执行如下操作:
  * <ul>
- *   <li>识别调用目标（支持模块成员函数调用和当前模块函数调用）；</li>
+ *   <li>识别调用目标（支持模块成员函数调用和当前模块函数调用，也支持自动在所有已导入模块中查找唯一同名函数）；</li>
  *   <li>根据被调用函数的参数签名检查实参数量和类型的兼容性；</li>
  *   <li>支持数值参数的宽化转换（如 int → double）；</li>
  *   <li>支持数值到字符串的隐式转换（自动视为调用 {@code to_string}）；</li>
@@ -77,8 +77,38 @@ public class CallExpressionAnalyzer implements ExpressionAnalyzer<CallExpression
             return BuiltinType.INT;
         }
 
-        // 查找目标函数签名
+        // 查找目标函数签名（先在当前模块/显式模块查找）
         FunctionType ft = target.getFunctions().get(functionName);
+
+        // 如果当前模块未找到，再自动遍历所有已导入模块寻找唯一同名函数
+        if (ft == null && target == mi) {
+            ModuleInfo foundModule = null;
+            FunctionType foundType = null;
+            for (String importName : mi.getImports()) {
+                ModuleInfo imported = ctx.getModules().get(importName);
+                if (imported == null) continue;
+                FunctionType candidate = imported.getFunctions().get(functionName);
+                if (candidate != null) {
+                    if (foundModule != null) {
+                        // 多个导入模块含有同名函数，二义性，报错
+                        ctx.getErrors().add(new SemanticError(callee,
+                                "函数调用不明确: " + functionName +
+                                        " 同时存在于模块 " + foundModule.getName() +
+                                        " 和 " + imported.getName()));
+                        ctx.log("错误: 函数调用不明确 " + functionName);
+                        return BuiltinType.INT;
+                    }
+                    foundModule = imported;
+                    foundType = candidate;
+                }
+            }
+            if (foundType != null) {
+                target = foundModule;
+                ft = foundType;
+            }
+        }
+
+        // 最终未找到则报错
         if (ft == null) {
             ctx.getErrors().add(new SemanticError(callee,
                     "函数未定义: " + functionName));
