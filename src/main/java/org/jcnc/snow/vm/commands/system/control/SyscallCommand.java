@@ -16,53 +16,47 @@ import java.util.*;
 import static java.nio.file.StandardOpenOption.*;
 
 /**
- * {@code SyscallCommand} —— I/O syscall 子命令集合指令。
+ * SyscallCommand —— 虚拟机系统调用（SYSCALL）指令实现。
  *
  * <p>
- * 封装类 UNIX 文件描述符（File Descriptor, FD）操作、文件/网络 I/O、管道、fd 复制、多路复用（select）等系统调用能力，
- * 基于 Java NIO 统一实现，供虚拟机指令集以 SYSCALL 形式扩展使用。
+ * 本类负责将虚拟机指令集中的 SYSCALL 进行分派，模拟现实系统常见的文件、网络、管道、标准输出等操作，
+ * 通过操作数栈完成参数、返回值传递，并借助文件描述符表（FDTable）进行底层资源管理。
+ * 所有 I/O 相关功能均基于 Java NIO 实现，兼容多种 I/O 场景。
  * </p>
  *
- * <b>栈操作约定：</b>
+ * <p>参数与栈约定:</p>
  * <ul>
- *   <li>参数按“右值先入栈、左值后入栈”的顺序推入操作数栈，执行 {@code SYSCALL <SUBCMD>} 后出栈。</li>
- *   <li>即：调用 SYSCALL OPEN path flags mode，入栈顺序为 path（先入）→ flags → mode（后入），出栈时 mode→flags→path 弹出。</li>
+ *   <li>所有调用参数，均按“右值先入、左值后入”顺序压入 {@link OperandStack}。</li>
+ *   <li>SYSCALL 指令自动弹出参数并处理结果；返回值（如描述符、读取长度、是否成功等）压回栈顶。</li>
  * </ul>
  *
- * <b>返回值说明：</b>
+ * <p>异常与失败处理:</p>
  * <ul>
- *   <li>成功：压入正值（如 FD、实际数据、字节数、0 表示成功）。</li>
- *   <li>失败：统一压入 -1，后续可扩展为 errno 机制。</li>
+ *   <li>系统调用失败或遇到异常时，均向操作数栈压入 {@code -1}，以便调用者统一检测。</li>
  * </ul>
  *
- * <b>支持的子命令（部分）：</b>
+ * <p>支持的子命令示例:</p>
  * <ul>
  *   <li>PRINT / PRINTLN —— 控制台输出</li>
- *   <li>OPEN / CLOSE / READ / WRITE / SEEK —— 文件 I/O 操作</li>
- *   <li>PIPE / DUP —— 管道和 FD 复制</li>
- *   <li>SOCKET / CONNECT / BIND / LISTEN / ACCEPT —— 网络套接字</li>
- *   <li>SELECT —— I/O 多路复用</li>
+ *   <li>OPEN / CLOSE / READ / WRITE / SEEK —— 文件相关操作</li>
+ *   <li>PIPE / DUP —— 管道与文件描述符复制</li>
+ *   <li>SOCKET / CONNECT / BIND / LISTEN / ACCEPT —— 网络通信</li>
+ *   <li>SELECT —— 多通道 I/O 就绪检测</li>
  * </ul>
  */
 public class SyscallCommand implements Command {
 
-
-
-    /*--------------------------------------------------------------------------------*/
-
     /**
-     * <b>执行 SYSCALL 子命令</b>：
-     * <p>
-     * 按照 parts[1] 指定的 SYSCALL 子命令，结合虚拟机栈与资源表完成对应的系统调用模拟。
-     * 支持基础文件、网络、管道等 I/O 操作，并对异常统一处理。
-     * </p>
+     * 分发并执行 SYSCALL 子命令，根据子命令类型从操作数栈取出参数、操作底层资源，并将结果压回栈顶。
      *
-     * @param parts     指令字符串数组，parts[1] 为子命令
+     * @param parts     指令及子命令参数分割数组，parts[1]为子命令名
      * @param pc        当前指令计数器
      * @param stack     操作数栈
      * @param locals    局部变量表
      * @param callStack 调用栈
-     * @return 下一条指令的 pc 值（默认 pc+1）
+     * @return 下一条指令的 pc 值（通常为 pc+1）
+     * @throws IllegalArgumentException      缺少子命令参数时抛出
+     * @throws UnsupportedOperationException 不支持的 SYSCALL 子命令时抛出
      */
     @Override
     public int execute(String[] parts, int pc,
@@ -70,46 +64,27 @@ public class SyscallCommand implements Command {
                        LocalVariableStore locals,
                        CallStack callStack) {
 
-        if (parts.length < 2)
-            throw new IllegalArgumentException("SYSCALL needs sub-command");
+        if (parts.length < 2) {
+            throw new IllegalArgumentException("SYSCALL missing subcommand");
+        }
 
         String cmd = parts[1].toUpperCase(Locale.ROOT);
 
         try {
             switch (cmd) {
-
-                /*==================== 文件 / 目录 ====================*/
-
-                /*
-                 * OPEN —— 打开文件，返回文件描述符（File Descriptor, FD）。
-                 * 入栈（push）顺序: path（文件路径, String）, flags（int）, mode（int，文件权限，暂未用）
-                 * 出栈（pop）顺序: mode → flags → path
-                 * 成功返回 fd，失败返回 -1。
-                 */
+                // 文件相关操作
                 case "OPEN" -> {
-                    int mode = (Integer) stack.pop();      // 目前未用
+                    int mode = (Integer) stack.pop();
                     int flags = (Integer) stack.pop();
                     String path = String.valueOf(stack.pop());
                     FileChannel fc = FileChannel.open(Paths.get(path), flagsToOptions(flags));
                     stack.push(FDTable.register(fc));
                 }
-                /*
-                 * CLOSE —— 关闭文件描述符。
-                 * 入栈顺序: fd（int）
-                 * 出栈顺序: fd
-                 * 返回 0 成功，-1 失败
-                 */
                 case "CLOSE" -> {
                     int fd = (Integer) stack.pop();
                     FDTable.close(fd);
                     stack.push(0);
                 }
-                /*
-                 * READ —— 从 fd 读取指定字节数。
-                 * 入栈顺序: fd（int）, count（int，字节数）
-                 * 出栈顺序: count → fd
-                 * 返回：byte[]（实际读取的数据，EOF 时长度为 0）
-                 */
                 case "READ" -> {
                     int count = (Integer) stack.pop();
                     int fd = (Integer) stack.pop();
@@ -126,12 +101,6 @@ public class SyscallCommand implements Command {
                     buf.get(out);
                     stack.push(out);
                 }
-                /*
-                 * WRITE —— 向 fd 写数据。
-                 * 入栈顺序: fd（int）, data（byte[] 或 String）
-                 * 出栈顺序: data → fd
-                 * 返回写入字节数，失败 -1
-                 */
                 case "WRITE" -> {
                     Object dataObj = stack.pop();
                     int fd = (Integer) stack.pop();
@@ -146,12 +115,6 @@ public class SyscallCommand implements Command {
                     int written = wch.write(ByteBuffer.wrap(data));
                     stack.push(written);
                 }
-                /*
-                 * SEEK —— 文件定位，移动文件读写指针。
-                 * 入栈顺序: fd（int）, offset（long/int）, whence（int, 0=SET,1=CUR,2=END）
-                 * 出栈顺序: whence → offset → fd
-                 * 返回新位置（long），失败 -1
-                 */
                 case "SEEK" -> {
                     int whence = (Integer) stack.pop();
                     long off = ((Number) stack.pop()).longValue();
@@ -165,58 +128,32 @@ public class SyscallCommand implements Command {
                         case 0 -> sbc.position(off);
                         case 1 -> sbc.position(sbc.position() + off);
                         case 2 -> sbc.position(sbc.size() + off);
-                        default -> throw new IllegalArgumentException("bad whence");
+                        default -> throw new IllegalArgumentException("Invalid offset type");
                     };
                     stack.push(newPos);
                 }
 
-                /*==================== 管道 / FD 相关 ====================*/
-
-                /*
-                 * PIPE —— 创建匿名管道。
-                 * 入栈顺序: （无）
-                 * 出栈顺序: （无）
-                 * 返回顺序: write fd（先压栈），read fd（后压栈）
-                 */
+                // 管道与描述符操作
                 case "PIPE" -> {
                     Pipe p = Pipe.open();
-                    stack.push(FDTable.register(p.sink()));   // write fd
-                    stack.push(FDTable.register(p.source())); // read fd
+                    stack.push(FDTable.register(p.sink()));
+                    stack.push(FDTable.register(p.source()));
                 }
-                /*
-                 * DUP —— 复制一个已存在的 fd（dup）。
-                 * 入栈顺序: oldfd（int）
-                 * 出栈顺序: oldfd
-                 * 返回新的 fd，失败 -1
-                 */
                 case "DUP" -> {
                     int oldfd = (Integer) stack.pop();
                     stack.push(FDTable.dup(oldfd));
                 }
 
-                /*==================== 网络相关 ====================*/
-
-                /*
-                 * SOCKET —— 创建套接字，支持 stream/dgram。
-                 * 入栈顺序: domain（int, AF_INET=2等）, type（int, 1=STREAM,2=DGRAM）, protocol（int, 预留）
-                 * 出栈顺序: protocol → type → domain
-                 * 返回 fd
-                 */
+                // 网络相关
                 case "SOCKET" -> {
-                    int proto = (Integer) stack.pop();      // 预留，暂不用
-                    int type = (Integer) stack.pop();       // 1=STREAM,2=DGRAM
-                    int domain = (Integer) stack.pop();     // AF_INET=2……
+                    int proto = (Integer) stack.pop();
+                    int type = (Integer) stack.pop();
+                    int domain = (Integer) stack.pop();
                     Channel ch = (type == 1)
                             ? SocketChannel.open()
                             : DatagramChannel.open();
                     stack.push(FDTable.register(ch));
                 }
-                /*
-                 * CONNECT —— 发起 TCP 连接。
-                 * 入栈顺序: fd（int）, host（String）, port（int）
-                 * 出栈顺序: port → host → fd
-                 * 返回 0 成功，-1 失败
-                 */
                 case "CONNECT" -> {
                     int port = (Integer) stack.pop();
                     String host = String.valueOf(stack.pop());
@@ -225,14 +162,10 @@ public class SyscallCommand implements Command {
                     if (ch instanceof SocketChannel sc) {
                         sc.connect(new InetSocketAddress(host, port));
                         stack.push(0);
-                    } else stack.push(-1);
+                    } else {
+                        stack.push(-1);
+                    }
                 }
-                /*
-                 * BIND —— 绑定端口。
-                 * 入栈顺序: fd（int）, host（String）, port（int）
-                 * 出栈顺序: port → host → fd
-                 * 返回 0 成功，-1 失败
-                 */
                 case "BIND" -> {
                     int port = (Integer) stack.pop();
                     String host = String.valueOf(stack.pop());
@@ -241,45 +174,32 @@ public class SyscallCommand implements Command {
                     if (ch instanceof ServerSocketChannel ssc) {
                         ssc.bind(new InetSocketAddress(host, port));
                         stack.push(0);
-                    } else stack.push(-1);
+                    } else {
+                        stack.push(-1);
+                    }
                 }
-                /*
-                 * LISTEN —— 监听 socket，兼容 backlog。
-                 * 入栈顺序: fd（int）, backlog（int）
-                 * 出栈顺序: backlog → fd
-                 * 返回 0 成功，-1 失败
-                 * <b>注意：Java NIO 打开 ServerSocketChannel 已自动监听，无 backlog 处理，行为和 UNIX 有区别。</b>
-                 */
                 case "LISTEN" -> {
                     int backlog = (Integer) stack.pop();
                     int fd = (Integer) stack.pop();
                     Channel ch = FDTable.get(fd);
-                    if (ch instanceof ServerSocketChannel) stack.push(0);
-                    else stack.push(-1);
+                    if (ch instanceof ServerSocketChannel) {
+                        stack.push(0);
+                    } else {
+                        stack.push(-1);
+                    }
                 }
-                /*
-                 * ACCEPT —— 接收连接。
-                 * 入栈顺序: fd（int）
-                 * 出栈顺序: fd
-                 * 返回新连接 fd，失败 -1
-                 */
                 case "ACCEPT" -> {
                     int fd = (Integer) stack.pop();
                     Channel ch = FDTable.get(fd);
                     if (ch instanceof ServerSocketChannel ssc) {
                         SocketChannel cli = ssc.accept();
                         stack.push(FDTable.register(cli));
-                    } else stack.push(-1);
+                    } else {
+                        stack.push(-1);
+                    }
                 }
 
-                /*==================== 多路复用 ====================*/
-
-                /*
-                 * SELECT —— I/O 多路复用，监视多个 fd 是否可读写。
-                 * 入栈顺序: fds（List<Integer>）, timeout_ms（long）
-                 * 出栈顺序: timeout_ms → fds
-                 * 返回: 就绪 fd 列表（List<Integer>）
-                 */
+                // 多路复用
                 case "SELECT" -> {
                     long timeout = ((Number) stack.pop()).longValue();
                     @SuppressWarnings("unchecked")
@@ -298,107 +218,94 @@ public class SyscallCommand implements Command {
                     int ready = sel.select(timeout);
                     List<Integer> readyFds = new ArrayList<>();
                     if (ready > 0) {
-                        for (SelectionKey k : sel.selectedKeys())
+                        for (SelectionKey k : sel.selectedKeys()) {
                             readyFds.add((Integer) k.attachment());
+                        }
                     }
                     stack.push(readyFds);
                     sel.close();
                 }
 
-
-                /*==================== 控制台输出 ====================*/
-
-                /*
-                 * PRINT —— 控制台输出（无换行）。
-                 * 入栈顺序: data（任意基本类型或其包装类型、String、byte[] 等）
-                 * 出栈顺序: data
-                 * 返回 0
-                 */
+                // 控制台输出
                 case "PRINT" -> {
                     Object dataObj = stack.pop();
                     output(dataObj, false);
-                    stack.push(0); // success
+                    stack.push(0);
                 }
-
-                /* PRINTLN —— 控制台输出（自动换行）。*/
                 case "PRINTLN" -> {
                     Object dataObj = stack.pop();
                     output(dataObj, true);
-                    stack.push(0); // success
+                    stack.push(0);
                 }
 
-
-                /*==================== 其它未实现/扩展命令 ====================*/
-
-                /*
-                 * 其它自定义 syscall 子命令未实现
-                 */
-                default -> throw new UnsupportedOperationException("Unsupported SYSCALL: " + cmd);
+                default -> throw new UnsupportedOperationException("Unsupported SYSCALL subcommand: " + cmd);
             }
         } catch (Exception e) {
-            // 统一异常处理，异常时压入 -1
             pushErr(stack, e);
         }
 
-        // 默认：下一条指令
         return pc + 1;
     }
 
-    /*------------------------------------ 工具方法 ------------------------------------*/
-
     /**
-     * <b>POSIX open 标志到 Java NIO OpenOption 的映射</b>
+     * 根据传入的文件打开标志，构造 NIO {@link OpenOption} 集合。
      * <p>
-     * 将 Linux/UNIX 的 open 调用 flags 参数，转换为 Java NIO 的 OpenOption 集合。
-     * 目前仅支持 WRITE（0x1）、READ、CREATE（0x40）、TRUNCATE（0x200）、APPEND（0x400）等常用标志。
+     * 本方法负责将底层虚拟机传递的 flags 整数型位域，转换为 Java NIO 标准的文件打开选项集合，
+     * 以支持文件读、写、创建、截断、追加等多种访问场景。
+     * 常用于 SYSCALL 的 OPEN 子命令。
      * </p>
      *
-     * @param flags POSIX 风格 open 标志（如 O_WRONLY=0x1, O_CREAT=0x40 等）
-     * @return 映射后的 OpenOption 集合
+     * @param flags 文件打开模式标志。各标志可组合使用，具体含义请参见虚拟机文档。
+     * @return 转换后的 OpenOption 集合，可直接用于 FileChannel.open 等 NIO 方法
      */
     private static Set<OpenOption> flagsToOptions(int flags) {
         Set<OpenOption> opts = new HashSet<>();
-        // 0x1 = WRITE，否则默认 READ
+        // 如果有写入标志，则添加WRITE，否则默认为READ。
         if ((flags & 0x1) != 0) opts.add(WRITE);
         else opts.add(READ);
+        // 如果包含创建标志，允许创建文件。
         if ((flags & 0x40) != 0) opts.add(CREATE);
+        // 包含截断标志，打开时清空内容。
         if ((flags & 0x200) != 0) opts.add(TRUNCATE_EXISTING);
+        // 包含追加标志，文件写入时追加到末尾。
         if ((flags & 0x400) != 0) opts.add(APPEND);
         return opts;
     }
 
     /**
-     * <b>统一异常处理</b>：
+     * 捕获所有异常并统一处理，操作数栈压入 -1 代表本次系统调用失败。
      * <p>
-     * 捕获 syscall 内部所有异常，将 -1 压入操作数栈，表示系统调用失败（暂不区分错误类型）。
-     * 常见异常如文件不存在、权限不足、通道类型不符、网络故障等。
+     * 本方法是全局错误屏障，任何命令异常都会转换为虚拟机通用的失败信号，
+     * 保证上层调用逻辑不会被异常打断。实际应用中可拓展错误码机制。
      * </p>
      *
-     * @param stack 当前操作数栈
-     * @param e     捕获的异常对象
+     * @param stack 操作数栈，将失败信号写入此栈
+     * @param e     抛出的异常对象，可在调试时输出日志
      */
     private static void pushErr(OperandStack stack, Exception e) {
-        stack.push(-1);  // 目前统一用 -1，后续可按异常类型/errno 映射
+        stack.push(-1);
+        System.err.println("Syscall exception: " + e);
     }
 
     /**
-     * 统一的控制台输出辅助方法，支持：
-     * <ul>
-     *   <li>所有基本类型及其包装类（int、double、long、float…）</li>
-     *   <li>String、byte[]、char[] 以及其他原生数组</li>
-     *   <li>任意 Object（调用 {@code toString}）</li>
-     * </ul>
+     * 控制台输出通用方法，支持基本类型、字节数组、任意数组、对象等。
+     * <p>
+     * 该方法用于 SYSCALL PRINT/PRINTLN，将任意类型对象转为易读字符串输出到标准输出流。
+     * 字节数组自动按 UTF-8 解码，其它原生数组按格式化字符串输出。
+     * </p>
      *
-     * @param obj     要输出的对象
-     * @param newline 是否追加换行
+     * @param obj     待输出的内容，可以为任何类型（如基本类型、byte[]、数组、对象等）
+     * @param newline 是否自动换行。如果为 true，则在输出后换行；否则直接输出。
      */
     private static void output(Object obj, boolean newline) {
         String str;
         if (obj == null) {
             str = "null";
         } else if (obj instanceof byte[] bytes) {
+            // 字节数组作为文本输出
             str = new String(bytes);
         } else if (obj.getClass().isArray()) {
+            // 其它数组格式化输出
             str = arrayToString(obj);
         } else {
             str = obj.toString();
@@ -408,7 +315,15 @@ public class SyscallCommand implements Command {
     }
 
     /**
-     * 将各种原生数组转换成可读字符串。
+     * 将各种原生数组和对象数组转换为可读字符串，便于控制台输出和调试。
+     * <p>
+     * 本方法针对 int、long、double、float、short、char、byte、boolean 等所有原生数组类型
+     * 以及对象数组都能正确格式化，统一输出格式风格，避免显示为类型 hashCode。
+     * 若为不支持的类型，返回通用提示字符串。
+     * </p>
+     *
+     * @param array 任意原生数组或对象数组
+     * @return 该数组的可读字符串表示
      */
     private static String arrayToString(Object array) {
         if (array instanceof int[] a) return Arrays.toString(a);
