@@ -1,10 +1,10 @@
 module: Main
-    import: BuiltinUtils
+    import: os
 
     function: main
         return_type: void
         body:
-            syscall("PRINT",1)
+            syscall("PRINT",2222+1)
         end body
     end function
 end module
