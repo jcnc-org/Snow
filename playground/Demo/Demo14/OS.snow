@@ -1,4 +1,4 @@
-module: Main
+module: os
     import: os
     function: print
         parameter:
