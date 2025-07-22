@@ -1,6 +1,7 @@
 package org.jcnc.snow.compiler.backend.builder;
 
 import org.jcnc.snow.compiler.backend.core.InstructionGenerator;
+import org.jcnc.snow.compiler.backend.utils.OpHelper;
 import org.jcnc.snow.compiler.ir.core.IRFunction;
 import org.jcnc.snow.compiler.ir.core.IRInstruction;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
  * 仅负责根据指令类型分发到对应的 {@link InstructionGenerator} 子类完成实际生成。
  * </p>
  * <p>
- * 工作流程简述: 
+ * 工作流程简述:
  * <ol>
  *   <li>接收一组已注册的 IR 指令生成器，并建立类型到生成器的映射表。</li>
  *   <li>遍历 IR 函数体的每条指令，根据类型找到对应的生成器，调用其 generate 方法生成 VM 指令。</li>
@@ -74,18 +75,26 @@ public final class VMCodeGenerator {
      */
     public void generate(IRFunction fn) {
         this.currentFn = fn.name();
-        out.beginFunction(currentFn); // 输出函数起始
+
+        /* 登记函数入口地址 —— 解决 CALL 未解析符号问题 */
+        out.beginFunction(currentFn);
+
+        /* 逐条分发 IR 指令给对应的生成器 */
         for (IRInstruction ins : fn.body()) {
             @SuppressWarnings("unchecked")
-            // 取得与当前 IR 指令类型匹配的生成器（泛型强转消除类型警告）
             InstructionGenerator<IRInstruction> gen =
                     (InstructionGenerator<IRInstruction>) registry.get(ins.getClass());
             if (gen == null) {
                 throw new IllegalStateException("Unsupported IR: " + ins);
             }
-            // 通过多态分发到实际生成器
             gen.generate(ins, out, slotMap, currentFn);
         }
-        out.endFunction(); // 输出函数结束
+
+        /* 强制补上函数结尾的返回/终止指令 */
+        String retOpcode = "main".equals(currentFn) ? "HALT" : "RET";
+        out.emit(OpHelper.opcode(retOpcode));
+
+        /* 结束函数 */
+        out.endFunction();
     }
 }
