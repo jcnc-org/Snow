@@ -80,7 +80,7 @@ public class CallCommand implements Command {
                 new MethodContext("subroutine@" + targetAddr, null));
         callStack.pushFrame(newFrame);
 
-        System.out.println("Calling function at address: " + targetAddr);
+        System.out.println("\nCalling function at address: " + targetAddr);
         return targetAddr;   // jump
     }
 }
