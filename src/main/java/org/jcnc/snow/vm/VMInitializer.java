@@ -1,8 +1,8 @@
 package org.jcnc.snow.vm;
 
+import org.jcnc.snow.common.Mode;
 import org.jcnc.snow.vm.execution.CommandLoader;
 import org.jcnc.snow.vm.engine.VMCommandExecutor;
-import org.jcnc.snow.vm.engine.VMMode;
 import org.jcnc.snow.vm.engine.VirtualMachineEngine;
 import org.jcnc.snow.vm.io.FilePathResolver;
 import org.jcnc.snow.vm.utils.VMStateLogger;
@@ -45,7 +45,7 @@ public class VMInitializer {
      * @param vmMode The mode in which the virtual machine should operate.
      *               This can be used to specify different operational modes (e.g., debug mode, normal mode).
      */
-    public static void initializeAndRunVM(String[] args, VMMode vmMode) {
+    public static void initializeAndRunVM(String[] args, Mode vmMode) {
         // Retrieve and validate file path
         String filePath = FilePathResolver.getFilePath(args);
         if (filePath == null) return;
@@ -55,7 +55,7 @@ public class VMInitializer {
         if (commands.isEmpty()) return;
 
         // Execute the commands using the virtual machine engine
-        VirtualMachineEngine virtualMachineEngine = new VirtualMachineEngine(vmMode);
+        VirtualMachineEngine virtualMachineEngine = new VirtualMachineEngine();
         VMCommandExecutor.executeInstructions(virtualMachineEngine, commands);
 
         // Print the virtual machine's state

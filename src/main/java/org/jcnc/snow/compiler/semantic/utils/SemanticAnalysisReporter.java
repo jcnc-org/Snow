@@ -4,6 +4,8 @@ import org.jcnc.snow.compiler.semantic.error.SemanticError;
 
 import java.util.List;
 
+import static org.jcnc.snow.common.SnowConfig.print;
+
 /**
  * {@code SemanticAnalysisReporter} 用于在语义分析结束后汇总并打印所有收集到的
  * {@link SemanticError}。为了同时满足“完整错误收集”与“按需快速失败”两种使用场景，
@@ -28,7 +30,7 @@ public final class SemanticAnalysisReporter {
             System.err.println("语义分析发现 " + errors.size() + " 个错误: ");
             errors.forEach(err -> System.err.println("  " + err));
         } else {
-            System.out.println("\n## 语义分析通过，没有发现错误\n");
+            print("\n## 语义分析通过，没有发现错误\n");
         }
     }
 

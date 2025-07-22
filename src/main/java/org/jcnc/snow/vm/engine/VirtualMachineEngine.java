@@ -1,5 +1,6 @@
 package org.jcnc.snow.vm.engine;
 
+import org.jcnc.snow.common.Mode;
 import org.jcnc.snow.vm.execution.CommandExecutionHandler;
 import org.jcnc.snow.vm.module.*;
 
@@ -53,10 +54,10 @@ public class VirtualMachineEngine {
      *
      * @param vmMode execution mode (DEBUG / RUN)
      */
-    public VirtualMachineEngine(VMMode vmMode) {
+    public VirtualMachineEngine() {
         this.operandStack       = new OperandStack();
         this.callStack          = new CallStack();
-        this.localVariableStore = new LocalVariableStore(vmMode); // shared with root frame
+        this.localVariableStore = new LocalVariableStore(); // shared with root frame
         this.commandExecutionHandler =
                 new CommandExecutionHandler(operandStack, localVariableStore, callStack);
         this.programCounter = 0;

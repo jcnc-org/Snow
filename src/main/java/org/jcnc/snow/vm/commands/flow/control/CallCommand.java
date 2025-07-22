@@ -1,8 +1,10 @@
 package org.jcnc.snow.vm.commands.flow.control;
 
-import org.jcnc.snow.vm.engine.VMMode;
+import org.jcnc.snow.common.Mode;
 import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.*;
+
+import static org.jcnc.snow.common.SnowConfig.print;
 
 /**
  * The CallCommand class implements the {@link Command} interface and represents a subroutine/function call
@@ -32,18 +34,18 @@ public class CallCommand implements Command {
      * and control transfer to the target function address.
      * </p>
      *
-     * @param parts         The instruction parameters. Must include:
-     *                      <ul>
-     *                          <li>{@code parts[0]}: The "CALL" operator.</li>
-     *                          <li>{@code parts[1]}: The target address of the callee function.</li>
-     *                          <li>{@code parts[2]}: The number of arguments to pass.</li>
-     *                      </ul>
-     * @param currentPC     The current program counter, used to record the return address for after the call.
-     * @param operandStack  The operand stack manager. Arguments are popped from this stack.
-     * @param callerLVS     The local variable store of the caller function (not directly modified here).
-     * @param callStack     The virtual machine's call stack manager, used to push the new stack frame.
+     * @param parts        The instruction parameters. Must include:
+     *                     <ul>
+     *                         <li>{@code parts[0]}: The "CALL" operator.</li>
+     *                         <li>{@code parts[1]}: The target address of the callee function.</li>
+     *                         <li>{@code parts[2]}: The number of arguments to pass.</li>
+     *                     </ul>
+     * @param currentPC    The current program counter, used to record the return address for after the call.
+     * @param operandStack The operand stack manager. Arguments are popped from this stack.
+     * @param callerLVS    The local variable store of the caller function (not directly modified here).
+     * @param callStack    The virtual machine's call stack manager, used to push the new stack frame.
      * @return The new program counter value, which is the address of the callee function (i.e., jump target).
-     *         The VM should transfer control to this address after setting up the call frame.
+     * The VM should transfer control to this address after setting up the call frame.
      * @throws IllegalArgumentException If the instruction parameters are malformed or missing.
      * @throws IllegalStateException    If the operand stack does not contain enough arguments.
      */
@@ -61,13 +63,13 @@ public class CallCommand implements Command {
         int nArgs;
         try {
             targetAddr = Integer.parseInt(parts[1]);
-            nArgs      = Integer.parseInt(parts[2]);
+            nArgs = Integer.parseInt(parts[2]);
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("CALL: malformed operands", e);
         }
 
         /* build new frame & local table for callee */
-        LocalVariableStore calleeLVS = new LocalVariableStore(VMMode.RUN);
+        LocalVariableStore calleeLVS = new LocalVariableStore();
 
         /* transfer arguments: operand stack top is last arg */
         for (int slot = nArgs - 1; slot >= 0; slot--) {
@@ -80,7 +82,7 @@ public class CallCommand implements Command {
                 new MethodContext("subroutine@" + targetAddr, null));
         callStack.pushFrame(newFrame);
 
-        System.out.println("\nCalling function at address: " + targetAddr);
+        print("\nCalling function at address: " + targetAddr);
         return targetAddr;   // jump
     }
 }
