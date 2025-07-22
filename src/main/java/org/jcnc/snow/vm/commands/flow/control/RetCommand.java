@@ -44,7 +44,7 @@ public class RetCommand implements Command {
         finished.getLocalVariableStore().clearVariables();
 
         int returnAddr = finished.getReturnAddress();
-        System.out.println("Return " + returnAddr);
+        System.out.println("\nReturn " + returnAddr);
         return returnAddr;
     }
 }
