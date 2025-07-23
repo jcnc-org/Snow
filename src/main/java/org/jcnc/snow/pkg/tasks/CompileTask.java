@@ -1,12 +1,14 @@
 package org.jcnc.snow.pkg.tasks;
 
 import org.jcnc.snow.cli.commands.CompileCommand;
-import org.jcnc.snow.compiler.backend.utils.OpHelper;
+import org.jcnc.snow.common.Mode;
+import org.jcnc.snow.common.SnowConfig;
 import org.jcnc.snow.compiler.backend.alloc.RegisterAllocator;
 import org.jcnc.snow.compiler.backend.builder.VMCodeGenerator;
 import org.jcnc.snow.compiler.backend.builder.VMProgramBuilder;
 import org.jcnc.snow.compiler.backend.core.InstructionGenerator;
 import org.jcnc.snow.compiler.backend.generator.InstructionGeneratorProvider;
+import org.jcnc.snow.compiler.backend.utils.OpHelper;
 import org.jcnc.snow.compiler.ir.builder.IRProgramBuilder;
 import org.jcnc.snow.compiler.ir.core.IRFunction;
 import org.jcnc.snow.compiler.ir.core.IRInstruction;
@@ -26,6 +28,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
+import static org.jcnc.snow.common.SnowConfig.print;
+
 /**
  * CLI 任务: 编译 .snow 源文件为 VM 字节码（.water 文件）。
  * <p>
@@ -39,16 +43,20 @@ import java.util.*;
  * </pre>
  */
 public final class CompileTask implements Task {
-    /** 项目信息 */
+    /**
+     * 项目信息
+     */
     private final Project project;
-    /** 原始命令行参数 */
+    /**
+     * 原始命令行参数
+     */
     private final String[] args;
 
     /**
      * 创建一个编译任务。
      *
-     * @param project  项目信息对象
-     * @param args     命令行参数数组
+     * @param project 项目信息对象
+     * @param args    命令行参数数组
      */
     public CompileTask(Project project, String[] args) {
         this.project = project;
@@ -62,6 +70,56 @@ public final class CompileTask implements Task {
      */
     public CompileTask(Project project) {
         this(project, new String[0]);
+    }
+
+    /* ---------------------- 调试输出工具 ---------------------- */
+
+    /**
+     * 推断 .water 输出文件名。
+     * <ul>
+     *   <li>如果指定 -o，直接使用该名称。</li>
+     *   <li>目录编译时，取目录名。</li>
+     *   <li>单文件编译时，取文件名去掉 .snow 后缀。</li>
+     *   <li>否则默认 "program"。</li>
+     * </ul>
+     *
+     * @param sources 源文件路径列表
+     * @param outName 输出文件名（如有指定，否则为 null）
+     * @param dir     源码目录（如有指定，否则为 null）
+     * @return 推断出的输出文件路径（.water 文件）
+     */
+    private static Path deriveOutputPath(List<Path> sources, String outName, Path dir) {
+        String base;
+        if (outName != null) {
+            base = outName;
+        } else if (dir != null) {
+            base = dir.getFileName().toString();
+        } else if (sources.size() == 1) {
+            base = sources.getFirst().getFileName().toString()
+                    .replaceFirst("\\.snow$", "");
+        } else {
+            base = "program";
+        }
+        return Path.of(base + ".water");
+    }
+
+    /**
+     * 将 main 函数调整至函数列表首位，确保程序入口为 PC=0。
+     *
+     * @param in 原始 IRProgram
+     * @return 调整入口后的 IRProgram
+     */
+    private static IRProgram reorderForEntry(IRProgram in) {
+        List<IRFunction> ordered = new ArrayList<>(in.functions());
+        for (int i = 0; i < ordered.size(); i++) {
+            if ("main".equals(ordered.get(i).name())) {
+                Collections.swap(ordered, 0, i);
+                break;
+            }
+        }
+        IRProgram out = new IRProgram();
+        ordered.forEach(out::add);
+        return out;
     }
 
     /**
@@ -96,6 +154,7 @@ public final class CompileTask implements Task {
             String arg = args[i];
             switch (arg) {
                 case "run" -> runAfterCompile = true;
+                case "-debug" -> SnowConfig.MODE = Mode.DEBUG;
                 case "-o" -> {
                     if (i + 1 < args.length) outputName = args[++i];
                     else {
@@ -151,8 +210,8 @@ public final class CompileTask implements Task {
         // ---------------- 1. 词法/语法分析，并打印源代码 ----------------
         List<Node> allAst = new ArrayList<>();
 
-        System.out.println("## 编译器输出");
-        System.out.println("### Snow 源代码");
+        print("## 编译器输出");
+        print("### Snow 源代码");
 
         for (Path p : sources) {
             if (!Files.exists(p)) {
@@ -163,8 +222,8 @@ public final class CompileTask implements Task {
             String code = Files.readString(p, StandardCharsets.UTF_8);
 
             // 打印源码
-            System.out.println("#### " + p.getFileName());
-            System.out.println(code);
+            print("#### " + p.getFileName());
+            print(code);
 
             // 词法、语法分析
             LexerEngine lexer = new LexerEngine(code, p.toString());
@@ -185,11 +244,11 @@ public final class CompileTask implements Task {
         program = reorderForEntry(program);
 
         // 打印 AST 和 IR
-        System.out.println("### AST");
-        ASTPrinter.printJson(allAst);
+        print("### AST");
+        if (SnowConfig.isDebug()) ASTPrinter.printJson(allAst);
 
-        System.out.println("### IR");
-        System.out.println(program);
+        print("### IR");
+        print(program.toString());
 
         // ---------------- 4. IR → VM 指令 ----------------
         VMProgramBuilder builder = new VMProgramBuilder();
@@ -203,74 +262,28 @@ public final class CompileTask implements Task {
         }
         List<String> finalCode = builder.build();
 
-        System.out.println("### VM code");
-        for (int i = 0; i < finalCode.size(); i++) {
-            String[] parts = finalCode.get(i).split(" ");
-            String name = OpHelper.opcodeName(parts[0]);
-            parts = Arrays.copyOfRange(parts, 1, parts.length);
-            System.out.printf("%04d: %-10s %s\n", i, name, String.join(" ", parts));
+        print("### VM code");
+        if (SnowConfig.isDebug()) {
+            for (int i = 0; i < finalCode.size(); i++) {
+                String[] parts = finalCode.get(i).split(" ");
+                String name = OpHelper.opcodeName(parts[0]);
+                parts = Arrays.copyOfRange(parts, 1, parts.length);
+                print("%04d: %-10s %s%n", i, name, String.join(" ", parts));
+            }
         }
 
         // ---------------- 5. 写出 .water 文件 ----------------
         Path outputFile = deriveOutputPath(sources, outputName, dir);
         Files.write(outputFile, finalCode, StandardCharsets.UTF_8);
-        System.out.println("Written to " + outputFile.toAbsolutePath());
+        print("Written to " + outputFile.toAbsolutePath());
 
-        // ---------------- 6. 可选: 立即运行 VM ----------------
+        // ---------------- 6. 立即运行 VM ----------------
         if (runAfterCompile) {
-            System.out.println("\n=== Launching VM ===");
+            print("\n=== Launching VM ===");
             VMLauncher.main(new String[]{outputFile.toString()});
-            System.out.println("\n=== VM exited ===");
+            print("\n=== VM exited ===");
         }
 
         return 0;
-    }
-
-    /**
-     * 推断 .water 输出文件名。
-     * <ul>
-     *   <li>如果指定 -o，直接使用该名称。</li>
-     *   <li>目录编译时，取目录名。</li>
-     *   <li>单文件编译时，取文件名去掉 .snow 后缀。</li>
-     *   <li>否则默认 "program"。</li>
-     * </ul>
-     *
-     * @param sources   源文件路径列表
-     * @param outName   输出文件名（如有指定，否则为 null）
-     * @param dir       源码目录（如有指定，否则为 null）
-     * @return 推断出的输出文件路径（.water 文件）
-     */
-    private static Path deriveOutputPath(List<Path> sources, String outName, Path dir) {
-        String base;
-        if (outName != null) {
-            base = outName;
-        } else if (dir != null) {
-            base = dir.getFileName().toString();
-        } else if (sources.size() == 1) {
-            base = sources.getFirst().getFileName().toString()
-                    .replaceFirst("\\.snow$", "");
-        } else {
-            base = "program";
-        }
-        return Path.of(base + ".water");
-    }
-
-    /**
-     * 将 main 函数调整至函数列表首位，确保程序入口为 PC=0。
-     *
-     * @param in 原始 IRProgram
-     * @return 调整入口后的 IRProgram
-     */
-    private static IRProgram reorderForEntry(IRProgram in) {
-        List<IRFunction> ordered = new ArrayList<>(in.functions());
-        for (int i = 0; i < ordered.size(); i++) {
-            if ("main".equals(ordered.get(i).name())) {
-                Collections.swap(ordered, 0, i);
-                break;
-            }
-        }
-        IRProgram out = new IRProgram();
-        ordered.forEach(out::add);
-        return out;
     }
 }

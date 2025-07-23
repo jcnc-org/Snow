@@ -1,6 +1,7 @@
 package org.jcnc.snow.vm;
 
-import org.jcnc.snow.vm.engine.VMMode;
+
+import org.jcnc.snow.common.Mode;
 
 import static org.jcnc.snow.vm.VMInitializer.initializeAndRunVM;
 
@@ -12,7 +13,7 @@ import static org.jcnc.snow.vm.VMInitializer.initializeAndRunVM;
  *
  * <p>This class provides the entry point to launch the virtual machine. The main method retrieves the file path
  * of the VM instructions from the command-line arguments, initializes the VM engine, and runs the VM in the
- * specified mode (e.g., {@link VMMode#DEBUG}).</p>
+ * specified mode (e.g., {@link Mode#DEBUG}).</p>
  */
 public class VMLauncher {
 
@@ -44,6 +45,6 @@ public class VMLauncher {
      */
     public static void main(String[] args) {
         // Call the method that initializes and runs the VM in DEBUG mode
-        initializeAndRunVM(args, VMMode.RUN);
+        initializeAndRunVM(args, Mode.RUN);
     }
 }

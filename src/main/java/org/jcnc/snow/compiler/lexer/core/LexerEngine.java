@@ -1,5 +1,6 @@
 package org.jcnc.snow.compiler.lexer.core;
 
+import org.jcnc.snow.common.SnowConfig;
 import org.jcnc.snow.compiler.lexer.base.TokenScanner;
 import org.jcnc.snow.compiler.lexer.scanners.*;
 import org.jcnc.snow.compiler.lexer.token.Token;
@@ -9,6 +10,8 @@ import org.jcnc.snow.compiler.lexer.utils.TokenPrinter;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.jcnc.snow.common.SnowConfig.print;
 
 /**
  * Snow 语言词法分析器核心实现。
@@ -53,14 +56,17 @@ public class LexerEngine {
         /* 2. 后置整体校验 */
         validateTokens();
         /* 3. 打印 token */
-        TokenPrinter.print(tokens);
+        if (SnowConfig.isDebug()) {
+            TokenPrinter.print(tokens);
+        }
+
         /* 4. 统一报告错误 */
         report(errors);
     }
 
     public static void report(List<LexicalError> errors) {
         if (errors == null || errors.isEmpty()) {
-            System.out.println("\n## 词法分析通过，没有发现错误\n");
+            print("\n## 词法分析通过，没有发现错误\n");
             return;
         }
         System.err.println("\n词法分析发现 " + errors.size() + " 个错误: ");

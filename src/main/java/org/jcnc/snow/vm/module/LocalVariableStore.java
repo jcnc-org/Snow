@@ -1,11 +1,12 @@
 package org.jcnc.snow.vm.module;
 
+import org.jcnc.snow.common.SnowConfig;
 import org.jcnc.snow.vm.gui.LocalVariableStoreSwing;
 import org.jcnc.snow.vm.utils.LoggingUtils;
-import org.jcnc.snow.vm.engine.VMMode;
 
 import java.util.ArrayList;
-import java.util.Objects;
+
+import static org.jcnc.snow.vm.utils.VMUtils.isNativeImage;
 
 /**
  * The {@code LocalVariableStore} represents a simple dynamically-sized
@@ -18,38 +19,43 @@ import java.util.Objects;
 public class LocalVariableStore {
 
     private final ArrayList<Object> localVariables;
-    private final VMMode vmMode;
-
     /* ---------- construction ---------- */
 
-    public LocalVariableStore(VMMode vmMode, int initialCapacity) {
+    public LocalVariableStore(int initialCapacity) {
         this.localVariables = new ArrayList<>(initialCapacity);
-        this.vmMode = vmMode;
         handleMode();
     }
 
-    public LocalVariableStore(VMMode vmMode) {
+    public LocalVariableStore() {
         this.localVariables = new ArrayList<>();
-        this.vmMode = vmMode;
         handleMode();
     }
 
     /* ---------- public API ---------- */
 
-    /** Sets the value at {@code index}, expanding the list if necessary. */
+    /**
+     * Sets the value at {@code index}, expanding the list if necessary.
+     */
     public void setVariable(int index, Object value) {
         ensureCapacity(index + 1);
         localVariables.set(index, value);
     }
 
     /* ------------------------------------------------------------
-     * 兼容早期实现: VM 指令译码器可直接调用 store / load
-     * 而无需关心内部命名差异。
+     * Backward compatibility: VM instruction decoder can directly call
+     * store / load methods without caring about internal naming differences.
      * ------------------------------------------------------------ */
-    public void store(int index, Object value) { setVariable(index, value); }
-    public Object load(int index)              { return getVariable(index); }
+    public void store(int index, Object value) {
+        setVariable(index, value);
+    }
 
-    /** Returns the value at {@code index}. */
+    public Object load(int index) {
+        return getVariable(index);
+    }
+
+    /**
+     * Returns the value at {@code index}.
+     */
     public Object getVariable(int index) {
         /* 修改点 #1 —— 自动扩容以避免 LOAD 越界异常  */
         if (index < 0)
@@ -58,12 +64,16 @@ public class LocalVariableStore {
         return localVariables.get(index);   // 可能为 null，符合 JVM 语义
     }
 
-    /** Exposes the backing list (read-only preferred). */
+    /**
+     * Exposes the backing list (read-only preferred).
+     */
     public ArrayList<Object> getLocalVariables() {
         return localVariables;
     }
 
-    /** Prints every slot to the logger. */
+    /**
+     * Prints every slot to the logger.
+     */
     public void printLv() {
         if (localVariables.isEmpty()) {
             LoggingUtils.logInfo("Local variable table is empty", "");
@@ -76,7 +86,12 @@ public class LocalVariableStore {
         }
     }
 
-    /** Clears all variables (used when a stack frame is popped). */
+
+    /* ---------- internal helpers ---------- */
+
+    /**
+     * Clears all variables (used when a stack frame is popped).
+     */
     public void clearVariables() {
         localVariables.clear();
     }
@@ -96,10 +111,9 @@ public class LocalVariableStore {
         }
     }
 
-
-    /* ---------- internal helpers ---------- */
-
-    /** Ensures backing list can hold {@code minCapacity} slots. */
+    /**
+     * Ensures backing list can hold {@code minCapacity} slots.
+     */
     private void ensureCapacity(int minCapacity) {
         /* 修改点 #3 —— 使用 while 循环填充 null，确保 slot 可随机写入 */
         while (localVariables.size() < minCapacity) {
@@ -107,11 +121,19 @@ public class LocalVariableStore {
         }
     }
 
-    /** Mode-specific UI hook (unchanged). */
+    /**
+     * Mode-specific UI hook for debugging.
+     * <p>
+     * If debug mode is enabled and not running inside a GraalVM native-image,
+     * this method will open the Swing-based variable inspector window.
+     * In native-image environments (where AWT/Swing is unavailable),
+     * the window will not be displayed.
+     */
     private void handleMode() {
-        /* no-op */
-        if (Objects.requireNonNull(vmMode) == VMMode.DEBUG) {
+        if (SnowConfig.isDebug()) {
+            if (isNativeImage()) return;
             LocalVariableStoreSwing.display(this, "Local Variable Table");
         }
     }
+
 }
