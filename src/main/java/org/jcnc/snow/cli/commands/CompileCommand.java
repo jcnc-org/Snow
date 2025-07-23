@@ -60,10 +60,10 @@ public final class CompileCommand implements CLICommand {
 
             List<String> argList = new ArrayList<>();
 
-            // 保留用户在 cloud 模式下传入的 “run” 标志
+            // 保留用户在 cloud 模式下传入的 “run” / “-debug” 标志
             for (String a : args) {
-                if ("run".equals(a)) {
-                    argList.add("run");
+                if ("run".equals(a) || "-debug".equals(a)) {
+                    argList.add(a);
                 }
             }
 
