@@ -1,54 +1,77 @@
 package org.jcnc.snow.compiler.semantic.core;
 
-import org.jcnc.snow.compiler.semantic.type.*;
+import org.jcnc.snow.compiler.semantic.type.BuiltinType;
+import org.jcnc.snow.compiler.semantic.type.FunctionType;
+import org.jcnc.snow.compiler.semantic.type.Type;
 
-import java.util.Map;
+import java.util.*;
 
 /**
- * {@code BuiltinTypeRegistry} 是内置类型和内置模块的集中注册中心。
+ * <b>BuiltinTypeRegistry - 语言全部内置类型/模块/函数注册中心</b>
+ *
  * <p>
- * 本类主要负责: 
+ * 该类统一注册编译器需要用到的所有基础类型、标准库模块与内核函数，供语义分析及类型检查阶段使用。
  * <ul>
- *   <li>定义语言中所有可识别的基础类型（如 int、float、string 等）；</li>
- *   <li>在语义分析初始化时，将内置模块（如 {@code BuiltinUtils}）注册到上下文中；</li>
- *   <li>提供对内置类型的快速查找支持。</li>
+ *   <li>所有基础类型（byte、short、int、long、float、double、string、boolean、void）</li>
+ *   <li>标准库模块 <b>BuiltinUtils</b>（仅注册函数签名，具体实现由 Snow 语言源码实现）</li>
+ *   <li>内核函数 <b>syscall</b>（供标准库内部实现调用）</li>
  * </ul>
- * 该类为纯工具类，所有成员均为静态，不可实例化。
+ * </p>
  */
 public final class BuiltinTypeRegistry {
 
     /**
-     * 内置类型映射表: 将类型名称字符串映射到对应的 {@link Type} 实例。
+     * <b>基础类型表</b>：类型名称 → Type 实例
      * <p>
-     * 用于类型解析过程（如解析变量声明或函数返回类型）中，
-     * 将用户源码中的类型字符串转换为语义类型对象。
+     * 本 Map 静态初始化，注册所有 Snow 语言基础类型，供类型检查与类型推断使用。
+     * </p>
      */
-    public static final Map<String, Type> BUILTIN_TYPES = Map.of(
-            "int",    BuiltinType.INT,
-            "long",   BuiltinType.LONG,
-            "short",  BuiltinType.SHORT,
-            "byte",   BuiltinType.BYTE,
-            "float",  BuiltinType.FLOAT,
-            "double", BuiltinType.DOUBLE,
-            "string", BuiltinType.STRING,
-            "boolean", BuiltinType.BOOLEAN,
-            "void",   BuiltinType.VOID
-    );
+    public static final Map<String, Type> BUILTIN_TYPES;
+    static {
+        Map<String, Type> t = new HashMap<>();
+        t.put("byte",   BuiltinType.BYTE);     // 字节型
+        t.put("short",  BuiltinType.SHORT);    // 短整型
+        t.put("int",    BuiltinType.INT);      // 整型
+        t.put("long",   BuiltinType.LONG);     // 长整型
+        t.put("float",  BuiltinType.FLOAT);    // 单精度浮点
+        t.put("double", BuiltinType.DOUBLE);   // 双精度浮点
+        t.put("string", BuiltinType.STRING);   // 字符串
+        t.put("void",   BuiltinType.VOID);     // 无返回
+        t.put("boolean", BuiltinType.BOOLEAN); // 布尔类型
+
+        BUILTIN_TYPES = Collections.unmodifiableMap(t); // 不可变映射，防止被意外更改
+    }
 
     /**
-     * 私有构造函数，禁止实例化。
+     * 私有构造方法，禁止实例化
      */
     private BuiltinTypeRegistry() { }
 
     /**
-     * 初始化语义上下文中与内置模块相关的内容。
-     * <p>
-     * 当前实现将内置模块 {@code BuiltinUtils} 注册至上下文模块表中，
-     * 使其在用户代码中可被访问（如 {@code BuiltinUtils.to_string(...)}）。
+     * <b>初始化内置模块和函数声明</b>
      *
-     * @param ctx 当前语义分析上下文
+     * <p>
+     * 语义分析阶段调用，将所有基础模块与函数声明注册到语义上下文中。
+     * - 目前注册 BuiltinUtils 标准库模块（仅注册签名，不负责具体实现）。
+     * - syscall 函数注册到 BuiltinUtils 内，供标准库内部调用。
+     * </p>
+     *
+     * @param ctx 全局语义分析上下文，持有模块表
      */
     public static void init(Context ctx) {
+        /* ---------- 注册标准库 os ---------- */
+        ModuleInfo utils = new ModuleInfo("os");
 
+        // syscall(string, int): void   —— 供标准库内部使用的调用接口
+        utils.getFunctions().put(
+                "syscall",
+                new FunctionType(
+                        Arrays.asList(BuiltinType.STRING, BuiltinType.INT),
+                        BuiltinType.VOID
+                )
+        );
+
+        // 注册 BuiltinUtils 到上下文的模块表（若已存在则不重复添加）
+        ctx.getModules().putIfAbsent("os", utils);
     }
 }

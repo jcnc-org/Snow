@@ -59,7 +59,7 @@ public class HaltCommand implements Command {
     @Override
     public int execute(String[] parts, int currentPC, OperandStack operandStack, LocalVariableStore localVariableStore, CallStack callStack) {
         // Output the termination message
-        LoggingUtils.logInfo("Process has ended", "\n");
+        LoggingUtils.logInfo("\nProcess has ended", "");
 
         // Return -1 to indicate the program termination, and the virtual machine will not continue executing subsequent instructions
         return -1;

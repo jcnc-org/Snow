@@ -1,8 +1,9 @@
 module: Main
+    import: os
     function: main
         return_type: void
         body:
-            declare abc:int =1
+            print(222)
         end body
     end function
 end module

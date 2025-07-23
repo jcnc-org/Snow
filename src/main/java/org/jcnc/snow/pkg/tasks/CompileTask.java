@@ -220,6 +220,7 @@ public final class CompileTask implements Task {
         if (runAfterCompile) {
             System.out.println("\n=== Launching VM ===");
             VMLauncher.main(new String[]{outputFile.toString()});
+            System.out.println("\n=== VM exited ===");
         }
 
         return 0;

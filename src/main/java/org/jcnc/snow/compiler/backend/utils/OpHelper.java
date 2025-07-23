@@ -167,6 +167,9 @@ public final class OpHelper {
         map.put("D2I", Integer.toString(VMOpCode.D2I));
         map.put("D2L", Integer.toString(VMOpCode.D2L));
         map.put("D2F", Integer.toString(VMOpCode.D2F));
+        map.put("R_PUSH", Integer.toString(VMOpCode.R_PUSH));
+        map.put("R_LOAD", Integer.toString(VMOpCode.R_LOAD));
+        map.put("R_STORE", Integer.toString(VMOpCode.R_STORE));
         map.put("POP", Integer.toString(VMOpCode.POP));
         map.put("DUP", Integer.toString(VMOpCode.DUP));
         map.put("SWAP", Integer.toString(VMOpCode.SWAP));
@@ -176,11 +179,19 @@ public final class OpHelper {
         map.put("MOV", Integer.toString(VMOpCode.MOV));
         map.put("HALT", Integer.toString(VMOpCode.HALT));
         map.put("SYSCALL", Integer.toString(VMOpCode.SYSCALL));
-        map.put("DEBUG_TRAP", Integer.toString(VMOpCode.DEBUG_TRAP));
+//        map.put("DEBUG_TRAP", Integer.toString(VMOpCode.DEBUG_TRAP));
         OPCODE_MAP = Collections.unmodifiableMap(map);
 
         Map<Integer, String> revmap = new HashMap<>();  // reverse map
-        OPCODE_MAP.forEach((key, value) -> revmap.put(Integer.parseInt(value), key));
+        OPCODE_MAP.forEach((key, value) -> {
+            int codeInt;
+            if (value.startsWith("0x") || value.startsWith("0X")) {
+                codeInt = Integer.parseInt(value.substring(2), 16);
+            } else {
+                codeInt = Integer.parseInt(value);
+            }
+            revmap.put(codeInt, key);
+        });
         OPCODE_NAME_MAP = Collections.unmodifiableMap(revmap);
     }
 
@@ -222,11 +233,13 @@ public final class OpHelper {
         if (v instanceof Byte) return "B";
         if (v instanceof Double) return "D";
         if (v instanceof Float) return "F";
+        if (v instanceof String) return "R";   //引用类型
         throw new IllegalStateException("Unknown const type: " + v.getClass());
     }
 
     /**
      * 根据 opcode 数值的字符串形式获取指令名
+     *
      * @param code 字符串形式的 opcode 数值
      * @return opcode 对应的指令名
      */
@@ -236,6 +249,7 @@ public final class OpHelper {
 
     /**
      * 根据 opcode 获取指令名
+     *
      * @param code opcode
      * @return opcode 对应的指令名
      */

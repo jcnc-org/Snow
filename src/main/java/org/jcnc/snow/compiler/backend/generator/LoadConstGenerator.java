@@ -10,16 +10,18 @@ import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 import java.util.Map;
 
 /**
- * 常量加载指令生成器
- * 该类用于生成将常量加载到虚拟机寄存器的指令，包括 PUSH 常量值和 STORE 到指定槽位，
- * 并为每个槽位设置正确的类型前缀（如 'I', 'L', 'F' 等）。
+ * <b>LoadConstGenerator - 将 IR {@code LoadConstInstruction} 生成 VM 指令</b>
+ *
+ * <p>
+ * 本类负责将 IR 层的常量加载指令 {@link LoadConstInstruction} 转换为对应的虚拟机指令。
+ * 额外支持：如果常量类型为 {@code String}，会同步登记到
+ * {@link CallGenerator} 的字符串常量池，方便 syscall 降级场景使用。
+ * </p>
  */
 public class LoadConstGenerator implements InstructionGenerator<LoadConstInstruction> {
 
     /**
-     * 返回本生成器支持的指令类型，即 LoadConstInstruction。
-     *
-     * @return 支持的指令类型的 Class 对象
+     * 指定本生成器支持的 IR 指令类型（LoadConstInstruction）
      */
     @Override
     public Class<LoadConstInstruction> supportedClass() {
@@ -27,49 +29,49 @@ public class LoadConstGenerator implements InstructionGenerator<LoadConstInstruc
     }
 
     /**
-     * 生成一条常量加载指令的目标虚拟机代码。
+     * 生成 VM 指令主流程
      *
-     * @param ins       当前要生成的 LoadConstInstruction 指令
-     * @param out       VMProgramBuilder，用于输出生成的虚拟机指令
-     * @param slotMap   IR 虚拟寄存器到实际槽位编号的映射表
-     * @param currentFn 当前函数名（如有需要可使用）
+     * @param ins       当前常量加载指令
+     * @param out       指令输出构建器
+     * @param slotMap   虚拟寄存器与物理槽位映射
+     * @param currentFn 当前函数名
      */
     @Override
     public void generate(LoadConstInstruction ins,
                          VMProgramBuilder out,
                          Map<IRVirtualRegister, Integer> slotMap,
                          String currentFn) {
-        // 1. 获取常量值（第一个操作数必为常量）
+
+        /* 1. 获取常量值 */
         IRConstant constant = (IRConstant) ins.operands().getFirst();
         Object value = constant.value();
 
-        // 2. 生成 PUSH 指令，将常量值推入操作数栈
-        // 通过 OpHelper 辅助方法获取合适的数据类型前缀
-        String pushOp = OpHelper.pushOpcodeFor(value);
-        out.emit(pushOp + " " + value);
+        /* 2. 生成 PUSH 指令，将常量值入栈 */
+        out.emit(OpHelper.pushOpcodeFor(value) + " " + value);
 
-        // 3. 生成 STORE 指令，将栈顶的值存入对应槽位（寄存器）
-        // 同样通过 OpHelper 获取对应类型的 STORE 指令
-        String storeOp = OpHelper.storeOpcodeFor(value);
-        // 获取目标虚拟寄存器对应的槽位编号
+        /* 3. STORE 到目标槽位 */
         int slot = slotMap.get(ins.dest());
-        out.emit(storeOp + " " + slot);
+        out.emit(OpHelper.storeOpcodeFor(value) + " " + slot);
 
-        // 4. 根据常量的 Java 类型，为槽位设置正确的前缀字符
-        // 这样在后续类型检查/运行时可用，常见前缀如 'I', 'L', 'F', 'D', 'S', 'B'
+        /* 4. 标记槽位数据类型（用于后续类型推断和 LOAD/STORE 指令选择） */
         char prefix = switch (value) {
-            case Integer _ -> 'I';  // 整型
-            case Long _ -> 'L';  // 长整型
-            case Short _ -> 'S';  // 短整型
-            case Byte _ -> 'B';  // 字节型
-            case Double _ -> 'D';  // 双精度浮点型
-            case Float _ -> 'F';  // 单精度浮点型
-            case Boolean _  -> 'I';  // 布尔（作为 0/1 整型存储）
-            case null, default ->
-                    throw new IllegalStateException("Unknown const type: " + (value != null ? value.getClass() : null));
+            case Integer _ -> 'I';   // 整型
+            case Long    _ -> 'L';   // 长整型
+            case Short   _ -> 'S';   // 短整型
+            case Byte    _ -> 'B';   // 字节型
+            case Double  _ -> 'D';   // 双精度
+            case Float   _ -> 'F';   // 单精度
+            case Boolean _ -> 'I';   // 布尔类型用 I 处理
+            case String  _ -> 'R';   // 字符串常量
+            case null, default ->    // 其它类型异常
+                    throw new IllegalStateException("未知的常量类型: "
+                            + (value != null ? value.getClass() : null));
         };
-
-        // 写入槽位类型映射表
         out.setSlotType(slot, prefix);
+
+        /* 5. 如果是字符串常量，则登记到 CallGenerator 的常量池，便于 syscall 字符串降级使用 */
+        if (value instanceof String s) {
+            CallGenerator.registerStringConst(ins.dest().id(), s);
+        }
     }
 }
