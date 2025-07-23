@@ -6,6 +6,8 @@ import org.jcnc.snow.vm.utils.LoggingUtils;
 
 import java.util.ArrayList;
 
+import static org.jcnc.snow.vm.utils.VMUtils.isNativeImage;
+
 /**
  * The {@code LocalVariableStore} represents a simple dynamically-sized
  * local-variable table (<em>frame locals</em>) of the VM.
@@ -84,6 +86,9 @@ public class LocalVariableStore {
         }
     }
 
+
+    /* ---------- internal helpers ---------- */
+
     /**
      * Clears all variables (used when a stack frame is popped).
      */
@@ -106,9 +111,6 @@ public class LocalVariableStore {
         }
     }
 
-
-    /* ---------- internal helpers ---------- */
-
     /**
      * Ensures backing list can hold {@code minCapacity} slots.
      */
@@ -120,12 +122,18 @@ public class LocalVariableStore {
     }
 
     /**
-     * Mode-specific UI hook (unchanged).
+     * Mode-specific UI hook for debugging.
+     * <p>
+     * If debug mode is enabled and not running inside a GraalVM native-image,
+     * this method will open the Swing-based variable inspector window.
+     * In native-image environments (where AWT/Swing is unavailable),
+     * the window will not be displayed.
      */
     private void handleMode() {
-        /* no-op */
         if (SnowConfig.isDebug()) {
+            if (isNativeImage()) return;
             LocalVariableStoreSwing.display(this, "Local Variable Table");
         }
     }
+
 }

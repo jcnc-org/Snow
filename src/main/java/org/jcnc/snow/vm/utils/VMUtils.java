@@ -1,5 +1,6 @@
 package org.jcnc.snow.vm.utils;
 
+import org.graalvm.nativeimage.ImageInfo;
 import org.jcnc.snow.vm.engine.VirtualMachineEngine;
 
 /**
@@ -38,5 +39,22 @@ public class VMUtils {
         }
         vm.printStack();
         vm.printLocalVariables();
+    }
+
+    /**
+     * Detects if the current runtime environment is a GraalVM native-image.
+     * <p>
+     * Uses GraalVM's {@code org.graalvm.nativeimage.ImageInfo.inImageCode()} API to determine
+     * if the application is running as a native executable. If the class is not present
+     * (for example, in a standard JVM), returns {@code false}.
+     *
+     * @return {@code true} if running inside a GraalVM native-image, otherwise {@code false}
+     */
+    public static boolean isNativeImage() {
+        try {
+            return ImageInfo.inImageCode();
+        } catch (Throwable t) {
+            return false;
+        }
     }
 }
