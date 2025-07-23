@@ -42,8 +42,8 @@ public class LocalVariableStore {
     }
 
     /* ------------------------------------------------------------
-     * 兼容早期实现: VM 指令译码器可直接调用 store / load
-     * 而无需关心内部命名差异。
+     * Backward compatibility: VM instruction decoder can directly call
+     * store / load methods without caring about internal naming differences.
      * ------------------------------------------------------------ */
     public void store(int index, Object value) {
         setVariable(index, value);
