@@ -3,6 +3,8 @@ package org.jcnc.snow.vm.commands.flow.control;
 import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.*;
 
+import static org.jcnc.snow.common.SnowConfig.print;
+
 /**
  * Implements the {@code RET} instruction (method return).
  *
@@ -44,7 +46,7 @@ public class RetCommand implements Command {
         finished.getLocalVariableStore().clearVariables();
 
         int returnAddr = finished.getReturnAddress();
-        System.out.println("Return " + returnAddr);
+        print("\nReturn " + returnAddr);
         return returnAddr;
     }
 }

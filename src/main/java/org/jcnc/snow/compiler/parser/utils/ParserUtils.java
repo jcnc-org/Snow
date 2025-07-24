@@ -9,7 +9,7 @@ import org.jcnc.snow.compiler.parser.context.TokenStream;
  * 提供一系列静态方法用于标准语法结构（如结构头、结构尾）的匹配校验，以及常用的容错处理操作。
  * 这些方法可在函数定义、模块定义、循环、条件语句等语法块中复用，有效减少冗余代码，提高解析器稳定性。
  *
- * <p>主要功能包括：
+ * <p>主要功能包括: 
  * <ul>
  *   <li>匹配结构性语法起始标记（如 {@code loop:}、{@code function:}）</li>
  *   <li>匹配结构性语法结尾标记（如 {@code end loop}、{@code end function}）</li>
@@ -25,7 +25,7 @@ public class ParserUtils {
      * 若格式不匹配，将抛出语法异常。
      *
      * @param ts      当前的 token 流
-     * @param keyword 结构起始关键字（如 "loop", "function", "initializer" 等）
+     * @param keyword 结构起始关键字（如 "loop", "function", "init" 等）
      */
     public static void matchHeader(TokenStream ts, String keyword) {
         ts.expect(keyword);                  // 匹配关键字

@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * {@code IfStatementParser} 类负责解析 if 条件语句，是语句级解析器中的条件分支处理器。
  * <p>
- * 本解析器支持以下结构的条件语法：
+ * 本解析器支持以下结构的条件语法: 
  * <pre>{@code
  * if <condition> then
  *     <then-statements>
@@ -23,7 +23,7 @@ import java.util.List;
  *     <else-statements>]
  * end if
  * }</pre>
- * 其中：
+ * 其中: 
  * <ul>
  *     <li>{@code <condition>} 为任意可解析的布尔或数值表达式，使用 {@link PrattExpressionParser} 解析；</li>
  *     <li>{@code <then-statements>} 与 {@code <else-statements>} 可包含多条语句，自动跳过空行；</li>
@@ -119,7 +119,7 @@ public class IfStatementParser implements StatementParser {
         }
 
         // -------------------------
-        // 统一结束处理：end if
+        // 统一结束处理: end if
         // -------------------------
         ts.expect("end");
         ts.expect("if");

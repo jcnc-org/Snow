@@ -6,7 +6,7 @@ import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 /**
  * {@code ImportNode} 表示抽象语法树（AST）中的 import 语句节点。
  * <p>
- * import 语句用于引入外部模块或库文件，其语法形式一般为：
+ * import 语句用于引入外部模块或库文件，其语法形式一般为: 
  * {@code import my.module;}
  * </p>
  * <p>

@@ -19,11 +19,11 @@ import java.util.regex.Pattern;
  *   <li>顶级区块（如 project、properties、repositories、dependencies、build）以 <code>sectionName &#123;</code> 开始，以 <code>&#125;</code> 结束</li>
  *   <li>区块内部只识别 <code>key = value</code> 赋值，行尾可有 <code># 注释</code></li>
  *   <li>build 区块支持嵌套，内部键通过 <code>.</code> 展平，例如 <code>compile.enabled = true</code></li>
- *   <li><strong>新增：</strong>对 <code>"value"</code> 或 <code>'value'</code> 形式的字面量自动去引号，调用方得到的均是不含引号的裸字符串</li>
+ *   <li><strong>新增: </strong>对 <code>"value"</code> 或 <code>'value'</code> 形式的字面量自动去引号，调用方得到的均是不含引号的裸字符串</li>
  * </ul>
  *
  * <pre>
- * 示例 .cloud 文件片段：
+ * 示例 .cloud 文件片段:
  * project {
  *   group = com.example
  *   artifact = "demo-app"
@@ -117,7 +117,7 @@ public final class CloudDSLParser {
 
         // 检查区块是否全部闭合
         if (!sectionStack.isEmpty()) {
-            throw new IllegalStateException("文件结束但区块未闭合：" + sectionStack);
+            throw new IllegalStateException("文件结束但区块未闭合: " + sectionStack);
         }
 
         // 构建 Project 模型

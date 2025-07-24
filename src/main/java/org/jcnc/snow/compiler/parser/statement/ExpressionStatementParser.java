@@ -14,7 +14,7 @@ import org.jcnc.snow.compiler.parser.expression.PrattExpressionParser;
 /**
  * {@code ExpressionStatementParser} 用于解析通用表达式语句（赋值或普通表达式）。
  * <p>
- * 支持以下两种语法结构：
+ * 支持以下两种语法结构: 
  * <pre>{@code
  * x = 1 + 2        // 赋值语句
  * doSomething()    // 一般表达式语句
@@ -51,7 +51,7 @@ public class ExpressionStatementParser implements StatementParser {
         int column = ts.peek().getCol();
         String file = ctx.getSourceName();
 
-        // 赋值语句：IDENTIFIER = expr
+        // 赋值语句: IDENTIFIER = expr
         if (ts.peek().getType() == TokenType.IDENTIFIER && "=".equals(ts.peek(1).getLexeme())) {
             String varName = ts.next().getLexeme();
             ts.expect("=");

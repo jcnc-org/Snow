@@ -8,19 +8,19 @@ import java.util.Objects;
  * <p>
  * 适用于函数声明、函数调用、类型检查等语义分析场景。
  * <p>
- * 例如，一个函数接受两个 {@code int} 参数并返回 {@code string}，其函数类型为：
+ * 例如，一个函数接受两个 {@code int} 参数并返回 {@code string}，其函数类型为: 
  * <pre>
  *   (int, int) -> string
  * </pre>
  *
- * <p>该类使用 Java 16+ {@code record} 语法定义，自动提供：
+ * <p>该类使用 Java 16+ {@code record} 语法定义，自动提供: 
  * <ul>
  *   <li>构造方法；</li>
  *   <li>访问器 {@code paramTypes()} 和 {@code returnType()}；</li>
  *   <li>{@code equals()}, {@code hashCode()}, {@code toString()} 方法；</li>
  * </ul>
  *
- * <p>实现接口：{@link Type}
+ * <p>实现接口: {@link Type}
  *
  * @param paramTypes 参数类型列表（顺序敏感，不可为 null）
  * @param returnType 返回类型（不可为 null）
@@ -43,7 +43,7 @@ public record FunctionType(List<Type> paramTypes, Type returnType) implements Ty
     /**
      * 判断当前函数类型是否与另一个类型兼容。
      * <p>
-     * 兼容条件：
+     * 兼容条件: 
      * <ul>
      *   <li>对方也是 {@code FunctionType}；</li>
      *   <li>返回类型兼容（可宽化或完全匹配）；</li>
@@ -62,7 +62,7 @@ public record FunctionType(List<Type> paramTypes, Type returnType) implements Ty
     /**
      * 返回函数类型的标准字符串表示形式。
      * <p>
-     * 格式为：
+     * 格式为: 
      * <pre>
      *   (param1, param2, ...) -> returnType
      * </pre>
@@ -78,7 +78,7 @@ public record FunctionType(List<Type> paramTypes, Type returnType) implements Ty
     /**
      * 判断两个函数类型是否相等。
      * <p>
-     * 相等条件为：
+     * 相等条件为: 
      * <ul>
      *   <li>引用相同；</li>
      *   <li>或参数类型列表完全相等，且返回类型也相等。</li>

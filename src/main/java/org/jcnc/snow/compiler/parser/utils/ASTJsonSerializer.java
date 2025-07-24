@@ -14,7 +14,7 @@ import java.util.*;
  * 并可借助 {@code JSONParser.toJson(Object)} 方法将其序列化为 JSON 字符串，用于调试、
  * 可视化或跨语言数据传输。
  * <p>
- * 支持的节点类型包括（新增对 {@code BoolLiteralNode}、{@code UnaryExpressionNode} 的完整支持）：
+ * 支持的节点类型包括（新增对 {@code BoolLiteralNode}、{@code UnaryExpressionNode} 的完整支持）: 
  * <ul>
  *   <li>{@link ModuleNode}</li>
  *   <li>{@link FunctionNode}</li>
@@ -121,7 +121,7 @@ public class ASTJsonSerializer {
                 Map<String, Object> map = newNodeMap("Declaration");
                 map.put("name", d.getName());
                 map.put("varType", d.getType());
-                map.put("initializer", d.getInitializer().map(ASTJsonSerializer::exprToMap).orElse(null));
+                map.put("init", d.getInitializer().map(ASTJsonSerializer::exprToMap).orElse(null));
                 yield map;
             }
             // 赋值语句节点
@@ -132,7 +132,7 @@ public class ASTJsonSerializer {
             // 条件语句节点
             case IfNode i -> {
                 Map<String, Object> map = newNodeMap("If");
-                map.put("condition", exprToMap(i.condition()));
+                map.put("cond", exprToMap(i.condition()));
                 List<Object> thenList = new ArrayList<>(i.thenBranch().size());
                 for (Node stmt : i.thenBranch()) thenList.add(nodeToMap(stmt));
                 map.put("then", thenList);
@@ -146,9 +146,9 @@ public class ASTJsonSerializer {
             // 循环语句节点
             case LoopNode l -> {
                 Map<String, Object> map = newNodeMap("Loop");
-                map.put("initializer", l.initializer() != null ? nodeToMap(l.initializer()) : null);
-                map.put("condition", l.condition() != null ? exprToMap(l.condition()) : null);
-                map.put("update", l.update() != null ? nodeToMap(l.update()) : null);
+                map.put("init", l.init() != null ? nodeToMap(l.init()) : null);
+                map.put("cond", l.cond() != null ? exprToMap(l.cond()) : null);
+                map.put("step", l.step() != null ? nodeToMap(l.step()) : null);
                 List<Object> body = new ArrayList<>(l.body().size());
                 for (Node stmt : l.body()) body.add(nodeToMap(stmt));
                 map.put("body", body);
@@ -213,7 +213,7 @@ public class ASTJsonSerializer {
                             "object", exprToMap(object),
                             "member", member
                     );
-            // 默认兜底处理：只写类型
+            // 默认兜底处理: 只写类型
             default -> Map.of("type", expr.getClass().getSimpleName());
         };
     }

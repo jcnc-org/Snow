@@ -84,7 +84,7 @@ public class OperandStack {
      * </p>
      */
     public void printOperandStack() {
-        LoggingUtils.logInfo("Operand Stack state:", stack + "\n");
+        LoggingUtils.logInfo("\n\nOperand Stack state:", stack + "\n");
     }
 
     /**

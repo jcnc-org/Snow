@@ -18,7 +18,7 @@ public class TopLevelParserFactory {
     /** 关键字 → 解析器注册表 */
     private static final Map<String, TopLevelParser> registry = new HashMap<>();
 
-    /** 缺省解析器：脚本模式（单条语句可执行） */
+    /** 缺省解析器: 脚本模式（单条语句可执行） */
     private static final TopLevelParser DEFAULT = new ScriptTopLevelParser();
 
     static {

@@ -10,25 +10,25 @@ import java.util.Map;
 /**
  * {@code Context} 表示语义分析阶段的共享上下文环境。
  * <p>
- * 它贯穿整个语义分析流程，用于维护并提供以下核心服务：
+ * 它贯穿整个语义分析流程，用于维护并提供以下核心服务: 
  * <ul>
- *   <li>模块信息管理：包含所有已加载模块（源模块与内置模块）；</li>
- *   <li>错误收集：集中存储语义分析期间产生的 {@link SemanticError}；</li>
- *   <li>日志控制：支持按需输出详细调试日志；</li>
- *   <li>分析器调度：通过 {@link AnalyzerRegistry} 管理语句/表达式的分析器分发。</li>
+ *   <li>模块信息管理: 包含所有已加载模块（源模块与内置模块）；</li>
+ *   <li>错误收集: 集中存储语义分析期间产生的 {@link SemanticError}；</li>
+ *   <li>日志控制: 支持按需输出详细调试日志；</li>
+ *   <li>分析器调度: 通过 {@link AnalyzerRegistry} 管理语句/表达式的分析器分发。</li>
  * </ul>
  */
 public class Context {
-    /** 模块表：模块名 → {@link ModuleInfo}，用于模块查找与跨模块引用 */
+    /** 模块表: 模块名 → {@link ModuleInfo}，用于模块查找与跨模块引用 */
     private final Map<String, ModuleInfo> modules;
 
-    /** 错误列表：语义分析过程中收集的所有 {@link SemanticError} */
+    /** 错误列表: 语义分析过程中收集的所有 {@link SemanticError} */
     private final List<SemanticError> errors;
 
-    /** 日志开关：若为 true，将启用 {@link #log(String)} 输出日志信息 */
+    /** 日志开关: 若为 true，将启用 {@link #log(String)} 输出日志信息 */
     private final boolean verbose;
 
-    /** 语义分析器注册表：用于按节点类型动态调度分析器 */
+    /** 语义分析器注册表: 用于按节点类型动态调度分析器 */
     private final AnalyzerRegistry registry;
 
     /**

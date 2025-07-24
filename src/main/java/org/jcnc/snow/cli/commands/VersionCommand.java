@@ -4,13 +4,13 @@ import org.jcnc.snow.cli.SnowCLI;
 import org.jcnc.snow.cli.api.CLICommand;
 
 /**
- * CLI 子命令：输出当前 Snow 工具的版本号。
+ * CLI 子命令: 输出当前 Snow 工具的版本号。
  * <p>
  * 用于显示当前 CLI 工具版本，便于诊断、升级、兼容性确认等场景。
  * </p>
  *
  * <pre>
- * 用法示例：
+ * 用法示例: 
  * $ snow version
  * </pre>
  */

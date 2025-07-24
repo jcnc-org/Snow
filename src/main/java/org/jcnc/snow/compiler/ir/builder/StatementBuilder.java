@@ -150,23 +150,23 @@ public class StatementBuilder {
 
     /**
      * 构建循环语句（for/while）。
-     * 处理流程：初始语句 → 条件判断 → 循环体 → 更新语句 → 跳回条件。
+     * 处理流程: 初始语句 → 条件判断 → 循环体 → 更新语句 → 跳回条件。
      *
      * @param loop 循环节点
      */
     private void buildLoop(LoopNode loop) {
-        if (loop.initializer() != null) build(loop.initializer());
+        if (loop.init() != null) build(loop.init());
         String lblStart = ctx.newLabel();
         String lblEnd = ctx.newLabel();
         // 循环开始标签
         InstructionFactory.label(ctx, lblStart);
 
         // 条件不满足则跳出循环
-        emitConditionalJump(loop.condition(), lblEnd);
+        emitConditionalJump(loop.cond(), lblEnd);
         // 构建循环体
         buildStatements(loop.body());
         // 更新部分（如 for 的 i++）
-        if (loop.update() != null) build(loop.update());
+        if (loop.step() != null) build(loop.step());
 
         // 跳回循环起点
         InstructionFactory.jmp(ctx, lblStart);
@@ -176,7 +176,7 @@ public class StatementBuilder {
 
     /**
      * 构建分支语句（if/else）。
-     * 处理流程：条件判断 → then 分支 → else 分支（可选）。
+     * 处理流程: 条件判断 → then 分支 → else 分支（可选）。
      *
      * @param ifNode if 语句节点
      */

@@ -80,7 +80,7 @@ public class InstructionFactory {
     /**
      * Move 指令（src → dest）。若寄存器相同也安全。
      * <p>
-     * 实现方式：dest = src + 0（即加上常量 0）。
+     * 实现方式: dest = src + 0（即加上常量 0）。
      * </p>
      *
      * @param ctx  当前 IR 上下文
@@ -92,7 +92,7 @@ public class InstructionFactory {
         if (src == dest) {
             return;
         }
-        // 回退实现：dest = src + 0
+        // 回退实现: dest = src + 0
         IRVirtualRegister zero = loadConst(ctx, 0);
         ctx.addInstruction(new BinaryOperationInstruction(IROpCode.ADD_I32, dest, src, zero));
     }

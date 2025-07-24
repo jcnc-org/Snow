@@ -1,10 +1,14 @@
 package org.jcnc.snow.vm.factories;
 
+import org.jcnc.snow.vm.commands.system.control.SyscallCommand;
 import org.jcnc.snow.vm.commands.type.control.byte8.*;
 import org.jcnc.snow.vm.commands.type.control.double64.*;
 import org.jcnc.snow.vm.commands.type.control.float32.*;
 import org.jcnc.snow.vm.commands.type.control.int32.*;
 import org.jcnc.snow.vm.commands.type.control.long64.*;
+import org.jcnc.snow.vm.commands.ref.control.RLoadCommand;
+import org.jcnc.snow.vm.commands.ref.control.RPushCommand;
+import org.jcnc.snow.vm.commands.ref.control.RStoreCommand;
 import org.jcnc.snow.vm.commands.type.control.short16.*;
 import org.jcnc.snow.vm.commands.type.control.byte8.BAndCommand;
 import org.jcnc.snow.vm.commands.type.control.byte8.BOrCommand;
@@ -60,6 +64,7 @@ public class CommandFactory {
     private static final Command[] COMMANDS = new Command[0x0500];
 
     static {
+
 
         // region Type Control (0x0000-0x00BF)
         // region Byte8	 (0x0000-0x001F)
@@ -204,6 +209,7 @@ public class CommandFactory {
         COMMANDS[VMOpCode.D_CL]    = new DCLCommand();
         COMMANDS[VMOpCode.D_CLE]   = new DCLECommand();
         // endregion
+
         // endregion
 
         // region Type Conversion (0x00C0-0x00DF)
@@ -244,6 +250,12 @@ public class CommandFactory {
         COMMANDS[VMOpCode.D2F] = new D2FCommand();
         // endregion
 
+        // region Reference Control  (0x00E0-0x00EF)
+        COMMANDS[VMOpCode.R_PUSH] = new RPushCommand();
+        COMMANDS[VMOpCode.R_LOAD] = new RLoadCommand();
+        COMMANDS[VMOpCode.R_STORE] = new RStoreCommand();
+        // endregion
+
         // region Stack Control (0x0100-0x01FF)
         COMMANDS[VMOpCode.POP]  = new PopCommand();
         COMMANDS[VMOpCode.DUP]  = new DupCommand();
@@ -262,7 +274,7 @@ public class CommandFactory {
 
         // region  System Control (0x0400-0x04FF)
         COMMANDS[VMOpCode.HALT]        = new HaltCommand();
-//        COMMANDS[VMOpCode.SYSCALL]     = new SyscallCommand();
+        COMMANDS[VMOpCode.SYSCALL]     = new SyscallCommand();
 //        COMMANDS[VMOpCode.DEBUG_TRAP]  = new DebugTrapCommand();
         // endregion
 

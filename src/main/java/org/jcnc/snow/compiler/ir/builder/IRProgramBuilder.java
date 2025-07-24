@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * 本类负责将解析生成的 AST 根节点列表转换为可执行的 IRProgram。
  *
- * <p>主要职责：
+ * <p>主要职责:
  * <ul>
  *   <li>遍历输入的顶层节点，识别 ModuleNode、FunctionNode 及脚本式顶层 StatementNode；</li>
  *   <li>对 ModuleNode 中的所有函数节点调用 FunctionBuilder 构建 IRFunction 并添加至 IRProgram；</li>
@@ -36,13 +36,13 @@ public final class IRProgramBuilder {
         for (Node node : roots) {
             switch (node) {
                 case ModuleNode moduleNode ->
-                    // 模块节点：批量构建并添加模块内所有函数
+                    // 模块节点: 批量构建并添加模块内所有函数
                         moduleNode.functions().forEach(f -> irProgram.add(buildFunction(f)));
                 case FunctionNode functionNode ->
-                    // 顶层函数节点：直接构建并添加
+                    // 顶层函数节点: 直接构建并添加
                         irProgram.add(buildFunction(functionNode));
                 case StatementNode statementNode ->
-                    // 脚本式顶层语句：封装为“_start”函数后构建并添加
+                    // 脚本式顶层语句: 封装为“_start”函数后构建并添加
                         irProgram.add(buildFunction(wrapTopLevel(statementNode)));
                 default ->
                     // 严格校验节点类型，遇不支持者立即失败
@@ -65,7 +65,7 @@ public final class IRProgramBuilder {
     /**
      * 将单个脚本式顶层 StatementNode 封装为名称固定的“_start”函数节点。
      *
-     * <p>封装规则：
+     * <p>封装规则:
      * <ul>
      *   <li>函数名固定为“_start”；</li>
      *   <li>返回类型设为 null，由后续流程处理；</li>

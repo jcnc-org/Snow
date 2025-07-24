@@ -17,7 +17,7 @@ public class TokenPrinter {
     /**
      * 将给定的 Token 列表打印到标准输出（控制台）。
      * <p>
-     * 输出格式：
+     * 输出格式: 
      * <pre>
      * line   col    type             lexeme
      * ----------------------------------------------------
@@ -33,7 +33,7 @@ public class TokenPrinter {
      *               都应包含有效的行号、列号、类型和词素信息
      */
     public static void print(List<Token> tokens) {
-        // 打印表头：列名对齐，宽度分别为 6、6、16
+        // 打印表头: 列名对齐，宽度分别为 6、6、16
         System.out.printf("%-6s %-6s %-16s %s%n", "line", "col", "type", "lexeme");
         System.out.println("----------------------------------------------------");
 
@@ -45,7 +45,7 @@ public class TokenPrinter {
                     .replace("\t", "\\t")
                     .replace("\r", "\\r");
 
-            // 按照固定格式输出：行号、列号、类型、词素
+            // 按照固定格式输出: 行号、列号、类型、词素
             System.out.printf("%-6d %-6d %-16s %s%n",
                     token.getLine(),
                     token.getCol(),

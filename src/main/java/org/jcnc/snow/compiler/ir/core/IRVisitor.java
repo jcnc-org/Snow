@@ -7,12 +7,12 @@ import org.jcnc.snow.compiler.ir.instruction.*;
  * <p>
  * 它定义了访问者模式的核心机制，通过对每种 {@link IRInstruction} 子类
  * 提供独立的 {@code visit} 方法，实现对指令的分发与处理。
- * 不同的访问者实现可用于执行不同任务，例如：
+ * 不同的访问者实现可用于执行不同任务，例如:
  * </p>
  * <ul>
- *   <li>{@code IRPrinter}：打印指令内容</li>
- *   <li>{@code IROptimizer}：分析与重写 IR 以优化性能</li>
- *   <li>{@code IRCodeGenerator}：生成平台相关的机器码或汇编代码</li>
+ *   <li>{@code IRPrinter}: 打印指令内容</li>
+ *   <li>{@code IROptimizer}: 分析与重写 IR 以优化性能</li>
+ *   <li>{@code IRCodeGenerator}: 生成平台相关的机器码或汇编代码</li>
  * </ul>
  *
  * <p>

@@ -16,11 +16,11 @@ import java.util.Map;
  * 支持自动类型提升，保证 int、long、float、double 等类型的比较均能得到正确的 IR 指令。
  * </p>
  *
- * 类型判定支持：
+ * 类型判定支持: 
  * <ul>
- *     <li>字面量后缀：支持 B/S/I/L/F/D（大小写均可）</li>
- *     <li>浮点数支持：如无后缀但有小数点，视为 double</li>
- *     <li>变量类型：根据传入变量表推断类型，未识别则默认 int</li>
+ *     <li>字面量后缀: 支持 B/S/I/L/F/D（大小写均可）</li>
+ *     <li>浮点数支持: 如无后缀但有小数点，视为 double</li>
+ *     <li>变量类型: 根据传入变量表推断类型，未识别则默认 int</li>
  * </ul>
  */
 public final class ComparisonUtils {
@@ -39,7 +39,7 @@ public final class ComparisonUtils {
     }
 
     /**
-     * 返回类型宽度优先级（越大代表类型越宽）。类型对应的优先级：
+     * 返回类型宽度优先级（越大代表类型越宽）。类型对应的优先级: 
      *   - D (double): 6
      *   - F (float): 5
      *   - L (long): 4
@@ -106,7 +106,7 @@ public final class ComparisonUtils {
     }
 
     /**
-     * 内部工具方法：根据表达式节点和变量表推断类型标记字符。
+     * 内部工具方法: 根据表达式节点和变量表推断类型标记字符。
      * 字面量支持 B/S/I/L/F/D（大小写均可），浮点数默认 double；
      * 标识符类型按变量表映射，未知则默认 int。
      *

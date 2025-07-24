@@ -14,7 +14,7 @@ import org.jcnc.snow.compiler.parser.ast.base.Node;
  *   <li>避免直接输出 AST 节点的默认 <code>toString()</code> 形式。</li>
  * </ul>
  *
- * <p><b>示例输出：</b></p>
+ * <p><b>示例输出: </b></p>
  * <pre>
  *   D:\Devs\IdeaProjects\Snow\playground\Main.snow: 行 7, 列 28: 参数类型不匹配 (位置 1): 期望 int, 实际 long
  * </pre>
@@ -26,7 +26,7 @@ import org.jcnc.snow.compiler.parser.ast.base.Node;
 public record SemanticError(Node node, String message) {
 
     /**
-     * 返回该语义错误的字符串描述，格式如下：
+     * 返回该语义错误的字符串描述，格式如下: 
      * <pre>
      * [文件绝对路径: ]行 X, 列 Y: [错误信息]
      * </pre>

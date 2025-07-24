@@ -3,6 +3,8 @@ package org.jcnc.snow.vm.utils;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static org.jcnc.snow.common.SnowConfig.print;
+
 /**
  * The LoggingUtils class provides logging functionality, supporting different log levels for output.
  * This class uses Java's built-in logging system for logging, supporting both console output and log file recording.
@@ -51,6 +53,6 @@ public class LoggingUtils {
      */
     public static void logInfo(String title, String message) {
         // Output the informational message to the console
-        System.out.println(title + message);
+        print(title + message);
     }
 }

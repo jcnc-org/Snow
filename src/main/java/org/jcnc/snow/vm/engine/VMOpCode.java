@@ -1,5 +1,9 @@
 package org.jcnc.snow.vm.engine;
 
+import org.jcnc.snow.vm.commands.ref.control.RLoadCommand;
+import org.jcnc.snow.vm.commands.ref.control.RPushCommand;
+import org.jcnc.snow.vm.commands.ref.control.RStoreCommand;
+import org.jcnc.snow.vm.commands.system.control.SyscallCommand;
 import org.jcnc.snow.vm.commands.type.control.byte8.*;
 import org.jcnc.snow.vm.commands.type.control.double64.*;
 import org.jcnc.snow.vm.commands.type.control.float32.*;
@@ -2482,6 +2486,74 @@ public class VMOpCode {
     // endregion Double64
     // endregion Conversion
 
+    // region Reference Control (0x00E0-0x00EF)
+        /**
+         * R_PUSH Opcode: Represents an operation that pushes an object reference (such as a String or any reference type)
+         * onto the operand stack.
+         * <p>This opcode is implemented by the {@link RPushCommand} class, which defines its specific execution logic.</p>
+         *
+         * <p>Execution Steps:</p>
+         * <ol>
+         *     <li>Parses the object reference literal (e.g., a string) from the instruction parameters.</li>
+         *     <li>Creates or interprets the reference as an object instance if necessary.</li>
+         *     <li>Pushes the reference object onto the operand stack.</li>
+         *     <li>Increments the program counter (PC) to proceed with the next sequential instruction.</li>
+         * </ol>
+         *
+         * <p>This opcode is commonly used for:</p>
+         * <ul>
+         *     <li>Pushing string literals, objects, or other references needed for subsequent operations.</li>
+         *     <li>Supplying parameters for method calls that expect reference types.</li>
+         *     <li>Initializing the operand stack with reference values for computation or storage.</li>
+         * </ul>
+         */
+        public static final int R_PUSH  = 0x00E0;
+        /**
+         * R_LOAD Opcode: Represents an operation that loads an object reference from the local variable table
+         * and pushes it onto the operand stack.
+         * <p>This opcode is implemented by the {@link RLoadCommand} class, which defines its specific execution logic.</p>
+         *
+         * <p>Execution Steps:</p>
+         * <ol>
+         *     <li>Parses the target slot index from the instruction parameters.</li>
+         *     <li>Retrieves the reference object stored at the specified slot in the local variable table
+         *         of the current stack frame.</li>
+         *     <li>Pushes the retrieved reference onto the operand stack.</li>
+         *     <li>Increments the program counter (PC) to proceed with the next sequential instruction.</li>
+         * </ol>
+         *
+         * <p>This opcode is commonly used for:</p>
+         * <ul>
+         *     <li>Accessing local variables (such as function arguments or local object references) during method execution.</li>
+         *     <li>Preparing reference values for operations or method invocations.</li>
+         *     <li>Reusing objects previously stored in local variables.</li>
+         * </ul>
+         */
+        public static final int R_LOAD  = 0x00E1;
+        /**
+         * R_STORE Opcode: Represents an operation that pops an object reference from the top of the operand stack
+         * and stores it into the local variable table at the specified slot index.
+         * <p>This opcode is implemented by the {@link RStoreCommand} class, which defines its specific execution logic.</p>
+         *
+         * <p>Execution Steps:</p>
+         * <ol>
+         *     <li>Parses the target slot index from the instruction parameters.</li>
+         *     <li>Pops the top reference object from the operand stack.</li>
+         *     <li>Stores the popped reference object into the specified slot in the local variable table
+         *         of the current stack frame.</li>
+         *     <li>Increments the program counter (PC) to proceed with the next sequential instruction.</li>
+         * </ol>
+         *
+         * <p>This opcode is commonly used for:</p>
+         * <ul>
+         *     <li>Storing computation results or intermediate reference values for later use.</li>
+         *     <li>Passing object references to local variables in preparation for further operations or method calls.</li>
+         *     <li>Managing object lifetimes and ensuring correct referencing in scoped execution contexts.</li>
+         * </ul>
+         */
+        public static final int R_STORE = 0x00E2;
+    // endregion
+
     // region Stack Control (0x0100-0x01FF)
     /**
      * POP Opcode: Represents a stack operation that removes the top element from the operand stack.
@@ -2646,8 +2718,18 @@ public class VMOpCode {
      * </ul>
      */
     public static final int HALT = 0x0400;
+    /**
+     * SYSCALL Opcode: Represents a system call operation that invokes a system-level function or service.
+     * <p>This opcode is implemented by the {@link SyscallCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the system call identifier from the instruction parameters.</li>
+     *     <li>Invokes the corresponding system-level function or service based on the system call identifier.</li>
+     *     <li>Returns the result of the system call operation.</li>
+     */
     public static final int SYSCALL = 0x0401;
-    public static final int DEBUG_TRAP = 0x0402;
+//    public static final int DEBUG_TRAP = 0x0402;
     // endregion
 
     /**

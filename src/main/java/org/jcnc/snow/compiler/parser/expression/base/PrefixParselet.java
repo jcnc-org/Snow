@@ -8,7 +8,7 @@ import org.jcnc.snow.compiler.lexer.token.Token;
  * {@code PrefixParselet} 是用于解析前缀表达式的通用接口。
  * <p>
  * 前缀表达式是以某个词法单元（Token）作为起始的表达式结构，
- * 常见类型包括：
+ * 常见类型包括:
  * <ul>
  *     <li>数字字面量（如 {@code 42}）</li>
  *     <li>标识符（如 {@code foo}）</li>

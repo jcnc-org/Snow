@@ -4,6 +4,8 @@ import org.jcnc.snow.cli.api.CLICommand;
 import org.jcnc.snow.cli.commands.*;
 import org.jcnc.snow.cli.utils.CLIUtils;
 import org.jcnc.snow.cli.utils.VersionUtils;
+import org.jcnc.snow.common.Mode;
+import org.jcnc.snow.common.SnowConfig;
 
 import java.util.Arrays;
 import java.util.Map;

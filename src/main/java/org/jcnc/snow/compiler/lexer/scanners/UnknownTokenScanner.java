@@ -11,7 +11,7 @@ import org.jcnc.snow.compiler.lexer.token.Token;
  * 由本类处理并抛出 {@link LexicalException}，终止词法分析流程。
  * </p>
  * <p>
- * 主要作用：保证所有非法、不可识别的字符（如@、$等）不会被静默跳过或误当作合法 Token，
+ * 主要作用: 保证所有非法、不可识别的字符（如@、$等）不会被静默跳过或误当作合法 Token，
  * 而是在词法阶段立刻定位并报错，有助于尽早发现源代码问题。
  * </p>
  */
@@ -50,6 +50,6 @@ public class UnknownTokenScanner extends AbstractTokenScanner {
         if (lexeme.isEmpty())
             lexeme = String.valueOf(ctx.advance());
         // 抛出词法异常，并带上错误片段与具体位置
-        throw new LexicalException("Illegal character sequence '" + lexeme + "'", line, col);
+        throw new LexicalException("非法字符序列 '" + lexeme + "'", line, col);
     }
 }

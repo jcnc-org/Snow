@@ -29,7 +29,7 @@ public class IRReturnInstruction extends IRInstruction {
     }
 
     /**
-     * 获取该指令的操作码：RET。
+     * 获取该指令的操作码: RET。
      *
      * @return IROpCode.RET，表示返回操作
      */
@@ -60,7 +60,7 @@ public class IRReturnInstruction extends IRInstruction {
 
     /**
      * 转换为字符串形式，便于调试与打印。
-     * 示例：ret v1
+     * 示例: ret v1
      *
      * @return 字符串形式的返回指令
      */

@@ -12,18 +12,18 @@ import org.jcnc.snow.compiler.semantic.type.Type;
 /**
  * {@code NumberLiteralAnalyzer} 用于对数字字面量表达式进行语义分析并推断其精确类型。
  * <p>
- * 类型判定逻辑如下：
+ * 类型判定逻辑如下:
  * <ol>
- *   <li>首先检查字面量末尾是否带有类型后缀（不区分大小写）：
+ *   <li>首先检查字面量末尾是否带有类型后缀（不区分大小写）:
  *     <ul>
- *       <li>{@code b}：byte 类型（{@link BuiltinType#BYTE}）</li>
- *       <li>{@code s}：short 类型（{@link BuiltinType#SHORT}）</li>
- *       <li>{@code l}：long 类型（{@link BuiltinType#LONG}）</li>
- *       <li>{@code f}：float 类型（{@link BuiltinType#FLOAT}）</li>
- *       <li>{@code d}：double 类型（{@link BuiltinType#DOUBLE}）</li>
+ *       <li>{@code b}: byte 类型（{@link BuiltinType#BYTE}）</li>
+ *       <li>{@code s}: short 类型（{@link BuiltinType#SHORT}）</li>
+ *       <li>{@code l}: long 类型（{@link BuiltinType#LONG}）</li>
+ *       <li>{@code f}: float 类型（{@link BuiltinType#FLOAT}）</li>
+ *       <li>{@code d}: double 类型（{@link BuiltinType#DOUBLE}）</li>
  *     </ul>
  *   </li>
- *   <li>若无后缀，则：
+ *   <li>若无后缀，则:
  *     <ul>
  *       <li>只要文本中包含 {@code '.'} 或 {@code e/E}，即判为 double 类型</li>
  *       <li>否则默认判为 int 类型</li>
@@ -37,7 +37,7 @@ public class NumberLiteralAnalyzer implements ExpressionAnalyzer<NumberLiteralNo
     /**
      * 对数字字面量进行语义分析，推断其类型。
      * <p>
-     * 分析流程：
+     * 分析流程:
      * <ol>
      *   <li>若字面量以后缀结尾，直接按后缀映射类型。</li>
      *   <li>否则，若含有小数点或科学计数法标记，则为 double，否则为 int。</li>

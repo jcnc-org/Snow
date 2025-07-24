@@ -12,7 +12,7 @@ import org.jcnc.snow.compiler.semantic.type.Type;
 /**
  * {@code AssignmentAnalyzer} 是赋值语句的语义分析器。
  * <p>
- * 负责分析和验证赋值语句的合法性，包括：
+ * 负责分析和验证赋值语句的合法性，包括:
  * <ul>
  *   <li>变量是否已声明且可赋值（必须为 {@link SymbolKind#VARIABLE} 类型）；</li>
  *   <li>赋值右值的类型是否与变量类型兼容；</li>
@@ -54,7 +54,7 @@ public class AssignmentAnalyzer implements StatementAnalyzer<AssignmentNode> {
         Type valType = ctx.getRegistry().getExpressionAnalyzer(asg.value())
                 .analyze(ctx, mi, fn, locals, asg.value());
 
-        // 类型检查：若类型不兼容，则尝试判断是否允许宽化转换
+        // 类型检查: 若类型不兼容，则尝试判断是否允许宽化转换
         if (!sym.type().isCompatible(valType)) {
             // 数值类型允许自动宽化转换（如 int → double）
             if (!(sym.type().isNumeric() && valType.isNumeric()

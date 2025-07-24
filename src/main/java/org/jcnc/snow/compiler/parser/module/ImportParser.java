@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * {@code ImportParser} 类用于解析源码中的 import 导入语句。
  * <p>
- * 支持以下格式的语法：
+ * 支持以下格式的语法:
  * <pre>
  * import: module1, module2, module3
  * </pre>
@@ -23,7 +23,7 @@ public class ImportParser {
     /**
      * 解析 import 语句，并返回表示被导入模块的语法树节点列表。
      * <p>
-     * 该方法会依次执行以下操作：
+     * 该方法会依次执行以下操作:
      * <ol>
      *     <li>确认当前语句以关键字 {@code import} 开头。</li>
      *     <li>确认后跟一个冒号 {@code :}。</li>

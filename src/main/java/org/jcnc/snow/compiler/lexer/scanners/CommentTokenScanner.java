@@ -8,17 +8,17 @@ import org.jcnc.snow.compiler.lexer.token.TokenType;
 /**
  * {@code CommentTokenScanner} —— 注释解析器，基于有限状态机（FSM）。
  *
- * <p>负责将源码中的两种注释形式切分为 {@link TokenType#COMMENT COMMENT} token：</p>
+ * <p>负责将源码中的两种注释形式切分为 {@link TokenType#COMMENT COMMENT} token: </p>
  * <ol>
- *   <li>单行注释：以 {@code //} 开头，直至行尾或文件末尾。</li>
- *   <li>多行注释：以 {@code /*} 开头，以 <code>*&#47;</code> 结束，可跨多行。</li>
+ *   <li>单行注释: 以 {@code //} 开头，直至行尾或文件末尾。</li>
+ *   <li>多行注释: 以 {@code /*} 开头，以 <code>*&#47;</code> 结束，可跨多行。</li>
  * </ol>
  *
- * <p>本扫描器遵循“发现即捕获”原则：注释文本被完整保留在 Token 中，供后续的文档提取、源映射等分析使用。</p>
+ * <p>本扫描器遵循“发现即捕获”原则: 注释文本被完整保留在 Token 中，供后续的文档提取、源映射等分析使用。</p>
  *
  * <p>错误处理策略</p>
  * <ul>
- *   <li>未终止的多行注释：若文件结束时仍未遇到 <code>*&#47;</code>，抛出 {@link LexicalException}。</li>
+ *   <li>未终止的多行注释: 若文件结束时仍未遇到 <code>*&#47;</code>，抛出 {@link LexicalException}。</li>
  * </ul>
  */
 public class CommentTokenScanner extends AbstractTokenScanner {
@@ -61,7 +61,7 @@ public class CommentTokenScanner extends AbstractTokenScanner {
                     break;
 
                 case SINGLE_LINE:
-                    // 单行注释处理：读取直到行尾
+                    // 单行注释处理: 读取直到行尾
                     if (ctx.isAtEnd() || ctx.peek() == '\n') {
                         // 如果遇到换行符，停止读取并返回注释内容
                         return new Token(TokenType.COMMENT, literal.toString(), line, col);

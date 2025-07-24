@@ -20,8 +20,8 @@ public final class IROpCodeMapper {
     /**
      * IR 操作码到 VM 指令名的静态映射表。
      * <ul>
-     *     <li>键：IR 操作码（{@link IROpCode} 枚举项）</li>
-     *     <li>值：对应虚拟机指令名（字符串）</li>
+     *     <li>键: IR 操作码（{@link IROpCode} 枚举项）</li>
+     *     <li>值: 对应虚拟机指令名（字符串）</li>
      * </ul>
      * 使用 {@link EnumMap}，查找和存储高效。
      */

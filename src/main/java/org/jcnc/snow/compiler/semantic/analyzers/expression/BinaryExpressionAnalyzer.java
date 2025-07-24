@@ -13,7 +13,7 @@ import org.jcnc.snow.compiler.semantic.type.Type;
 /**
  * {@code BinaryExpressionAnalyzer} 负责对二元表达式做语义分析并返回其类型。
  * <p>
- * 支持特性：
+ * 支持特性: 
  * 1. 字符串拼接「+」
  * 2. 数值运算与自动宽化
  * 3. 比较 / 关系运算
@@ -44,20 +44,20 @@ public class BinaryExpressionAnalyzer implements ExpressionAnalyzer<BinaryExpres
 
         String op = bin.operator();
 
-        /* ----------- 情况 1：字符串拼接 ----------- */
+        /* ----------- 情况 1: 字符串拼接 ----------- */
         if (op.equals("+") &&
                 (left == BuiltinType.STRING || right == BuiltinType.STRING)) {
             return BuiltinType.STRING;
         }
 
-        /* ----------- 情况 1.5：布尔值比较 ----------- */
+        /* ----------- 情况 1.5: 布尔值比较 ----------- */
         if (("==".equals(op) || "!=".equals(op)) &&
                 left == BuiltinType.BOOLEAN &&
                 right == BuiltinType.BOOLEAN) {
             return BuiltinType.BOOLEAN;
         }
 
-        /* ----------- 情况 2：数值运算 / 比较 ----------- */
+        /* ----------- 情况 2: 数值运算 / 比较 ----------- */
         if ("+-*/%".contains(op) || ("<<=>>===!=").contains(op)) {
             if (left.isNumeric() && right.isNumeric()) {
                 // 自动数值宽化（如 int + float → float）
@@ -72,7 +72,7 @@ public class BinaryExpressionAnalyzer implements ExpressionAnalyzer<BinaryExpres
             }
         }
 
-        /* ----------- 情况 3：不支持的类型组合 ----------- */
+        /* ----------- 情况 3: 不支持的类型组合 ----------- */
         ctx.getErrors().add(new SemanticError(
                 bin,
                 String.format("运算符 '%s' 不支持类型: %s 和 %s", op, left, right)

@@ -10,14 +10,14 @@ import org.jcnc.snow.pkg.tasks.PublishTask;
 import java.nio.file.Paths;
 
 /**
- * CLI 命令：将已构建的项目包发布到远程仓库。
+ * CLI 命令: 将已构建的项目包发布到远程仓库。
  * <p>
  * 用于持续集成、交付或分发场景。
  * 支持自动读取 DSL 项目描述文件，并注册和执行发布生命周期阶段的任务。
  * </p>
  *
  * <pre>
- * 用法示例：
+ * 用法示例: 
  * $ snow publish
  * </pre>
  */

@@ -13,7 +13,7 @@ import org.jcnc.snow.compiler.semantic.type.Type;
 /**
  * {@code LoopAnalyzer} 用于分析 for/while 等循环结构的语义正确性。
  * <p>
- * 主要职责如下：
+ * 主要职责如下: 
  * <ul>
  *   <li>为整个循环体（包括初始化、条件、更新、循环体本身）创建独立的块级符号表（作用域），保证循环内变量与外部隔离。</li>
  *   <li>依次分析初始化语句、条件表达式、更新语句和循环体各语句，并递归检查嵌套的语法结构。</li>
@@ -44,24 +44,24 @@ public class LoopAnalyzer implements StatementAnalyzer<LoopNode> {
         // 新建 loopScope，以支持循环内部变量声明与外部隔离
         SymbolTable loopScope = new SymbolTable(locals);
 
-        // 2. 分析初始化语句（如 for(i=0)），使用 loopScope 作为作用域
-        var initAnalyzer = ctx.getRegistry().getStatementAnalyzer(ln.initializer());
+        // 2. 分析初始化语句
+        var initAnalyzer = ctx.getRegistry().getStatementAnalyzer(ln.init());
         if (initAnalyzer != null) {
-            initAnalyzer.analyze(ctx, mi, fn, loopScope, ln.initializer());
+            initAnalyzer.analyze(ctx, mi, fn, loopScope, ln.init());
         }
 
-        // 3. 分析条件表达式（如 for(...; cond; ...) 或 while(cond)）
-        var condAnalyzer = ctx.getRegistry().getExpressionAnalyzer(ln.condition());
-        Type condType = condAnalyzer.analyze(ctx, mi, fn, loopScope, ln.condition());
+        // 3. 分析条件表达式
+        var condAnalyzer = ctx.getRegistry().getExpressionAnalyzer(ln.cond());
+        Type condType = condAnalyzer.analyze(ctx, mi, fn, loopScope, ln.cond());
         // 条件类型必须为 boolean，否则记录错误
         if (TypeUtils.isLogic(condType)) {
             ctx.getErrors().add(new SemanticError(ln, "loop 条件必须为 boolean"));
         }
 
-        // 4. 分析更新语句（如 for(...; ...; update)）
-        var updateAnalyzer = ctx.getRegistry().getStatementAnalyzer(ln.update());
+        // 4. 分析更新语句
+        var updateAnalyzer = ctx.getRegistry().getStatementAnalyzer(ln.step());
         if (updateAnalyzer != null) {
-            updateAnalyzer.analyze(ctx, mi, fn, loopScope, ln.update());
+            updateAnalyzer.analyze(ctx, mi, fn, loopScope, ln.step());
         }
 
         // 5. 分析循环体内的每一条语句

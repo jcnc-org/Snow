@@ -13,7 +13,7 @@ import java.util.Map;
  * </p>
  *
  * <pre>
- * 示例用法：
+ * 示例用法:
  * LifecycleManager manager = new LifecycleManager();
  * manager.register(LifecyclePhase.INIT, new InitTask());
  * manager.executeAll();

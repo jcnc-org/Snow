@@ -27,11 +27,20 @@ public class CLIUtils {
     );
 
     /**
+     * 全局调试标志集合，支持 "-debug"、"--debug"。
+     */
+    public static final Set<String> GLOBAL_DEBUG_FLAGS = Set.of(
+            "--debug"
+    );
+
+    /**
      * 全局选项列表，包括帮助和版本选项的描述。
      */
     public static final List<Option> GLOBAL_OPTIONS = List.of(
             new Option(List.of("-h", "--help"), "Show this help message and exit"),
-            new Option(List.of("-v", "--version"), "Print snow programming language version and exit")
+            new Option(List.of("-v", "--version"), "Print snow programming language version and exit"),
+            new Option(List.of("-debug", "--debug"), "Enable debug mode with verbose internal logs")
+
     );
 
     /**

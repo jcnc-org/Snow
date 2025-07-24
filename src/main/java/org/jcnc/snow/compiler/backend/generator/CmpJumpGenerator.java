@@ -47,7 +47,7 @@ public class CmpJumpGenerator implements InstructionGenerator<IRCompareJumpInstr
      * </ol>
      *
      * @param ins       IR 条件比较跳转指令
-     * @param out       VMProgramBuilder：用于发出 VM 指令
+     * @param out       VMProgramBuilder: 用于发出 VM 指令
      * @param slotMap   虚拟寄存器到 VM 槽位的映射表
      * @param currentFn 当前处理的函数名（调试用，当前未使用）
      */
