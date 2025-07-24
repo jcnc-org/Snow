@@ -53,7 +53,7 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
 
 | 类别       | 关键特性                                                                                              |
 |----------|---------------------------------------------------------------------------------------------------|
-| 语言层      | `module` / `import` / `function` / `loop` / `if–else` / Pratt 表达式解析<br>静态类型检查 & 作用域分析             |
+| 语言层      | module / import / function / loop / if–else / Pratt 表达式解析<br>静态类型检查 & 作用域分析                       |
 | 编译器前端    | Lexer / Parser / Semantic Analyzer 全栈自研，生成 JSON-AST                                               |
 | IR & 后端  | 三地址式 IR ➜ 线性扫描寄存器分配 ➜ SnowVM 指令                                                                   |
 | 虚拟机      | 栈 + 寄存器混合架构、GUI 局部变量监视                                                                            |
