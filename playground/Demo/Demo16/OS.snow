@@ -1,0 +1,11 @@
+module: os
+    import: os
+    function: print
+        parameter:
+            declare i1: int
+        return_type: void
+        body:
+            syscall("PRINT",i1)
+        end body
+    end function
+end module
