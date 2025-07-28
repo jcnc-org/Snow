@@ -1,9 +1,13 @@
 module: Main
     import: os
+    globals:
+        declare num1:int=10
     function: main
+
         return_type: void
         body:
-            print(222)
+            declare num1:int=11
+            print(num1)
         end body
     end function
 end module
