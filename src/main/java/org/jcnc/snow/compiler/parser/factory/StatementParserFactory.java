@@ -27,6 +27,7 @@ public class StatementParserFactory {
         registry.put("if",      new IfStatementParser());
         registry.put("loop",    new LoopStatementParser());
         registry.put("return",  new ReturnStatementParser());
+        registry.put("break",   new BreakStatementParser());
 
         // 默认处理器: 表达式语句
         registry.put("",        new ExpressionStatementParser());

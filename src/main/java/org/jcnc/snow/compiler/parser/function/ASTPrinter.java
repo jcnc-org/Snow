@@ -116,6 +116,7 @@ public class ASTPrinter {
             }
             case ReturnNode r -> System.out.println(pad + "return" +
                     r.getExpression().map(e -> " " + e).orElse(""));
+            case BreakNode _ -> System.out.println(pad + "break");
             case ExpressionStatementNode(ExpressionNode expression, NodeContext _) ->
                     System.out.println(pad + expression);
             case null, default -> System.out.println(pad + n);  // 回退处理
