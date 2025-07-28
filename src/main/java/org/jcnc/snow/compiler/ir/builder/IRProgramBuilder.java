@@ -8,6 +8,7 @@ import org.jcnc.snow.compiler.parser.ast.base.Node;
 import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -36,8 +37,8 @@ public final class IRProgramBuilder {
         for (Node node : roots) {
             switch (node) {
                 case ModuleNode moduleNode ->
-                    // 模块节点: 批量构建并添加模块内所有函数
-                        moduleNode.functions().forEach(f -> irProgram.add(buildFunction(f)));
+                    // 对每个模块，所有函数均自动注入 globals
+                        moduleNode.functions().forEach(f -> irProgram.add(buildFunctionWithGlobals(moduleNode, f)));
                 case FunctionNode functionNode ->
                     // 顶层函数节点: 直接构建并添加
                         irProgram.add(buildFunction(functionNode));
@@ -50,6 +51,30 @@ public final class IRProgramBuilder {
             }
         }
         return irProgram;
+    }
+
+    /**
+     * 构建带有模块全局声明“注入”的函数。
+     * 为了在当前 IR 设计下能访问全局变量，将模块的 globals 作为前置声明
+     * 追加到函数体最前面，使其在函数内被注册到 IR 作用域中。
+     */
+    private IRFunction buildFunctionWithGlobals(ModuleNode moduleNode, FunctionNode functionNode) {
+        if (moduleNode.globals() == null || moduleNode.globals().isEmpty()) {
+            return buildFunction(functionNode);
+        }
+        // 重建函数体：先放 globals 的声明，再放原来的语句
+        List<StatementNode> newBody = new ArrayList<>(moduleNode.globals().size() + functionNode.body().size());
+        newBody.addAll(moduleNode.globals());
+        newBody.addAll(functionNode.body());
+
+        FunctionNode wrapped = new FunctionNode(
+                functionNode.name(),
+                functionNode.parameters(),
+                functionNode.returnType(),
+                newBody,
+                functionNode.context()
+        );
+        return buildFunction(wrapped);
     }
 
     /**
@@ -79,8 +104,8 @@ public final class IRProgramBuilder {
     private FunctionNode wrapTopLevel(StatementNode stmt) {
         return new FunctionNode(
                 "_start",
-                null,
-                String.valueOf(List.of()),
+                List.of(),
+                "void",
                 List.of(stmt),
                 new NodeContext(-1, -1, "")
         );

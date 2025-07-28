@@ -12,7 +12,7 @@ import java.util.Set;
  * </p>
  *
  * <p>
- * 主要功能与特性: 
+ * 主要功能与特性:
  * <ul>
  *     <li>统一管理语言关键字和类型名集合，便于扩展与维护。</li>
  *     <li>自动推断 Token 类型，无需外部干预。</li>
@@ -25,7 +25,7 @@ public class TokenFactory {
     /**
      * 语言的保留关键字集合。
      */
-    private static final Set<String> KEYWORDS = Set.of("module", "function", "parameter", "return_type", "body", "end", "if", "then", "else", "loop", "declare", "return", "import", "init", "cond", "step");
+    private static final Set<String> KEYWORDS = Set.of("module", "function", "parameter", "return_type", "body", "end", "if", "then", "else", "loop", "declare", "return", "import", "init", "cond", "step","globals");
 
     /**
      * 内置类型名称集合，如 int、string 等。

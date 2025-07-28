@@ -154,7 +154,7 @@ public final class CompileTask implements Task {
             String arg = args[i];
             switch (arg) {
                 case "run" -> runAfterCompile = true;
-                case "-debug" -> SnowConfig.MODE = Mode.DEBUG;
+                case "--debug" -> SnowConfig.MODE = Mode.DEBUG;
                 case "-o" -> {
                     if (i + 1 < args.length) outputName = args[++i];
                     else {
