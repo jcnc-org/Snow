@@ -14,7 +14,7 @@ import java.util.*;
  * 并可借助 {@code JSONParser.toJson(Object)} 方法将其序列化为 JSON 字符串，用于调试、
  * 可视化或跨语言数据传输。
  * <p>
- * 支持的节点类型包括（新增对 {@code BoolLiteralNode}、{@code UnaryExpressionNode} 的完整支持）: 
+ * 支持的节点类型包括:
  * <ul>
  *   <li>{@link ModuleNode}</li>
  *   <li>{@link FunctionNode}</li>
@@ -83,7 +83,7 @@ public class ASTJsonSerializer {
         return switch (n) {
             // 模块节点
             case ModuleNode(
-                    String name, List<ImportNode> imports, List<FunctionNode> functions, NodeContext _
+                    String name, List<ImportNode> imports, List<DeclarationNode> globals, List<FunctionNode> functions, NodeContext _
             ) -> {
                 Map<String, Object> map = newNodeMap("Module");
                 map.put("name", name);
@@ -92,6 +92,15 @@ public class ASTJsonSerializer {
                     imps.add(Map.of("type", "Import", "module", imp.moduleName()));
                 }
                 map.put("imports", imps);
+                List<Object> globs = new ArrayList<>(globals.size());
+                for (DeclarationNode d : globals) {
+                    Map<String, Object> decl = newNodeMap("Declaration");
+                    decl.put("name", d.getName());
+                    decl.put("varType", d.getType());
+                    decl.put("init", d.getInitializer().map(ASTJsonSerializer::exprToMap).orElse(null));
+                    globs.add(decl);
+                }
+                map.put("globals", globs);
                 List<Object> funcs = new ArrayList<>(functions.size());
                 for (FunctionNode f : functions) {
                     funcs.add(nodeToMap(f));
