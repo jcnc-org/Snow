@@ -6,11 +6,23 @@ import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
 
 /**
- * 解析 break 语句：仅包含关键字本身，并以换行结束。
+ * {@code BreakStatementParser} 用于解析 break 语句。
+ * <p>
+ * break 语句的语法仅包含关键字本身，随后以换行结束。
  * 语义：立即终止当前（最内层）循环。
+ * </p>
  */
 public class BreakStatementParser implements StatementParser {
 
+    /**
+     * 解析 break 语句节点。
+     * <p>
+     * 期望格式为：'break' NEWLINE
+     * </p>
+     *
+     * @param ctx 解析上下文
+     * @return BreakNode AST 节点
+     */
     @Override
     public BreakNode parse(ParserContext ctx) {
         // 记录当前位置作为 NodeContext
