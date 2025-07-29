@@ -1,6 +1,5 @@
 package org.jcnc.snow.vm.utils;
 
-import org.graalvm.nativeimage.ImageInfo;
 import org.jcnc.snow.vm.engine.VirtualMachineEngine;
 
 /**
@@ -52,9 +51,11 @@ public class VMUtils {
      */
     public static boolean isNativeImage() {
         try {
-            return ImageInfo.inImageCode();
+            Class<?> imageInfo = Class.forName("org.graalvm.nativeimage.ImageInfo");
+            return (Boolean) imageInfo.getMethod("inImageCode").invoke(null);
         } catch (Throwable t) {
             return false;
         }
     }
+
 }
