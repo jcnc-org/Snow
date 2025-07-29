@@ -98,21 +98,30 @@ public class StatementBuilder {
             return;
         }
         if (stmt instanceof DeclarationNode decl) {
-            // 变量声明，如 int a = 1;
+            // 变量声明语句（如 int a = 1;）
             if (decl.getInitializer().isPresent()) {
-                // 声明同时有初值
+                // 如果声明时带有初始值（如 int a = b;）
 
-                // 1. 设置声明变量的类型
+                // 1. 设置变量类型，便于表达式求值/指令生成时推断类型信息
                 ctx.setVarType(decl.getType());
 
-                IRVirtualRegister r = expr.build(decl.getInitializer().get());
+                // 2. 为当前声明的变量分配一个全新的虚拟寄存器
+                //    这样可以保证该变量和初始值表达式中的变量物理上独立，不会发生别名/串扰
+                IRVirtualRegister dest = ctx.newRegister();
 
-                // 2. 清除变量声明
+                // 3. 将初始值表达式的计算结果写入新分配的寄存器
+                //    即使初始值是某个已存在变量（如 outer_i），这里是值的拷贝
+                expr.buildInto(decl.getInitializer().get(), dest);
+
+                // 4. 清理类型设置，防止影响后续变量声明
                 ctx.clearVarType();
 
-                ctx.getScope().declare(decl.getName(), decl.getType(), r);
+                // 5. 在作用域内将变量名与新分配的寄存器进行绑定
+                //    这样后续对该变量的任何操作都只会影响 dest，不会反向影响初值表达式中的源变量
+                ctx.getScope().declare(decl.getName(), decl.getType(), dest);
             } else {
-                // 仅声明，无初值
+                // 仅声明变量，无初值（如 int a;）
+                // 在作用域内声明并分配新寄存器，但不进行初始化
                 ctx.getScope().declare(decl.getName(), decl.getType());
             }
             return;
