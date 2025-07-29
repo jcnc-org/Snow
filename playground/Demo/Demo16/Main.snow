@@ -1,0 +1,22 @@
+module: Main
+    import: os
+    function: main
+        return_type: int
+        body:
+            loop:
+                init:
+                    declare i:int = 1
+                cond:
+                    i <= 10
+                step:
+                    i = i + 1
+                body:
+                    if i % 2 == 0 then
+                        print(i)
+                    end if
+                end body
+            end loop
+            return 0
+        end body
+    end function
+end module

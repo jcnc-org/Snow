@@ -44,6 +44,7 @@ public final class IROpCodeMapper {
         opcodeMap.put(IROpCode.MUL_B8, "B_MUL");
         opcodeMap.put(IROpCode.DIV_B8, "B_DIV");
         opcodeMap.put(IROpCode.NEG_B8, "B_NEG");
+        opcodeMap.put(IROpCode.MOD_B8, "B_MOD");
 
         // 整形16位算术运算映射
         opcodeMap.put(IROpCode.ADD_S16, "S_ADD");
@@ -51,6 +52,7 @@ public final class IROpCodeMapper {
         opcodeMap.put(IROpCode.MUL_S16, "S_MUL");
         opcodeMap.put(IROpCode.DIV_S16, "S_DIV");
         opcodeMap.put(IROpCode.NEG_S16, "S_NEG");
+        opcodeMap.put(IROpCode.MOD_S16, "S_MOD");
 
         // 整形32位算术运算映射
         opcodeMap.put(IROpCode.ADD_I32, "I_ADD");
@@ -58,6 +60,7 @@ public final class IROpCodeMapper {
         opcodeMap.put(IROpCode.MUL_I32, "I_MUL");
         opcodeMap.put(IROpCode.DIV_I32, "I_DIV");
         opcodeMap.put(IROpCode.NEG_I32, "I_NEG");
+        opcodeMap.put(IROpCode.MOD_I32, "I_MOD");
 
         // 整形64位算术运算映射
         opcodeMap.put(IROpCode.ADD_L64, "L_ADD");
@@ -65,6 +68,7 @@ public final class IROpCodeMapper {
         opcodeMap.put(IROpCode.MUL_L64, "L_MUL");
         opcodeMap.put(IROpCode.DIV_L64, "L_DIV");
         opcodeMap.put(IROpCode.NEG_L64, "L_NEG");
+        opcodeMap.put(IROpCode.MOD_L64, "L_MOD");
 
         // --- 32-bit floating point ---
 
@@ -73,6 +77,7 @@ public final class IROpCodeMapper {
         opcodeMap.put(IROpCode.MUL_F32, "F_MUL");
         opcodeMap.put(IROpCode.DIV_F32, "F_DIV");
         opcodeMap.put(IROpCode.NEG_F32, "F_NEG");
+        opcodeMap.put(IROpCode.MOD_F32, "F_MOD");
 
         // --- 64-bit floating point ---
         opcodeMap.put(IROpCode.ADD_D64, "D_ADD");
@@ -80,6 +85,7 @@ public final class IROpCodeMapper {
         opcodeMap.put(IROpCode.MUL_D64, "D_MUL");
         opcodeMap.put(IROpCode.DIV_D64, "D_DIV");
         opcodeMap.put(IROpCode.NEG_D64, "D_NEG");
+        opcodeMap.put(IROpCode.MOD_D64, "D_MOD");
 
         // 比较运算映射
         // 8位整数比较运算映射
