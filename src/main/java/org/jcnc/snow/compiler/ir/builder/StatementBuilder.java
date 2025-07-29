@@ -9,6 +9,7 @@ import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
 
+import java.util.ArrayDeque;
 import java.util.Locale;
 
 /**
@@ -27,6 +28,10 @@ public class StatementBuilder {
      * 表达式 IR 构建器，用于将表达式节点转为 IR 指令。
      */
     private final ExpressionBuilder expr;
+    /**
+     * break 目标标签栈（保存每层循环的结束标签）
+     */
+    private final ArrayDeque<String> breakTargets = new ArrayDeque<>();
 
     /**
      * 构造方法。
@@ -120,6 +125,14 @@ public class StatementBuilder {
             }
             return;
         }
+        if (stmt instanceof BreakNode) {
+            // break 语句：跳转到当前最近一层循环的结束标签
+            if (breakTargets.isEmpty()) {
+                throw new IllegalStateException("`break` appears outside of a loop");
+            }
+            InstructionFactory.jmp(ctx, breakTargets.peek());
+            return;
+        }
         // 不支持的语句类型
         throw new IllegalStateException("Unsupported statement: " + stmt.getClass().getSimpleName() + ": " + stmt);
     }
@@ -163,8 +176,15 @@ public class StatementBuilder {
 
         // 条件不满足则跳出循环
         emitConditionalJump(loop.cond(), lblEnd);
-        // 构建循环体
-        buildStatements(loop.body());
+        // 在进入循环体前，记录本层循环的结束标签，供 break 使用
+        breakTargets.push(lblEnd);
+        try {
+            // 构建循环体
+            buildStatements(loop.body());
+        } finally {
+            // 离开循环体时弹出标签，避免影响外层
+            breakTargets.pop();
+        }
         // 更新部分（如 for 的 i++）
         if (loop.step() != null) build(loop.step());
 
