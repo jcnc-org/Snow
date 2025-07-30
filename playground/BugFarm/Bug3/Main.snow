@@ -9,11 +9,6 @@ module: Main
             declare i1: int = 2147483647
             declare l1: long = 9223372036854775807L
 
-            // 溢出（都应该收集到错误）
-            declare b2: byte = 128b
-            declare s2: short = 40000s
-            declare i2: int = 3000000000
-            declare l2: long = 9223372036854775808L
         end body
     end function
 end module
