@@ -32,6 +32,10 @@ public class StatementBuilder {
      * break 目标标签栈（保存每层循环的结束标签）
      */
     private final ArrayDeque<String> breakTargets = new ArrayDeque<>();
+    /**
+     * continue 目标标签栈（保存每层循环的 step 起始标签）
+     */
+    private final ArrayDeque<String> continueTargets = new ArrayDeque<>();
 
     /**
      * 构造方法。
@@ -133,6 +137,14 @@ public class StatementBuilder {
             InstructionFactory.jmp(ctx, breakTargets.peek());
             return;
         }
+        if (stmt instanceof ContinueNode) {
+            // continue 语句：跳转到当前最近一层循环的 step 起始标签
+            if (continueTargets.isEmpty()) {
+                throw new IllegalStateException("`continue` appears outside of a loop");
+            }
+            InstructionFactory.jmp(ctx, continueTargets.peek());
+            return;
+        }
         // 不支持的语句类型
         throw new IllegalStateException("Unsupported statement: " + stmt.getClass().getSimpleName() + ": " + stmt);
     }
@@ -178,17 +190,22 @@ public class StatementBuilder {
         emitConditionalJump(loop.cond(), lblEnd);
         // 在进入循环体前，记录本层循环的结束标签，供 break 使用
         breakTargets.push(lblEnd);
+        // 记录本层循环的 step 起始标签，供 continue 使用
+        String lblStep = ctx.newLabel();
+        continueTargets.push(lblStep);
         try {
             // 构建循环体
             buildStatements(loop.body());
         } finally {
             // 离开循环体时弹出标签，避免影响外层
             breakTargets.pop();
+            continueTargets.pop();
         }
-        // 更新部分（如 for 的 i++）
+        // step 起始标签(所有 continue 会跳到这里)
+        InstructionFactory.label(ctx, lblStep);
         if (loop.step() != null) build(loop.step());
 
-        // 跳回循环起点
+        // 回到 cond 检查
         InstructionFactory.jmp(ctx, lblStart);
         // 循环结束标签
         InstructionFactory.label(ctx, lblEnd);

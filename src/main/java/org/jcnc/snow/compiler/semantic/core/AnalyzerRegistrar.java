@@ -41,6 +41,7 @@ public final class AnalyzerRegistrar {
         registry.registerStatementAnalyzer(ReturnNode.class, new ReturnAnalyzer());
         registry.registerExpressionAnalyzer(BoolLiteralNode.class, new BoolLiteralAnalyzer());
         registry.registerStatementAnalyzer(BreakNode.class, new BreakAnalyzer());
+        registry.registerStatementAnalyzer(ContinueNode.class, new ContinueAnalyzer());
 
         // 特殊处理: 表达式语句（如 "foo();"）作为语句包装表达式
         registry.registerStatementAnalyzer(ExpressionStatementNode.class,

@@ -1,0 +1,43 @@
+module: Main
+    import: os
+    function: main
+        return_type: int
+        body:
+            loop:
+                init:
+                    declare i:int = 1
+                cond:
+                    i <= 5
+                step:
+                    i = i + 1
+                body:
+                    if i % 2 == 0 then
+                        continue
+                    end if
+                    if i > 3 then
+                        break
+                    end if
+                    loop:
+                        init:
+                            declare j:int = 1
+                        cond:
+                            j <= 5
+                        step:
+                            j = j + 1
+                        body:
+                            if j == 4 then
+                                break
+                            end if
+                            if j % 2 == 0 then
+                                continue
+                            end if
+                            print(i)
+                            print(j)
+                        end body
+                    end loop
+                end body
+            end loop
+            return 0
+        end body
+    end function
+end module
