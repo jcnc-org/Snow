@@ -1,8 +1,7 @@
 module: Main
     import: os
     function: main
-        parameter:
-        return_type: int
+        return_type: void
         body:
             loop:
                 init:
@@ -23,23 +22,12 @@ module: Main
                         step:
                             inter_j = inter_j + 1
                         body:
-                            
+
                         end body
                     end loop
 
                 end body
             end loop
-
-            return 0
-        end body
-    end function
-
-    function: print
-        parameter:
-            declare i1: int
-        return_type: void
-        body:
-            syscall("PRINT",i1)
         end body
     end function
 end module
