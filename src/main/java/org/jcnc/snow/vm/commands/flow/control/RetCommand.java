@@ -1,7 +1,11 @@
 package org.jcnc.snow.vm.commands.flow.control;
 
 import org.jcnc.snow.vm.interfaces.Command;
-import org.jcnc.snow.vm.module.*;
+import org.jcnc.snow.vm.module.CallStack;
+import org.jcnc.snow.vm.module.LocalVariableStore;
+import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.module.StackFrame;
+import org.jcnc.snow.vm.utils.LoggingUtils;
 
 import static org.jcnc.snow.common.SnowConfig.print;
 
@@ -37,7 +41,7 @@ public class RetCommand implements Command {
 
         /* ----- Root frame: do NOT pop, just end program ----- */
         if (topFrame.getReturnAddress() == PROGRAM_END) {
-            System.out.println("Return <root>");
+            LoggingUtils.logInfo("", "\nReturn <root>");
             return PROGRAM_END;          // VM main loop should break
         }
 

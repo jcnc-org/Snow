@@ -3,7 +3,7 @@ module: Main
     function: main
         return_type: void
         body:
-            print(222)
+            os.print(222)
         end body
     end function
 end module

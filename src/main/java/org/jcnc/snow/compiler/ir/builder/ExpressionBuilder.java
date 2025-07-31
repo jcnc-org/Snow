@@ -157,7 +157,7 @@ public record ExpressionBuilder(IRContext ctx) {
     }
 
     /**
-     * 构建函数或方法调用表达式。
+     * 构建函数或方法调用表达式。模块内未限定调用会自动补全当前模块名。
      *
      * @param call AST 调用表达式节点
      * @return 存储调用结果的虚拟寄存器
@@ -171,8 +171,18 @@ public record ExpressionBuilder(IRContext ctx) {
             // 成员方法调用，例如 obj.foo()
             case MemberExpressionNode m when m.object() instanceof IdentifierNode id
                     -> id.name() + "." + m.member();
-            // 普通函数调用
-            case IdentifierNode id -> id.name();
+            // 普通函数调用，如果未指定模块，自动补全当前模块名
+            case IdentifierNode id -> {
+                String current = ctx.getFunction().name();
+                int dot = current.lastIndexOf('.');
+                if (dot > 0) {
+                    // 当前处于模块内函数（Module.func），补全为同模块下的全限定名
+                    yield current.substring(0, dot) + "." + id.name();
+                } else {
+                    // 顶层/脚本函数等不含模块前缀，保持原样
+                    yield id.name();
+                }
+            }
             // 其它情况暂不支持
             default -> throw new IllegalStateException("不支持的调用目标: " + call.callee().getClass().getSimpleName());
         };

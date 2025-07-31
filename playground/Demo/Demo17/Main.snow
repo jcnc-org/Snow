@@ -12,7 +12,7 @@ module: Main
                     i = i + 1
                 body:
                     if i % 2 == 0 then
-                        print(i)
+                        os.print(i)
                         break
                     end if
                 end body
