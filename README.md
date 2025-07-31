@@ -11,8 +11,8 @@
     <a href="https://gitee.com/jcnc-org/snow/blob/main/LICENSE">
         <img src="https://img.shields.io/badge/%20license-Apache--2.0%20-blue" alt="">
     </a>
-    <a href="https://gitee.com/jcnc-org/snow/tree/v0.5.0/">
-        <img src="https://img.shields.io/badge/version-v0.5.0-blue" alt="">
+    <a href="https://gitee.com/jcnc-org/snow/tree/v0.6.0/">
+        <img src="https://img.shields.io/badge/version-v0.6.0-blue" alt="">
     </a>
 </p>
 
