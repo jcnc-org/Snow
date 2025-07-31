@@ -1,0 +1,33 @@
+module: Main
+    import: os
+    function: main
+        return_type: void
+        body:
+            loop:
+                init:
+                    declare outer_i: int = 1
+                cond:
+                    outer_i <= 10
+                step:
+                    outer_i = outer_i + 1
+                body:
+                    print(outer_i)
+
+                    loop:
+                        init:
+                            // 注意这一行使用了外层循环的变量 outer_i
+                            declare inter_j: int = outer_i
+                        cond:
+                            inter_j <= 10
+                        step:
+                            inter_j = inter_j + 1
+                        body:
+
+                        end body
+                    end loop
+
+                end body
+            end loop
+        end body
+    end function
+end module

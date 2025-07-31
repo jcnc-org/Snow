@@ -1,109 +1,109 @@
 package org.jcnc.snow.compiler.backend.builder;
 
 import org.jcnc.snow.vm.engine.VMOpCode;
-
 import java.util.*;
 
 /**
- * VMProgramBuilder: 构建线性 VM 程序（即按顺序存放所有 VM 指令）。
+ * VMProgramBuilder 用于构建虚拟机(VM)的最终指令列表。
  * <p>
- * 本类用于编译器后端，将所有生成的 VM 指令（包括分支和调用指令）统一存储、管理。
- * 支持符号（如函数入口、标签地址）的延迟解析与回填（fix-up）机制，
- * 可在目标尚未定义时提前生成分支或调用指令，定义后自动修正。
- * </p>
- * <p>
- * 常用于处理跨函数、跨标签的 CALL/JUMP 等复杂控制流，确保最终生成的 VM 指令地址一致正确。
- * </p>
+ * 主要职责：
+ * <ul>
+ *     <li>维护代码指令序列和符号地址表</li>
+ *     <li>支持跨函数、标签跳转的延后修补(Call/Branch Fixup)</li>
+ *     <li>支持虚拟机本地槽位类型的管理(如 I/F...)</li>
+ * </ul>
  */
 public final class VMProgramBuilder {
-    /** 未解析目标的 CALL 指令信息（待修补） */
+
+    /**
+     * 未知目标的 CALL 指令修补记录(待目标地址确定后修正)。
+     * @param index CALL 指令在 code 列表中的位置
+     * @param target 目标函数的全名
+     * @param nArgs 参数个数
+     */
     private record CallFix(int index, String target, int nArgs) {}
 
-    /** 未解析目标的分支指令（JUMP/IC_* 等待修补） */
+    /**
+     * 未知目标的分支指令修补记录(待目标标签确定后修正)。
+     * @param index 分支指令在 code 列表中的位置
+     * @param label 跳转目标标签名
+     */
     private record BranchFix(int index, String label) {}
 
-    /** 占位符: 用于表示尚未确定的符号地址 */
+    /** 未解析地址的占位符，便于后期批量修补 */
     private static final String PLACEHOLDER = "-1";
 
-    /** 按顺序存放的 VM 指令文本 */
+    /** VM 指令列表 */
     private final List<String> code = new ArrayList<>();
-
-    // 虚拟机槽位编号到数据类型前缀的映射（如 0 -> 'I', 1 -> 'D' 等）
+    /** 槽位(寄存器)类型映射表(如 I/F...，用于类型检查或代码生成优化) */
     private final Map<Integer, Character> slotType = new HashMap<>();
-
-    /** 符号（如函数名、标签名）到其首地址（即指令序号/偏移量）的映射表
-     *  主要用于跳转和调用，定位具体的代码位置 */
+    /** 符号(函数名/标签)到指令序号的映射表 */
     private final Map<String, Integer> addr = new HashMap<>();
-
-    /** 所有待回填（fix-up）的 CALL 调用指令记录
-     *  由于被调用目标地址在编译时可能尚未确定，需要先记录，最终统一回填 */
+    /** 所有待修补的 CALL 指令集合 */
     private final List<CallFix> callFixes = new ArrayList<>();
-
-    /** 所有待回填（fix-up）的分支跳转指令记录
-     *  与 CALL 类似，分支指令的目标地址也可能需要编译后期再补充 */
+    /** 所有待修补的分支指令集合 */
     private final List<BranchFix> branchFixes = new ArrayList<>();
-
-    /** 程序计数器（Program Counter），表示下一个生成指令将插入的位置 */
+    /** 当前代码指针(已生成指令的数量/下一个指令的位置) */
     private int pc = 0;
 
     /**
-     * 设置某个槽位对应的数据类型前缀
+     * 设置槽位(局部变量/虚拟寄存器)的类型前缀。
+     *
      * @param slot   槽位编号
-     * @param prefix 类型前缀（如 'I' 表示 int，'D' 表示 double 等）
+     * @param prefix 类型前缀(如 'I', 'F')
      */
     public void setSlotType(int slot, char prefix) {
         slotType.put(slot, prefix);
     }
 
     /**
-     * 获取某个槽位对应的数据类型前缀
-     * 若未指定则返回默认类型 'I'（int）
+     * 获取槽位的类型前缀，默认为 'I'(整数类型)。
+     *
      * @param slot 槽位编号
-     * @return 类型前缀（如 'I', 'D' 等）
+     * @return 类型前缀字符
      */
     public char getSlotType(int slot) {
         return slotType.getOrDefault(slot, 'I');
     }
 
-
     /**
-     * 标记函数入口或标签，并尝试修补所有等候该符号的指令。
-     * @param name 符号名（函数名/标签名）
+     * 标记一个函数或标签的起始位置。
+     * <p>
+     * 1. 记录符号到当前 pc 的映射；
+     * 2. 立即尝试修补之前所有针对该符号的延后调用和分支。
+     *
+     * @param name 函数名或标签名(全限定名)
      */
     public void beginFunction(String name) {
-        addr.put(name, pc);            // 记录当前地址为入口
-        patchCallFixes(name);          // 修补所有待该符号的 CALL
-        patchBranchFixes(name);        // 修补所有待该符号的分支
+        addr.put(name, pc);
+        patchCallFixes(name);
+        patchBranchFixes(name);
     }
 
-    /**
-     * 结束函数（当前实现为空，方便 API 统一）。
-     */
-    public void endFunction() { /* no-op */ }
+    /** 函数结尾的处理(占位，无需特殊处理)。 */
+    public void endFunction() {}
 
     /**
-     * 写入一条 VM 指令或标签。
-     * <ul>
-     *   <li>如果以冒号结尾，视为标签，仅登记其地址，不写入指令流，也不递增 pc。</li>
-     *   <li>否则写入实际指令，并自增 pc。</li>
-     * </ul>
-     * @param line 一行 VM 指令文本或标签名（结尾有冒号）
+     * 添加一条指令或标签到代码列表。
+     *
+     * @param line 指令字符串或标签字符串(若以冒号结尾为标签)
      */
     public void emit(String line) {
-        if (line.endsWith(":")) {                  // 是标签定义行
+        if (line.endsWith(":")) {
+            // 标签定义
             String label = line.substring(0, line.length() - 1);
-            addr.put(label, pc);                   // 记录标签地址
-            patchBranchFixes(label);               // 修补所有以该标签为目标的分支指令
-            return;                                // 标签行不写入 code，不递增 pc
+            addr.put(label, pc);
+            patchBranchFixes(label);
+            return;
         }
-        code.add(line);                            // 普通指令写入 code
+        code.add(line);
         pc++;
     }
 
     /**
-     * 生成 CALL 指令。
-     * 支持延迟修补: 若目标已知，直接写入地址；否则写入占位并登记 fix-up。
-     * @param target 目标函数名
+     * 添加一条 CALL 指令，若目标未定义则延后修补。
+     *
+     * @param target 目标函数全名
      * @param nArgs  参数个数
      */
     public void emitCall(String target, int nArgs) {
@@ -117,10 +117,10 @@ public final class VMProgramBuilder {
     }
 
     /**
-     * 生成分支（JUMP 或 IC_*）指令。
-     * 支持延迟修补机制。
-     * @param opcode 指令名
-     * @param label  目标标签名
+     * 添加一条分支指令(如 JMP/BR/BEQ)，若目标未定义则延后修补。
+     *
+     * @param opcode 指令操作码
+     * @param label  跳转目标标签名
      */
     public void emitBranch(String opcode, String label) {
         Integer a = resolve(label);
@@ -133,13 +133,12 @@ public final class VMProgramBuilder {
     }
 
     /**
-     * 构建最终 VM 代码文本列表。
-     * <ul>
-     *   <li>若存在未解析符号（CALL 或分支），则抛出异常。</li>
-     *   <li>否则返回不可变指令流。</li>
-     * </ul>
-     * @return 完整 VM 指令流
-     * @throws IllegalStateException 若有未修补的符号引用
+     * 完成代码生成，输出最终 VM 指令序列。
+     * <p>
+     * 如果存在未修补的调用或分支，将抛出异常。
+     *
+     * @return 指令序列(不可变)
+     * @throws IllegalStateException 如果存在未修补符号
      */
     public List<String> build() {
         if (!callFixes.isEmpty() || !branchFixes.isEmpty()) {
@@ -151,27 +150,26 @@ public final class VMProgramBuilder {
     }
 
     /**
-     * 解析符号地址。若全限定名找不到则降级尝试简单名。
-     * @param sym 符号名
-     * @return    地址或 null（未定义）
+     * 解析符号地址，仅支持全名精准匹配。
+     *
+     * @param sym 符号全名
+     * @return 地址(指令序号)，未找到返回 null
      */
     private Integer resolve(String sym) {
-        Integer a = addr.get(sym);
-        if (a == null && sym.contains(".")) {
-            a = addr.get(sym.substring(sym.lastIndexOf('.') + 1));
-        }
-        return a;
+        return addr.get(sym);
     }
 
     /**
-     * 修补所有以 name 为目标的 CALL 占位符。
-     * @param name 新定义的函数名
+     * 修补所有等待目标函数 name 的 CALL 指令。
+     * <p>
+     * 只支持全名精确修补，不做模糊查找或短名回退。
+     *
+     * @param name 目标函数全名
      */
     private void patchCallFixes(String name) {
         for (Iterator<CallFix> it = callFixes.iterator(); it.hasNext();) {
             CallFix f = it.next();
-            // 目标函数名完全匹配或后缀匹配（兼容全限定名）
-            if (f.target.equals(name) || f.target.endsWith("." + name)) {
+            if (f.target.equals(name)) {
                 code.set(f.index, VMOpCode.CALL + " " + addr.get(name) + " " + f.nArgs);
                 it.remove();
             }
@@ -179,8 +177,9 @@ public final class VMProgramBuilder {
     }
 
     /**
-     * 修补所有以 label 为目标的分支占位符。
-     * @param label 新定义的标签名
+     * 修补所有等待目标 label 的分支指令。
+     *
+     * @param label 目标标签
      */
     private void patchBranchFixes(String label) {
         for (Iterator<BranchFix> it = branchFixes.iterator(); it.hasNext();) {

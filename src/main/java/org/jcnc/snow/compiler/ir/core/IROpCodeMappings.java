@@ -6,97 +6,123 @@ import java.util.Map;
  * 操作符与IR操作码映射表，统一管理所有类型的算术和比较操作映射。
  */
 public final class IROpCodeMappings {
-    private IROpCodeMappings() {} // 禁止实例化
-
     // 8位整型运算符映射
     public static final Map<String, IROpCode> OP_B8 = Map.of(
-            "+", IROpCode.ADD_B8, "-", IROpCode.SUB_B8,
-            "*", IROpCode.MUL_B8, "/", IROpCode.DIV_B8
+            "+", IROpCode.ADD_B8,
+            "-", IROpCode.SUB_B8,
+            "*", IROpCode.MUL_B8,
+            "/", IROpCode.DIV_B8,
+            "%", IROpCode.MOD_B8
     );
     // 16位整型
     public static final Map<String, IROpCode> OP_S16 = Map.of(
-            "+", IROpCode.ADD_S16, "-", IROpCode.SUB_S16,
-            "*", IROpCode.MUL_S16, "/", IROpCode.DIV_S16
+            "+", IROpCode.ADD_S16,
+            "-", IROpCode.SUB_S16,
+            "*", IROpCode.MUL_S16,
+            "/", IROpCode.DIV_S16,
+            "%", IROpCode.MOD_S16
     );
     // 32位整型
     public static final Map<String, IROpCode> OP_I32 = Map.of(
-            "+", IROpCode.ADD_I32, "-", IROpCode.SUB_I32,
-            "*", IROpCode.MUL_I32, "/", IROpCode.DIV_I32
+            "+", IROpCode.ADD_I32,
+            "-", IROpCode.SUB_I32,
+            "*", IROpCode.MUL_I32,
+            "/", IROpCode.DIV_I32,
+            "%", IROpCode.MOD_I32
     );
     // 64位长整型
     public static final Map<String, IROpCode> OP_L64 = Map.of(
-            "+", IROpCode.ADD_L64, "-", IROpCode.SUB_L64,
-            "*", IROpCode.MUL_L64, "/", IROpCode.DIV_L64
+            "+", IROpCode.ADD_L64,
+            "-", IROpCode.SUB_L64,
+            "*", IROpCode.MUL_L64,
+            "/", IROpCode.DIV_L64,
+            "%", IROpCode.MOD_L64
     );
     // 32位浮点型
     public static final Map<String, IROpCode> OP_F32 = Map.of(
-            "+", IROpCode.ADD_F32, "-", IROpCode.SUB_F32,
-            "*", IROpCode.MUL_F32, "/", IROpCode.DIV_F32
+            "+", IROpCode.ADD_F32,
+            "-", IROpCode.SUB_F32,
+            "*", IROpCode.MUL_F32,
+            "/", IROpCode.DIV_F32,
+            "%", IROpCode.MOD_F32
     );
     // 64位双精度浮点型
     public static final Map<String, IROpCode> OP_D64 = Map.of(
-            "+", IROpCode.ADD_D64, "-", IROpCode.SUB_D64,
-            "*", IROpCode.MUL_D64, "/", IROpCode.DIV_D64
+            "+", IROpCode.ADD_D64,
+            "-", IROpCode.SUB_D64,
+            "*", IROpCode.MUL_D64,
+            "/", IROpCode.DIV_D64,
+            "%", IROpCode.MOD_D64
     );
-
-    /* ────── 比较运算符映射 ────── */
-    /** 8-bit（byte）比较 */
+    /**
+     * 8-bit（byte）比较
+     */
     public static final Map<String, IROpCode> CMP_B8 = Map.of(
             "==", IROpCode.CMP_BEQ,
             "!=", IROpCode.CMP_BNE,
-            "<",  IROpCode.CMP_BLT,
-            ">",  IROpCode.CMP_BGT,
+            "<", IROpCode.CMP_BLT,
+            ">", IROpCode.CMP_BGT,
             "<=", IROpCode.CMP_BLE,
             ">=", IROpCode.CMP_BGE
     );
 
-    /** 16-bit（short）比较 */
+    /* ────── 比较运算符映射 ────── */
+    /**
+     * 16-bit（short）比较
+     */
     public static final Map<String, IROpCode> CMP_S16 = Map.of(
             "==", IROpCode.CMP_SEQ,
             "!=", IROpCode.CMP_SNE,
-            "<",  IROpCode.CMP_SLT,
-            ">",  IROpCode.CMP_SGT,
+            "<", IROpCode.CMP_SLT,
+            ">", IROpCode.CMP_SGT,
             "<=", IROpCode.CMP_SLE,
             ">=", IROpCode.CMP_SGE
     );
-
-    /** 32-bit（int）比较 */
+    /**
+     * 32-bit（int）比较
+     */
     public static final Map<String, IROpCode> CMP_I32 = Map.of(
             "==", IROpCode.CMP_IEQ,
             "!=", IROpCode.CMP_INE,
-            "<",  IROpCode.CMP_ILT,
-            ">",  IROpCode.CMP_IGT,
+            "<", IROpCode.CMP_ILT,
+            ">", IROpCode.CMP_IGT,
             "<=", IROpCode.CMP_ILE,
             ">=", IROpCode.CMP_IGE
     );
-
-    /** 64-bit（long）比较 */
+    /**
+     * 64-bit（long）比较
+     */
     public static final Map<String, IROpCode> CMP_L64 = Map.of(
             "==", IROpCode.CMP_LEQ,
             "!=", IROpCode.CMP_LNE,
-            "<",  IROpCode.CMP_LLT,
-            ">",  IROpCode.CMP_LGT,
+            "<", IROpCode.CMP_LLT,
+            ">", IROpCode.CMP_LGT,
             "<=", IROpCode.CMP_LLE,
             ">=", IROpCode.CMP_LGE
     );
-
-    /** 32-bit（float）比较 */
+    /**
+     * 32-bit（float）比较
+     */
     public static final Map<String, IROpCode> CMP_F32 = Map.of(
             "==", IROpCode.CMP_FEQ,
             "!=", IROpCode.CMP_FNE,
-            "<",  IROpCode.CMP_FLT,
-            ">",  IROpCode.CMP_FGT,
+            "<", IROpCode.CMP_FLT,
+            ">", IROpCode.CMP_FGT,
             "<=", IROpCode.CMP_FLE,
             ">=", IROpCode.CMP_FGE
     );
-
-    /** 64-bit（double）比较 */
+    /**
+     * 64-bit（double）比较
+     */
     public static final Map<String, IROpCode> CMP_D64 = Map.of(
             "==", IROpCode.CMP_DEQ,
             "!=", IROpCode.CMP_DNE,
-            "<",  IROpCode.CMP_DLT,
-            ">",  IROpCode.CMP_DGT,
+            "<", IROpCode.CMP_DLT,
+            ">", IROpCode.CMP_DGT,
             "<=", IROpCode.CMP_DLE,
             ">=", IROpCode.CMP_DGE
     );
+
+    private IROpCodeMappings() {
+    } // 禁止实例化
 }

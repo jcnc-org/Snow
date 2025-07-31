@@ -2,6 +2,7 @@ package org.jcnc.snow.compiler.semantic.core;
 
 import org.jcnc.snow.compiler.parser.ast.FunctionNode;
 import org.jcnc.snow.compiler.parser.ast.ModuleNode;
+import org.jcnc.snow.compiler.parser.ast.DeclarationNode;
 import org.jcnc.snow.compiler.parser.ast.ReturnNode;
 import org.jcnc.snow.compiler.semantic.analyzers.base.StatementAnalyzer;
 import org.jcnc.snow.compiler.semantic.error.SemanticError;
@@ -16,7 +17,7 @@ import org.jcnc.snow.compiler.semantic.type.BuiltinType;
  * 它逐个遍历所有模块中的函数定义，并对函数体中的每一条语句调用对应的语义分析器，
  * 执行类型检查、作用域验证、错误记录等任务。
  * <p>
- * 核心职责包括: 
+ * 核心职责包括:
  * <ul>
  *   <li>为每个函数构建局部符号表并注册函数参数为变量；</li>
  *   <li>分发函数体语句至相应的 {@link StatementAnalyzer}；</li>
@@ -39,7 +40,7 @@ public record FunctionChecker(Context ctx) {
     /**
      * 执行函数体检查流程。
      * <p>
-     * 对所有模块中的所有函数依次进行处理: 
+     * 对所有模块中的所有函数依次进行处理:
      * <ol>
      *   <li>查找模块对应的 {@link ModuleInfo}；</li>
      *   <li>创建函数局部符号表 {@link SymbolTable}，并注册所有参数变量；</li>
@@ -54,11 +55,18 @@ public record FunctionChecker(Context ctx) {
             // 获取当前模块对应的语义信息
             ModuleInfo mi = ctx.modules().get(mod.name());
 
+            // 先构建全局符号表
+            SymbolTable globalScope = new SymbolTable(null);
+            for (DeclarationNode g : mod.globals()) {
+                var t = ctx.parseType(g.getType());
+                globalScope.define(new Symbol(g.getName(), t, SymbolKind.VARIABLE));
+            }
+
             // 遍历模块中所有函数定义
             for (FunctionNode fn : mod.functions()) {
 
-                // 构建函数局部作用域符号表，设置父作用域为 null
-                SymbolTable locals = new SymbolTable(null);
+                // 构建函数局部作用域符号表，父作用域为 globalScope
+                SymbolTable locals = new SymbolTable(globalScope);
 
                 // 将函数参数注册为局部变量
                 fn.parameters().forEach(p ->

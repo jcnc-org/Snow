@@ -1,6 +1,7 @@
 package org.jcnc.snow.compiler.parser.module;
 
 import org.jcnc.snow.compiler.lexer.token.TokenType;
+import org.jcnc.snow.compiler.parser.ast.DeclarationNode;
 import org.jcnc.snow.compiler.parser.ast.FunctionNode;
 import org.jcnc.snow.compiler.parser.ast.ImportNode;
 import org.jcnc.snow.compiler.parser.ast.ModuleNode;
@@ -10,6 +11,7 @@ import org.jcnc.snow.compiler.parser.context.ParserContext;
 import org.jcnc.snow.compiler.parser.context.TokenStream;
 import org.jcnc.snow.compiler.parser.context.UnexpectedToken;
 import org.jcnc.snow.compiler.parser.function.FunctionParser;
+import org.jcnc.snow.compiler.parser.statement.DeclarationStatementParser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +19,7 @@ import java.util.List;
 /**
  * {@code ModuleParser} 负责解析源码中的模块结构，是顶层结构解析器实现之一。
  * <p>
- * 模块定义可包含多个导入（import）语句和函数定义（function），
+ * 模块定义可包含多个导入（import）语句、globals 全局声明和函数定义（function），
  * 导入语句可在模块中任意位置出现，且允许模块体中穿插任意数量的空行（空行会被自动忽略，不影响语法结构）。
  * </p>
  *
@@ -26,6 +28,8 @@ import java.util.List;
  * <pre>
  * module: mymod
  *   import ...
+ *   globals:
+ *     declare ...
  *   function ...
  *   ...
  * end module
@@ -40,7 +44,7 @@ public class ModuleParser implements TopLevelParser {
      * 解析过程包括:
      * <ol>
      *     <li>匹配模块声明起始 {@code module: IDENTIFIER}。</li>
-     *     <li>收集模块体内所有 import 和 function 语句，允许穿插空行。</li>
+     *     <li>收集模块体内所有 import、globals 和 function 语句，允许穿插空行。</li>
      *     <li>匹配模块结束 {@code end module}。</li>
      * </ol>
      * 若遇到未识别的语句，将抛出 {@link UnexpectedToken} 异常，定位错误位置和原因。
@@ -64,12 +68,15 @@ public class ModuleParser implements TopLevelParser {
         ts.expectType(TokenType.NEWLINE);
 
         List<ImportNode> imports = new ArrayList<>();
+        List<DeclarationNode> globals = new ArrayList<>();
         List<FunctionNode> functions = new ArrayList<>();
 
         ImportParser importParser = new ImportParser();
         FunctionParser funcParser = new FunctionParser();
+        DeclarationStatementParser globalsParser = new DeclarationStatementParser();
 
         while (true) {
+            // 跳过空行
             if (ts.peek().getType() == TokenType.NEWLINE) {
                 ts.next();
                 continue;
@@ -78,12 +85,33 @@ public class ModuleParser implements TopLevelParser {
                 break;
             }
             String lex = ts.peek().getLexeme();
-            if ("import".equals(lex)) {
-                imports.addAll(importParser.parse(ctx));
-            } else if ("function".equals(lex)) {
-                functions.add(funcParser.parse(ctx));
-            } else {
-                throw new UnexpectedToken(
+            switch (lex) {
+                case "import" -> imports.addAll(importParser.parse(ctx));
+                case "function" -> functions.add(funcParser.parse(ctx));
+                case "globals" -> {
+                    ts.expect("globals");
+                    ts.expect(":");
+                    ts.expectType(TokenType.NEWLINE);
+                    while (true) {
+                        if (ts.peek().getType() == TokenType.NEWLINE) {
+                            ts.next();
+                            continue;
+                        }
+                        String innerLex = ts.peek().getLexeme();
+                        if ("declare".equals(innerLex)) {
+                            globals.add(globalsParser.parse(ctx));
+                        } else if ("function".equals(innerLex) || "import".equals(innerLex) || "end".equals(innerLex)) {
+                            break;
+                        } else {
+                            throw new UnexpectedToken(
+                                    "globals 区块中不支持的内容: " + innerLex,
+                                    ts.peek().getLine(),
+                                    ts.peek().getCol()
+                            );
+                        }
+                    }
+                }
+                case null, default -> throw new UnexpectedToken(
                         "Unexpected token in module: " + lex,
                         ts.peek().getLine(),
                         ts.peek().getCol()
@@ -94,6 +122,6 @@ public class ModuleParser implements TopLevelParser {
         ts.expect("end");
         ts.expect("module");
 
-        return new ModuleNode(name, imports, functions, new NodeContext(line, column, file));
+        return new ModuleNode(name, imports, globals, functions, new NodeContext(line, column, file));
     }
 }

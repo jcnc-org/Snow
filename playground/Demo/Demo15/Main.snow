@@ -1,0 +1,20 @@
+module: Main
+    import: os
+    globals:
+        declare num2:int=10
+    function: main
+        return_type: void
+        body:
+            declare num1:int=11
+            os.print(num1+num2+abc())
+        end body
+    end function
+
+    function: abc
+        return_type: int
+        body:
+            return 1
+        end body
+    end function
+
+end module

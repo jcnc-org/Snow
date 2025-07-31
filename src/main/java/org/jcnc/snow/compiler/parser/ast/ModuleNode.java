@@ -18,6 +18,7 @@ import java.util.StringJoiner;
 public record ModuleNode(
         String name,
         List<ImportNode> imports,
+        List<DeclarationNode> globals,
         List<FunctionNode> functions,
         NodeContext context
 ) implements Node {
@@ -33,12 +34,17 @@ public record ModuleNode(
         for (ImportNode imp : imports) {
             importJoiner.add(imp.moduleName());
         }
+        StringJoiner globalJoiner = new StringJoiner(", ");
+        for (DeclarationNode g : globals) {
+            globalJoiner.add(g.getType() + " " + g.getName());
+        }
         StringJoiner funcJoiner = new StringJoiner(", ");
         for (FunctionNode fn : functions) {
             funcJoiner.add(fn.name());
         }
         return "Module(name=" + name
                 + ", imports=[" + importJoiner + "]"
+                + ", globals=[" + globalJoiner + "]"
                 + ", functions=[" + funcJoiner + "])";
     }
 }

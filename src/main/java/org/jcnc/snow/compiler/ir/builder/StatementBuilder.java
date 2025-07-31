@@ -9,6 +9,7 @@ import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
 
+import java.util.ArrayDeque;
 import java.util.Locale;
 
 /**
@@ -27,6 +28,14 @@ public class StatementBuilder {
      * 表达式 IR 构建器，用于将表达式节点转为 IR 指令。
      */
     private final ExpressionBuilder expr;
+    /**
+     * break 目标标签栈（保存每层循环的结束标签）
+     */
+    private final ArrayDeque<String> breakTargets = new ArrayDeque<>();
+    /**
+     * continue 目标标签栈（保存每层循环的 step 起始标签）
+     */
+    private final ArrayDeque<String> continueTargets = new ArrayDeque<>();
 
     /**
      * 构造方法。
@@ -89,21 +98,30 @@ public class StatementBuilder {
             return;
         }
         if (stmt instanceof DeclarationNode decl) {
-            // 变量声明，如 int a = 1;
+            // 变量声明语句（如 int a = 1;）
             if (decl.getInitializer().isPresent()) {
-                // 声明同时有初值
+                // 如果声明时带有初始值（如 int a = b;）
 
-                // 1. 设置声明变量的类型
+                // 1. 设置变量类型，便于表达式求值/指令生成时推断类型信息
                 ctx.setVarType(decl.getType());
 
-                IRVirtualRegister r = expr.build(decl.getInitializer().get());
+                // 2. 为当前声明的变量分配一个全新的虚拟寄存器
+                //    这样可以保证该变量和初始值表达式中的变量物理上独立，不会发生别名/串扰
+                IRVirtualRegister dest = ctx.newRegister();
 
-                // 2. 清除变量声明
+                // 3. 将初始值表达式的计算结果写入新分配的寄存器
+                //    即使初始值是某个已存在变量（如 outer_i），这里是值的拷贝
+                expr.buildInto(decl.getInitializer().get(), dest);
+
+                // 4. 清理类型设置，防止影响后续变量声明
                 ctx.clearVarType();
 
-                ctx.getScope().declare(decl.getName(), decl.getType(), r);
+                // 5. 在作用域内将变量名与新分配的寄存器进行绑定
+                //    这样后续对该变量的任何操作都只会影响 dest，不会反向影响初值表达式中的源变量
+                ctx.getScope().declare(decl.getName(), decl.getType(), dest);
             } else {
-                // 仅声明，无初值
+                // 仅声明变量，无初值（如 int a;）
+                // 在作用域内声明并分配新寄存器，但不进行初始化
                 ctx.getScope().declare(decl.getName(), decl.getType());
             }
             return;
@@ -118,6 +136,22 @@ public class StatementBuilder {
                 // return 无返回值
                 InstructionFactory.retVoid(ctx);
             }
+            return;
+        }
+        if (stmt instanceof BreakNode) {
+            // break 语句：跳转到当前最近一层循环的结束标签
+            if (breakTargets.isEmpty()) {
+                throw new IllegalStateException("`break` appears outside of a loop");
+            }
+            InstructionFactory.jmp(ctx, breakTargets.peek());
+            return;
+        }
+        if (stmt instanceof ContinueNode) {
+            // continue 语句：跳转到当前最近一层循环的 step 起始标签
+            if (continueTargets.isEmpty()) {
+                throw new IllegalStateException("`continue` appears outside of a loop");
+            }
+            InstructionFactory.jmp(ctx, continueTargets.peek());
             return;
         }
         // 不支持的语句类型
@@ -163,12 +197,24 @@ public class StatementBuilder {
 
         // 条件不满足则跳出循环
         emitConditionalJump(loop.cond(), lblEnd);
-        // 构建循环体
-        buildStatements(loop.body());
-        // 更新部分（如 for 的 i++）
+        // 在进入循环体前，记录本层循环的结束标签，供 break 使用
+        breakTargets.push(lblEnd);
+        // 记录本层循环的 step 起始标签，供 continue 使用
+        String lblStep = ctx.newLabel();
+        continueTargets.push(lblStep);
+        try {
+            // 构建循环体
+            buildStatements(loop.body());
+        } finally {
+            // 离开循环体时弹出标签，避免影响外层
+            breakTargets.pop();
+            continueTargets.pop();
+        }
+        // step 起始标签(所有 continue 会跳到这里)
+        InstructionFactory.label(ctx, lblStep);
         if (loop.step() != null) build(loop.step());
 
-        // 跳回循环起点
+        // 回到 cond 检查
         InstructionFactory.jmp(ctx, lblStart);
         // 循环结束标签
         InstructionFactory.label(ctx, lblEnd);
