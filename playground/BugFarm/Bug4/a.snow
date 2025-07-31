@@ -1,0 +1,8 @@
+module: ModuleA
+    function: fun
+        return_type: int
+        body:
+            return 123
+        end body
+    end function
+end module
