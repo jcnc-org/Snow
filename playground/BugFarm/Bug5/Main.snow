@@ -1,0 +1,16 @@
+module: Main
+    import: os
+    globals:
+        declare sum: int = 0
+    function: main
+        parameter:
+        return_type: int
+        body:
+            sum = 20
+
+            os.print(sum)
+
+            return 0
+        end body
+    end function
+end module
