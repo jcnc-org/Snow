@@ -36,12 +36,6 @@ public final class VMCodeGenerator {
     private final VMProgramBuilder out;
 
     /**
-     * 当前正在处理的函数名。
-     * 用于区分是否为 main 函数等用途。
-     */
-    private String currentFn;
-
-    /**
      * 构造 VMCodeGenerator。
      *
      * @param slotMap    虚拟寄存器到 VM 局部槽位的分配表
@@ -72,7 +66,7 @@ public final class VMCodeGenerator {
      * @throws IllegalStateException 如果遇到不支持的 IR 指令类型
      */
     public void generate(IRFunction fn) {
-        this.currentFn = fn.name();
+        String currentFn = fn.name();
         out.beginFunction(currentFn);
         for (IRInstruction ins : fn.body()) {
             @SuppressWarnings("unchecked")
