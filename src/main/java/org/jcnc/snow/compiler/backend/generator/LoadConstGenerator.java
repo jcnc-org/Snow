@@ -63,7 +63,8 @@ public class LoadConstGenerator implements InstructionGenerator<LoadConstInstruc
             case Float   _ -> 'F';   // 单精度
             case Boolean _ -> 'I';   // 布尔类型用 I 处理
             case String  _ -> 'R';   // 字符串常量
-            case null, default ->    // 其它类型异常
+            case java.util.List<?> _ -> 'R'; // 引用类型（如数组等）
+            case null, default ->
                     throw new IllegalStateException("未知的常量类型: "
                             + (value != null ? value.getClass() : null));
         };

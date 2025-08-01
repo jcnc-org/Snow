@@ -51,7 +51,7 @@ public class ExpressionStatementParser implements StatementParser {
         int column = ts.peek().getCol();
         String file = ctx.getSourceName();
 
-        // 赋值语句: IDENTIFIER = expr
+        // 简单形式: IDENTIFIER = expr
         if (ts.peek().getType() == TokenType.IDENTIFIER && "=".equals(ts.peek(1).getLexeme())) {
             String varName = ts.next().getLexeme();
             ts.expect("=");
@@ -60,9 +60,23 @@ public class ExpressionStatementParser implements StatementParser {
             return new AssignmentNode(varName, value, new NodeContext(line, column, file));
         }
 
+        // 尝试解析更通用的左值形式（支持下标）: <expr> = <expr>
+        ExpressionNode lhs = new PrattExpressionParser().parse(ctx);
+        if ("=".equals(ts.peek().getLexeme())) {
+            ts.next(); // consume '='
+            ExpressionNode rhs = new PrattExpressionParser().parse(ctx);
+            ts.expectType(TokenType.NEWLINE);
+            // 根据左值类型构造具体赋值节点
+            if (lhs instanceof org.jcnc.snow.compiler.parser.ast.IdentifierNode id) {
+                return new AssignmentNode(id.name(), rhs, new NodeContext(line, column, file));
+            } else if (lhs instanceof org.jcnc.snow.compiler.parser.ast.IndexExpressionNode idx) {
+                return new org.jcnc.snow.compiler.parser.ast.IndexAssignmentNode(idx, rhs, new NodeContext(line, column, file));
+            } else {
+                throw new UnexpectedToken("不支持的赋值左值类型: " + lhs.getClass().getSimpleName(), line, column);
+            }
+        }
         // 普通表达式语句
-        ExpressionNode expr = new PrattExpressionParser().parse(ctx);
         ts.expectType(TokenType.NEWLINE);
-        return new ExpressionStatementNode(expr, new NodeContext(line, column, file));
+        return new ExpressionStatementNode(lhs, new NodeContext(line, column, file));
     }
 }

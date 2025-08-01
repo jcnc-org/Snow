@@ -47,4 +47,6 @@ public interface Type {
         int ia = order.indexOf(a), ib = order.indexOf(b);
         return order.get(Math.max(ia, ib));
     }
+    /** 类型名字符串（如 int、double[]） */
+    default String name() { return toString(); }
 }

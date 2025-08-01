@@ -13,42 +13,39 @@ import org.jcnc.snow.vm.engine.VMOpCode;
 import java.util.*;
 
 /**
- * <b>CallGenerator - 将 IR {@code CallInstruction} 生成 VM 指令</b>
- *
+ * {@code CallGenerator} 负责将 IR 层的 {@link CallInstruction} 生成对应的 VM 层函数调用指令。
  * <p>
- * 本类负责将中间表示（IR）中的函数调用指令 {@link CallInstruction} 转换为虚拟机（VM）指令。
- * 支持普通函数调用和特殊的 syscall 指令转换。
- * </p>
- *
- * <p>
- * <b>能力说明：</b>
+ * 支持：
  * <ul>
- *   <li>支持识别 {@code IRConstant} 直接字面量或已绑定到虚拟寄存器的字符串常量，直接降级为 {@code SYSCALL &lt;SUBCMD&gt;} 指令。</li>
- *   <li>对普通函数，完成参数加载、调用、返回值保存等指令生成。</li>
+ *     <li>普通函数调用的参数压栈、调用、返回值保存</li>
+ *     <li>特殊的 {@code syscall} 指令转为 VM 的 SYSCALL 指令</li>
+ *     <li>数组访问内置函数 {@code __index_i(arr, idx)} 的专用指令序列</li>
  * </ul>
+ * <p>
+ * 对于 syscall 子命令，支持常量字符串和字符串寄存器两种来源，并支持寄存器-字符串常量池注册机制。
  * </p>
  */
 public class CallGenerator implements InstructionGenerator<CallInstruction> {
 
     /**
-     * <虚拟寄存器 id, 对应的字符串常量>
-     * <p>用于记录虚拟寄存器与其绑定字符串常量的映射。由 {@link LoadConstGenerator} 在编译期间填充。</p>
+     * 字符串常量池：用于绑定虚拟寄存器 id 到字符串值（供 syscall 子命令使用）。
      */
     private static final Map<Integer, String> STRING_CONST_POOL = new HashMap<>();
 
     /**
-     * 注册字符串常量到虚拟寄存器
-     * <p>供 {@link LoadConstGenerator} 在加载字符串常量时调用。</p>
+     * 注册一个字符串常量，绑定到虚拟寄存器 id。
      *
-     * @param regId 虚拟寄存器 id
-     * @param value 字符串常量值
+     * @param regId  虚拟寄存器 id
+     * @param value  字符串常量
      */
     public static void registerStringConst(int regId, String value) {
         STRING_CONST_POOL.put(regId, value);
     }
 
     /**
-     * 返回本生成器支持的 IR 指令类型（CallInstruction）
+     * 返回当前指令生成器支持的 IR 指令类型（即 {@link CallInstruction}）。
+     *
+     * @return {@code CallInstruction.class}
      */
     @Override
     public Class<CallInstruction> supportedClass() {
@@ -56,12 +53,12 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
     }
 
     /**
-     * 生成 VM 指令的主逻辑
+     * 生成 VM 指令序列，实现函数调用/特殊 syscall/数组索引等 IR 指令的转换。
      *
-     * @param ins       当前 IR 指令（函数调用）
-     * @param out       指令输出构建器
-     * @param slotMap   IR 虚拟寄存器与物理槽位映射
-     * @param currentFn 当前函数名
+     * @param ins        当前函数调用 IR 指令
+     * @param out        VM 指令输出构建器
+     * @param slotMap    IR 虚拟寄存器 → VM 槽位映射表
+     * @param currentFn  当前函数名
      */
     @Override
     public void generate(CallInstruction ins,
@@ -79,7 +76,7 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
             }
 
             // ---------- 0. 解析 syscall 子命令 ----------
-            // 子命令支持 IRConstant（直接字面量）或虚拟寄存器（需已绑定字符串）
+            // 支持 IRConstant 字面量或虚拟寄存器（需已绑定字符串）
             String subcmd;
             IRValue first = args.getFirst();
 
@@ -88,13 +85,11 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
                     throw new IllegalStateException("syscall 第一个参数必须是字符串常量");
                 subcmd = s.toUpperCase(Locale.ROOT);
 
-            } else if (first instanceof IRVirtualRegister vr) {   // 虚拟寄存器
-                // 从常量池中查找是否已绑定字符串
-                subcmd = Optional.ofNullable(STRING_CONST_POOL.get(vr.id()))
-                        .orElseThrow(() ->
-                                new IllegalStateException("未找到 syscall 字符串常量绑定: " + vr));
-                subcmd = subcmd.toUpperCase(Locale.ROOT);
-
+            } else if (first instanceof IRVirtualRegister vr) { // 来自寄存器的字符串
+                String s = STRING_CONST_POOL.get(vr.id());
+                if (s == null)
+                    throw new IllegalStateException("未找到 syscall 字符串常量绑定: " + vr);
+                subcmd = s.toUpperCase(Locale.ROOT);
             } else {
                 throw new IllegalStateException("syscall 第一个参数必须是字符串常量");
             }
@@ -113,21 +108,54 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
             return;   // syscall 无返回值，直接返回
         }
 
+        /* ========== 特殊处理内部索引函数：__index_i(arr, idx) ========== */
+        if ("__index_i".equals(ins.getFunctionName())) {
+            // 加载参数（arr 为引用类型，idx 为整型）
+            if (ins.getArguments().size() != 2) {
+                throw new IllegalStateException("__index_i 需要两个参数(arr, idx)");
+            }
+            IRVirtualRegister arr = (IRVirtualRegister) ins.getArguments().get(0);
+            IRVirtualRegister idx = (IRVirtualRegister) ins.getArguments().get(1);
+
+            int arrSlot = slotMap.get(arr);
+            int idxSlot = slotMap.get(idx);
+
+            char arrT = out.getSlotType(arrSlot);
+            if (arrT == '\0') arrT = 'R'; // 默认为引用类型
+            out.emit(OpHelper.opcode(arrT + "_LOAD") + " " + arrSlot);
+
+            char idxT = out.getSlotType(idxSlot);
+            if (idxT == '\0') idxT = 'I'; // 默认为整型
+            out.emit(OpHelper.opcode(idxT + "_LOAD") + " " + idxSlot);
+
+            // 调用 SYSCALL ARR_GET，让 VM 取出数组元素并压回栈顶
+            out.emit(VMOpCode.SYSCALL + " " + "ARR_GET");
+
+            // 取回返回值并保存（当前仅支持 int 元素）
+            int destSlot = slotMap.get(ins.getDest());
+            out.emit(OpHelper.opcode("I_STORE") + " " + destSlot);
+            out.setSlotType(destSlot, 'I');
+            return;
+        }
+
         /* ========== 普通函数调用 ========== */
 
         // ---------- 1. 推断返回值类型（非 void 返回时用） ----------
         char retType = 'I';  // 默认为整型
         if (!ins.getArguments().isEmpty()) {
-            int firstSlot = slotMap.get((IRVirtualRegister) ins.getArguments().getFirst());
-            retType = out.getSlotType(firstSlot);
-            if (retType == '\0') retType = 'I';
+            // 简化：根据第一个参数类型推断返回类型，或者通过全局表拿到返回类型
+            String ret = GlobalFunctionTable.getReturnType(ins.getFunctionName());
+            if (ret != null) {
+                retType = Character.toUpperCase(ret.charAt(0));
+            }
         }
 
-        // ---------- 2. 加载全部实参 ----------
-        for (var arg : ins.getArguments()) {
-            int slotId = slotMap.get((IRVirtualRegister) arg);
+        // ---------- 2. 压栈所有参数 ----------
+        for (IRValue arg : ins.getArguments()) {
+            IRVirtualRegister vr = (IRVirtualRegister) arg;
+            int slotId = slotMap.get(vr);
             char t = out.getSlotType(slotId);
-            if (t == '\0') t = 'I';  // 默认整型
+            if (t == '\0') t = 'I';
             out.emit(OpHelper.opcode(t + "_LOAD") + " " + slotId);
         }
 

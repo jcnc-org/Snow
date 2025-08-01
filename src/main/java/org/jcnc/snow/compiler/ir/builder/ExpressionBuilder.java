@@ -1,6 +1,7 @@
 package org.jcnc.snow.compiler.ir.builder;
 
 import org.jcnc.snow.compiler.ir.core.IROpCode;
+import org.jcnc.snow.compiler.ir.core.IRValue;
 import org.jcnc.snow.compiler.ir.instruction.CallInstruction;
 import org.jcnc.snow.compiler.ir.instruction.LoadConstInstruction;
 import org.jcnc.snow.compiler.ir.instruction.UnaryOperationInstruction;
@@ -14,37 +15,26 @@ import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import java.util.*;
 
 /**
- * <b>ExpressionBuilder - 表达式 → IR 构建器</b>
- *
+ * {@code ExpressionBuilder} 表达式 → IR 构建器。
  * <p>
  * 负责将 AST 表达式节点递归转换为 IR 虚拟寄存器操作，并生成对应的 IR 指令序列。
- * 支持字面量、标识符、二元表达式、一元表达式、函数调用等多种类型表达式。
- * </p>
- *
- * <p>
- * 主要功能：
+ * 支持字面量、标识符、二元表达式、一元表达式、函数调用、数组下标等多种类型表达式。
  * <ul>
- *     <li>将表达式节点映射为虚拟寄存器</li>
- *     <li>为每种表达式类型生成对应 IR 指令</li>
- *     <li>支持表达式嵌套的递归构建</li>
- *     <li>支持写入指定目标寄存器，避免冗余的 move 指令</li>
+ *   <li>将表达式节点映射为虚拟寄存器</li>
+ *   <li>为每种表达式类型生成对应 IR 指令</li>
+ *   <li>支持表达式嵌套的递归构建</li>
+ *   <li>支持写入指定目标寄存器，避免冗余的 move 指令</li>
+ *   <li>支持 IndexExpressionNode 的编译期折叠（arr[2]），并自动降级为运行时调用 __index_i</li>
  * </ul>
- * </p>
  */
 public record ExpressionBuilder(IRContext ctx) {
 
-    /* ───────────────── 顶层入口 ───────────────── */
-
     /**
-     * 构建任意 AST 表达式节点，自动为其分配一个新的虚拟寄存器，并返回该寄存器。
+     * 构建表达式，返回存储其结果的虚拟寄存器。
      *
-     * <p>
-     * 这是表达式 IR 生成的核心入口。它会根据不同的表达式类型进行分派，递归构建 IR 指令。
-     * </p>
-     *
-     * @param expr 任意 AST 表达式节点
-     * @return 存储该表达式结果的虚拟寄存器
-     * @throws IllegalStateException 遇到不支持的表达式类型或未定义标识符
+     * @param expr 要生成 IR 的表达式节点
+     * @return 存储表达式值的虚拟寄存器
+     * @throws IllegalStateException 不支持的表达式类型或未定义标识符
      */
     public IRVirtualRegister build(ExpressionNode expr) {
         return switch (expr) {
@@ -78,14 +68,20 @@ public record ExpressionBuilder(IRContext ctx) {
     /* ───────────────── 写入指定寄存器 ───────────────── */
 
     /**
-     * 生成表达式，并将其结果直接写入目标寄存器，避免冗余的 move 操作。
-     *
+     * 将表达式节点 {@link ExpressionNode} 的结果写入指定的虚拟寄存器 {@code dest}。
      * <p>
-     * 某些简单表达式（如字面量、变量名）可以直接写入目标寄存器；复杂表达式则会先 build 到新寄存器，再 move 到目标寄存器。
+     * 按表达式类型分派处理，包括：
+     * <ul>
+     *   <li>字面量（数字、字符串、布尔、数组）：生成 loadConst 指令直接写入目标寄存器</li>
+     *   <li>变量标识符：查表获取源寄存器，并 move 到目标寄存器</li>
+     *   <li>二元表达式与下标表达式：递归生成子表达式结果，并写入目标寄存器</li>
+     *   <li>其它类型：统一先 build 到临时寄存器，再 move 到目标寄存器</li>
+     * </ul>
      * </p>
      *
-     * @param node 要生成的表达式节点
-     * @param dest 目标虚拟寄存器（用于存储结果）
+     * @param node 要求值的表达式节点
+     * @param dest 结果目标虚拟寄存器
+     * @throws IllegalStateException 若标识符未定义（如变量未声明时引用）
      */
     public void buildInto(ExpressionNode node, IRVirtualRegister dest) {
         switch (node) {
@@ -103,8 +99,8 @@ public record ExpressionBuilder(IRContext ctx) {
             case BoolLiteralNode b ->
                     InstructionFactory.loadConstInto(
                             ctx, dest, new IRConstant(b.getValue() ? 1 : 0));
-
-            // 标识符：查表获取原寄存器，然后 move 到目标寄存器
+            case ArrayLiteralNode arr ->
+                    InstructionFactory.loadConstInto(ctx, dest, buildArrayConstant(arr));
             case IdentifierNode id -> {
                 IRVirtualRegister src = ctx.getScope().lookup(id.name());
                 if (src == null)
@@ -114,8 +110,10 @@ public record ExpressionBuilder(IRContext ctx) {
 
             // 二元表达式：递归生成并写入目标寄存器
             case BinaryExpressionNode bin -> buildBinaryInto(bin, dest);
-
-            // 其它复杂情况：先 build 到新寄存器，再 move 到目标寄存器
+            case IndexExpressionNode idx -> {
+                IRVirtualRegister tmp = buildIndex(idx);
+                InstructionFactory.move(ctx, tmp, dest);
+            }
             default -> {
                 IRVirtualRegister tmp = build(node);
                 InstructionFactory.move(ctx, tmp, dest);
@@ -123,7 +121,79 @@ public record ExpressionBuilder(IRContext ctx) {
         }
     }
 
-    /* ───────────────── 具体表达式类型 ───────────────── */
+    /**
+     * 下标访问表达式处理。支持编译期常量折叠（数组和下标均为常量时直接求值），
+     * 否则生成运行时调用 __index_i（由 VM 降级为 ARR_GET）。
+     *
+     * @param node 下标访问表达式
+     * @return 存储结果的虚拟寄存器
+     */
+    private IRVirtualRegister buildIndex(IndexExpressionNode node) {
+        Object arrConst = tryFoldConst(node.array());
+        Object idxConst = tryFoldConst(node.index());
+        if (arrConst instanceof java.util.List<?> list && idxConst instanceof Number num) {
+            int i = num.intValue();
+            if (i < 0 || i >= list.size())
+                throw new IllegalStateException("数组下标越界: " + i + " (长度 " + list.size() + ")");
+            Object elem = list.get(i);
+            IRVirtualRegister r = ctx.newRegister();
+            InstructionFactory.loadConstInto(ctx, r, new IRConstant(elem));
+            return r;
+        }
+        IRVirtualRegister arrReg = build(node.array());
+        IRVirtualRegister idxReg = build(node.index());
+        IRVirtualRegister dest   = ctx.newRegister();
+        List<IRValue> argv = new ArrayList<>();
+        argv.add(arrReg);
+        argv.add(idxReg);
+        ctx.addInstruction(new CallInstruction(dest, "__index_i", argv));
+        return dest;
+    }
+
+    /**
+     * 尝试将表达式折叠为编译期常量（支持嵌套）。
+     * 支持数字、字符串、布尔、数组、常量标识符。
+     *
+     * @param expr 要折叠的表达式节点
+     * @return 常量对象（如数字、字符串、List），否则返回 null
+     */
+    private Object tryFoldConst(ExpressionNode expr) {
+        if (expr == null) return null;
+        if (expr instanceof NumberLiteralNode n) {
+            String s = n.value();
+            try {
+                if (s.contains(".") || s.contains("e") || s.contains("E")) {
+                    return Double.parseDouble(s);
+                }
+                return Integer.parseInt(s);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        if (expr instanceof StringLiteralNode s) {
+            return s.value();
+        }
+        if (expr instanceof BoolLiteralNode b) {
+            return b.getValue() ? 1 : 0;
+        }
+        if (expr instanceof ArrayLiteralNode arr) {
+            java.util.List<Object> list = new java.util.ArrayList<>();
+            for (ExpressionNode e : arr.elements()) {
+                Object v = tryFoldConst(e);
+                if (v == null) return null;
+                list.add(v);
+            }
+            return java.util.List.copyOf(list);
+        }
+        if (expr instanceof IdentifierNode id) {
+            Object v = null;
+            try {
+                v = ctx.getScope().getConstValue(id.name());
+            } catch (Throwable ignored) {}
+            return v;
+        }
+        return null;
+    }
 
     /**
      * 一元表达式构建
@@ -284,5 +354,42 @@ public record ExpressionBuilder(IRContext ctx) {
         IRVirtualRegister r = ctx.newRegister();
         ctx.addInstruction(new LoadConstInstruction(r, c));
         return r;
+    }
+
+    /**
+     * 构建数组字面量表达式（元素均为常量时）。
+     *
+     * @param arr 数组字面量节点
+     * @return 存储该数组的寄存器
+     */
+    private IRVirtualRegister buildArrayLiteral(ArrayLiteralNode arr) {
+        IRConstant c = buildArrayConstant(arr);
+        IRVirtualRegister r = ctx.newRegister();
+        ctx.addInstruction(new LoadConstInstruction(r, c));
+        return r;
+    }
+
+    /**
+     * 构建数组常量（所有元素均为数字、字符串或布尔常量）。
+     *
+     * @param arr 数组字面量节点
+     * @return 数组 IRConstant
+     * @throws IllegalStateException 若含有非常量元素
+     */
+    private IRConstant buildArrayConstant(ArrayLiteralNode arr) {
+        List<Object> list = new ArrayList<>();
+        for (ExpressionNode e : arr.elements()) {
+            switch (e) {
+                case NumberLiteralNode n -> {
+                    IRConstant num = ExpressionUtils.buildNumberConstant(ctx, n.value());
+                    list.add(num.value());
+                }
+                case StringLiteralNode s -> list.add(s.value());
+                case BoolLiteralNode b   -> list.add(b.getValue() ? 1 : 0);
+                default -> throw new IllegalStateException(
+                        "暂不支持含非常量元素的数组字面量: " + e.getClass().getSimpleName());
+            }
+        }
+        return new IRConstant(List.copyOf(list));
     }
 }

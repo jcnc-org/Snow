@@ -226,6 +226,39 @@ public class SyscallCommand implements Command {
                     sel.close();
                 }
 
+                // 数组元素访问：arr[idx] -> 返回元素（当前实现返回 int 或字符串/引用原样）
+                case "ARR_GET" -> {
+                    Object idxObj = stack.pop();
+                    Object arrObj = stack.pop();
+                    int idx;
+                    if (idxObj instanceof Number n) idx = n.intValue();
+                    else if (idxObj instanceof String s) idx = Integer.parseInt(s.trim());
+                    else throw new IllegalArgumentException("ARR_GET: invalid index type " + idxObj);
+
+                    Object elem;
+                    if (arrObj instanceof java.util.List<?> list) {
+                        if (idx < 0 || idx >= list.size())
+                            throw new IndexOutOfBoundsException("数组下标越界: " + idx + " (长度 " + list.size() + ")");
+                        elem = list.get(idx);
+                    } else if (arrObj != null && arrObj.getClass().isArray()) {
+                        int len = java.lang.reflect.Array.getLength(arrObj);
+                        if (idx < 0 || idx >= len)
+                            throw new IndexOutOfBoundsException("数组下标越界: " + idx + " (长度 " + len + ")");
+                        elem = java.lang.reflect.Array.get(arrObj, idx);
+                    } else {
+                        throw new IllegalArgumentException("ARR_GET: not an array/list: " + arrObj);
+                    }
+
+                    if (elem instanceof Number n) {
+                        stack.push(n.intValue());
+                    } else if (elem instanceof Boolean b) {
+                        stack.push(b ? 1 : 0);
+                    } else {
+                        // 对于字符串或其它引用类型，直接返回引用，由上层决定如何存储
+                        stack.push(elem);
+                    }
+                }
+
                 // 控制台输出
                 case "PRINT" -> {
                     Object dataObj = stack.pop();
