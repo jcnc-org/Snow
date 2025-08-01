@@ -1,0 +1,14 @@
+module: Main
+    import: os
+    function: main
+        return_type: void
+        body:
+            declare cols: int = 2
+            declare matrix: int[] = [1, 2, 3, 4]
+
+            declare x: int = matrix[cols]
+
+            os.print(x)
+        end body
+    end function
+end module
