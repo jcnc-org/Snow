@@ -3,11 +3,23 @@ module: Main
     function: main
         return_type: void
         body:
-            declare cols: int = 2
-            declare matrix: int[] = [1, 2, 3, 4]
+            declare n: int[][][][] = [
+                [
+                    [ [17, 18], [19, 20] ],
+                    [ [21, 22], [23, 24] ]
+                ],
+                [
+                    [ [25, 26], [27, 28] ],
+                    [ [29, 30], [31, 32] ]
+                ]
+            ]
 
-            declare x: int = matrix[cols]
+            declare i: int = 0
+            declare j: int = 1
+            declare k: int = 0
+            declare l: int = 0
 
+            declare x: int = n[i][j][k][l]
             os.print(x)
         end body
     end function
