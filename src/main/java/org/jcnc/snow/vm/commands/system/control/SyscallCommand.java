@@ -47,6 +47,97 @@ import static java.nio.file.StandardOpenOption.*;
 public class SyscallCommand implements Command {
 
     /**
+     * 根据传入的文件打开标志，构造 NIO {@link OpenOption} 集合。
+     * <p>
+     * 本方法负责将底层虚拟机传递的 flags 整数型位域，转换为 Java NIO 标准的文件打开选项集合，
+     * 以支持文件读、写、创建、截断、追加等多种访问场景。
+     * 常用于 SYSCALL 的 OPEN 子命令。
+     * </p>
+     *
+     * @param flags 文件打开模式标志。各标志可组合使用，具体含义请参见虚拟机文档。
+     * @return 转换后的 OpenOption 集合，可直接用于 FileChannel.open 等 NIO 方法
+     */
+    private static Set<OpenOption> flagsToOptions(int flags) {
+        Set<OpenOption> opts = new HashSet<>();
+        // 如果有写入标志，则添加WRITE，否则默认为READ。
+        if ((flags & 0x1) != 0) opts.add(WRITE);
+        else opts.add(READ);
+        // 如果包含创建标志，允许创建文件。
+        if ((flags & 0x40) != 0) opts.add(CREATE);
+        // 包含截断标志，打开时清空内容。
+        if ((flags & 0x200) != 0) opts.add(TRUNCATE_EXISTING);
+        // 包含追加标志，文件写入时追加到末尾。
+        if ((flags & 0x400) != 0) opts.add(APPEND);
+        return opts;
+    }
+
+    /**
+     * 捕获所有异常并统一处理，操作数栈压入 -1 代表本次系统调用失败。
+     * <p>
+     * 本方法是全局错误屏障，任何命令异常都会转换为虚拟机通用的失败信号，
+     * 保证上层调用逻辑不会被异常打断。实际应用中可拓展错误码机制。
+     * </p>
+     *
+     * @param stack 操作数栈，将失败信号写入此栈
+     * @param e     抛出的异常对象，可在调试时输出日志
+     */
+    private static void pushErr(OperandStack stack, Exception e) {
+        stack.push(-1);
+        System.err.println("Syscall exception: " + e);
+    }
+
+    /**
+     * 控制台输出通用方法，支持基本类型、字节数组、任意数组、对象等。
+     * <p>
+     * 该方法用于 SYSCALL PRINT/PRINTLN，将任意类型对象转为易读字符串输出到标准输出流。
+     * 字节数组自动按 UTF-8 解码，其它原生数组按格式化字符串输出。
+     * </p>
+     *
+     * @param obj     待输出的内容，可以为任何类型（如基本类型、byte[]、数组、对象等）
+     * @param newline 是否自动换行。如果为 true，则在输出后换行；否则直接输出。
+     */
+    private static void output(Object obj, boolean newline) {
+        String str;
+        if (obj == null) {
+            str = "null";
+        } else if (obj instanceof byte[] bytes) {
+            // 字节数组作为文本输出
+            str = new String(bytes);
+        } else if (obj.getClass().isArray()) {
+            // 其它数组格式化输出
+            str = arrayToString(obj);
+        } else {
+            str = obj.toString();
+        }
+        if (newline) System.out.println(str);
+        else System.out.print(str);
+    }
+
+    /**
+     * 将各种原生数组和对象数组转换为可读字符串，便于控制台输出和调试。
+     * <p>
+     * 本方法针对 int、long、double、float、short、char、byte、boolean 等所有原生数组类型
+     * 以及对象数组都能正确格式化，统一输出格式风格，避免显示为类型 hashCode。
+     * 若为不支持的类型，返回通用提示字符串。
+     * </p>
+     *
+     * @param array 任意原生数组或对象数组
+     * @return 该数组的可读字符串表示
+     */
+    private static String arrayToString(Object array) {
+        if (array instanceof int[] a) return Arrays.toString(a);
+        if (array instanceof long[] a) return Arrays.toString(a);
+        if (array instanceof double[] a) return Arrays.toString(a);
+        if (array instanceof float[] a) return Arrays.toString(a);
+        if (array instanceof short[] a) return Arrays.toString(a);
+        if (array instanceof char[] a) return Arrays.toString(a);
+        if (array instanceof byte[] a) return Arrays.toString(a);
+        if (array instanceof boolean[] a) return Arrays.toString(a);
+        if (array instanceof Object[] a) return Arrays.deepToString(a);
+        return "Unsupported array";
+    }
+
+    /**
      * 分发并执行 SYSCALL 子命令，根据子命令类型从操作数栈取出参数、操作底层资源，并将结果压回栈顶。
      *
      * @param parts     指令及子命令参数分割数组，parts[1]为子命令名
@@ -226,6 +317,105 @@ public class SyscallCommand implements Command {
                     sel.close();
                 }
 
+                // 数组元素访问：arr[idx] —— 保留所有类型精度（byte/short/int/long/float/double/boolean/string/ref）
+                case "ARR_GET" -> {
+                    /*
+                      执行数组下标访问操作 arr[idx]，并将对应元素以真实类型压入操作数栈。
+                      <ul>
+                        <li>支持 List 与任意原生数组类型（int[]、double[] 等）；</li>
+                        <li>idx 参数支持 Number/String 类型，自动转 int；</li>
+                        <li>下标越界将抛出异常，非数组类型将报错；</li>
+                        <li>返回结果保持类型精度：byte/short/int/long/float/double/boolean/string/object;</li>
+                        <li>boolean 元素以 1/0 压栈，string/引用直接压栈；</li>
+                      </ul>
+
+                      异常与出错行为：
+                      <ul>
+                        <li>索引类型非法、目标非数组/列表，将抛 IllegalArgumentException；</li>
+                        <li>索引越界，将抛 IndexOutOfBoundsException；</li>
+                      </ul>
+                     */
+                    Object idxObj = stack.pop();
+                    Object arrObj = stack.pop();
+                    int idx;
+                    if (idxObj instanceof Number n) idx = n.intValue();
+                    else if (idxObj instanceof String s) idx = Integer.parseInt(s.trim());
+                    else throw new IllegalArgumentException("ARR_GET: invalid index type " + idxObj);
+
+                    Object elem;
+                    if (arrObj instanceof java.util.List<?> list) {
+                        if (idx < 0 || idx >= list.size())
+                            throw new IndexOutOfBoundsException("数组下标越界: " + idx + " (长度 " + list.size() + ")");
+                        elem = list.get(idx);
+                    } else if (arrObj != null && arrObj.getClass().isArray()) {
+                        int len = java.lang.reflect.Array.getLength(arrObj);
+                        if (idx < 0 || idx >= len)
+                            throw new IndexOutOfBoundsException("数组下标越界: " + idx + " (长度 " + len + ")");
+                        elem = java.lang.reflect.Array.get(arrObj, idx);
+                    } else {
+                        throw new IllegalArgumentException("ARR_GET: not an array/list: " + arrObj);
+                    }
+
+                    // === 按真实类型压栈（byte/short/int/long/float/double/boolean/string/ref）===
+                    if (elem instanceof Number n) {
+                        if (elem instanceof Double) {
+                            stack.push(n.doubleValue());
+                        } else if (elem instanceof Float) {
+                            stack.push(n.floatValue());
+                        } else if (elem instanceof Long) {
+                            stack.push(n.longValue());
+                        } else if (elem instanceof Integer) {
+                            stack.push(n.intValue());
+                        } else if (elem instanceof Short) {
+                            stack.push(n.shortValue());
+                        } else if (elem instanceof Byte) {
+                            stack.push(n.byteValue());
+                        } else {
+                            stack.push(n.intValue()); // 兜底
+                        }
+                    } else if (elem instanceof Boolean b) {
+                        stack.push(b ? 1 : 0);
+                    } else {
+                        // string 或其它引用类型，直接返回
+                        stack.push(elem);
+                    }
+                }
+
+                case "ARR_SET" -> {
+                    /*
+                      arr[idx] = value
+                      支持 List 和所有原生数组类型（int[], double[], ...）
+                      参数顺序：栈顶 value、idx、arr
+                      不返回值（成功/失败由异常控制）
+                    */
+                    Object value = stack.pop();
+                    Object idxObj = stack.pop();
+                    Object arrObj = stack.pop();
+                    int idx;
+                    if (idxObj instanceof Number n) idx = n.intValue();
+                    else if (idxObj instanceof String s) idx = Integer.parseInt(s.trim());
+                    else throw new IllegalArgumentException("ARR_SET: invalid index type " + idxObj);
+
+                    if (arrObj instanceof java.util.List<?> list) {
+                        // 必须是可变 List
+                        @SuppressWarnings("unchecked")
+                        java.util.List<Object> mlist = (java.util.List<Object>) list;
+                        if (idx < 0 || idx >= mlist.size())
+                            throw new IndexOutOfBoundsException("数组下标越界: " + idx + " (长度 " + mlist.size() + ")");
+                        mlist.set(idx, value);
+                    } else if (arrObj != null && arrObj.getClass().isArray()) {
+                        int len = java.lang.reflect.Array.getLength(arrObj);
+                        if (idx < 0 || idx >= len)
+                            throw new IndexOutOfBoundsException("数组下标越界: " + idx + " (长度 " + len + ")");
+                        java.lang.reflect.Array.set(arrObj, idx, value);
+                    } else {
+                        throw new IllegalArgumentException("ARR_SET: not an array/list: " + arrObj);
+                    }
+                    // 操作成功，push 0 作为 ok 信号；不需要返回时可省略
+                    stack.push(0);
+                }
+
+
                 // 控制台输出
                 case "PRINT" -> {
                     Object dataObj = stack.pop();
@@ -245,96 +435,5 @@ public class SyscallCommand implements Command {
         }
 
         return pc + 1;
-    }
-
-    /**
-     * 根据传入的文件打开标志，构造 NIO {@link OpenOption} 集合。
-     * <p>
-     * 本方法负责将底层虚拟机传递的 flags 整数型位域，转换为 Java NIO 标准的文件打开选项集合，
-     * 以支持文件读、写、创建、截断、追加等多种访问场景。
-     * 常用于 SYSCALL 的 OPEN 子命令。
-     * </p>
-     *
-     * @param flags 文件打开模式标志。各标志可组合使用，具体含义请参见虚拟机文档。
-     * @return 转换后的 OpenOption 集合，可直接用于 FileChannel.open 等 NIO 方法
-     */
-    private static Set<OpenOption> flagsToOptions(int flags) {
-        Set<OpenOption> opts = new HashSet<>();
-        // 如果有写入标志，则添加WRITE，否则默认为READ。
-        if ((flags & 0x1) != 0) opts.add(WRITE);
-        else opts.add(READ);
-        // 如果包含创建标志，允许创建文件。
-        if ((flags & 0x40) != 0) opts.add(CREATE);
-        // 包含截断标志，打开时清空内容。
-        if ((flags & 0x200) != 0) opts.add(TRUNCATE_EXISTING);
-        // 包含追加标志，文件写入时追加到末尾。
-        if ((flags & 0x400) != 0) opts.add(APPEND);
-        return opts;
-    }
-
-    /**
-     * 捕获所有异常并统一处理，操作数栈压入 -1 代表本次系统调用失败。
-     * <p>
-     * 本方法是全局错误屏障，任何命令异常都会转换为虚拟机通用的失败信号，
-     * 保证上层调用逻辑不会被异常打断。实际应用中可拓展错误码机制。
-     * </p>
-     *
-     * @param stack 操作数栈，将失败信号写入此栈
-     * @param e     抛出的异常对象，可在调试时输出日志
-     */
-    private static void pushErr(OperandStack stack, Exception e) {
-        stack.push(-1);
-        System.err.println("Syscall exception: " + e);
-    }
-
-    /**
-     * 控制台输出通用方法，支持基本类型、字节数组、任意数组、对象等。
-     * <p>
-     * 该方法用于 SYSCALL PRINT/PRINTLN，将任意类型对象转为易读字符串输出到标准输出流。
-     * 字节数组自动按 UTF-8 解码，其它原生数组按格式化字符串输出。
-     * </p>
-     *
-     * @param obj     待输出的内容，可以为任何类型（如基本类型、byte[]、数组、对象等）
-     * @param newline 是否自动换行。如果为 true，则在输出后换行；否则直接输出。
-     */
-    private static void output(Object obj, boolean newline) {
-        String str;
-        if (obj == null) {
-            str = "null";
-        } else if (obj instanceof byte[] bytes) {
-            // 字节数组作为文本输出
-            str = new String(bytes);
-        } else if (obj.getClass().isArray()) {
-            // 其它数组格式化输出
-            str = arrayToString(obj);
-        } else {
-            str = obj.toString();
-        }
-        if (newline) System.out.println(str);
-        else System.out.print(str);
-    }
-
-    /**
-     * 将各种原生数组和对象数组转换为可读字符串，便于控制台输出和调试。
-     * <p>
-     * 本方法针对 int、long、double、float、short、char、byte、boolean 等所有原生数组类型
-     * 以及对象数组都能正确格式化，统一输出格式风格，避免显示为类型 hashCode。
-     * 若为不支持的类型，返回通用提示字符串。
-     * </p>
-     *
-     * @param array 任意原生数组或对象数组
-     * @return 该数组的可读字符串表示
-     */
-    private static String arrayToString(Object array) {
-        if (array instanceof int[] a) return Arrays.toString(a);
-        if (array instanceof long[] a) return Arrays.toString(a);
-        if (array instanceof double[] a) return Arrays.toString(a);
-        if (array instanceof float[] a) return Arrays.toString(a);
-        if (array instanceof short[] a) return Arrays.toString(a);
-        if (array instanceof char[] a) return Arrays.toString(a);
-        if (array instanceof byte[] a) return Arrays.toString(a);
-        if (array instanceof boolean[] a) return Arrays.toString(a);
-        if (array instanceof Object[] a) return Arrays.deepToString(a);
-        return "Unsupported array";
     }
 }

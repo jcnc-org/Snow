@@ -28,7 +28,7 @@ public class SymbolTokenScanner extends AbstractTokenScanner {
      */
     @Override
     public boolean canHandle(char c, LexerContext ctx) {
-        return ":,().+-*/".indexOf(c) >= 0;
+        return ":,().+-*/[]".indexOf(c) >= 0;
     }
 
     /**
@@ -53,6 +53,8 @@ public class SymbolTokenScanner extends AbstractTokenScanner {
             case '/' -> TokenType.DIVIDE;
             case '(' -> TokenType.LPAREN;
             case ')' -> TokenType.RPAREN;
+            case '[' -> TokenType.LBRACKET;
+            case ']' -> TokenType.RBRACKET;
             default -> TokenType.UNKNOWN;
         };
         return new Token(type, String.valueOf(c), line, col);
