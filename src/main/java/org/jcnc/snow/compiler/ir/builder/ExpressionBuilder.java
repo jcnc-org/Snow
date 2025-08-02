@@ -191,15 +191,15 @@ public record ExpressionBuilder(IRContext ctx) {
                     int p = base.indexOf('[');
                     if (p > 0) base = base.substring(0, p); // 基本类型
                     switch (base) {
-                        case "byte"    -> func = "__index_b";
-                        case "short"   -> func = "__index_s";
-                        case "int"     -> func = "__index_i";
-                        case "long"    -> func = "__index_l";
-                        case "float"   -> func = "__index_f";
-                        case "double"  -> func = "__index_d";
+                        case "byte" -> func = "__index_b";
+                        case "short" -> func = "__index_s";
+                        case "int" -> func = "__index_i";
+                        case "long" -> func = "__index_l";
+                        case "float" -> func = "__index_f";
+                        case "double" -> func = "__index_d";
                         case "boolean" -> func = "__index_i"; // 布尔型用 int 通道返回 1/0
-                        case "string"  -> func = "__index_r"; // 字符串/其它未识别类型均走引用
-                        default        -> func = "__index_r";
+                        case "string" -> func = "__index_r"; // 字符串/其它未识别类型均走引用
+                        default -> func = "__index_r";
                     }
                 }
             }
@@ -222,7 +222,7 @@ public record ExpressionBuilder(IRContext ctx) {
      * @param node 下标访问表达式节点
      * @return 存放引用结果的虚拟寄存器
      */
-    private IRVirtualRegister buildIndexRef(IndexExpressionNode node) {
+    public IRVirtualRegister buildIndexRef(IndexExpressionNode node) {
         // 1. 常量折叠：如果 array 和 index 都是编译期常量，直接取值
         Object arrConst = tryFoldConst(node.array());
         Object idxConst = tryFoldConst(node.index());

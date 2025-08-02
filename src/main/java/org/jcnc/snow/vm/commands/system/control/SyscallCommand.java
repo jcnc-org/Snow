@@ -381,6 +381,40 @@ public class SyscallCommand implements Command {
                     }
                 }
 
+                case "ARR_SET" -> {
+                    /*
+                      arr[idx] = value
+                      支持 List 和所有原生数组类型（int[], double[], ...）
+                      参数顺序：栈顶 value、idx、arr
+                      不返回值（成功/失败由异常控制）
+                    */
+                    Object value = stack.pop();
+                    Object idxObj = stack.pop();
+                    Object arrObj = stack.pop();
+                    int idx;
+                    if (idxObj instanceof Number n) idx = n.intValue();
+                    else if (idxObj instanceof String s) idx = Integer.parseInt(s.trim());
+                    else throw new IllegalArgumentException("ARR_SET: invalid index type " + idxObj);
+
+                    if (arrObj instanceof java.util.List<?> list) {
+                        // 必须是可变 List
+                        @SuppressWarnings("unchecked")
+                        java.util.List<Object> mlist = (java.util.List<Object>) list;
+                        if (idx < 0 || idx >= mlist.size())
+                            throw new IndexOutOfBoundsException("数组下标越界: " + idx + " (长度 " + mlist.size() + ")");
+                        mlist.set(idx, value);
+                    } else if (arrObj != null && arrObj.getClass().isArray()) {
+                        int len = java.lang.reflect.Array.getLength(arrObj);
+                        if (idx < 0 || idx >= len)
+                            throw new IndexOutOfBoundsException("数组下标越界: " + idx + " (长度 " + len + ")");
+                        java.lang.reflect.Array.set(arrObj, idx, value);
+                    } else {
+                        throw new IllegalArgumentException("ARR_SET: not an array/list: " + arrObj);
+                    }
+                    // 操作成功，push 0 作为 ok 信号；不需要返回时可省略
+                    stack.push(0);
+                }
+
 
                 // 控制台输出
                 case "PRINT" -> {

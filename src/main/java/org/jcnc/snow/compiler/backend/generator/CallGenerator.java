@@ -77,7 +77,7 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
             return;
         }
 
-        // 各种一维数组类型（byte/short/int/long/float/double/boolean）
+        // 各种一维数组类型（byte/short/int/long/float/double/boolean）读取
         switch (fn) {
             case "__index_b" -> {
                 generateIndexInstruction(ins, out, slotMap, 'B');
@@ -107,6 +107,35 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
                 generateIndexInstruction(ins, out, slotMap, 'R');
                 return;
             }
+
+            case "__setindex_b" -> {
+                generateSetIndexInstruction(ins, out, slotMap, 'B');
+                return;
+            }
+            case "__setindex_s" -> {
+                generateSetIndexInstruction(ins, out, slotMap, 'S');
+                return;
+            }
+            case "__setindex_i" -> {
+                generateSetIndexInstruction(ins, out, slotMap, 'I');
+                return;
+            }
+            case "__setindex_l" -> {
+                generateSetIndexInstruction(ins, out, slotMap, 'L');
+                return;
+            }
+            case "__setindex_f" -> {
+                generateSetIndexInstruction(ins, out, slotMap, 'F');
+                return;
+            }
+            case "__setindex_d" -> {
+                generateSetIndexInstruction(ins, out, slotMap, 'D');
+                return;
+            }
+            case "__setindex_r" -> {
+                generateSetIndexInstruction(ins, out, slotMap, 'R');
+                return;
+            }
         }
 
         // 普通函数调用
@@ -114,6 +143,54 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
     }
 
     // ========== 私有辅助方法 ==========
+
+    /**
+     * 生成数组元素赋值指令（arr[idx] = value），无返回值。
+     * <p>
+     * 调用栈压栈顺序为：arr (引用类型, R)，idx (整型, I)，value (元素类型, T)。
+     * 执行 SYSCALL ARR_SET 指令以完成数组赋值操作。
+     * </p>
+     *
+     * @param ins     当前的调用指令（包含参数信息）
+     * @param out     VM 指令生成器（用于输出 VM 指令）
+     * @param slotMap 虚拟寄存器与槽位的映射表
+     * @param valType 待写入的 value 的类型标识（'B': byte, 'S': short, 'I': int, 'L': long, 'F': float, 'D': double, 其余为引用类型'R'）
+     * @throws IllegalStateException 如果参数数量不为3，则抛出异常
+     */
+    private void generateSetIndexInstruction(CallInstruction ins,
+                                             VMProgramBuilder out,
+                                             Map<IRVirtualRegister, Integer> slotMap,
+                                             char valType) {
+        List<IRValue> args = ins.getArguments();
+        if (args.size() != 3) {
+            // 参数数量错误，抛出异常并输出实际参数列表
+            throw new IllegalStateException(
+                    "[CallGenerator] __setindex_* 需要三个参数(arr, idx, value)，实际: " + args);
+        }
+
+        // 第一个参数为数组对象，压入引用类型寄存器（'R'），如 arr
+        loadArgument(out, slotMap, args.get(0), 'R', ins.getFunctionName());
+
+        // 第二个参数为索引值，压入整型寄存器（'I'），如 idx
+        loadArgument(out, slotMap, args.get(1), 'I', ins.getFunctionName());
+
+        // 第三个参数为待赋值元素，根据元素类型压入相应类型寄存器
+        // 支持类型：'B'(byte), 'S'(short), 'I'(int), 'L'(long), 'F'(float), 'D'(double)
+        // 其他情况（如引用类型），按'R'处理
+        switch (valType) {
+            case 'B' -> loadArgument(out, slotMap, args.get(2), 'B', ins.getFunctionName());
+            case 'S' -> loadArgument(out, slotMap, args.get(2), 'S', ins.getFunctionName());
+            case 'I' -> loadArgument(out, slotMap, args.get(2), 'I', ins.getFunctionName());
+            case 'L' -> loadArgument(out, slotMap, args.get(2), 'L', ins.getFunctionName());
+            case 'F' -> loadArgument(out, slotMap, args.get(2), 'F', ins.getFunctionName());
+            case 'D' -> loadArgument(out, slotMap, args.get(2), 'D', ins.getFunctionName());
+            default -> loadArgument(out, slotMap, args.get(2), 'R', ins.getFunctionName());
+        }
+
+        // 输出 VM 指令：SYSCALL ARR_SET，完成数组元素写入操作
+        out.emit(VMOpCode.SYSCALL + " " + "ARR_SET");
+    }
+
 
     /**
      * 解析 syscall 子命令（第一个参数），支持字符串常量与已绑定字符串的虚拟寄存器。

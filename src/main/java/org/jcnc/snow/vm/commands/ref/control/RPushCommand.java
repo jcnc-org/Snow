@@ -14,292 +14,35 @@ import java.util.List;
  * and represents the "reference push" instruction ({@code R_PUSH}) in the virtual machine.
  *
  * <p>
- * This instruction pushes a reference value—typically a string literal or an array literal—onto the operand stack.
- * </p>
- *
- * <p><b>Instruction format:</b> {@code R_PUSH <literal>}</p>
- *
- * <p>
- * Example usages:
+ * This instruction pushes a reference-type value onto the operand stack.
+ * The input is parsed from the textual instruction form, which can represent:
  * <ul>
- *   <li>{@code R_PUSH "hello"} &rarr; push the string {@code "hello"} onto stack</li>
- *   <li>{@code R_PUSH [1,2,3]} &rarr; push an (unmodifiable) {@code List<Integer>} onto stack</li>
- *   <li>{@code R_PUSH [[1,2,3],[4,5,6]]} &rarr; push a nested (unmodifiable) {@code List<List<Integer>>} onto stack</li>
+ *     <li>String literals</li>
+ *     <li>Array literals (e.g., {@code [1, 2, 3]}), including nested arrays</li>
  * </ul>
  * </p>
  *
  * <p>
- * Supported element types in array literals include integers, floating-point numbers (parsed as {@code Double}),
- * booleans ({@code true}/{@code false} → {@code 1}/{@code 0}), quoted strings (surrounded by double quotes),
- * and further nested arrays.
+ * For array literals, a nested list structure is constructed. In this implementation,
+ * array literals are pushed as <b>mutable</b> {@link java.util.ArrayList} structures,
+ * so that subsequent system calls such as {@code ARR_SET} can modify elements in-place.
  * </p>
  */
-public final class RPushCommand implements Command {
-
-    // ======== Parsing helpers ========
+public class RPushCommand implements Command {
 
     /**
-     * Deeply wraps lists as unmodifiable; leaves scalars unchanged.
+     * Executes the R_PUSH command.
      *
-     * @param v input object
-     * @return deeply unmodifiable version of the object
-     */
-    private static Object deepUnmodifiableObject(Object v) {
-        if (v instanceof List<?> l) {
-            return deepUnmodifiable(l);
-        }
-        return v;
-    }
-
-    /**
-     * Recursively wraps all nested lists as unmodifiable.
-     *
-     * @param l input list
-     * @return deeply unmodifiable list
-     */
-    private static List<?> deepUnmodifiable(List<?> l) {
-        List<Object> out = new ArrayList<>(l.size());
-        for (Object v : l) out.add(deepUnmodifiableObject(v));
-        return Collections.unmodifiableList(out);
-    }
-
-    /**
-     * Parses a value starting from the cursor.
-     * Skips whitespace, and delegates to the appropriate sub-parser depending on the character:
-     * array, quoted string, or atomic value.
-     *
-     * @param c cursor
-     * @return parsed value (Object)
-     */
-    private static Object parseValue(Cursor c) {
-        skipWs(c);
-        if (c.end()) return "";
-        char ch = c.ch();
-        if (ch == '[') return parseArray(c);
-        if (ch == '\"') return parseQuoted(c);
-        return parseAtom(c);
-    }
-
-    /**
-     * Parses an array literal from the cursor, supporting nested structures.
-     * Assumes the current character is '['.
-     *
-     * @param c cursor
-     * @return List of parsed objects
-     */
-    private static List<Object> parseArray(Cursor c) {
-        // assumes current char is '['
-        expect(c, '[');
-        skipWs(c);
-        List<Object> values = new ArrayList<>();
-        if (!peek(c, ']')) {
-            while (true) {
-                Object v = parseValue(c);
-                values.add(v);
-                skipWs(c);
-                if (peek(c, ',')) {
-                    c.i++; // consume ','
-                    skipWs(c);
-                    continue;
-                }
-                break;
-            }
-        }
-        expect(c, ']');
-        return values;
-    }
-
-    // ======== Recursive-descent parser for array literals ========
-
-    /**
-     * Parses a string literal wrapped in double quotes (supports common escape sequences).
-     * <p>
-     * Assumes the cursor currently points to the starting quote character ("), and consumes the opening quote.
-     * Parses the string content from the cursor, stopping at the closing quote (").
-     * Supported escape sequences:
-     * <ul>
-     *   <li>\n newline</li>
-     *   <li>\r carriage return</li>
-     *   <li>\t tab</li>
-     *   <li>\" double quote itself</li>
-     *   <li>\\ backslash</li>
-     *   <li>Other characters are output as-is</li>
-     * </ul>
-     * If the string is not closed properly (i.e., no closing quote is found before the end), returns the currently parsed content.
-     *
-     * @param c cursor object (must support ch() for current char, i for index, end() for boundary check)
-     * @return parsed string content
-     */
-    private static String parseQuoted(Cursor c) {
-        // Assume current position is the opening quote; consume it
-        expect(c, '\"');
-        StringBuilder sb = new StringBuilder();
-
-        // Traverse until the end or an unclosed string
-        while (!c.end()) {
-            char ch = c.ch();
-            c.i++;
-            if (ch == '\\') { // handle escape sequences
-                if (c.end()) break; // nothing after escape char
-                char nxt = c.ch();
-                c.i++;
-                // Common escapes
-                switch (nxt) {
-                    case 'n' -> sb.append('\n');    // newline
-                    case 'r' -> sb.append('\r');    // carriage return
-                    case 't' -> sb.append('\t');    // tab
-                    case '\"' -> sb.append('\"');   // double quote
-                    case '\\' -> sb.append('\\');   // backslash
-                    default -> sb.append(nxt);      // any other char as-is
-                }
-            } else if (ch == '\"') {
-                // Found closing quote; end of string
-                return sb.toString();
-            } else {
-                // Regular character
-                sb.append(ch);
-            }
-        }
-        // Unclosed string, return parsed content
-        return sb.toString();
-    }
-
-    /**
-     * Parses an atomic constant ("atom"), supporting type-suffixed numbers and booleans.
-     * <p>
-     * Examples: 0.1f, 123L, 3.14d, 100, true, false<br>
-     * Parsing rules:
-     * <ul>
-     *   <li>Supports float(f/F), long(l/L), double(d/D), short(s/S), byte(b/B) type suffixes</li>
-     *   <li>Supports boolean true/false (case-insensitive, converted to 1/0)</li>
-     *   <li>Decimals without suffix parsed as double; integers without suffix as int</li>
-     *   <li>If parsing fails, returns the original string</li>
-     * </ul>
-     *
-     * @param c cursor, must support ch() for current char, i for index, end() for boundary check, s for the original string
-     * @return parsed Object
-     */
-    private static Object parseAtom(Cursor c) {
-        int start = c.i;
-        // Read until a comma, ']' or whitespace
-        while (!c.end()) {
-            char ch = c.ch();
-            if (ch == ',' || ch == ']') break;
-            if (Character.isWhitespace(ch)) break;
-            c.i++;
-        }
-        // Extract current token
-        String token = c.s.substring(start, c.i).trim();
-        if (token.isEmpty()) return "";
-        // Boolean parsing (case-insensitive, convert to 1/0)
-        if ("true".equalsIgnoreCase(token)) return 1;
-        if ("false".equalsIgnoreCase(token)) return 0;
-        // Handle numeric type suffixes
-        try {
-            char last = token.charAt(token.length() - 1);
-            switch (last) {
-                case 'f':
-                case 'F':
-                    // float suffix
-                    return Float.parseFloat(token.substring(0, token.length() - 1));
-                case 'l':
-                case 'L':
-                    // long suffix
-                    return Long.parseLong(token.substring(0, token.length() - 1));
-                case 'd':
-                case 'D':
-                    // double suffix
-                    return Double.parseDouble(token.substring(0, token.length() - 1));
-                case 's':
-                case 'S':
-                    // short suffix
-                    return Short.parseShort(token.substring(0, token.length() - 1));
-                case 'b':
-                case 'B':
-                    // byte suffix
-                    return Byte.parseByte(token.substring(0, token.length() - 1));
-                default:
-                    // No suffix, check for floating point or integer
-                    if (token.contains(".") || token.contains("e") || token.contains("E")) {
-                        return Double.parseDouble(token);
-                    } else {
-                        return Integer.parseInt(token);
-                    }
-            }
-        } catch (NumberFormatException ex) {
-            // Parsing failed, fall back to original string (e.g. identifiers)
-            return token;
-        }
-    }
-
-
-    /**
-     * Skips all whitespace characters at the current cursor position until a non-whitespace or end of text is reached.
-     * <p>
-     * The cursor index is automatically incremented, so it will point to the next non-whitespace character (or end of text).
-     *
-     * @param c cursor object (must support ch() for current char, i for index, end() for boundary check)
-     */
-    private static void skipWs(Cursor c) {
-        // Increment cursor while not at end and is whitespace
-        while (!c.end() && Character.isWhitespace(c.ch())) {
-            c.i++;
-        }
-    }
-
-    /**
-     * Checks if the current cursor position matches the specified character.
-     *
-     * @param c  cursor object
-     * @param ch expected character
-     * @return true if not at end and character matches ch, otherwise false
-     */
-    private static boolean peek(Cursor c, char ch) {
-        return !c.end() && c.ch() == ch;
-    }
-
-    /**
-     * Asserts that the current cursor position is the specified character; throws if not.
-     * If it matches, skips the character and any following whitespace.
-     *
-     * @param c  cursor object
-     * @param ch expected character
-     * @throws IllegalArgumentException if current position is not the expected character
-     */
-    private static void expect(Cursor c, char ch) {
-        if (c.end() || c.ch() != ch)
-            throw new IllegalArgumentException("R_PUSH array literal parse error: expected '" + ch + "' at position " + c.i);
-        c.i++; // Consume current character
-        skipWs(c); // Skip any subsequent whitespace
-    }
-
-
-    /**
-     * Executes the R_PUSH instruction: pushes a constant or array constant onto the operand stack.
-     * <p>
-     * Processing steps:
-     * <ul>
-     *     <li>1. Checks parameter count, throws if insufficient.</li>
-     *     <li>2. Concatenates all arguments (except opcode) into a raw literal string.</li>
-     *     <li>3. Checks if the literal is an array (starts with [ and ends with ]).</li>
-     *     <li>4. If array, recursively parses and pushes as a read-only List onto the operand stack.</li>
-     *     <li>5. Otherwise, pushes the literal string as-is.</li>
-     * </ul>
-     *
-     * @param parts instruction and parameter strings (parts[0] is the opcode, others are params)
-     * @param pc    current instruction index
-     * @param stack operand stack
-     * @param lvs   local variable store
-     * @param cs    call stack
-     * @return next instruction index
+     * @param parts     The parts of the instruction, where {@code parts[1..n]} are concatenated as the literal.
+     * @param pc        The current program counter.
+     * @param stack     The operand stack where the result will be pushed.
+     * @param local     The local variable store (unused in this instruction).
+     * @param callStack The call stack (unused in this instruction).
+     * @return The new program counter (typically {@code pc+1}).
+     * @throws IllegalStateException if no literal parameter is provided.
      */
     @Override
-    public int execute(String[] parts, int pc,
-                       OperandStack stack,
-                       LocalVariableStore lvs,
-                       CallStack cs) {
-
-        // Check parameter count
+    public int execute(String[] parts, int pc, OperandStack stack, LocalVariableStore local, CallStack callStack) {
         if (parts.length < 2)
             throw new IllegalStateException("R_PUSH missing parameter");
 
@@ -318,8 +61,8 @@ public final class RPushCommand implements Command {
                 // Should not happen in theory; safety fallback
                 stack.push(parsed);
             } else {
-                // Convert to read-only List before pushing to prevent modification
-                stack.push(deepUnmodifiable(list));
+                // Push a deep-mutable copy so ARR_SET can modify elements in-place
+                stack.push(deepMutable(list));
             }
         } else {
             // Regular string, push as-is
@@ -331,19 +74,29 @@ public final class RPushCommand implements Command {
     /**
      * A simple string cursor, supporting index increment and character reading, for use by the parser.
      */
-    private static final class Cursor {
-        final String s; // Original string
-        int i;          // Current index
+    static class Cursor {
+        final String s;
+        int i;
 
+        /**
+         * Constructs a new {@code Cursor} for the given string.
+         *
+         * @param s The string to parse.
+         */
         Cursor(String s) {
             this.s = s;
             this.i = 0;
         }
 
         /**
-         * Checks if the cursor is at the end of the string.
-         *
-         * @return true if at end
+         * Advances the cursor by one character.
+         */
+        void skip() {
+            i++;
+        }
+
+        /**
+         * @return {@code true} if the cursor has reached the end of the string.
          */
         boolean end() {
             return i >= s.length();
@@ -353,10 +106,186 @@ public final class RPushCommand implements Command {
          * Gets the character at the current cursor position.
          *
          * @return current character
+         * @throws StringIndexOutOfBoundsException if at end of string
          */
         char ch() {
             return s.charAt(i);
         }
     }
 
+    /**
+     * Parses a value from the input string at the current cursor position.
+     * This can be an array literal, a quoted string, or a simple atom (number, word).
+     *
+     * @param c The cursor for parsing.
+     * @return The parsed value (could be List, String, Number).
+     */
+    Object parseValue(Cursor c) {
+        skipWs(c);
+        if (c.end()) return "";
+        char ch = c.ch();
+        if (ch == '[') return parseArray(c);
+        if (ch == '\"') return parseQuoted(c);
+        return parseAtom(c);
+    }
+
+    /**
+     * Skips whitespace characters in the input string.
+     *
+     * @param c The cursor to advance.
+     */
+    private static void skipWs(Cursor c) {
+        while (!c.end()) {
+            char ch = c.ch();
+            if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n') c.skip();
+            else break;
+        }
+    }
+
+    /**
+     * Parses an array literal from the input, including nested arrays.
+     *
+     * @param c The cursor (positioned at '[' at entry).
+     * @return A List representing the parsed array.
+     */
+    private Object parseArray(Cursor c) {
+        // assumes current char is '['
+        c.skip(); // skip '['
+        List<Object> out = new ArrayList<>();
+        skipWs(c);
+        while (!c.end()) {
+            if (c.ch() == ']') {
+                c.skip(); // skip ']'
+                break;
+            }
+            Object v = parseValue(c);
+            out.add(v);
+            skipWs(c);
+            if (!c.end() && c.ch() == ',') {
+                c.skip();
+                skipWs(c);
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Parses a quoted string literal, handling escape characters.
+     *
+     * @param c The cursor (positioned at '"' at entry).
+     * @return The parsed string value.
+     */
+    private static String parseQuoted(Cursor c) {
+        // assumes current char is '"'
+        c.skip(); // skip opening quote
+        StringBuilder sb = new StringBuilder();
+        while (!c.end()) {
+            char ch = c.ch();
+            c.skip();
+            if (ch == '\\') {
+                if (c.end()) break;
+                char esc = c.ch();
+                c.skip();
+                switch (esc) {
+                    case 'n' -> sb.append('\n');
+                    case 'r' -> sb.append('\r');
+                    case 't' -> sb.append('\t');
+                    case '\"' -> sb.append('\"');
+                    case '\\' -> sb.append('\\');
+                    default -> sb.append(esc);
+                }
+            } else if (ch == '\"') {
+                break;
+            } else {
+                sb.append(ch);
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Parses an atom (number, hexadecimal, binary, or plain string token).
+     *
+     * @param c The cursor.
+     * @return An Integer, Double, or String, depending on the content.
+     */
+    private static Object parseAtom(Cursor c) {
+        StringBuilder sb = new StringBuilder();
+        while (!c.end()) {
+            char ch = c.ch();
+            if (ch == ',' || ch == ']' || ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n') break;
+            sb.append(ch);
+            c.skip();
+        }
+        String token = sb.toString();
+        // try number
+        try {
+            if (token.startsWith("0x") || token.startsWith("0X")) {
+                return Integer.parseInt(token.substring(2), 16);
+            }
+            if (token.startsWith("0b") || token.startsWith("0B")) {
+                return Integer.parseInt(token.substring(2), 2);
+            }
+            if (token.contains(".")) {
+                return Double.parseDouble(token);
+            }
+            return Integer.parseInt(token);
+        } catch (NumberFormatException e) {
+            // fallback as string
+            return token;
+        }
+    }
+
+    // ---------------------- helpers for immutability/mutability ----------------------
+
+    /**
+     * Recursively creates an unmodifiable copy of a list, with all nested lists also unmodifiable.
+     *
+     * @param l The list to make unmodifiable.
+     * @return An unmodifiable deep copy of the list.
+     */
+    List<?> deepUnmodifiable(List<?> l) {
+        List<Object> out = new ArrayList<>(l.size());
+        for (Object v : l) out.add(deepUnmodifiableObject(v));
+        return Collections.unmodifiableList(out);
+    }
+
+    /**
+     * Helper method for {@link #deepUnmodifiable(List)}. Recursively processes each element.
+     *
+     * @param v The object to process.
+     * @return Unmodifiable list if input is a list, otherwise the value itself.
+     */
+    Object deepUnmodifiableObject(Object v) {
+        if (v instanceof List<?> l) {
+            return deepUnmodifiable(l);
+        }
+        return v;
+    }
+
+    /**
+     * Create a deep mutable copy of a nested List structure, preserving element values.
+     * Nested lists are turned into {@link java.util.ArrayList} so they can be modified by ARR_SET.
+     *
+     * @param l The source list.
+     * @return Deep mutable copy of the list.
+     */
+    private static java.util.List<?> deepMutable(java.util.List<?> l) {
+        java.util.List<Object> out = new java.util.ArrayList<>(l.size());
+        for (Object v : l) out.add(deepMutableObject(v));
+        return out;
+    }
+
+    /**
+     * Helper method for {@link #deepMutable(List)}. Recursively processes each element.
+     *
+     * @param v The object to process.
+     * @return Mutable list if input is a list, otherwise the value itself.
+     */
+    private static Object deepMutableObject(Object v) {
+        if (v instanceof java.util.List<?> l) {
+            return deepMutable(l);
+        }
+        return v;
+    }
 }

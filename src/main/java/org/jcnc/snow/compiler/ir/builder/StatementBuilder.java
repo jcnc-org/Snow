@@ -103,6 +103,57 @@ public class StatementBuilder {
             ctx.clearVarType();
             return;
         }
+
+        // ==== 支持数组下标赋值 arr[idx] = value ====
+        if (stmt instanceof IndexAssignmentNode idxAssign) {
+            IndexExpressionNode target = idxAssign.target();
+
+            // 1. 目标数组寄存器：多维时用 buildIndexRef 拿引用
+            IRVirtualRegister arrReg = (target.array() instanceof IndexExpressionNode inner)
+                    ? expr.buildIndexRef(inner)
+                    : expr.build(target.array());
+
+            // 2. 下标与右值
+            IRVirtualRegister idxReg = expr.build(target.index());
+            IRVirtualRegister valReg = expr.build(idxAssign.value());
+
+            // 3. 选择内置函数名 __setindex_x，根据元素类型分派
+            String func = "__setindex_r";
+            org.jcnc.snow.compiler.parser.ast.base.ExpressionNode base = target.array();
+            while (base instanceof IndexExpressionNode innerIdx) base = innerIdx.array();
+            if (base instanceof IdentifierNode id) {
+                String arrType = ctx.getScope().lookupType(id.name());
+                if (arrType != null) {
+                    String elemType = arrType.endsWith("[]") ? arrType.substring(0, arrType.length() - 2) : arrType;
+                    switch (elemType) {
+                        case "byte"    -> func = "__setindex_b";
+                        case "short"   -> func = "__setindex_s";
+                        case "int"     -> func = "__setindex_i";
+                        case "long"    -> func = "__setindex_l";
+                        case "float"   -> func = "__setindex_f";
+                        case "double"  -> func = "__setindex_d";
+                        case "boolean" -> func = "__setindex_i";
+                        case "string"  -> func = "__setindex_r";
+                        default        -> func = "__setindex_r";
+                    }
+                }
+            }
+
+            // 4. 生成 CALL 指令
+            java.util.List<org.jcnc.snow.compiler.ir.core.IRValue> argv =
+                    java.util.List.of(arrReg, idxReg, valReg);
+            ctx.addInstruction(new org.jcnc.snow.compiler.ir.instruction.CallInstruction(null, func, argv));
+
+            // 5. 赋值后清理常量绑定
+            try {
+                if (base instanceof IdentifierNode id2) {
+                    ctx.getScope().clearConstValue(id2.name());
+                }
+            } catch (Throwable ignored) {}
+
+            return;
+        }
+
         if (stmt instanceof DeclarationNode decl) {
             // 变量声明语句（如 int a = 1;）
             if (decl.getInitializer().isPresent()) {
