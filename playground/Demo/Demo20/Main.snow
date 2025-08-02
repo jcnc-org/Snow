@@ -1,0 +1,11 @@
+module: Main
+    import: os
+    function: main
+        return_type: double
+        body:
+            declare n: double[] = [10.0]
+
+            return n[0] + 1.0
+        end body
+    end function
+end module
