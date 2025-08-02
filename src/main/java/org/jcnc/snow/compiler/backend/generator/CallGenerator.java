@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <ul>
  *   <li>syscall: 支持字符串常量与寄存器到子命令的绑定与解析</li>
- *   <li>数组下标访问: 特殊的“__index_i”和“__index_r”内部调用</li>
+ *   <li>数组下标访问: 支持所有主流基础类型 “__index_b/s/i/l/f/d/r”</li>
  *   <li>普通函数: 支持自动推断返回值类型与槽位类型</li>
  * </ul>
  */
@@ -77,16 +77,36 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
             return;
         }
 
-        // 一维数组整型下标访问
-        if ("__index_i".equals(fn)) {
-            generateIndexInstruction(ins, out, slotMap, true);
-            return;
-        }
-
-        // 多维数组返回引用的下标访问
-        if ("__index_r".equals(fn)) {
-            generateIndexInstruction(ins, out, slotMap, false);
-            return;
+        // 各种一维数组类型（byte/short/int/long/float/double/boolean）
+        switch (fn) {
+            case "__index_b" -> {
+                generateIndexInstruction(ins, out, slotMap, 'B');
+                return;
+            }
+            case "__index_s" -> {
+                generateIndexInstruction(ins, out, slotMap, 'S');
+                return;
+            }
+            case "__index_i" -> {
+                generateIndexInstruction(ins, out, slotMap, 'I');
+                return;
+            }
+            case "__index_l" -> {
+                generateIndexInstruction(ins, out, slotMap, 'L');
+                return;
+            }
+            case "__index_f" -> {
+                generateIndexInstruction(ins, out, slotMap, 'F');
+                return;
+            }
+            case "__index_d" -> {
+                generateIndexInstruction(ins, out, slotMap, 'D');
+                return;
+            }
+            case "__index_r" -> {
+                generateIndexInstruction(ins, out, slotMap, 'R');
+                return;
+            }
         }
 
         // 普通函数调用
@@ -155,25 +175,38 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
     }
 
     /**
-     * 生成一维/多维数组的下标访问指令。
+     * 生成一维/多维数组的下标访问指令（支持类型分派）。
+     * <p>
+     * 本方法用于将 IR 层的数组下标访问表达式（如 arr[idx]），生成对应的 VM 指令序列。
+     * 支持 byte/short/int/long/float/double/reference 等所有基础类型的数组元素访问。
+     * </p>
      *
-     * @param ins     调用指令
-     * @param out     VM 程序构建器
-     * @param slotMap 寄存器到槽位映射
-     * @param isInt   是否是一维整型下标
+     * <ul>
+     *   <li>1. 依次加载数组参数（arr）和下标参数（idx）到操作数栈</li>
+     *   <li>2. 发出 ARR_GET 系统调用指令（SYSCALL ARR_GET），通过 VM 访问对应元素</li>
+     *   <li>3. 根据元素声明类型，将结果写入目标槽位，支持类型分派（B/S/I/L/F/D/R）</li>
+     *   <li>4. 若参数或返回寄存器缺失，则抛出异常提示</li>
+     * </ul>
+     *
+     * @param ins     下标访问对应的 IR 调用指令，函数名通常为 __index_x
+     * @param out     VM 程序构建器，用于发出 VM 指令
+     * @param slotMap IR 虚拟寄存器到 VM 槽位的映射表
+     * @param retType 元素类型标识（'B' byte, 'S' short, 'I' int, 'L' long, 'F' float, 'D' double, 'R' ref/obj）
+     * @throws IllegalStateException 参数个数不符、缺少目标寄存器、未找到槽位等情况
      */
-    private void generateIndexInstruction(CallInstruction ins, VMProgramBuilder out, Map<IRVirtualRegister, Integer> slotMap, boolean isInt) {
+    private void generateIndexInstruction(CallInstruction ins, VMProgramBuilder out, Map<IRVirtualRegister, Integer> slotMap, char retType) {
         String fn = ins.getFunctionName();
         List<IRValue> args = ins.getArguments();
         if (args.size() != 2) {
             throw new IllegalStateException(
                     "[CallGenerator] %s 需要两个参数(arr, idx)，实际: %s".formatted(fn, args));
         }
-        // 加载数组参数
+        // 加载数组参数（寄存器类型按 R/ref 处理，默认对象槽位）
         loadArgument(out, slotMap, args.get(0), 'R', fn);
-        // 加载下标参数
+        // 加载下标参数（寄存器类型按 I/int 处理）
         loadArgument(out, slotMap, args.get(1), 'I', fn);
 
+        // 发出 ARR_GET 系统调用（元素访问由 VM 完成类型分派）
         out.emit(VMOpCode.SYSCALL + " " + "ARR_GET");
 
         // 保存返回值到目标寄存器
@@ -187,12 +220,37 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
             throw new IllegalStateException(
                     "[CallGenerator] %s 未找到目标寄存器的槽位映射 (dest: %s)".formatted(fn, dest));
         }
-        if (isInt) {
-            out.emit(OpHelper.opcode("I_STORE") + " " + destSlot);
-            out.setSlotType(destSlot, 'I');
-        } else {
-            out.emit(OpHelper.opcode("R_STORE") + " " + destSlot);
-            out.setSlotType(destSlot, 'R');
+
+        // 按元素类型分派写入 VM 槽位
+        switch (retType) {
+            case 'B' -> {
+                out.emit(OpHelper.opcode("B_STORE") + " " + destSlot);
+                out.setSlotType(destSlot, 'B');
+            }
+            case 'S' -> {
+                out.emit(OpHelper.opcode("S_STORE") + " " + destSlot);
+                out.setSlotType(destSlot, 'S');
+            }
+            case 'I' -> {
+                out.emit(OpHelper.opcode("I_STORE") + " " + destSlot);
+                out.setSlotType(destSlot, 'I');
+            }
+            case 'L' -> {
+                out.emit(OpHelper.opcode("L_STORE") + " " + destSlot);
+                out.setSlotType(destSlot, 'L');
+            }
+            case 'F' -> {
+                out.emit(OpHelper.opcode("F_STORE") + " " + destSlot);
+                out.setSlotType(destSlot, 'F');
+            }
+            case 'D' -> {
+                out.emit(OpHelper.opcode("D_STORE") + " " + destSlot);
+                out.setSlotType(destSlot, 'D');
+            }
+            default -> {
+                out.emit(OpHelper.opcode("R_STORE") + " " + destSlot);
+                out.setSlotType(destSlot, 'R');
+            }
         }
     }
 

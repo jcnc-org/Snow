@@ -137,7 +137,7 @@ public record ExpressionBuilder(IRContext ctx) {
      *   <li>否则：
      *     <ul>
      *       <li>若数组表达式本身是下一个下标的中间值（即多维数组链式下标），则先用 __index_r 获取“引用”；</li>
-     *       <li>最后一级用 __index_i 获取实际整型元素值。</li>
+     *       <li>最后一级用 __index_b/s/i/l/f/d/r，按声明类型智能分派。</li>
      *     </ul>
      *   </li>
      * </ul>
@@ -182,8 +182,28 @@ public record ExpressionBuilder(IRContext ctx) {
             // 非最末层，下标取“引用”
             ctx.addInstruction(new CallInstruction(dest, "__index_r", argv));
         } else {
-            // 最末层，下标取实际元素值
-            ctx.addInstruction(new CallInstruction(dest, "__index_i", argv));
+            // 最末层，下标取实际元素值，按声明类型分派
+            String func = "__index_i"; // 默认整型
+            if (node.array() instanceof IdentifierNode id) {
+                String declType = ctx.getScope().lookupType(id.name()); // 如 "double[]"、"int[]"
+                if (declType != null) {
+                    String base = declType.toLowerCase();
+                    int p = base.indexOf('[');
+                    if (p > 0) base = base.substring(0, p); // 基本类型
+                    switch (base) {
+                        case "byte"    -> func = "__index_b";
+                        case "short"   -> func = "__index_s";
+                        case "int"     -> func = "__index_i";
+                        case "long"    -> func = "__index_l";
+                        case "float"   -> func = "__index_f";
+                        case "double"  -> func = "__index_d";
+                        case "boolean" -> func = "__index_i"; // 布尔型用 int 通道返回 1/0
+                        case "string"  -> func = "__index_r"; // 字符串/其它未识别类型均走引用
+                        default        -> func = "__index_r";
+                    }
+                }
+            }
+            ctx.addInstruction(new CallInstruction(dest, func, argv));
         }
 
         return dest;
