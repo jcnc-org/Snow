@@ -317,23 +317,23 @@ public class SyscallCommand implements Command {
                     sel.close();
                 }
 
-// 数组元素访问：arr[idx] —— 保留所有类型精度（byte/short/int/long/float/double/boolean/string/ref）
+                // 数组元素访问：arr[idx] —— 保留所有类型精度（byte/short/int/long/float/double/boolean/string/ref）
                 case "ARR_GET" -> {
-                    /**
-                     * 执行数组下标访问操作 arr[idx]，并将对应元素以真实类型压入操作数栈。
-                     * <ul>
-                     *   <li>支持 List 与任意原生数组类型（int[]、double[] 等）；</li>
-                     *   <li>idx 参数支持 Number/String 类型，自动转 int；</li>
-                     *   <li>下标越界将抛出异常，非数组类型将报错；</li>
-                     *   <li>返回结果保持类型精度：byte/short/int/long/float/double/boolean/string/object;</li>
-                     *   <li>boolean 元素以 1/0 压栈，string/引用直接压栈；</li>
-                     * </ul>
-                     *
-                     * 异常与出错行为：
-                     * <ul>
-                     *   <li>索引类型非法、目标非数组/列表，将抛 IllegalArgumentException；</li>
-                     *   <li>索引越界，将抛 IndexOutOfBoundsException；</li>
-                     * </ul>
+                    /*
+                      执行数组下标访问操作 arr[idx]，并将对应元素以真实类型压入操作数栈。
+                      <ul>
+                        <li>支持 List 与任意原生数组类型（int[]、double[] 等）；</li>
+                        <li>idx 参数支持 Number/String 类型，自动转 int；</li>
+                        <li>下标越界将抛出异常，非数组类型将报错；</li>
+                        <li>返回结果保持类型精度：byte/short/int/long/float/double/boolean/string/object;</li>
+                        <li>boolean 元素以 1/0 压栈，string/引用直接压栈；</li>
+                      </ul>
+
+                      异常与出错行为：
+                      <ul>
+                        <li>索引类型非法、目标非数组/列表，将抛 IllegalArgumentException；</li>
+                        <li>索引越界，将抛 IndexOutOfBoundsException；</li>
+                      </ul>
                      */
                     Object idxObj = stack.pop();
                     Object arrObj = stack.pop();
