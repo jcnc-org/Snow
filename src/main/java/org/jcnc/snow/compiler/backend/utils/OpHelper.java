@@ -234,6 +234,7 @@ public final class OpHelper {
         if (v instanceof Double) return "D";
         if (v instanceof Float) return "F";
         if (v instanceof String) return "R";   //引用类型
+        if (v instanceof java.util.List) return "R";   // 引用类型（数组等）
         throw new IllegalStateException("Unknown const type: " + v.getClass());
     }
 

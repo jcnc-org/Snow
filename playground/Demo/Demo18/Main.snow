@@ -31,8 +31,8 @@ module: Main
                             if j % 2 == 0 then
                                 continue
                             end if
-                            print(i)
-                            print(j)
+                            os.print(i)
+                            os.print(j)
                         end body
                     end loop
                 end body

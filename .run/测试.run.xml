@@ -9,7 +9,10 @@
     <toRun name="Demo15" type="Application" />
     <toRun name="Demo16" type="Application" />
     <toRun name="Demo17" type="Application" />
+    <toRun name="Demo18" type="Application" />
+    <toRun name="Demo19" type="Application" />
     <toRun name="Demo2" type="Application" />
+    <toRun name="Demo20" type="Application" />
     <toRun name="Demo3" type="Application" />
     <toRun name="Demo4" type="Application" />
     <toRun name="Demo6" type="Application" />
