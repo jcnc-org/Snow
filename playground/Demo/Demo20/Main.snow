@@ -1,11 +1,12 @@
 module: Main
-    import: os
+    import:os
     function: main
-        return_type: double
+        return_type: void
         body:
-            declare n: double[] = [10.0]
+            declare arr: int[] = [1, 2, 3]
+            arr[0] = 5
 
-            return n[0] + 1.0
+            os.print(arr[0])
         end body
     end function
 end module
