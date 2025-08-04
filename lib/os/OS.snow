@@ -1,9 +1,9 @@
 module: os
     import: os
     function: print
-        parameter:
+        params:
             declare i1: int
-        return_type: void
+        returns: void
         body:
             syscall("PRINT",i1)
         end body
