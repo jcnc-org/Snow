@@ -40,6 +40,6 @@ public class ParseError {
      */
     @Override
     public String toString() {
-        return file + ": 行 " + line + ", 列 " + column + ": " + message;
+        return file + ":" + line + ":" + column + ": " + message;
     }
 }

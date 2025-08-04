@@ -49,8 +49,8 @@ public record SemanticError(Node node, String message) {
 
 
         StringBuilder sb = new StringBuilder();
-        if (file != null && !file.isBlank()) sb.append(file).append(": ");
-        sb.append((line >= 0 && col >= 0) ? "行 " + line + ", 列 " + col : "未知位置");
+        if (file != null && !file.isBlank()) sb.append(file).append(":");
+        sb.append((line >= 0 && col >= 0) ? line + ":" + col : "未知位置");
         sb.append(": ").append(message);
         return sb.toString();
     }
