@@ -44,7 +44,7 @@ SnowVM) 的完整编译-执行链路。
 
 Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的语法和严格的类型系统,以帮助 LLM 更好地理解程序。
 
-语言使用显式的 `module` 声明来组织代码,用 `function`,`parameter`,`return_type`,`body` 等关键字分隔不同代码块,语法结构固定且易读。此外,Snow
+语言使用显式的 `module` 声明来组织代码,用 `function`,`params`,`returns`,`body` 等关键字分隔不同代码块,语法结构固定且易读。此外,Snow
 实现了语义分析来检查变量作用域和类型一致性,在编译阶段捕获错误并确保生成的中间代码正确无误。这种自上而下的编译流程,使得代码设计和生成更加模块化,可解释,也有利于调试和优化。
 
 相关背景: [心路历程](docs/Snow-Lang-Journey/Snow-Lang-Journey.md)
@@ -111,7 +111,7 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
     module: Main
         import:Math
         function: main
-            return_type: int
+            returns: int
             body:
                 Math.add(6,1)
                 return 0
@@ -135,7 +135,7 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
     3      15     IDENTIFIER       main
     3      19     NEWLINE          \n
     
-    4      9      KEYWORD          return_type
+    4      9      KEYWORD          returns
     4      20     COLON            :
     4      22     TYPE             int
     4      25     NEWLINE          \n
@@ -174,10 +174,10 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
     #### Math.snow
     module: Math
         function: add
-            parameter:
+            params:
                 declare n1: int
                 declare n2: int
-            return_type: int
+            returns: int
             body:
                return n1 + n2
             end body
@@ -195,7 +195,7 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
     2      15     IDENTIFIER       add
     2      18     NEWLINE          \n
     
-    3      9      KEYWORD          parameter
+    3      9      KEYWORD          params
     3      18     COLON            :
     3      19     NEWLINE          \n
     
@@ -211,7 +211,7 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
     5      25     TYPE             int
     5      28     NEWLINE          \n
     
-    6      9      KEYWORD          return_type
+    6      9      KEYWORD          returns
     6      20     COLON            :
     6      22     TYPE             int
     6      25     NEWLINE          \n
@@ -494,7 +494,7 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
 ```snow
 module: Math
     function: main
-        return_type: int
+        returns: int
         body:
             Math.factorial(6)
             return 0
@@ -502,9 +502,9 @@ module: Math
     end function
 
     function: factorial
-        parameter:
+        params:
             declare n:int
-        return_type: int
+        returns: int
         body:
             declare num1:int = 1
             loop:

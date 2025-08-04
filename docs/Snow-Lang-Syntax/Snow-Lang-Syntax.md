@@ -7,7 +7,7 @@
 ```snow
 module: Main
     function: main
-        return_type: int
+        returns: int
         body:
 
             return 1 + 1
@@ -114,7 +114,7 @@ cond 可以是表达式（结果为 bool 类型）或者 bool 字面量
 ```snow
 module: Main
     function: main
-        return_type: int
+        returns: int
         body:
             if 5 > 7 then
                 return 5
@@ -152,7 +152,7 @@ end loop
 ```snow
 module: Main
     function: main
-        return_type: int
+        returns: int
         body:
             declare sum: int = 0
             loop:
@@ -177,17 +177,17 @@ end module
 函数的形式如下: 
 ```snow
 function: add
-    parameter:
+    params:
         declare a: int
         declare b: int
-    return_type: int
+    returns: int
     body:
         return a + b
     end body
 end function
 ```
-其中 add 是函数名，parameter 下面是参数列表（可省略），与变量的定义类似，但是不允许赋初值，
-接着 return_type 设置返回值类型，最后的 body 为函数体。
+其中 add 是函数名，params 下面是参数列表（可省略），与变量的定义类似，但是不允许赋初值，
+接着 returns 设置返回值类型，最后的 body 为函数体。
 
 ## 模块
 
@@ -200,7 +200,7 @@ snow 会自动将同名模块的函数合并。
 ```snow
 module: Main
     function: main
-        return_type: int
+        returns: int
         body:
 
             return 1 + 1
@@ -216,10 +216,10 @@ end module
 // Math.snow
 module: Math
     function: add
-        parameter:
+        params:
             declare a: int
             declare b: int
-        return_type: int
+        returns: int
         body:
             return a + b
         end body
@@ -233,7 +233,7 @@ end module
 module: Main
     import: Math
     function: main
-        return_type: int
+        returns: int
         body:
 
             return Math.add(5, 7)
@@ -248,7 +248,7 @@ end module
 module: Main
     import: Math, Time
     function: main
-        return_type: int
+        returns: int
         body:
 
             return Math.add(5, 7)

@@ -3,8 +3,8 @@ module: Main
     globals:
         declare sum: int = 0
     function: main
-        parameter:
-        return_type: int
+        params:
+        returns: int
         body:
             sum = 20
 

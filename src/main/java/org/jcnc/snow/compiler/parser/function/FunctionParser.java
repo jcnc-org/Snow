@@ -27,8 +27,8 @@ import java.util.*;
  *
  * <ul>
  *     <li>函数头（关键字 {@code function:} 与函数名）</li>
- *     <li>参数列表（parameter 区块）</li>
- *     <li>返回类型（return_type 区块）</li>
+ *     <li>参数列表（params 区块）</li>
+ *     <li>返回类型（returns 区块）</li>
  *     <li>函数体（body 区块）</li>
  *     <li>函数结束（关键字 {@code end function}）</li>
  * </ul>
@@ -107,7 +107,7 @@ public class FunctionParser implements TopLevelParser {
     }
 
     /**
-     * 构造函数定义中各区块的解析规则（parameter、return_type、body）。
+     * 构造函数定义中各区块的解析规则（params、returns、body）。
      *
      * <p>
      * 每个 {@link SectionDefinition} 包含两个部分: 区块起始判断器（基于关键字）与具体的解析逻辑。
@@ -124,13 +124,13 @@ public class FunctionParser implements TopLevelParser {
             List<StatementNode> body) {
         Map<String, SectionDefinition> map = new HashMap<>();
 
-        map.put("parameter", new SectionDefinition(
-                (TokenStream stream) -> stream.peek().getLexeme().equals("parameter"),
+        map.put("params", new SectionDefinition(
+                (TokenStream stream) -> stream.peek().getLexeme().equals("params"),
                 (ParserContext context, TokenStream stream) -> params.addAll(parseParameters(context))
         ));
 
-        map.put("return_type", new SectionDefinition(
-                (TokenStream stream) -> stream.peek().getLexeme().equals("return_type"),
+        map.put("returns", new SectionDefinition(
+                (TokenStream stream) -> stream.peek().getLexeme().equals("returns"),
                 (ParserContext context, TokenStream stream) -> returnType[0] = parseReturnType(stream)
         ));
 
@@ -182,7 +182,7 @@ public class FunctionParser implements TopLevelParser {
      * <p>
      * 支持声明后附加注释，格式示例: 
      * <pre>
-     * parameter:
+     * params:
      *   declare x: int   // 说明文字
      *   declare y: float
      * </pre>
@@ -194,7 +194,7 @@ public class FunctionParser implements TopLevelParser {
     private List<ParameterNode> parseParameters(ParserContext ctx) {
         TokenStream ts = ctx.getTokens();
 
-        ts.expect("parameter");
+        ts.expect("params");
         ts.expect(":");
         skipComments(ts);
         ts.expectType(TokenType.NEWLINE);
@@ -208,7 +208,7 @@ public class FunctionParser implements TopLevelParser {
                 continue;
             }
             String lex = ts.peek().getLexeme();
-            if (lex.equals("return_type") || lex.equals("body") || lex.equals("end")) {
+            if (lex.equals("returns") || lex.equals("body") || lex.equals("end")) {
                 break;
             }
 
@@ -232,14 +232,14 @@ public class FunctionParser implements TopLevelParser {
      * 解析返回类型声明。
      *
      * <p>
-     * 格式为 {@code return_type: TYPE}，支持前置或行尾注释。
+     * 格式为 {@code returns: TYPE}，支持前置或行尾注释。
      * </p>
      *
      * @param ts 当前使用的 {@link TokenStream}。
      * @return 返回类型名称字符串。
      */
     private String parseReturnType(TokenStream ts) {
-        ts.expect("return_type");
+        ts.expect("returns");
         ts.expect(":");
         skipComments(ts);
         Token typeToken = ts.expectType(TokenType.TYPE);

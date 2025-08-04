@@ -1,7 +1,7 @@
 module: Main
     function: main
-        parameter:
-        return_type: int
+        params:
+        returns: int
         body:
             declare b1 :int = -1
             return b1
