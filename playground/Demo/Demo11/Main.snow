@@ -1,5 +1,5 @@
 function: main
-    return_type: int
+    returns: int
     body:
         return 65537
     end body

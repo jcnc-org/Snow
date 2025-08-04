@@ -3,7 +3,7 @@ module: Main
     globals:
         declare num2:int=10
     function: main
-        return_type: void
+        returns: void
         body:
             declare num1:int=11
             os.print(num1+num2+abc())
@@ -11,7 +11,7 @@ module: Main
     end function
 
     function: abc
-        return_type: int
+        returns: int
         body:
             return 1
         end body

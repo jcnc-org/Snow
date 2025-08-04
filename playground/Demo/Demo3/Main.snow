@@ -1,7 +1,7 @@
 module: Main
     function: main
-        parameter:
-        return_type: int
+        params:
+        returns: int
         body:
            declare n1: int =1
            declare n2: int =2

@@ -1,5 +1,5 @@
 function: main
-    return_type: int
+    returns: int
     body:
         declare res: boolean = 8L > 7L
         if res then
