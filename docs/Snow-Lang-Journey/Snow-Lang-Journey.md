@@ -76,8 +76,8 @@
 module: Main
     import:Math
     function: main
-        parameter:
-        return_type: int
+        params:
+        returns: int
         body:
             Math.factorial(6L,1L)
 
@@ -90,10 +90,10 @@ end module
 ## 源代码 (test.snow)
 module: Math
     function: factorial
-        parameter:
+        params:
             declare n1: long
             declare n2: long
-        return_type: long
+        returns: long
         body:
            return n1+n2
         end body
