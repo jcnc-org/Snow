@@ -24,8 +24,8 @@ public final class SnowExample {
         return """
                 module: Math
                     function: main
-                        parameter:
-                        return_type: int
+                        params:
+                        returns: int
                         body:
                             Math.factorial(6)
                             return 0
@@ -33,9 +33,9 @@ public final class SnowExample {
                     end function
                 
                     function: factorial
-                        parameter:
+                        params:
                             declare n: int
-                        return_type: int
+                        returns: int
                         body:
                             declare num1: int = 1
                             loop:

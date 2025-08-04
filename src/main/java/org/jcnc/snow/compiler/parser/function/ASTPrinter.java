@@ -71,7 +71,7 @@ public class ASTPrinter {
                     NodeContext _
             ) -> {
                 System.out.println(pad + "function " + name
-                        + "(params=" + parameters + ", return=" + returnType + ")");
+                        + "(params=" + parameters + ", returns=" + returnType + ")");
                 for (StatementNode stmt : body) {
                     print(stmt, indent + 1);
                 }
