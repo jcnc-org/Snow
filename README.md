@@ -44,7 +44,7 @@ SnowVM) 的完整编译-执行链路。
 
 Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的语法和严格的类型系统,以帮助 LLM 更好地理解程序。
 
-语言使用显式的 `module` 声明来组织代码,用 `function`,`parameter`,`returns`,`body` 等关键字分隔不同代码块,语法结构固定且易读。此外,Snow
+语言使用显式的 `module` 声明来组织代码,用 `function`,`params`,`returns`,`body` 等关键字分隔不同代码块,语法结构固定且易读。此外,Snow
 实现了语义分析来检查变量作用域和类型一致性,在编译阶段捕获错误并确保生成的中间代码正确无误。这种自上而下的编译流程,使得代码设计和生成更加模块化,可解释,也有利于调试和优化。
 
 相关背景: [心路历程](docs/Snow-Lang-Journey/Snow-Lang-Journey.md)
