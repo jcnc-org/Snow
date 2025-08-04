@@ -40,6 +40,6 @@ public class ParseError {
      */
     @Override
     public String toString() {
-        return file + ":" + line + ":" + column + ": " + message;
+        return "file:///" + file + ":" + line + ":" + column + ": " + message;
     }
 }
