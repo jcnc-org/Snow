@@ -1,7 +1,7 @@
 module: ModuleB
     import: ModuleA
     function: fun
-        return_type: int
+        returns: int
         body:
             return ModuleA.fun() + ModuleA.fun()
         end body
