@@ -1,6 +1,6 @@
 module: Main
     function: main
-        return_type: void
+        returns: void
         body:
             declare abc:int =1
         end body

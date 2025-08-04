@@ -3,8 +3,8 @@ module: Main
     globals:
         declare sum: int = 123
     function: main
-        parameter:
-        return_type: int
+        params:
+        returns: int
         body:
             os.print(sum)
             return 0
