@@ -1,7 +1,7 @@
 module: Main
     function: main
-        parameter:
-        return_type: boolean
+        params:
+        returns: boolean
         body:
            declare b1: boolean =true
            
