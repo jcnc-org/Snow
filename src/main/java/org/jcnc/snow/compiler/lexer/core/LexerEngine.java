@@ -37,7 +37,7 @@ public class LexerEngine {
      * @param sourceName 文件名（诊断用）
      */
     public LexerEngine(String source, String sourceName) {
-        this.absPath = new File(sourceName).getAbsolutePath();
+        this.absPath = new File(sourceName).getAbsolutePath().replace('\\', '/');
         this.context = new LexerContext(source);
         this.scanners = List.of(
                 new WhitespaceTokenScanner(),

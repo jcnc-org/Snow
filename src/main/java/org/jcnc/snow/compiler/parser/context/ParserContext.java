@@ -39,7 +39,7 @@ public class ParserContext {
      */
     public ParserContext(List<Token> tokens, String sourceName) {
         this.tokens = new TokenStream(tokens);
-        this.sourceName = Paths.get(sourceName).toAbsolutePath().toString();
+        this.sourceName = Paths.get(sourceName).toAbsolutePath().toString().replace('\\', '/');
     }
 
 
