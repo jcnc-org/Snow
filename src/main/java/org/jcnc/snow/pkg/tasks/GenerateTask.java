@@ -16,7 +16,7 @@ import java.util.List;
  * <code>main.snow</code>。
  *
  * <p>
- * 生成内容包括: 
+ * 生成内容包括:
  * <ul>
  *   <li><code>src/</code>                       —— 源码根目录</li>
  *   <li><code>src/{group package}/</code> —— 按 <code>project.group</code> 创建的包路径
@@ -31,7 +31,9 @@ import java.util.List;
  */
 public final class GenerateTask implements Task {
 
-    /** 项目信息元数据 */
+    /**
+     * 项目信息元数据
+     */
     private final Project project;
 
     /**
@@ -88,6 +90,13 @@ public final class GenerateTask implements Task {
         if (Files.notExists(mainSnow)) {
             Files.writeString(mainSnow, SnowExample.getMainModule());
             System.out.println("[generate] created " + root.relativize(mainSnow));
+        }
+
+        /* ---------- 5. 写入系统库文件 os.snow ---------- */
+        Path osSnow = packageDir.resolve("OS.snow");
+        if (Files.notExists(osSnow)) {
+            Files.writeString(osSnow, SnowExample.getOsModule());
+            System.out.println("[generate] created " + root.relativize(osSnow));
         }
 
         System.out.println("[generate] project scaffold is ready.");
