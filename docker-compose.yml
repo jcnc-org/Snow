@@ -1,0 +1,8 @@
+services:
+  snow-export:
+    image: my-snow-export
+    build:
+      context: .
+    command: [ "/bin/sh", "-c", "cp /export/Snow /output/Snow" ]
+    volumes:
+      - ./target:/output
