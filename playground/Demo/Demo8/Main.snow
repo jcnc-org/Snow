@@ -1,7 +1,7 @@
 module: Main
     function: main
-        parameter:
-        return_type: long
+        params:
+        returns: long
         body:
             declare n: long
             n = 2147483647

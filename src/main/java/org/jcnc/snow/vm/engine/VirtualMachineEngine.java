@@ -1,6 +1,5 @@
 package org.jcnc.snow.vm.engine;
 
-import org.jcnc.snow.common.Mode;
 import org.jcnc.snow.vm.execution.CommandExecutionHandler;
 import org.jcnc.snow.vm.module.*;
 
@@ -51,8 +50,6 @@ public class VirtualMachineEngine {
 
     /**
      * Builds a VM engine with fresh runtime structures.
-     *
-     * @param vmMode execution mode (DEBUG / RUN)
      */
     public VirtualMachineEngine() {
         this.operandStack       = new OperandStack();

@@ -80,35 +80,7 @@ public class CallExpressionAnalyzer implements ExpressionAnalyzer<CallExpression
         // 查找目标函数签名（先在当前模块/显式模块查找）
         FunctionType ft = target.getFunctions().get(functionName);
 
-        // 如果当前模块未找到，再自动遍历所有已导入模块寻找唯一同名函数
-        if (ft == null && target == mi) {
-            ModuleInfo foundModule = null;
-            FunctionType foundType = null;
-            for (String importName : mi.getImports()) {
-                ModuleInfo imported = ctx.getModules().get(importName);
-                if (imported == null) continue;
-                FunctionType candidate = imported.getFunctions().get(functionName);
-                if (candidate != null) {
-                    if (foundModule != null) {
-                        // 多个导入模块含有同名函数，二义性，报错
-                        ctx.getErrors().add(new SemanticError(callee,
-                                "函数调用不明确: " + functionName +
-                                        " 同时存在于模块 " + foundModule.getName() +
-                                        " 和 " + imported.getName()));
-                        ctx.log("错误: 函数调用不明确 " + functionName);
-                        return BuiltinType.INT;
-                    }
-                    foundModule = imported;
-                    foundType = candidate;
-                }
-            }
-            if (foundType != null) {
-                target = foundModule;
-                ft = foundType;
-            }
-        }
-
-        // 最终未找到则报错
+        // 未找到则报错
         if (ft == null) {
             ctx.getErrors().add(new SemanticError(callee,
                     "函数未定义: " + functionName));

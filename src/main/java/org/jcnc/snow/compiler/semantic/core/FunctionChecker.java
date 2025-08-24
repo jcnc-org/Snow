@@ -59,7 +59,13 @@ public record FunctionChecker(Context ctx) {
             SymbolTable globalScope = new SymbolTable(null);
             for (DeclarationNode g : mod.globals()) {
                 var t = ctx.parseType(g.getType());
-                globalScope.define(new Symbol(g.getName(), t, SymbolKind.VARIABLE));
+                // 检查全局变量是否重复声明
+                if (!globalScope.define(new Symbol(g.getName(), t, SymbolKind.VARIABLE))) {
+                    ctx.errors().add(new SemanticError(
+                            g,
+                            "全局变量重复声明: " + g.getName()
+                    ));
+                }
             }
 
             // 遍历模块中所有函数定义

@@ -1,0 +1,35 @@
+module: Main
+    import: os
+    globals:
+        declare sum: int = 123
+    function: main
+        params:
+        returns: int
+        body:
+            declare arr: int[][][][][][][][][][][][][][][][][][][][][][] = [[[[[[[[[[[[[[[[[[[[[[1], [2], [3]]]]]]]]]]]]]]]]]]]]]]
+            loop:
+                init:
+                    declare i: int = 0
+                cond:
+                    i < 3
+                step:
+                    i = i + 1
+                body:
+                    arr[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][i][0] = arr[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][i][0] + 1
+                end body
+            end loop
+            loop:
+                init:
+                    declare i: int = 0
+                cond:
+                    i < 3
+                step:
+                    i = i + 1
+                body:
+                    os.print(arr[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][i][0])
+                end body
+            end loop
+            return 0
+        end body
+    end function
+end module

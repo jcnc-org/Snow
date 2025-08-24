@@ -1,7 +1,7 @@
 module: Main
     function: main
-        parameter:
-        return_type: int
+        params:
+        returns: int
         body:
            return (1+2) / 3 * 4 + 2 *2
         end body

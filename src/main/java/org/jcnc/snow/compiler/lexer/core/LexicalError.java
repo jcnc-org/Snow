@@ -50,6 +50,6 @@ public class LexicalError {
      */
     @Override
     public String toString() {
-        return file + ": 行 " + line + ", 列 " + column + ": " + message;
+        return "file:///" + file + ":" + line + ":" + column + ": " + message;
     }
 }

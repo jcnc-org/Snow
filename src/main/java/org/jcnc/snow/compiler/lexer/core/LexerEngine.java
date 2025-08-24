@@ -37,7 +37,7 @@ public class LexerEngine {
      * @param sourceName 文件名（诊断用）
      */
     public LexerEngine(String source, String sourceName) {
-        this.absPath = new File(sourceName).getAbsolutePath();
+        this.absPath = new File(sourceName).getAbsolutePath().replace('\\', '/');
         this.context = new LexerContext(source);
         this.scanners = List.of(
                 new WhitespaceTokenScanner(),
@@ -56,9 +56,9 @@ public class LexerEngine {
         /* 2. 后置整体校验 */
         validateTokens();
         /* 3. 打印 token */
-        if (SnowConfig.isDebug()) {
-            TokenPrinter.print(tokens);
-        }
+//        if (SnowConfig.isDebug()) {
+//            TokenPrinter.print(tokens);
+//        }
 
         /* 4. 统一报告错误 */
         report(errors);

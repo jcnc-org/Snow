@@ -1,0 +1,12 @@
+module: Main
+    import:os
+    function: main
+        returns: void
+        body:
+            declare arr: int[] = [1, 2, 3]
+            arr[0] = 5
+
+            os.print(arr[0])
+        end body
+    end function
+end module

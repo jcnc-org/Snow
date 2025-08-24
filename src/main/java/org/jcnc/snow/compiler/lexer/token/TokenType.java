@@ -14,10 +14,10 @@ public enum TokenType {
     /** 普通标识符，如变量名、函数名等 */
     IDENTIFIER,
 
-    /** 语言保留关键字（如 if、return、module 等） */
+    /** 关键字（declare、if、else、loop、break、continue、return 等） */
     KEYWORD,
 
-    /** 内置类型名称（如 int、string、bool 等） */
+    /** 内置类型名（byte、short、int、long、float、double、string、boolean、void 等） */
     TYPE,
 
     /* ---------- 字面量 ---------- */
@@ -66,6 +66,12 @@ public enum TokenType {
 
     /** 右括号 ')' */
     RPAREN,
+
+    /** 左中括号 '[' */
+    LBRACKET,
+
+    /** 右中括号 ']' */
+    RBRACKET,
 
     /** 相等比较符号 '==' */
     DOUBLE_EQUALS,

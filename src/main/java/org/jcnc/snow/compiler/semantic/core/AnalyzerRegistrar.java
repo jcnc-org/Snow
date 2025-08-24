@@ -57,6 +57,11 @@ public final class AnalyzerRegistrar {
         registry.registerExpressionAnalyzer(CallExpressionNode.class, new CallExpressionAnalyzer());
         registry.registerExpressionAnalyzer(BinaryExpressionNode.class, new BinaryExpressionAnalyzer());
 
+        registry.registerExpressionAnalyzer(ArrayLiteralNode.class,   new ArrayLiteralAnalyzer());
+        registry.registerExpressionAnalyzer(IndexExpressionNode.class,new IndexExpressionAnalyzer()); // ★ 关键行
+        registry.registerStatementAnalyzer(IndexAssignmentNode.class, new IndexAssignmentAnalyzer());
+
+
         // ---------- 注册一元表达式分析器 ----------
         registry.registerExpressionAnalyzer(UnaryExpressionNode.class, new UnaryExpressionAnalyzer());
 

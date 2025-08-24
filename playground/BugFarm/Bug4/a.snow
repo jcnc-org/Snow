@@ -1,6 +1,6 @@
 module: ModuleA
     function: fun
-        return_type: int
+        returns: int
         body:
             return 123
         end body

@@ -1,7 +1,7 @@
 package org.jcnc.snow.pkg.utils;
 
 /**
- * 示例模块模板工具类，提供 main.snow 的标准示例代码字符串。
+ * 示例模块模板工具类，提供标准的示例 Snow 代码片段。
  * <p>
  * 用于项目脚手架生成或帮助用户快速上手 .snow 语言。
  * </p>
@@ -23,19 +23,18 @@ public final class SnowExample {
     public static String getMainModule() {
         return """
                 module: Math
+                    import: os
                     function: main
-                        parameter:
-                        return_type: int
+                        returns: void
                         body:
-                            Math.factorial(6)
-                            return 0
+                            os.print(Math.factorial(6))
                         end body
                     end function
                 
                     function: factorial
-                        parameter:
+                        params:
                             declare n: int
-                        return_type: int
+                        returns: int
                         body:
                             declare num1: int = 1
                             loop:
@@ -50,6 +49,27 @@ public final class SnowExample {
                                 end body
                             end loop
                             return num1
+                        end body
+                    end function
+                end module
+                """;
+    }
+
+    /**
+     * 获取系统库 os.snow 模块的内容字符串。
+     *
+     * @return os.snow 模块的完整代码
+     */
+    public static String getOsModule() {
+        return """
+                module: os
+                    import: os
+                    function: print
+                        params:
+                            declare i1: int
+                        returns: void
+                        body:
+                            syscall("PRINT", i1)
                         end body
                     end function
                 end module
