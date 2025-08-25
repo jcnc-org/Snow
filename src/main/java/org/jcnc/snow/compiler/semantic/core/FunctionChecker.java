@@ -57,13 +57,17 @@ public record FunctionChecker(Context ctx) {
 
             // 先构建全局符号表
             SymbolTable globalScope = new SymbolTable(null);
+            // 根据 isConst() 决定种类
             for (DeclarationNode g : mod.globals()) {
                 var t = ctx.parseType(g.getType());
-                // 检查全局变量是否重复声明
-                if (!globalScope.define(new Symbol(g.getName(), t, SymbolKind.VARIABLE))) {
+                SymbolKind k = g.isConst() ? SymbolKind.CONSTANT : SymbolKind.VARIABLE;
+
+                // 错误信息按常量/变量区分
+                String dupType = g.isConst() ? "常量" : "变量";
+                if (!globalScope.define(new Symbol(g.getName(), t, k))) {
                     ctx.errors().add(new SemanticError(
                             g,
-                            "全局变量重复声明: " + g.getName()
+                            dupType + "重复声明: " + g.getName()
                     ));
                 }
             }
