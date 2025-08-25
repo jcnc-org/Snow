@@ -1,0 +1,11 @@
+module: ModuleA
+    function: _sum
+        params:
+            declare a: int
+            declare b: int
+        returns: int
+        body:
+            return a + b
+        end body
+    end function
+end module
