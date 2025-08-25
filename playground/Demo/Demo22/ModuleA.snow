@@ -1,4 +1,0 @@
-module: ModuleA
-    globals:
-        declare const a: int =10
-end module

@@ -1,5 +1,5 @@
 module: Main
-    import: os,ModuleA
+    import: os
     globals:
         declare sum: int
     function: main
@@ -9,4 +9,9 @@ module: Main
             os.print(sum)
         end body
     end function
+end module
+
+module: ModuleA
+    globals:
+        declare const a: int =10
 end module
