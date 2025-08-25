@@ -1,8 +1,24 @@
 services:
-  snow-export:
-    image: my-snow-export
+  # Run with: docker compose run --rm linux-snow-export
+  linux-snow-export:
     build:
       context: .
-    command: [ "/bin/sh", "-c", "cp /export/Snow /output/Snow" ]
+      target: export
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+        ver="Snow-v${SNOW_VERSION}-linux-x64"
+        mkdir -p "/output/release/$$ver/bin"
+        cp /export/Snow "/output/release/$$ver/bin/"
+        if [ -d /export/lib ]; then
+          mkdir -p "/output/release/$$ver/lib"
+          cp -a /export/lib/. "/output/release/$$ver/lib/"
+        fi
+        tar -C /output/release -czf "/output/release/$$ver.tgz" "$$ver"
     volumes:
       - ./target:/output
+      - ./lib:/export/lib:ro
+    env_file:
+      - .env

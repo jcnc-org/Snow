@@ -1,5 +1,5 @@
 # Stage 1: 官方 GraalVM 社区版（已含 native-image）
-FROM ghcr.io/graalvm/native-image-community:latest AS builder
+FROM ghcr.io/graalvm/native-image-community:24.0.2 AS builder
 
 RUN microdnf install -y \
       gcc gcc-c++ make git wget tar gzip which findutils maven \
