@@ -16,7 +16,6 @@ $winLogErr = [System.IO.Path]::GetTempFileName()
 $linLogOut = [System.IO.Path]::GetTempFileName()
 $linLogErr = [System.IO.Path]::GetTempFileName()
 
-# Use only -NoNewWindow, remove -WindowStyle
 $winProc = Start-Process powershell.exe -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',"`"$winScript`"") `
     -RedirectStandardOutput $winLogOut -RedirectStandardError $winLogErr -NoNewWindow -PassThru
 $linProc = Start-Process powershell.exe -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',"`"$linScript`"") `
