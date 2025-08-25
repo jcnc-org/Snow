@@ -129,8 +129,6 @@ Write-Host ("windows-release: " + ($(if ($winProc.ExitCode -eq 0) { 'Success' } 
 Write-Host ("linux-release:   " + ($(if ($linProc.ExitCode -eq 0) { 'Success' } else { 'Failed' })))
 
 if (($winProc.ExitCode -ne 0) -or ($linProc.ExitCode -ne 0)) {
-    Write-Host ""
-    Write-Host "One or more tasks failed." -ForegroundColor Red
     Remove-Item $winLogOut, $winLogErr, $linLogOut, $linLogErr -Force
     exit 1
 }
