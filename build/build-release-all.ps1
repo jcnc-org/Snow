@@ -124,16 +124,6 @@ foreach ($item in $tasks) {
 }
 
 Write-Host ""
-Write-Host "===== Parallel Build Summary ====="
-Write-Host ("windows-release: " + ($(if ($winProc.ExitCode -eq 0) { 'Success' } else { 'Failed' })))
-Write-Host ("linux-release:   " + ($(if ($linProc.ExitCode -eq 0) { 'Success' } else { 'Failed' })))
-
-if (($winProc.ExitCode -ne 0) -or ($linProc.ExitCode -ne 0)) {
-    Remove-Item $winLogOut, $winLogErr, $linLogOut, $linLogErr -Force
-    exit 1
-}
-
-Write-Host ""
 Write-Host "All tasks completed successfully." -ForegroundColor Green
 
 Remove-Item $winLogOut, $winLogErr, $linLogOut, $linLogErr -Force

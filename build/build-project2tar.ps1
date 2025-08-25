@@ -1,47 +1,48 @@
-# 设定 tar 包的名称
+# Set the tar package name
 $tarName = "Snow.tar"
 
-# 获取脚本当前目录（build文件夹）
+# Get the script's current directory (build folder)
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 
-# 获取上一级目录（snow 根目录）
+# Get the parent directory (the project root)
 $parentDir = Split-Path -Parent $scriptDir
 
-# 设置 tar 包的完整路径
+# Set the full path to the tar package
 $tarPath = Join-Path $parentDir $tarName
 
-# 输出开始创建 tar 包的消息
-Write-Output "开始创建 tar 包: $tarName 到 $parentDir ..."
+# Output message: starting to create tar package
+Write-Output "Starting to create tar package: $tarName in $parentDir ..."
 
-# 如果存在旧 tar 包，先删除它
+# Remove old tar package if it exists
 if (Test-Path $tarPath) {
-    Write-Output "发现旧的 $tarName，正在删除..."
+    Write-Output "Found an old $tarName, removing it..."
     Remove-Item $tarPath -Force
 }
 
-# 确保 tar 命令可用
+# Make sure the tar command is available
 $tarCommand = "tar"
 if (-not (Get-Command $tarCommand -ErrorAction SilentlyContinue)) {
-    Write-Error "❌ tar 命令不可用。请确保 tar 已安装并可在 PowerShell 中执行。"
+    Write-Error "❌ 'tar' command is not available. Please make sure 'tar' is installed and can be run from PowerShell."
     exit 1
 }
 
-# 执行打包操作: 切换到 org\jcnc 目录下再压缩 snow 文件夹
+# Execute tar: change to org\jcnc directory and compress the snow folder
 try {
-    # 构建命令并执行
+    # Build the command and run it
     $tarCommandArgs = "-cf", $tarPath, "-C", "$scriptDir\..\src\main\java\org\jcnc", "snow"
-    Write-Output "执行 tar 命令: tar $tarCommandArgs"
+    Write-Output "Running tar command: tar $tarCommandArgs"
 
     & $tarCommand @tarCommandArgs
 } catch {
-    Write-Error "❌ 创建 tar 包失败。错误信息: $_"
+    Write-Error "❌ Failed to create tar package. Error: $_"
     exit 1
 }
 
-# 检查 tar 包是否创建成功
+# Check if tar package was created successfully
 if (Test-Path $tarPath) {
-    Write-Output "✅ 成功创建 $tarName"
+    Write-Output "✅ Successfully created $tarName"
+    exit 0
 } else {
-    Write-Error "❌ 创建失败，请检查 tar 命令和路径是否正确。"
+    Write-Error "❌ Creation failed. Please check the tar command and paths."
     exit 1
 }
