@@ -1,11 +1,11 @@
 module: Main
     import: os,ModuleA
     globals:
-        declare sum: int = 3
+        declare sum: int
     function: main
         returns: void
         body:
-            sum = sum + ModuleA._sum(1, 2)
+            sum = ModuleA.a
             os.print(sum)
         end body
     end function
