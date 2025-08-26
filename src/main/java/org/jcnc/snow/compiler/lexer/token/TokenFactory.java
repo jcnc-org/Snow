@@ -26,9 +26,9 @@ public class TokenFactory {
      * 语言的保留关键字集合。
      */
     private static final Set<String> KEYWORDS = Set.of
-             ("module", "function", "params", "returns", "body", "end",
-             "if", "then", "else", "loop", "declare", "return", "import", "init",
-             "cond", "step", "globals", "break", "continue");
+            ("module", "function", "params", "returns", "body", "end",
+                    "if", "then", "else", "loop", "declare", "return", "import", "init",
+                    "cond", "step", "globals", "break", "continue", "const");
 
     /**
      * 内置类型名称集合，如 int、string 等。

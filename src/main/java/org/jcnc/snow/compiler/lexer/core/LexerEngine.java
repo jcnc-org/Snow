@@ -1,11 +1,9 @@
 package org.jcnc.snow.compiler.lexer.core;
 
-import org.jcnc.snow.common.SnowConfig;
 import org.jcnc.snow.compiler.lexer.base.TokenScanner;
 import org.jcnc.snow.compiler.lexer.scanners.*;
 import org.jcnc.snow.compiler.lexer.token.Token;
 import org.jcnc.snow.compiler.lexer.token.TokenType;
-import org.jcnc.snow.compiler.lexer.utils.TokenPrinter;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -127,8 +125,8 @@ public class LexerEngine {
 
     /**
      * 目前包含2条规则: <br>
-     * 1. Declare-Ident declare 后必须紧跟合法标识符，并且只能一个<br>
-     * 2. Double-Ident declare 后若出现第二个 IDENTIFIER 视为多余<br>
+     * 1. Declare-Ident declare 后必须紧跟合法标识符（或 const + 标识符），并且只能一个<br>
+     * 2. Double-Ident declare 后若出现第二个多余的 IDENTIFIER<br>
      * <p>发现问题仅写入 {@link #errors}，不抛异常。</p>
      */
     private void validateTokens() {
@@ -139,17 +137,28 @@ public class LexerEngine {
             if (tok.getType() == TokenType.KEYWORD
                     && "declare".equalsIgnoreCase(tok.getLexeme())) {
 
-                // 第一个非 NEWLINE token
-                Token id1 = findNextNonNewline(i);
+                // 找 declare 后第一个非 NEWLINE token
+                Token t1 = findNextNonNewline(i);
+
+                // 如果有 const，允许
+                boolean hasConst = t1 != null
+                        && t1.getType() == TokenType.KEYWORD
+                        && "const".equalsIgnoreCase(t1.getLexeme());
+                int identStartIdx = hasConst ? tokens.indexOf(t1) : i;
+
+                // 找下一个非 NEWLINE token，如果有 const，就找下一个
+                Token id1 = findNextNonNewline(identStartIdx);
+
+                // id1 必须是 IDENTIFIER
                 if (id1 == null || id1.getType() != TokenType.IDENTIFIER) {
                     errors.add(err(
-                            (id1 == null ? tok : id1),
-                            "declare 后必须跟合法标识符 (以字母或 '_' 开头)"
+                            (id1 == null ? (hasConst ? t1 : tok) : id1),
+                            "declare 后必须跟合法标识符 (可选 const 关键字)"
                     ));
                     continue; // 若首标识符就错，后续检查可略
                 }
 
-                // 检查是否有第二个 IDENTIFIER
+                // 检查是否有第二个多余的 IDENTIFIER
                 Token id2 = findNextNonNewline(tokens.indexOf(id1));
                 if (id2 != null && id2.getType() == TokenType.IDENTIFIER) {
                     errors.add(err(id2, "declare 声明中出现多余的标识符"));

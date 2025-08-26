@@ -34,45 +34,51 @@ public class DeclarationStatementParser implements StatementParser {
      */
     @Override
     public DeclarationNode parse(ParserContext ctx) {
+        // 便捷引用词法 token 流
+        var tokens = ctx.getTokens();
+
         // 获取当前 token 的行号、列号和文件名
-        int line = ctx.getTokens().peek().getLine();
-        int column = ctx.getTokens().peek().getCol();
+        int line = tokens.peek().getLine();
+        int column = tokens.peek().getCol();
         String file = ctx.getSourceName();
 
         // 声明语句必须以 "declare" 开头
-        ctx.getTokens().expect("declare");
+        tokens.expect("declare");
+
+        // 是否声明为常量
+        boolean isConst = tokens.match("const");
 
         // 获取变量名称（标识符）
-        String name = ctx.getTokens()
+        String name = tokens
                 .expectType(TokenType.IDENTIFIER)
                 .getLexeme();
 
         // 类型标注的冒号分隔符
-        ctx.getTokens().expect(":");
+        tokens.expect(":");
 
         // 获取变量类型（类型标识符）
         StringBuilder type = new StringBuilder(
-                ctx.getTokens()
+                tokens
                         .expectType(TokenType.TYPE)
                         .getLexeme()
         );
 
         // 消费多维数组类型后缀 "[]"
-        while (ctx.getTokens().match("[")) {
-            ctx.getTokens().expectType(TokenType.RBRACKET); // 必须配对
+        while (tokens.match("[")) {
+            tokens.expectType(TokenType.RBRACKET); // 必须配对
             type.append("[]"); // 类型名称拼接 []，如 int[][] 等
         }
 
         // 可选初始化表达式（=号右侧）
         ExpressionNode init = null;
-        if (ctx.getTokens().match("=")) {
+        if (tokens.match("=")) {
             init = new PrattExpressionParser().parse(ctx);
         }
 
         // 声明语句必须以换行符结尾
-        ctx.getTokens().expectType(TokenType.NEWLINE);
+        tokens.expectType(TokenType.NEWLINE);
 
         // 返回构建好的声明语法树节点
-        return new DeclarationNode(name, type.toString(), init, new NodeContext(line, column, file));
+        return new DeclarationNode(name, type.toString(), isConst, init, new NodeContext(line, column, file));
     }
 }

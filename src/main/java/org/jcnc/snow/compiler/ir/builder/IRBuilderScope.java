@@ -15,30 +15,25 @@ import java.util.Map;
  *   <li>支持变量与虚拟寄存器的重新绑定与查找</li>
  *   <li>支持变量的类型信息记录与查询</li>
  *   <li>支持变量的编译期常量值记录与查询（便于常量折叠等优化）</li>
+ *   <li>支持跨模块全局常量（如 ModuleA.a）查找</li>
  * </ul>
  */
 final class IRBuilderScope {
 
-    /**
-     * 变量名到虚拟寄存器的映射表。
-     * 用于跟踪所有声明和分配的变量。
-     */
+    /** 变量名到虚拟寄存器的映射表（本地变量） */
     private final Map<String, IRVirtualRegister> vars = new HashMap<>();
+    /** 变量名到类型字符串的映射表 */
+    private final Map<String, String> varTypes = new HashMap<>();
+    /** 变量名到编译期常量值的映射表（本作用域） */
+    private final Map<String, Object> varConstValues = new HashMap<>();
 
     /**
-     * 变量名到类型字符串的映射表。
-     * 用于类型分析与推断。
+     * 额外：存放跨模块导入的全局常量
+     * key 形如 "ModuleA.a"   value 为其常量值
      */
-    private final Map<String, String> varTypes = new HashMap<>();
-    /**
-     * 变量名到编译期常量值的映射表。
-     * 用于常量折叠优化（如 int、string、数组等常量）。
-     */
-    private final Map<String, Object> varConstValues = new HashMap<>();
-    /**
-     * 当前作用域所绑定的 IRFunction 实例。
-     * 用于申请新的虚拟寄存器。
-     */
+    private final Map<String, Object> externalConsts = new HashMap<>();
+
+    /** 当前作用域所绑定的 IRFunction 实例 */
     private IRFunction fn;
 
     /**
@@ -118,7 +113,7 @@ final class IRBuilderScope {
     // ---------------- 编译期常量相关接口 ----------------
 
     /**
-     * 设置变量的编译期常量值。
+     * 设置变量的编译期常量值（本地变量）。
      *
      * @param name  变量名称
      * @param value 常量值（null 表示清除）
@@ -129,21 +124,38 @@ final class IRBuilderScope {
     }
 
     /**
-     * 获取变量的编译期常量值（如没有则返回 null）。
+     * 获取变量的编译期常量值（本地变量或导入的外部常量）。
+     * <br>
+     * 优先查找本地常量，未命中再查外部（如 "ModuleA.a"）。
      *
-     * @param name 变量名称
+     * @param name 变量名称或"模块名.常量名"
      * @return 编译期常量值，或 null
      */
     Object getConstValue(String name) {
-        return varConstValues.get(name);
+        Object v = varConstValues.get(name);
+        if (v != null) return v;
+        // 支持跨模块常量/全局变量
+        return externalConsts.get(name);
     }
 
     /**
-     * 清除变量的编译期常量值绑定。
+     * 清除变量的编译期常量值绑定（本地）。
      *
      * @param name 变量名称
      */
     void clearConstValue(String name) {
         varConstValues.remove(name);
+    }
+
+    // ---------------- 跨模块常量导入支持 ----------------
+
+    /**
+     * 导入外部（其他模块）的全局常量/变量。
+     *
+     * @param qualifiedName 形如 "ModuleA.a"
+     * @param value         其常量值
+     */
+    void importExternalConst(String qualifiedName, Object value) {
+        externalConsts.put(qualifiedName, value);
     }
 }

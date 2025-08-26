@@ -65,8 +65,8 @@ public final class AnalyzerRegistrar {
         // ---------- 注册一元表达式分析器 ----------
         registry.registerExpressionAnalyzer(UnaryExpressionNode.class, new UnaryExpressionAnalyzer());
 
-        // 对尚未实现的表达式类型使用兜底处理器
+        // ---------- 成员访问表达式 ----------
         registry.registerExpressionAnalyzer(MemberExpressionNode.class,
-                new UnsupportedExpressionAnalyzer<>());
+                new MemberExpressionAnalyzer());
     }
 }

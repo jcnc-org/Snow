@@ -1,8 +1,8 @@
 package org.jcnc.snow.compiler.semantic.core;
 
+import org.jcnc.snow.compiler.parser.ast.DeclarationNode;
 import org.jcnc.snow.compiler.parser.ast.FunctionNode;
 import org.jcnc.snow.compiler.parser.ast.ModuleNode;
-import org.jcnc.snow.compiler.parser.ast.DeclarationNode;
 import org.jcnc.snow.compiler.parser.ast.ReturnNode;
 import org.jcnc.snow.compiler.semantic.analyzers.base.StatementAnalyzer;
 import org.jcnc.snow.compiler.semantic.error.SemanticError;
@@ -11,70 +11,85 @@ import org.jcnc.snow.compiler.semantic.symbol.SymbolKind;
 import org.jcnc.snow.compiler.semantic.symbol.SymbolTable;
 import org.jcnc.snow.compiler.semantic.type.BuiltinType;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * {@code FunctionChecker} 是语义分析阶段中用于检查函数体语句合法性的调度器。
+ * {@code FunctionChecker} 是 Snow 编译器语义分析阶段用于检查所有函数体合法性的总控调度器。
  * <p>
- * 它逐个遍历所有模块中的函数定义，并对函数体中的每一条语句调用对应的语义分析器，
- * 执行类型检查、作用域验证、错误记录等任务。
- * <p>
- * 核心职责包括:
+ * <b>设计核心：</b>采用“两遍扫描”方案，彻底解决跨模块全局变量/常量类型推断和引用依赖问题：
  * <ul>
- *   <li>为每个函数构建局部符号表并注册函数参数为变量；</li>
- *   <li>分发函数体语句至相应的 {@link StatementAnalyzer}；</li>
- *   <li>记录未支持语句类型为语义错误；</li>
- *   <li>依赖上下文 {@link Context} 提供模块信息、类型解析、错误收集等服务。</li>
+ *   <li><b>第一遍</b>：为所有模块预先构建并注册其全局符号表（globals），保证跨模块引用时可见。</li>
+ *   <li><b>第二遍</b>：在全局符号表全部就绪后，依次分析所有模块的函数体，实现局部作用域、类型推断、语义校验等任务。</li>
+ * </ul>
+ * <b>功能职责：</b>
+ * <ul>
+ *   <li>遍历所有模块，先建立 globals，再遍历并检查所有函数体语句。</li>
+ *   <li>为每个函数体构建完整符号表，并注册参数变量。</li>
+ *   <li>分发每条语句到对应 {@link StatementAnalyzer} 进行类型检查和错误校验。</li>
+ *   <li>自动检查非 void 函数 return 完备性。</li>
+ *   <li>记录所有语义错误，便于前端高亮和诊断。</li>
  * </ul>
  *
- * @param ctx 全局语义分析上下文，提供模块信息、注册表、错误记录等支持
+ * @param ctx 全局语义分析上下文，持有模块信息、符号表、错误收集等资源
  */
 public record FunctionChecker(Context ctx) {
 
     /**
-     * 构造函数体检查器。
-     *
-     * @param ctx 当前语义分析上下文
-     */
-    public FunctionChecker {
-    }
-
-    /**
-     * 执行函数体检查流程。
+     * 主入口：对所有模块的所有函数体进行语义检查（两遍扫描实现）。
      * <p>
-     * 对所有模块中的所有函数依次进行处理:
-     * <ol>
-     *   <li>查找模块对应的 {@link ModuleInfo}；</li>
-     *   <li>创建函数局部符号表 {@link SymbolTable}，并注册所有参数变量；</li>
-     *   <li>对函数体中的每一条语句分发到已注册的分析器进行语义分析；</li>
-     *   <li>若某条语句无可用分析器，则记录为 {@link SemanticError}。</li>
-     * </ol>
+     * <b>第一遍</b>：为每个模块提前构建全局符号表（包含本模块所有全局变量和常量），
+     * 并注册到 {@link ModuleInfo}，确保跨模块引用时所有全局符号都已可用。
+     * <br>
+     * <b>第二遍</b>：遍历所有模块的所有函数，对每个函数体：
+     * <ul>
+     *   <li>构建局部作用域，父作用域为对应模块的 globals；</li>
+     *   <li>注册参数变量；</li>
+     *   <li>依次分发每条语句到对应 {@link StatementAnalyzer}，进行类型和语义检查；</li>
+     *   <li>自动校验非 void 函数 return 完备性；</li>
+     *   <li>将所有发现的问题统一记录到 {@link SemanticError} 列表。</li>
+     * </ul>
      *
      * @param mods 所有模块的 AST 根节点集合
      */
     public void check(Iterable<ModuleNode> mods) {
+        List<ModuleNode> moduleList = new ArrayList<>();
+        // ---------- 第1遍：收集所有全局符号表 ----------
         for (ModuleNode mod : mods) {
-            // 获取当前模块对应的语义信息
-            ModuleInfo mi = ctx.modules().get(mod.name());
+            moduleList.add(mod);
 
-            // 先构建全局符号表
+            // 获取当前模块的元信息
+            ModuleInfo mi = ctx.modules().get(mod.name());
+            // 创建本模块全局作用域（无父作用域）
             SymbolTable globalScope = new SymbolTable(null);
+
+            // 注册所有全局变量/常量到符号表
             for (DeclarationNode g : mod.globals()) {
                 var t = ctx.parseType(g.getType());
-                // 检查全局变量是否重复声明
-                if (!globalScope.define(new Symbol(g.getName(), t, SymbolKind.VARIABLE))) {
+                SymbolKind k = g.isConst() ? SymbolKind.CONSTANT : SymbolKind.VARIABLE;
+                String dupType = g.isConst() ? "常量" : "变量";
+                // 检查重复声明
+                if (!globalScope.define(new Symbol(g.getName(), t, k))) {
                     ctx.errors().add(new SemanticError(
                             g,
-                            "全局变量重复声明: " + g.getName()
+                            dupType + "重复声明: " + g.getName()
                     ));
                 }
             }
+            // 注册到模块信息，供跨模块引用
+            mi.setGlobals(globalScope);
+        }
 
-            // 遍历模块中所有函数定义
+        // ---------- 第2遍：遍历所有函数，分析函数体 ----------
+        for (ModuleNode mod : moduleList) {
+            ModuleInfo mi = ctx.modules().get(mod.name());
+            SymbolTable globalScope = mi.getGlobals();
+
             for (FunctionNode fn : mod.functions()) {
-
-                // 构建函数局部作用域符号表，父作用域为 globalScope
+                // 构建函数局部作用域，父作用域为 globalScope
                 SymbolTable locals = new SymbolTable(globalScope);
 
-                // 将函数参数注册为局部变量
+                // 注册函数参数为局部变量
                 fn.parameters().forEach(p ->
                         locals.define(new Symbol(
                                 p.name(),
@@ -83,7 +98,7 @@ public record FunctionChecker(Context ctx) {
                         ))
                 );
 
-                // 遍历并分析函数体内的每条语句
+                // 分析函数体内每条语句
                 for (var stmt : fn.body()) {
                     var analyzer = ctx.getRegistry().getStatementAnalyzer(stmt);
                     if (analyzer != null) {

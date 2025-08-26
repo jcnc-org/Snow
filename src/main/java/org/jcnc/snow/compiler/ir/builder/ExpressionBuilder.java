@@ -1,5 +1,6 @@
 package org.jcnc.snow.compiler.ir.builder;
 
+import org.jcnc.snow.compiler.ir.common.GlobalConstTable;
 import org.jcnc.snow.compiler.ir.core.IROpCode;
 import org.jcnc.snow.compiler.ir.core.IRValue;
 import org.jcnc.snow.compiler.ir.instruction.CallInstruction;
@@ -48,6 +49,8 @@ public record ExpressionBuilder(IRContext ctx) {
                 if (reg == null) throw new IllegalStateException("未定义标识符: " + id.name());
                 yield reg;
             }
+            // 模块常量 / 全局变量，如 ModuleA.a
+            case MemberExpressionNode mem -> buildMember(mem);
             // 二元表达式（如 a+b, x==y）
             case BinaryExpressionNode bin -> buildBinary(bin);
             // 函数/方法调用表达式
@@ -61,6 +64,40 @@ public record ExpressionBuilder(IRContext ctx) {
                     "不支持的表达式类型: " + expr.getClass().getSimpleName());
         };
     }
+
+    /**
+     * 成员访问表达式构建
+     *
+     * @param mem 成员表达式节点
+     * @return 存储结果的虚拟寄存器
+     */
+    private IRVirtualRegister buildMember(MemberExpressionNode mem) {
+        if (!(mem.object() instanceof IdentifierNode id)) {
+            throw new IllegalStateException("不支持的成员访问对象类型: "
+                    + mem.object().getClass().getSimpleName());
+        }
+        String qualified = id.name() + "." + mem.member();
+
+        /* 1) 尝试直接获取已有寄存器绑定 */
+        IRVirtualRegister reg = ctx.getScope().lookup(qualified);
+        if (reg != null) {
+            return reg;
+        }
+
+        /* 2) 折叠为编译期常量：先查作用域，再查全局常量表 */
+        Object v = ctx.getScope().getConstValue(qualified);
+        if (v == null) {
+            v = GlobalConstTable.get(qualified);
+        }
+        if (v != null) {
+            IRVirtualRegister r = ctx.newRegister();
+            ctx.addInstruction(new LoadConstInstruction(r, new IRConstant(v)));
+            return r;
+        }
+
+        throw new IllegalStateException("未定义的常量: " + qualified);
+    }
+
 
     /* ───────────────── 写入指定寄存器 ───────────────── */
 

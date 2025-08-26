@@ -6,7 +6,9 @@ import org.jcnc.snow.compiler.semantic.analyzers.base.StatementAnalyzer;
 import org.jcnc.snow.compiler.semantic.core.Context;
 import org.jcnc.snow.compiler.semantic.core.ModuleInfo;
 import org.jcnc.snow.compiler.semantic.error.SemanticError;
-import org.jcnc.snow.compiler.semantic.symbol.*;
+import org.jcnc.snow.compiler.semantic.symbol.Symbol;
+import org.jcnc.snow.compiler.semantic.symbol.SymbolKind;
+import org.jcnc.snow.compiler.semantic.symbol.SymbolTable;
 import org.jcnc.snow.compiler.semantic.type.BuiltinType;
 import org.jcnc.snow.compiler.semantic.type.Type;
 
@@ -25,7 +27,7 @@ import org.jcnc.snow.compiler.semantic.type.Type;
 public class DeclarationAnalyzer implements StatementAnalyzer<DeclarationNode> {
 
     /**
-     * 对变量声明语句执行语义分析。
+     * 对单条声明语句执行语义分析。
      *
      * @param ctx    当前语义分析上下文对象，提供类型解析、错误记录、日志输出等功能。
      * @param mi     当前模块信息，支持跨模块引用检查（本分析器未直接使用）。
@@ -40,45 +42,53 @@ public class DeclarationAnalyzer implements StatementAnalyzer<DeclarationNode> {
                         SymbolTable locals,
                         DeclarationNode decl) {
 
-        // 1. 解析声明类型
+        /* ---------- 1. 解析类型 ---------- */
         Type varType = ctx.parseType(decl.getType());
         if (varType == null) {
+            // 未知类型：记录错误并使用 int 兜底，避免后续空指针
             ctx.getErrors().add(new SemanticError(decl,
                     "未知类型: " + decl.getType()));
             ctx.log("错误: 未知类型 " + decl.getType()
-                    + " 在声明 " + decl.getName());
-            varType = BuiltinType.INT;  // 容错处理: 默认降级为 int
+                    + " (声明 " + decl.getName() + ")");
+            varType = BuiltinType.INT;
         }
-        ctx.log("声明变量: " + decl.getName()
-                + " 类型: " + varType);
+        ctx.log("声明" + (decl.isConst() ? "常量" : "变量")
+                + ": " + decl.getName() + " 类型: " + varType);
 
-        // 2. 将变量注册到当前作用域符号表中，检查重复定义
-        if (!locals.define(new Symbol(
-                decl.getName(), varType, SymbolKind.VARIABLE
-        ))) {
+        /* ---------- 2. 常量必须初始化 ---------- */
+        if (decl.isConst() && decl.getInitializer().isEmpty()) {
             ctx.getErrors().add(new SemanticError(decl,
-                    "变量重复声明: " + decl.getName()));
-            ctx.log("错误: 变量重复声明 " + decl.getName());
+                    "常量必须在声明时初始化: " + decl.getName()));
+            // 继续分析以捕获更多错误
         }
 
-        // 3. 检查初始化表达式（如果存在）
-        Type finalVarType = varType;  // 用于 lambda 捕获
-        decl.getInitializer().ifPresent(init -> {
-            Type initType = ctx.getRegistry().getExpressionAnalyzer(init)
-                    .analyze(ctx, mi, fn, locals, init);
+        /* ---------- 3. 注册符号并检测重名 ---------- */
+        SymbolKind kind = decl.isConst() ? SymbolKind.CONSTANT
+                : SymbolKind.VARIABLE;
+        if (!locals.define(new Symbol(decl.getName(), varType, kind))) {
+            ctx.getErrors().add(new SemanticError(decl,
+                    "重复声明: " + decl.getName()));
+            ctx.log("错误: 重复声明 " + decl.getName());
+        }
 
-            // 检查类型是否兼容，或是否允许数值宽化转换
-            if (!finalVarType.isCompatible(initType)) {
-                boolean canWiden = finalVarType.isNumeric()
-                        && initType.isNumeric()
-                        && Type.widen(initType, finalVarType) == finalVarType;
-                if (!canWiden) {
-                    ctx.getErrors().add(new SemanticError(decl,
-                            "初始化类型不匹配: 期望 " + finalVarType
-                                    + ", 实际 " + initType));
-                    ctx.log("错误: 初始化类型不匹配 "
-                            + decl.getName());
-                }
+        /* ---------- 4. 校验初始化表达式（若存在） ---------- */
+        Type finalVarType = varType;
+        decl.getInitializer().ifPresent(initExpr -> {
+            // 4.1 获取初始化表达式类型
+            Type initType = ctx.getRegistry()
+                    .getExpressionAnalyzer(initExpr)
+                    .analyze(ctx, mi, fn, locals, initExpr);
+
+            // 4.2 类型兼容性检查 + 数值宽化
+            boolean compatible = finalVarType.isCompatible(initType);
+            boolean widenOK = finalVarType.isNumeric()
+                    && initType.isNumeric()
+                    && Type.widen(initType, finalVarType) == finalVarType;
+
+            if (!compatible && !widenOK) {
+                ctx.getErrors().add(new SemanticError(decl,
+                        "初始化类型不匹配: 期望 " + finalVarType + ", 实际 " + initType));
+                ctx.log("错误: 初始化类型不匹配 " + decl.getName());
             }
         });
     }
