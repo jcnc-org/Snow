@@ -1,0 +1,14 @@
+module: Main
+    import: ModuleA
+    function: main
+        returns: void
+        body:
+           declare sum: byte = ModuleA.a
+        end body
+    end function
+end module
+
+module: ModuleA
+    globals:
+        declare const a: byte = 2b
+end module
