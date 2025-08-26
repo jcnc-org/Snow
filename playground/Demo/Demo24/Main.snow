@@ -3,19 +3,19 @@ module: Main
     function: main
         returns: void
         body:
-            declare a: int = ModuleA.sum(1,2)
+            declare a: byte = ModuleA.sum(1b,2b)
         end body
     end function
 end module
 
 module: ModuleA
     globals:
-        declare a: int = 10
+        declare a: byte = 10b
     function: sum
         params:
-            declare a: int
-            declare b: int
-        returns: int
+            declare a: byte
+            declare b: byte
+        returns: byte
         body:
             return a + b
         end body
