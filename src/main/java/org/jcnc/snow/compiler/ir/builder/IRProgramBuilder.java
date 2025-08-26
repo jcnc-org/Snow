@@ -58,6 +58,7 @@ public final class IRProgramBuilder {
     }
 
     // ===================== 全局常量收集 =====================
+
     /**
      * 扫描所有模块节点，将其中声明的 const 全局变量（compile-time 常量）
      * 以 "模块名.常量名" 形式注册到全局常量表。
@@ -84,26 +85,54 @@ public final class IRProgramBuilder {
     }
 
     /**
-     * 字面量提取工具。仅支持整数/浮点、字符串、布尔字面量，其它返回 null。
+     * 字面量提取与类型折叠工具。
+     * <p>
+     * 用于从表达式节点中解析出直接可用于全局常量表注册的 Java 值，
+     * 支持以下字面量类型：
+     * <ul>
+     *   <li>整数与浮点（可带下划线分隔符，支持类型后缀 b/s/l/f/d，自动转换为对应 Java 基本类型）</li>
+     *   <li>字符串字面量，直接返回内容</li>
+     *   <li>布尔字面量，true 返回 1，false 返回 0（用于数值语境）</li>
+     * </ul>
+     * 不支持的表达式或解析失败将返回 null。
      *
-     * @param expr 常量初始化表达式
-     * @return 字面量值（如 123, 3.14, "abc", 1/0），否则 null
+     * @param expr 字面量表达式节点，通常为 NumberLiteralNode/StringLiteralNode/BoolLiteralNode
+     * @return 提取出的 Java 值，可为 Integer/Byte/Short/Long/Double/String/Integer(布尔) 或 null
      */
     private Object evalLiteral(ExpressionNode expr) {
         return switch (expr) {
             case NumberLiteralNode num -> {
-                String s = num.value();
+                String raw = num.value();
+                // 1. 去掉下划线分隔符，便于解析（如 1_000_000）
+                String s = raw.replace("_", "");
+                // 2. 提取类型后缀（b/s/l/f/d），若有则去除
+                char last = Character.toLowerCase(s.charAt(s.length() - 1));
+                String core = switch (last) {
+                    case 'b', 's', 'l', 'f', 'd' -> s.substring(0, s.length() - 1);
+                    default -> s;
+                };
                 try {
-                    if (s.contains(".") || s.contains("e") || s.contains("E"))
-                        yield Double.parseDouble(s);
-                    yield Integer.parseInt(s);
+                    // 3. 若为浮点字面量或科学计数法，直接转 double
+                    if (core.contains(".") || core.contains("e") || core.contains("E")) {
+                        double dv = Double.parseDouble(core);
+                        yield dv;
+                    }
+                    // 4. 整数字面量，先转 long，再根据后缀决定精度
+                    long lv = Long.parseLong(core);
+                    yield switch (last) {
+                        case 'b' -> (byte) lv;   // 末尾 b，转 byte
+                        case 's' -> (short) lv;  // 末尾 s，转 short
+                        case 'l' -> lv;          // 末尾 l，转 long
+                        default -> (int) lv;    // 无后缀，转 int
+                    };
                 } catch (NumberFormatException ignore) {
+                    // 解析失败，返回 null
                     yield null;
                 }
             }
-            case StringLiteralNode str -> str.value();
-            case BoolLiteralNode b -> b.getValue() ? 1 : 0;
-            default -> null;
+            case StringLiteralNode str -> str.value();        // 字符串字面量，返回内容
+            case BoolLiteralNode b -> b.getValue() ? 1 : 0;   // 布尔字面量，true=1，false=0
+            default -> null;                                  // 其它类型不支持
         };
     }
 
