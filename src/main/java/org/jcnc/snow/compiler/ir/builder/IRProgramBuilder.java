@@ -1,9 +1,10 @@
 package org.jcnc.snow.compiler.ir.builder;
 
+import org.jcnc.snow.compiler.ir.common.GlobalConstTable;
 import org.jcnc.snow.compiler.ir.core.IRFunction;
 import org.jcnc.snow.compiler.ir.core.IRProgram;
-import org.jcnc.snow.compiler.parser.ast.FunctionNode;
-import org.jcnc.snow.compiler.parser.ast.ModuleNode;
+import org.jcnc.snow.compiler.parser.ast.*;
+import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.base.Node;
 import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
@@ -12,13 +13,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * IRProgramBuilder 负责将 AST 根节点(如模块、函数、顶层语句)转换为可执行的 IRProgram 实例。
- * <p>
- * 主要职责:
+ * IRProgramBuilder 负责将 AST 顶层节点转换为可执行的 {@link IRProgram}。
+ *
  * <ul>
- *   <li>遍历 AST 根节点，根据类型分别处理(模块、函数、顶层语句)。</li>
- *   <li>对模块内的函数添加全限定名，并在函数体前注入全局变量声明。</li>
- *   <li>将单独的顶层语句封装为特殊的 "_start" 函数。</li>
+ *   <li>预扫描所有模块，将 <code>declare const</code> 常量登记到全局常量表，支持跨模块常量折叠。</li>
+ *   <li>对模块内的函数加上模块前缀，保证命名唯一，并将本模块全局声明注入到函数体前部。</li>
+ *   <li>将独立顶层语句自动包装为特殊的 "_start" 函数（脚本模式支持）。</li>
  * </ul>
  */
 public final class IRProgramBuilder {
@@ -31,6 +31,9 @@ public final class IRProgramBuilder {
      * @throws IllegalStateException 遇到不支持的顶层节点类型时抛出
      */
     public IRProgram buildProgram(List<Node> roots) {
+        // 预先收集并登记全部模块常量到全局常量表
+        preloadGlobals(roots);
+
         IRProgram irProgram = new IRProgram();
         for (Node node : roots) {
             switch (node) {
@@ -53,6 +56,58 @@ public final class IRProgramBuilder {
         }
         return irProgram;
     }
+
+    // ===================== 全局常量收集 =====================
+    /**
+     * 扫描所有模块节点，将其中声明的 const 全局变量（compile-time 常量）
+     * 以 "模块名.常量名" 形式注册到全局常量表。
+     * <p>
+     * 只处理直接字面量（数字、字符串、布尔），暂不支持复杂表达式。
+     *
+     * @param roots 所有顶层 AST 节点
+     */
+    private void preloadGlobals(List<Node> roots) {
+        for (Node n : roots) {
+            if (n instanceof ModuleNode mod) {
+                String moduleName = mod.name();
+                if (mod.globals() == null) continue;
+                for (DeclarationNode decl : mod.globals()) {
+                    if (!decl.isConst() || decl.getInitializer().isEmpty()) continue;
+                    ExpressionNode init = decl.getInitializer().get();
+                    Object value = evalLiteral(init);
+                    if (value != null) {
+                        GlobalConstTable.register(moduleName + "." + decl.getName(), value);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 字面量提取工具。仅支持整数/浮点、字符串、布尔字面量，其它返回 null。
+     *
+     * @param expr 常量初始化表达式
+     * @return 字面量值（如 123, 3.14, "abc", 1/0），否则 null
+     */
+    private Object evalLiteral(ExpressionNode expr) {
+        return switch (expr) {
+            case NumberLiteralNode num -> {
+                String s = num.value();
+                try {
+                    if (s.contains(".") || s.contains("e") || s.contains("E"))
+                        yield Double.parseDouble(s);
+                    yield Integer.parseInt(s);
+                } catch (NumberFormatException ignore) {
+                    yield null;
+                }
+            }
+            case StringLiteralNode str -> str.value();
+            case BoolLiteralNode b -> b.getValue() ? 1 : 0;
+            default -> null;
+        };
+    }
+
+    // ===================== IRFunction 构建辅助 =====================
 
     /**
      * 构建带有模块全局声明“注入”的函数，并将函数名加上模块前缀，保证模块内函数名唯一。
