@@ -1,12 +1,10 @@
 module: Main
-    import: os
-    globals:
-        declare sum: int
+    import: ModuleA,os
     function: main
         returns: void
         body:
-            sum = ModuleA.a
-            os.print(sum)
+           declare sum: int = ModuleA.a+2
+           os.print(sum+1)
         end body
     end function
 end module
