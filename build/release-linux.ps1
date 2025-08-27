@@ -49,6 +49,87 @@ $targetDir = Join-Path $projectRoot "target\release"
 $outDir    = Join-Path $targetDir "Snow-v$version-linux-x64"
 $tgzPath   = Join-Path $targetDir "Snow-v$version-linux-x64.tgz"
 
+# ===== Step 5: Package to .tgz (no extra top-level dir, max compression) =====
+Write-Host "Step 5: Package to .tgz..."
+
+if (-not (Test-Path -LiteralPath $outDir)) {
+    Write-Error "Output directory not found: $outDir"
+    exit 1
+}
+
+# Ensure target directory exists
+if (-not (Test-Path -LiteralPath $targetDir)) {
+    New-Item -ItemType Directory -Force -Path $targetDir | Out-Null
+}
+
+# Remove old package if exists
+if (Test-Path -LiteralPath $tgzPath) {
+    Write-Host "→ Removing existing tgz: $tgzPath"
+    Remove-Item -LiteralPath $tgzPath -Force
+}
+
+function Invoke-TarGz {
+    param(
+        [Parameter(Mandatory = $true)][string]$SourceDir,
+        [Parameter(Mandatory = $true)][string]$DestTgz
+    )
+    $tarExe = "tar"
+
+    $isWindows = $env:OS -eq 'Windows_NT'
+
+    if ($isWindows) {
+        $psi = @{
+            FilePath    = $tarExe
+            ArgumentList= @("-C", $SourceDir, "-czf", $DestTgz, ".")
+            NoNewWindow = $true
+            Wait        = $true
+        }
+        try {
+            $p = Start-Process @psi -PassThru -ErrorAction Stop
+            $p.WaitForExit()
+            if ($p.ExitCode -ne 0) {
+                throw "tar exited with code $($p.ExitCode)"
+            }
+        } catch {
+            throw "Packaging failed (Windows tar): $($_.Exception.Message)"
+        }
+    } else {
+        try {
+            $psi = @{
+                FilePath    = $tarExe
+                ArgumentList= @("-C", $SourceDir, "-c", "-f", $DestTgz, "-I", "gzip -9", ".")
+                NoNewWindow = $true
+                Wait        = $true
+            }
+            $p = Start-Process @psi -PassThru -ErrorAction Stop
+            $p.WaitForExit()
+            if ($p.ExitCode -eq 0) { return }
+        } catch { }
+
+        try {
+            $psi = @{
+                FilePath    = $tarExe
+                ArgumentList= @("-C", $SourceDir, "-c", "-z", "-f", $DestTgz, ".")
+                NoNewWindow = $true
+                Wait        = $true
+            }
+            $p = Start-Process @psi -PassThru -ErrorAction Stop
+            $p.WaitForExit()
+            if ($p.ExitCode -ne 0) {
+                throw "tar exited with code $($p.ExitCode)"
+            }
+        } catch {
+            throw "Packaging failed (Linux tar): $($_.Exception.Message)"
+        }
+    }
+}
+try {
+    Invoke-TarGz -SourceDir $outDir -DestTgz $tgzPath
+} catch {
+    Write-Error $_.Exception.Message
+    exit 1
+}
+
 Write-Host ">>> Package ready!" -ForegroundColor Green
 Write-Host "Version    : $version"
 Write-Host "Output Dir : $outDir"

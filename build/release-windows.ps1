@@ -91,7 +91,7 @@ try {
         Write-Host ">>> lib directory not found, skipping." -ForegroundColor Yellow
     }
 
-    # ===== Step 4: Create zip =====
+    # ===== Step 4: Create release zip =====
     Write-Host "Step 4: Create release zip..."
     New-Item -ItemType Directory -Force -Path $releaseRoot | Out-Null
     $zipPath = Join-Path $releaseRoot ("{0}.zip" -f $verName)
@@ -101,7 +101,7 @@ try {
     }
 
     try {
-        Compress-Archive -Path $outDir -DestinationPath $zipPath -Force
+        Compress-Archive -Path (Join-Path $outDir '*') -DestinationPath $zipPath -CompressionLevel Optimal -Force
     } catch {
         Write-Error "Failed to create zip: $($_.Exception.Message)"
         exit 1
