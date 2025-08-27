@@ -20,46 +20,8 @@ public final class StringEscape {
     }
 
     /**
-     * <b>编译期方法：</b>
-     * <p>将普通字符串编码为可安全存储于单行文本（如 .water 指令）的转义字符串。</p>
-     *
-     * <ul>
-     *     <li>常见控制字符（如换行、制表符、回车等）会转为转义序列（如 <code>\n</code>、<code>\t</code>）。</li>
-     *     <li>反斜杠、单双引号等特殊字符会转为对应转义形式。</li>
-     *     <li>非可见 ASCII 字符或超出 0x7E 范围的字符，会被编码为 Unicode 形式 <code>uXXXX</code>。</li>
-     * </ul>
-     *
-     * @param input 原始字符串（可能包含特殊/不可见字符）
-     * @return 转义后的字符串，可安全作为单行文本保存
-     */
-    public static String escape(String input) {
-        StringBuilder sb = new StringBuilder();
-        for (char ch : input.toCharArray()) {
-            switch (ch) {
-                case '\n' -> sb.append("\\n");         // 换行
-                case '\t' -> sb.append("\\t");         // 制表符
-                case '\r' -> sb.append("\\r");         // 回车
-                case '\b' -> sb.append("\\b");         // 退格
-                case '\f' -> sb.append("\\f");         // 换页
-                case '\\' -> sb.append("\\\\");        // 反斜杠
-                case '"' -> sb.append("\\\"");        // 双引号
-                case '\'' -> sb.append("\\'");         // 单引号
-                default -> {
-                    // 对于不可见的 ASCII 字符（<0x20）或非 ASCII 可见字符（>0x7E），转为 Unicode
-                    if (ch < 0x20 || ch > 0x7E) {
-                        sb.append(String.format("\\u%04X", (int) ch));
-                    } else {
-                        sb.append(ch);                 // 其他字符直接附加
-                    }
-                }
-            }
-        }
-        return sb.toString();
-    }
-
-    /**
      * <b>运行期方法：</b>
-     * <p>将转义序列（如 <code>\n</code>, <code>\u4E16</code> 等）还原为实际字符。</p>
+     * <p>将转义序列还原为实际字符。</p>
      *
      * <ul>
      *     <li>支持常见的转义字符序列。</li>
