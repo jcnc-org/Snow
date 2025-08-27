@@ -10,36 +10,54 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * The {@code RPushCommand} class implements the {@link Command} interface
- * and represents the "reference push" instruction ({@code R_PUSH}) in the virtual machine.
- *
+ * The {@code RPushCommand} class implements the {@link Command} interface and provides
+ * the "reference push" instruction ({@code R_PUSH}) for the virtual machine.
  * <p>
- * This instruction pushes a reference-type value onto the operand stack.
- * The input is parsed from the textual instruction form, which can represent:
+ * <b>Function:</b> Pushes a reference-type value (String literal or array literal) onto the operand stack.
+ * </p>
+ *
+ * <h2>Supported Literals</h2>
  * <ul>
- *     <li>String literals</li>
- *     <li>Array literals (e.g., {@code [1, 2, 3]}), including nested arrays</li>
+ *     <li><b>String Literals:</b> Quoted strings (e.g., {@code "hello\nworld"}) with escape sequence support.</li>
+ *     <li><b>Array Literals:</b> Bracketed array forms (e.g., {@code [1, 2, [3, 4]]}), including nested arrays.</li>
  * </ul>
- * </p>
  *
- * <p>
- * For array literals, a nested list structure is constructed. In this implementation,
- * array literals are pushed as <b>mutable</b> {@link java.util.ArrayList} structures,
- * so that subsequent system calls such as {@code ARR_SET} can modify elements in-place.
- * </p>
+ * <h2>Implementation Details</h2>
+ * <ul>
+ *     <li>Array literals are parsed into <b>mutable</b> {@link java.util.ArrayList} objects, to support in-place modification (e.g., by {@code ARR_SET}).</li>
+ *     <li>String literals wrapped in quotes are automatically unescaped according to Java string escape rules.</li>
+ *     <li>Handles atomic values: numbers (including hex, binary, float, long, short, byte), booleans, and fallback to string.</li>
+ * </ul>
+ *
+ * <h2>Example Usage</h2>
+ * <pre>
+ *     R_PUSH "hello\nworld"     // pushes String "hello\nworld" (with actual newline)
+ *     R_PUSH [1, 2, 3]         // pushes ArrayList {1, 2, 3}
+ *     R_PUSH [1, [2, 3], 4]    // pushes nested arrays as mutable lists
+ * </pre>
+ *
+ * @author (your name or org)
+ * @since 1.0
  */
 public class RPushCommand implements Command {
 
     /**
-     * Executes the R_PUSH command.
+     * Executes the {@code R_PUSH} instruction. Parses the given literal parameter and pushes it onto the operand stack.
+     * <p>
+     * Handles:
+     * <ul>
+     *     <li>Array literals (e.g., {@code [1, 2, "a"]}), parsed recursively as mutable ArrayLists</li>
+     *     <li>Quoted string literals (e.g., {@code "abc\n"}), parsed with escape sequence support</li>
+     *     <li>Unquoted raw strings, numbers, and atoms</li>
+     * </ul>
      *
-     * @param parts     The parts of the instruction, where {@code parts[1..n]} are concatenated as the literal.
-     * @param pc        The current program counter.
-     * @param stack     The operand stack where the result will be pushed.
-     * @param local     The local variable store (unused in this instruction).
-     * @param callStack The call stack (unused in this instruction).
-     * @return The new program counter (typically {@code pc+1}).
-     * @throws IllegalStateException if no literal parameter is provided.
+     * @param parts     The instruction split into parts (opcode and arguments)
+     * @param pc        The current program counter
+     * @param stack     The operand stack to push the value onto
+     * @param local     The local variable store (unused)
+     * @param callStack The call stack (unused)
+     * @return The next program counter (pc + 1)
+     * @throws IllegalStateException if the R_PUSH parameter is missing or parsing fails
      */
     @Override
     public int execute(String[] parts, int pc, OperandStack stack, LocalVariableStore local, CallStack callStack) {
@@ -54,71 +72,64 @@ public class RPushCommand implements Command {
         }
         String literal = sb.toString().trim();
 
-        // Check if this is an array literal
+        // Handle array literal
         if (literal.startsWith("[") && literal.endsWith("]")) {
             Object parsed = parseValue(new Cursor(literal));
             if (!(parsed instanceof List<?> list)) {
-                // Should not happen in theory; safety fallback
                 stack.push(parsed);
             } else {
-                // Push a deep-mutable copy so ARR_SET can modify elements in-place
                 stack.push(deepMutable(list));
             }
-        } else {
-            // Regular string, push as-is
+        }
+        // String literal with quotes and escapes
+        else if (literal.length() >= 2 && literal.startsWith("\"") && literal.endsWith("\"")) {
+            String decoded = parseQuoted(new Cursor(literal));
+            stack.push(decoded);
+        }
+        // Raw atom or string
+        else {
             stack.push(literal);
         }
         return pc + 1;
     }
 
     /**
-     * A simple string cursor, supporting index increment and character reading, for use by the parser.
+     * Utility class for string parsing, used by the array and string literal parsers.
      */
     static class Cursor {
         final String s;
         int i;
 
         /**
-         * Constructs a new {@code Cursor} for the given string.
-         *
-         * @param s The string to parse.
+         * Constructs a cursor over the provided string.
+         * @param s the input string to parse
          */
-        Cursor(String s) {
-            this.s = s;
-            this.i = 0;
-        }
+        Cursor(String s) { this.s = s; this.i = 0; }
 
         /**
          * Advances the cursor by one character.
          */
-        void skip() {
-            i++;
-        }
+        void skip() { i++; }
 
         /**
-         * @return {@code true} if the cursor has reached the end of the string.
+         * Returns true if the cursor has reached the end of the string.
+         * @return true if end of string
          */
-        boolean end() {
-            return i >= s.length();
-        }
+        boolean end() { return i >= s.length(); }
 
         /**
-         * Gets the character at the current cursor position.
-         *
-         * @return current character
-         * @throws StringIndexOutOfBoundsException if at end of string
+         * Returns the current character at the cursor position.
+         * @return the current character
          */
-        char ch() {
-            return s.charAt(i);
-        }
+        char ch() { return s.charAt(i); }
     }
 
     /**
-     * Parses a value from the input string at the current cursor position.
-     * This can be an array literal, a quoted string, or a simple atom (number, word).
+     * Parses a value from the current cursor position.
+     * Supports arrays, quoted strings, or atoms.
      *
-     * @param c The cursor for parsing.
-     * @return The parsed value (could be List, String, Number).
+     * @param c the parsing cursor
+     * @return the parsed object (List, String, Number, Boolean, or String fallback)
      */
     Object parseValue(Cursor c) {
         skipWs(c);
@@ -130,9 +141,8 @@ public class RPushCommand implements Command {
     }
 
     /**
-     * Skips whitespace characters in the input string.
-     *
-     * @param c The cursor to advance.
+     * Skips whitespace characters at the cursor.
+     * @param c the parsing cursor
      */
     private static void skipWs(Cursor c) {
         while (!c.end()) {
@@ -143,13 +153,13 @@ public class RPushCommand implements Command {
     }
 
     /**
-     * Parses an array literal from the input, including nested arrays.
+     * Parses an array literal of the form [elem1, elem2, ...] (may be nested).
+     * Recursively parses elements using {@link #parseValue(Cursor)}.
      *
-     * @param c The cursor (positioned at '[' at entry).
-     * @return A List representing the parsed array.
+     * @param c the parsing cursor
+     * @return a List of parsed elements
      */
     private Object parseArray(Cursor c) {
-        // assumes current char is '['
         c.skip(); // skip '['
         List<Object> out = new ArrayList<>();
         skipWs(c);
@@ -170,13 +180,12 @@ public class RPushCommand implements Command {
     }
 
     /**
-     * Parses a quoted string literal, handling escape characters.
+     * Parses a quoted string, handling standard Java escape sequences (e.g. \n, \t, uXXXX).
      *
-     * @param c The cursor (positioned at '"' at entry).
-     * @return The parsed string value.
+     * @param c the parsing cursor
+     * @return the decoded string
      */
     private static String parseQuoted(Cursor c) {
-        // assumes current char is '"'
         c.skip(); // skip opening quote
         StringBuilder sb = new StringBuilder();
         while (!c.end()) {
@@ -190,8 +199,25 @@ public class RPushCommand implements Command {
                     case 'n' -> sb.append('\n');
                     case 'r' -> sb.append('\r');
                     case 't' -> sb.append('\t');
+                    case 'f' -> sb.append('\f');
+                    case 'b' -> sb.append('\b');
                     case '\"' -> sb.append('\"');
+                    case '\'' -> sb.append('\'');
                     case '\\' -> sb.append('\\');
+                    case 'u' -> { // Unicode escape: uXXXX
+                        StringBuilder uni = new StringBuilder();
+                        for (int k = 0; k < 4 && !c.end(); ++k) {
+                            uni.append(c.ch());
+                            c.skip();
+                        }
+                        try {
+                            int code = Integer.parseInt(uni.toString(), 16);
+                            sb.append((char) code);
+                        } catch (Exception e) {
+                            // Invalid unicode, append as is
+                            sb.append("\\u").append(uni);
+                        }
+                    }
                     default -> sb.append(esc);
                 }
             } else if (ch == '\"') {
@@ -204,10 +230,10 @@ public class RPushCommand implements Command {
     }
 
     /**
-     * Parses an atom (number, hexadecimal, binary, or plain string token).
+     * Parses an atomic value (number, boolean, or fallback string) from the cursor.
      *
-     * @param c The cursor.
-     * @return An Integer, Double, or String, depending on the content.
+     * @param c the parsing cursor
+     * @return the parsed object (Integer, Double, Float, Long, Boolean, or String)
      */
     private static Object parseAtom(Cursor c) {
         StringBuilder sb = new StringBuilder();
@@ -218,7 +244,7 @@ public class RPushCommand implements Command {
             c.skip();
         }
         String token = sb.toString();
-        // try number
+        // Try number parsing with various notations and types
         try {
             if (token.startsWith("0x") || token.startsWith("0X")) {
                 return Integer.parseInt(token.substring(2), 16);
@@ -226,6 +252,20 @@ public class RPushCommand implements Command {
             if (token.startsWith("0b") || token.startsWith("0B")) {
                 return Integer.parseInt(token.substring(2), 2);
             }
+            if (token.endsWith("f")) {
+                return Float.parseFloat(token.substring(0, token.length() - 1));
+            }
+            if (token.endsWith("L")) {
+                return Long.parseLong(token.substring(0, token.length() - 1));
+            }
+            if (token.endsWith("s")) {
+                return Short.parseShort(token.substring(0, token.length() - 1));
+            }
+            if (token.endsWith("b")) {
+                return Byte.parseByte(token.substring(0, token.length() - 1));
+            }
+            if (token.equals("1")) return true;
+            if (token.equals("0")) return false;
             if (token.contains(".")) {
                 return Double.parseDouble(token);
             }
@@ -236,13 +276,11 @@ public class RPushCommand implements Command {
         }
     }
 
-    // ---------------------- helpers for immutability/mutability ----------------------
-
     /**
-     * Recursively creates an unmodifiable copy of a list, with all nested lists also unmodifiable.
+     * Creates a deeply unmodifiable version of the provided list (and its nested lists).
      *
-     * @param l The list to make unmodifiable.
-     * @return An unmodifiable deep copy of the list.
+     * @param l the original list
+     * @return an unmodifiable view of the list and all nested lists
      */
     List<?> deepUnmodifiable(List<?> l) {
         List<Object> out = new ArrayList<>(l.size());
@@ -251,10 +289,10 @@ public class RPushCommand implements Command {
     }
 
     /**
-     * Helper method for {@link #deepUnmodifiable(List)}. Recursively processes each element.
+     * Helper for {@link #deepUnmodifiable(List)}; handles nested lists recursively.
      *
-     * @param v The object to process.
-     * @return Unmodifiable list if input is a list, otherwise the value itself.
+     * @param v the object to process
+     * @return an unmodifiable list if input is a list; otherwise, the object itself
      */
     Object deepUnmodifiableObject(Object v) {
         if (v instanceof List<?> l) {
@@ -264,11 +302,10 @@ public class RPushCommand implements Command {
     }
 
     /**
-     * Create a deep mutable copy of a nested List structure, preserving element values.
-     * Nested lists are turned into {@link java.util.ArrayList} so they can be modified by ARR_SET.
+     * Creates a deeply mutable version of the provided list (and its nested lists).
      *
-     * @param l The source list.
-     * @return Deep mutable copy of the list.
+     * @param l the original list
+     * @return a new mutable list (ArrayList), with all nested lists mutable
      */
     private static java.util.List<?> deepMutable(java.util.List<?> l) {
         java.util.List<Object> out = new java.util.ArrayList<>(l.size());
@@ -277,10 +314,10 @@ public class RPushCommand implements Command {
     }
 
     /**
-     * Helper method for {@link #deepMutable(List)}. Recursively processes each element.
+     * Helper for {@link #deepMutable(List)}; handles nested lists recursively.
      *
-     * @param v The object to process.
-     * @return Mutable list if input is a list, otherwise the value itself.
+     * @param v the object to process
+     * @return a mutable list if input is a list; otherwise, the object itself
      */
     private static Object deepMutableObject(Object v) {
         if (v instanceof java.util.List<?> l) {
