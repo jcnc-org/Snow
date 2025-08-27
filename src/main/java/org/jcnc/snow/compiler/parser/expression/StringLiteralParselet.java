@@ -1,5 +1,6 @@
 package org.jcnc.snow.compiler.parser.expression;
 
+import org.jcnc.snow.common.StringEscape;
 import org.jcnc.snow.compiler.lexer.token.Token;
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.StringLiteralNode;
@@ -26,8 +27,14 @@ public class StringLiteralParselet implements PrefixParselet {
      */
     @Override
     public ExpressionNode parse(ParserContext ctx, Token token) {
+        // 去除首尾引号
         String raw = token.getRaw();
-        String content = raw.substring(1, raw.length() - 1);
-        return new StringLiteralNode(content, new NodeContext(token.getLine(), token.getCol(), ctx.getSourceName()));
+        String inner = raw.substring(1, raw.length() - 1);
+        // 解析转义符与 Unicode 转义
+        String value = StringEscape.unescape(inner);
+        return new StringLiteralNode(
+                value,
+                new NodeContext(token.getLine(), token.getCol(), ctx.getSourceName())
+        );
     }
 }
