@@ -7,7 +7,7 @@
 
     <groupId>org.jcnc.snow</groupId>
     <artifactId>Snow</artifactId>
-    <version>0.7.0</version>
+    <version>0.8.0</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -70,11 +70,7 @@
     </build>
 
     <profiles>
-        <!--
-            原生镜像构建: Linux 平台
-            - 使用 GraalVM 的 native-image 工具，生成静态链接的可执行文件
-            - 依赖 musl libc，需提前安装并配置 musl-gcc 工具链
-        -->
+        <!-- 原生镜像构建: Linux 平台（使用 Docker builder 中的 musl 工具链） -->
         <profile>
             <id>native-linux</id>
             <activation>
@@ -82,25 +78,39 @@
                     <family>unix</family>
                 </os>
             </activation>
+
             <build>
                 <plugins>
                     <plugin>
                         <groupId>org.graalvm.buildtools</groupId>
                         <artifactId>native-maven-plugin</artifactId>
                         <version>${native.maven.plugin.version}</version>
-                        <!-- 启用插件扩展，允许在 build 生命周期中无须额外配置 -->
                         <extensions>true</extensions>
+
+                        <configuration>
+                            <mainClass>org.jcnc.snow.cli.SnowCLI</mainClass>
+                            <imageName>Snow</imageName>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                            <buildArgs>
+                                <buildArg>--static</buildArg>
+                                <buildArg>--libc=musl</buildArg>
+                                <buildArg>--emit=build-report</buildArg>
+                                <buildArg>-O2</buildArg>
+                                <buildArg>-H:Class=org.jcnc.snow.cli.SnowCLI</buildArg>
+                                <buildArg>-H:CCompilerPath=/opt/musl/bin/musl-gcc</buildArg>
+                                <buildArg>-H:CLibraryPath=/opt/musl/lib</buildArg>
+                            </buildArgs>
+                        </configuration>
+
                         <executions>
-                            <!-- 打包阶段生成原生可执行文件 -->
                             <execution>
                                 <id>build-native</id>
                                 <goals>
-                                    <!-- compile-no-fork 在当前 JVM 进程中执行 native-image -->
                                     <goal>compile-no-fork</goal>
                                 </goals>
                                 <phase>package</phase>
                             </execution>
-                            <!-- 测试阶段运行原生镜像的测试 -->
+
                             <execution>
                                 <id>test-native</id>
                                 <goals>
@@ -109,24 +119,6 @@
                                 <phase>test</phase>
                             </execution>
                         </executions>
-                        <configuration>
-                            <buildArgs>
-                                <!-- 静态链接 -->
-                                <buildArg>--static</buildArg>
-                                <!-- 指定 musl libc -->
-                                <buildArg>--libc=musl</buildArg>
-                                <!-- 输出构建报告 -->
-                                <buildArg>--emit build-report</buildArg>
-                                <!-- 优化级别 O2 -->
-                                <buildArg>-O2</buildArg>
-                            </buildArgs>
-                            <environment>
-                                <!-- 指定使用 musl 工具链 -->
-                                <PATH>/opt/musl-1.2.5/bin:${env.PATH}</PATH>
-                                <C_INCLUDE_PATH>/opt/musl-1.2.5/include</C_INCLUDE_PATH>
-                                <LIBRARY_PATH>/opt/musl-1.2.5/lib</LIBRARY_PATH>
-                            </environment>
-                        </configuration>
                     </plugin>
                 </plugins>
             </build>

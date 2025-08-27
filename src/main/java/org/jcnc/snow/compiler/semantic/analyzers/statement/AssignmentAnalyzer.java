@@ -6,21 +6,27 @@ import org.jcnc.snow.compiler.semantic.analyzers.base.StatementAnalyzer;
 import org.jcnc.snow.compiler.semantic.core.Context;
 import org.jcnc.snow.compiler.semantic.core.ModuleInfo;
 import org.jcnc.snow.compiler.semantic.error.SemanticError;
-import org.jcnc.snow.compiler.semantic.symbol.*;
+import org.jcnc.snow.compiler.semantic.symbol.Symbol;
+import org.jcnc.snow.compiler.semantic.symbol.SymbolKind;
+import org.jcnc.snow.compiler.semantic.symbol.SymbolTable;
 import org.jcnc.snow.compiler.semantic.type.Type;
 
 /**
- * {@code AssignmentAnalyzer} 是赋值语句的语义分析器。
- * <p>
- * 负责分析和验证赋值语句的合法性，包括:
+ * {@code AssignmentAnalyzer} 负责对赋值语句进行语义校验。
+ *
+ * <h2>校验要点</h2>
  * <ul>
- *   <li>变量是否已声明且可赋值（必须为 {@link SymbolKind#VARIABLE} 类型）；</li>
- *   <li>赋值右值的类型是否与变量类型兼容；</li>
- *   <li>是否允许进行数值类型的自动宽化转换（如 {@code int → float}）。</li>
+ *   <li><b>左值解析</b>：确保标识符已声明；</li>
+ *   <li><b>常量保护</b>：禁止修改 {@link SymbolKind#CONSTANT}；</li>
+ *   <li><b>类型兼容</b>：验证右值类型与目标类型兼容，若均为数值类型则允许宽化转换（如 <code>int → double</code>）。</li>
  * </ul>
- * 若类型不兼容且无法自动宽化，则将记录语义错误并输出日志信息。
+ *
+ * 任何不满足条件的情况都会向 {@link Context#getErrors()} 记录 {@link SemanticError}。
  */
 public class AssignmentAnalyzer implements StatementAnalyzer<AssignmentNode> {
+
+    /** 错误消息前缀，统一便于搜索定位 */
+    private static final String ERR_PREFIX = "赋值错误: ";
 
     /**
      * 分析赋值语句的语义有效性，包括左值合法性与类型匹配性。
@@ -41,29 +47,37 @@ public class AssignmentAnalyzer implements StatementAnalyzer<AssignmentNode> {
         // 获取赋值左值变量名并进行符号解析
         ctx.log("赋值检查: " + asg.variable());
         Symbol sym = locals.resolve(asg.variable());
-
-        // 检查变量是否已声明且为可赋值的变量类型
-        if (sym == null || sym.kind() != SymbolKind.VARIABLE) {
+        if (sym == null) {
             ctx.getErrors().add(new SemanticError(asg,
-                    "未声明的变量: " + asg.variable()));
-            ctx.log("错误: 未声明的变量 " + asg.variable());
+                    ERR_PREFIX + "未声明的变量: " + asg.variable()));
+            ctx.log(ERR_PREFIX + "未声明的变量 " + asg.variable());
+            return; // 无需继续后续检查
+        }
+
+        /* ---------- 2. 常量不可修改 ---------- */
+        if (sym.kind() == SymbolKind.CONSTANT) {
+            ctx.getErrors().add(new SemanticError(asg,
+                    ERR_PREFIX + "无法修改常量: " + asg.variable()));
+            ctx.log(ERR_PREFIX + "尝试修改常量 " + asg.variable());
             return;
         }
 
-        // 分析右值表达式类型
-        Type valType = ctx.getRegistry().getExpressionAnalyzer(asg.value())
+        /* ---------- 3. 右值类型分析 ---------- */
+        Type rhsType = ctx.getRegistry()
+                .getExpressionAnalyzer(asg.value())
                 .analyze(ctx, mi, fn, locals, asg.value());
 
-        // 类型检查: 若类型不兼容，则尝试判断是否允许宽化转换
-        if (!sym.type().isCompatible(valType)) {
-            // 数值类型允许自动宽化转换（如 int → double）
-            if (!(sym.type().isNumeric() && valType.isNumeric()
-                    && Type.widen(valType, sym.type()) == sym.type())) {
-                ctx.getErrors().add(new SemanticError(asg,
-                        "赋值类型不匹配: 期望 " + sym.type()
-                                + ", 实际 " + valType));
-                ctx.log("错误: 赋值类型不匹配 " + asg.variable());
-            }
+        /* ---------- 4. 类型兼容性检查 ---------- */
+        boolean compatible = sym.type().isCompatible(rhsType);
+        boolean widenOK = sym.type().isNumeric()
+                && rhsType.isNumeric()
+                && Type.widen(rhsType, sym.type()) == sym.type();
+
+        if (!compatible && !widenOK) {
+            ctx.getErrors().add(new SemanticError(asg,
+                    ERR_PREFIX + "类型不匹配: 期望 "
+                            + sym.type() + ", 实际 " + rhsType));
+            ctx.log(ERR_PREFIX + "类型不匹配 " + asg.variable());
         }
     }
 }

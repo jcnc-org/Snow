@@ -25,6 +25,7 @@ import java.util.List;
  *   <li>支持数值参数的宽化转换（如 int → double）；</li>
  *   <li>支持数值到字符串的隐式转换（自动视为调用 {@code to_string}）；</li>
  *   <li>在发生类型不匹配、未导入模块或函数未定义等情况下记录语义错误。</li>
+ *   <li>新增：以"_"开头的函数名只允许在本模块访问，禁止跨模块访问。</li>
  * </ul>
  */
 public class CallExpressionAnalyzer implements ExpressionAnalyzer<CallExpressionNode> {
@@ -64,20 +65,32 @@ public class CallExpressionAnalyzer implements ExpressionAnalyzer<CallExpression
             }
             target = ctx.getModules().get(mod);
             functionName = member;
-
-            // 简单函数名形式: func(...)
-        } else if (callee instanceof IdentifierNode(String name, NodeContext _)) {
+        }
+        // 简单函数名形式: func(...)
+        else if (callee instanceof IdentifierNode(String name, NodeContext _)) {
             functionName = name;
-
-            // 不支持的 callee 形式
-        } else {
+        }
+        // 不支持的 callee 形式
+        else {
             ctx.getErrors().add(new SemanticError(callee,
                     "不支持的调用方式: " + callee));
             ctx.log("错误: 不支持的调用方式 " + callee);
             return BuiltinType.INT;
         }
 
-        // 查找目标函数签名（先在当前模块/显式模块查找）
+        // -------------------------
+        // 私有函数访问控制
+        // -------------------------
+        // 如果函数名以"_"开头，且不是在本模块调用，则报错
+        if (functionName.startsWith("_") && !target.getName().equals(mi.getName())) {
+            ctx.getErrors().add(new SemanticError(callee,
+                    "无法访问模块私有函数: " + target.getName() + "." + functionName
+                            + "（下划线开头的函数只允许在定义模块内访问）"));
+            ctx.log("错误: 试图跨模块访问私有函数 " + target.getName() + "." + functionName);
+            return BuiltinType.INT;
+        }
+
+        // 查找目标函数签名（先在当前模块/指定模块查找）
         FunctionType ft = target.getFunctions().get(functionName);
 
         // 未找到则报错
