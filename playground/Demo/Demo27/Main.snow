@@ -1,8 +1,64 @@
 module: Main
+    // 全局变量，属于整个模块
+    globals:
+        declare c: int = 10
+
+    // 定义 Animal 结构体
+    struct: Animal
+        fields:
+            name: string   // 动物名字
+            age: int       // 动物年龄
+        end fields
+
+        // 内部私有函数（以下划线开头），拼接输出字符串
+        function: _formatSound
+            returns: string
+            body:
+                return name + " makes some sound (c=" + to_string(c) + ")"
+            end body
+        end function
+
+        // 公共方法，调用 _formatSound 并输出
+        function: sound
+            returns: void
+            body:
+                os.print(_formatSound())
+            end body
+        end function
+    end struct
+
+    // 定义 Dog 结构体，继承 Animal
+    struct: Dog extends Animal
+        fields:
+            breed: string   // 狗的品种，例如 Bulldog
+        end fields
+
+        // 重写 _formatSound，让 Dog 有自己的叫声
+        function: _formatSound
+            returns: string
+            body:
+                return name + " the " + breed + " says Woof!"
+            end body
+        end function
+
+        // 重写 sound 方法，输出 Dog 的叫声
+        function: sound
+            returns: void
+            body:
+                os.print(_formatSound())
+            end body
+        end function
+    end struct
+
+    // 程序入口
     function: main
         returns: void
         body:
-
+            declare d: Dog = new Dog()
+            d.name = "Buddy"
+            d.age = 3
+            d.breed = "Bulldog"
+            d.sound()
         end body
     end function
 end module
