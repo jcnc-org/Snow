@@ -1,0 +1,33 @@
+module: Main
+	// Animal结构体
+    struct: Animal
+        // 字段
+        fields:
+            declare name: string
+        // 构造函数
+        init:
+            params:
+                n: string
+            body:
+                this.name = n
+            end body
+        end init
+
+        // Animal结构体封装的函数
+        function: getName
+            returns: string
+            body:
+                // 返回字段 name
+                return this.name
+            end body
+        end function
+
+
+    // 程序入口
+    function: main
+        returns: void
+        body:
+            // 实例化一个叫A的Animal,并且调用构造函数
+			declare a: Animal = new Animal("GenericAnimal")
+    end function
+end module
