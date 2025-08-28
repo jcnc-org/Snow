@@ -22,7 +22,6 @@ module: Main
             end body
         end function
 
-
     // 程序入口
     function: main
         returns: void
