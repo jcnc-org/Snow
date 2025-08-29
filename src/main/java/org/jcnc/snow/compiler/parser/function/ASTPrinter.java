@@ -66,6 +66,14 @@ public class ASTPrinter {
                     print(fn, indent + 1);
                 }
             }
+
+            case StructNode s -> {
+                System.out.println(pad + "struct " + s.name());
+                s.fields().forEach(f -> print(f, indent + 1));
+                if (s.init() != null) print(s.init(), indent + 1);
+                s.methods().forEach(m -> print(m, indent + 1));
+            }
+
             case FunctionNode(
                     String name, List<ParameterNode> parameters, String returnType, List<StatementNode> body,
                     NodeContext _
