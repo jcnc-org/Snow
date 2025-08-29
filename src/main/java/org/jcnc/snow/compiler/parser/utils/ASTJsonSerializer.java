@@ -83,7 +83,7 @@ public class ASTJsonSerializer {
         return switch (n) {
             // 模块节点
             case ModuleNode(
-                    String name, List<ImportNode> imports, List<DeclarationNode> globals, List<FunctionNode> functions, NodeContext _
+                    String name, List<ImportNode> imports, List<DeclarationNode> globals,List<StructNode> structs, List<FunctionNode> functions, NodeContext _
             ) -> {
                 Map<String, Object> map = newNodeMap("Module");
                 map.put("name", name);
@@ -105,9 +105,39 @@ public class ASTJsonSerializer {
                 for (FunctionNode f : functions) {
                     funcs.add(nodeToMap(f));
                 }
+
+                List<Object> lStructs = new ArrayList<>();
+                structs.forEach(s -> lStructs.add(nodeToMap(s)));
+                map.put("structs", lStructs);
+
                 map.put("functions", funcs);
                 yield map;
             }
+
+            // Struct 节点
+            case StructNode(
+                    String name, List<DeclarationNode> fields,
+                    FunctionNode init, List<FunctionNode> methods, NodeContext _
+            ) -> {
+                Map<String, Object> map = newNodeMap("Struct");
+                map.put("name", name);
+
+                List<Object> lFields = new ArrayList<>();
+                fields.forEach(d -> lFields.add(Map.of(
+                        "type", "Field",
+                        "name", d.getName(),
+                        "varType", d.getType())));
+                map.put("fields", lFields);
+
+                map.put("init", init == null ? null : nodeToMap(init));
+
+                List<Object> lMethods = new ArrayList<>();
+                methods.forEach(f -> lMethods.add(nodeToMap(f)));
+                map.put("methods", lMethods);
+                yield map;
+            }
+
+
             // 函数定义节点
             case FunctionNode f -> {
                 Map<String, Object> map = newNodeMap("Function");
