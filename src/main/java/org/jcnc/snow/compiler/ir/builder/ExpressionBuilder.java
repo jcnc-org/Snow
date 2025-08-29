@@ -43,12 +43,7 @@ public record ExpressionBuilder(IRContext ctx) {
             // 布尔字面量，例如 true / false
             case BoolLiteralNode b -> buildBoolLiteral(b.getValue());
             // 标识符（变量名），如 a、b
-            case IdentifierNode id -> {
-                // 查找当前作用域中的变量寄存器
-                IRVirtualRegister reg = ctx.getScope().lookup(id.name());
-                if (reg == null) throw new IllegalStateException("未定义标识符: " + id.name());
-                yield reg;
-            }
+            case IdentifierNode id -> buildIdentifier(id);
             // 模块常量 / 全局变量，如 ModuleA.a
             case MemberExpressionNode mem -> buildMember(mem);
             // 二元表达式（如 a+b, x==y）
@@ -59,6 +54,7 @@ public record ExpressionBuilder(IRContext ctx) {
             case UnaryExpressionNode un -> buildUnary(un);
             case IndexExpressionNode idx -> buildIndex(idx);
             case ArrayLiteralNode arr -> buildArrayLiteral(arr);
+            case NewExpressionNode n -> buildNew(n);
             // 默认分支：遇到未知表达式类型则直接抛异常
             default -> throw new IllegalStateException(
                     "不支持的表达式类型: " + expr.getClass().getSimpleName());
@@ -66,76 +62,172 @@ public record ExpressionBuilder(IRContext ctx) {
     }
 
     /**
-     * 成员访问表达式构建
+     * 构造标识符节点对应的 IR 虚拟寄存器。
+     * <p>
+     * 支持普通变量查找，以及结构体方法/构造器中的“字段回退”机制（即自动将裸标识符回退为 this.<id>）。
      *
-     * @param mem 成员表达式节点
-     * @return 存储结果的虚拟寄存器
+     * @param id 标识符节点
+     * @return 查找到的 IR 虚拟寄存器
+     * @throws IllegalStateException 若标识符未定义且无法回退为字段
      */
-    private IRVirtualRegister buildMember(MemberExpressionNode mem) {
-        if (!(mem.object() instanceof IdentifierNode id)) {
-            throw new IllegalStateException("不支持的成员访问对象类型: "
-                    + mem.object().getClass().getSimpleName());
-        }
-        String qualified = id.name() + "." + mem.member();
+    private IRVirtualRegister buildIdentifier(IdentifierNode id) {
+        // ====================== 普通变量查找 ======================
+        // 1. 在当前作用域查找变量（可能是局部变量、形参、临时变量等）
+        IRVirtualRegister reg = ctx.getScope().lookup(id.name());
+        if (reg != null) return reg;
 
-        /* 1) 尝试直接获取已有寄存器绑定 */
-        IRVirtualRegister reg = ctx.getScope().lookup(qualified);
-        if (reg != null) {
-            return reg;
-        }
-
-        /* 2) 折叠为编译期常量：先查作用域，再查全局常量表 */
-        Object v = ctx.getScope().getConstValue(qualified);
-        if (v == null) {
-            v = GlobalConstTable.get(qualified);
-        }
-        if (v != null) {
-            IRVirtualRegister r = ctx.newRegister();
-            ctx.addInstruction(new LoadConstInstruction(r, new IRConstant(v)));
-            return r;
+        // ====================== 字段回退机制 ======================
+        // 2. 若未找到，则判断是否处于结构体方法或构造器中
+        //    尝试将裸标识符自动视为 this.<id>，即访问当前结构体实例的成员字段
+        IRVirtualRegister thisReg = ctx.getScope().lookup("this");
+        String thisType = ctx.getScope().lookupType("this");
+        if (thisReg != null && thisType != null) {
+            // 生成成员表达式节点 this.<id>
+            MemberExpressionNode asField = new MemberExpressionNode(
+                    new IdentifierNode("this", id.context()), // 构造 this 节点
+                    id.name(),                                // 字段名
+                    id.context()
+            );
+            // 递归构造成员访问（相当于构造 this.<id> 的 IR）
+            return buildMember(asField);
         }
 
-        throw new IllegalStateException("未定义的常量: " + qualified);
+        // ====================== 标识符未定义异常 ======================
+        // 3. 无法查找到变量且不能字段回退，抛出异常
+        throw new IllegalStateException("未定义标识符: " + id.name());
     }
 
 
-    /* ───────────────── 写入指定寄存器 ───────────────── */
+    /**
+     * 构建成员访问表达式的 IR 虚拟寄存器。
+     * <p>
+     * 支持两类成员访问：
+     * <ul>
+     *     <li>模块常量访问（如 ModuleName.CONST）</li>
+     *     <li>结构体/对象字段访问（如 obj.field 或 this.field）</li>
+     * </ul>
+     *
+     * @param mem 成员访问表达式节点（如 a.b 或 ModuleName.CONST）
+     * @return 存储成员值的 IR 虚拟寄存器
+     * @throws IllegalStateException 若找不到成员或无法解析类型
+     */
+    private IRVirtualRegister buildMember(MemberExpressionNode mem) {
+        // ===== 1. 处理模块常量 (ModuleName.member) =====
+        // 检查成员访问的对象是否为一个标识符（即模块名）
+        if (mem.object() instanceof IdentifierNode oid) {
+            String mod = oid.name();
+            // 查找是否存在该模块下的全局常量定义
+            Object c = GlobalConstTable.get(mod + "." + mem.member());
+            if (c != null) {
+                // 若找到常量，分配新寄存器并生成 LoadConst 指令
+                IRVirtualRegister r = ctx.newRegister();
+                ctx.addInstruction(new LoadConstInstruction(r, new IRConstant(c)));
+                return r;
+            }
+        }
+
+        // ===== 2. 结构体/对象字段访问 =====
+
+        // (1) 递归构建成员对象（如 a.b，先获得 a 的寄存器）
+        IRVirtualRegister objReg = build(mem.object());
+
+        // (2) 尝试解析成员访问接收者（object）的类型
+        String ownerType = null;
+        if (mem.object() instanceof IdentifierNode oid) {
+            // 如果对象是标识符，直接查询其类型（例如 a.x，a 的类型）
+            ownerType = ctx.getScope().lookupType(oid.name());
+        }
+        if (ownerType == null || ownerType.isEmpty()) {
+            // 兜底：如果访问 this.xxx，并且 this 有类型，则使用 this 的类型
+            String thisType = ctx.getScope().lookupType("this");
+            if (thisType != null) ownerType = thisType;
+        }
+        if (ownerType == null || ownerType.isEmpty()) {
+            // 类型无法解析，抛出异常
+            throw new IllegalStateException("无法解析成员访问接收者的类型");
+        }
+
+        // (3) 查找字段槽位下标：ownerType 的 mem.member() 字段的序号
+        Integer fieldIndex = ctx.getScope().lookupFieldIndex(ownerType, mem.member());
+        if (fieldIndex == null) {
+            // 字段不存在，抛出异常
+            throw new IllegalStateException("类型 " + ownerType + " 不存在字段: " + mem.member());
+        }
+
+        // (4) 生成读取字段的 IR 指令：CALL __index_r, objReg, const(fieldIndex)
+        // 4.1 先将字段下标加载到寄存器
+        IRVirtualRegister idxReg = ctx.newRegister();
+        ctx.addInstruction(new LoadConstInstruction(
+                idxReg,
+                IRConstant.fromNumber(Integer.toString(fieldIndex))
+        ));
+
+        // 4.2 生成成员读取调用指令
+        IRVirtualRegister out = ctx.newRegister();
+        List<IRValue> args = new ArrayList<>();
+        args.add(objReg); // 对象寄存器
+        args.add(idxReg); // 字段下标寄存器
+        ctx.addInstruction(new CallInstruction(out, "__index_r", args));
+        return out;
+    }
+
+
 
     /**
-     * 将表达式节点 {@link ExpressionNode} 的结果写入指定的虚拟寄存器 {@code dest}。
+     * 将表达式节点 {@link ExpressionNode} 的求值结果写入指定的目标虚拟寄存器 {@code dest}。
      * <p>
-     * 按表达式类型分派处理，包括：
-     * <ul>
-     *   <li>字面量（数字、字符串、布尔、数组）：生成 loadConst 指令直接写入目标寄存器</li>
-     *   <li>变量标识符：查表获取源寄存器，并 move 到目标寄存器</li>
-     *   <li>二元表达式、下标、调用表达式：递归生成子表达式结果，并写入目标寄存器</li>
-     *   <li>其它类型：统一先 build 到临时寄存器，再 move 到目标寄存器</li>
-     * </ul>
+     * 根据不同表达式类型，采取高效或递归方式生成中间代码，涵盖常量、变量、运算、数组、调用等。
      * </p>
      *
-     * @param node 要求值的表达式节点
-     * @param dest 结果目标虚拟寄存器
-     * @throws IllegalStateException 若标识符未定义（如变量未声明时引用）
+     * @param node 表达式节点（可为字面量、变量、数组、运算等）
+     * @param dest 目标虚拟寄存器（写入结果）
+     * @throws IllegalStateException 若变量标识符未定义
      */
     public void buildInto(ExpressionNode node, IRVirtualRegister dest) {
         switch (node) {
-            // 数字字面量：生成 loadConst 指令，将数值常量写入目标寄存器
+            // ===================== 数字字面量 =====================
+            // 如 42、3.14 等，直接生成 loadConst 指令，常量写入目标寄存器
             case NumberLiteralNode n -> InstructionFactory.loadConstInto(
                     ctx, dest, ExpressionUtils.buildNumberConstant(ctx, n.value()));
 
-            // 字符串字面量：生成 loadConst 指令，将字符串常量写入目标寄存器
+            // ===================== 字符串字面量 =====================
+            // 如 "hello"，直接生成 loadConst 指令
             case StringLiteralNode s -> InstructionFactory.loadConstInto(
                     ctx, dest, new IRConstant(s.value()));
 
-            // 布尔字面量：转换为 int 1/0，生成 loadConst 指令写入目标寄存器
+            // ===================== 布尔字面量 =====================
+            // 如 true/false，转换为 int 常量 1/0，生成 loadConst
             case BoolLiteralNode b -> InstructionFactory.loadConstInto(
                     ctx, dest, new IRConstant(b.getValue() ? 1 : 0));
 
-            // 数组字面量：生成数组常量并写入目标寄存器
+            // ===================== 数组字面量 =====================
+            // 直接构造数组常量（只支持静态初始化），生成 loadConst
             case ArrayLiteralNode arr -> InstructionFactory.loadConstInto(
                     ctx, dest, buildArrayConstant(arr));
 
-            // 变量标识符：查表获得源寄存器，move 到目标寄存器
+            // ===================== new 表达式（构造数组/对象） =====================
+            // 生成空数组，然后按参数依次初始化每一项，使用 __setindex_r 填充目标寄存器
+            case NewExpressionNode newExpr -> {
+                // 步骤1：先写入空 List（目标寄存器 dest）
+                InstructionFactory.loadConstInto(ctx, dest, new IRConstant(java.util.List.of()));
+
+                // 步骤2：依次写入构造参数（填充各下标项）
+                for (int i = 0; i < newExpr.arguments().size(); i++) {
+                    IRVirtualRegister argReg = build(newExpr.arguments().get(i)); // 参数值寄存器
+                    IRVirtualRegister idxReg = ctx.newTempRegister();             // 下标寄存器
+                    InstructionFactory.loadConstInto(ctx, idxReg, new IRConstant(i));
+
+                    // 组装参数：arr、idx、value，调用 runtime 的 __setindex_r 填充元素
+                    List<IRValue> args = new ArrayList<>();
+                    args.add(dest);   // 数组本身
+                    args.add(idxReg); // 下标
+                    args.add(argReg); // 元素值
+                    ctx.addInstruction(new CallInstruction(null, "__setindex_r", args));
+                }
+            }
+
+            // ===================== 变量标识符 =====================
+            // 如 x，查找符号表，move 到目标寄存器。未定义时报错。
             case IdentifierNode id -> {
                 IRVirtualRegister src = ctx.getScope().lookup(id.name());
                 if (src == null)
@@ -143,22 +235,26 @@ public record ExpressionBuilder(IRContext ctx) {
                 InstructionFactory.move(ctx, src, dest);
             }
 
-            // 二元表达式：递归生成左右子表达式，并将结果写入目标寄存器
+            // ===================== 二元表达式（如 a + b） =====================
+            // 递归生成左右操作数，并将运算结果写入目标寄存器
             case BinaryExpressionNode bin -> buildBinaryInto(bin, dest);
 
-            // 下标表达式：递归生成索引结果，move 到目标寄存器
+            // ===================== 下标访问（如 arr[1]） =====================
+            // 先递归构造表达式，将索引结果 move 到目标寄存器
             case IndexExpressionNode idx -> {
                 IRVirtualRegister tmp = buildIndex(idx);
                 InstructionFactory.move(ctx, tmp, dest);
             }
 
-            // 调用表达式：递归生成调用结果，move 到目标寄存器
+            // ===================== 函数/方法调用（如 foo(a, b)） =====================
+            // 递归生成调用，结果 move 到目标寄存器
             case CallExpressionNode call -> {
                 IRVirtualRegister tmp = buildCall(call);
                 InstructionFactory.move(ctx, tmp, dest);
             }
 
-            // 其它类型：统一先 build 到临时寄存器，再 move 到目标寄存器
+            // ===================== 其它所有情况（兜底处理） =====================
+            // 通用流程：先生成结果到临时寄存器，再 move 到目标寄存器
             default -> {
                 IRVirtualRegister tmp = build(node);
                 InstructionFactory.move(ctx, tmp, dest);
@@ -397,43 +493,119 @@ public record ExpressionBuilder(IRContext ctx) {
 
 
     /**
-     * 构建函数或方法调用表达式。
+     * 构造 new 对象/数组创建表达式的 IR 虚拟寄存器（支持列表型构造）。
      * <p>
-     * 支持普通函数调用（foo(a, b)）与成员方法调用（obj.method(a, b)）。
+     * 语义说明：本方法用于生成“new 表达式”的中间代码流程，具体包括：
      * <ul>
-     *   <li>首先递归生成所有参数的虚拟寄存器列表。</li>
-     *   <li>根据 callee 类型区分成员访问或直接标识符调用，并规范化方法名（如加前缀）。</li>
-     *   <li>为返回值分配新寄存器，生成 Call 指令。</li>
+     *     <li>分配一个新的寄存器用于保存新对象/数组引用</li>
+     *     <li>将一个空列表常量写入该寄存器（后端 runtime 识别为可变列表/对象）</li>
+     *     <li>遍历所有构造参数，依次写入目标列表的 [0..n-1] 位置</li>
+     *     <li>最终返回该寄存器</li>
      * </ul>
-     * </p>
+     * @param node new 表达式节点，包含所有构造参数
+     * @return 保存新创建对象/数组引用的目标寄存器
+     */
+    private IRVirtualRegister buildNew(NewExpressionNode node) {
+        // 1. 分配新的寄存器作为 new 表达式的结果
+        IRVirtualRegister dest = ctx.newRegister();
+
+        // 2. 先写入一个空列表常量（由后端 R_PUSH 等 runtime 扩展为动态对象/列表）
+        InstructionFactory.loadConstInto(ctx, dest, new IRConstant(java.util.List.of()));
+
+        // 3. 遍历所有构造参数，依次写入目标列表的 [0..n-1] 下标位置
+        for (int i = 0; i < node.arguments().size(); i++) {
+            // 3.1 构造第 i 个参数的值，存入 argReg
+            IRVirtualRegister argReg = build(node.arguments().get(i));
+            // 3.2 临时分配一个寄存器 idxReg 存储下标 i
+            IRVirtualRegister idxReg = ctx.newTempRegister();
+            InstructionFactory.loadConstInto(ctx, idxReg, new IRConstant(i));
+
+            // 3.3 调用 runtime 的 __setindex_r 写入元素
+            List<IRValue> args = new ArrayList<>();
+            args.add(dest);   // 目标列表对象
+            args.add(idxReg); // 当前下标
+            args.add(argReg); // 参数值
+
+            ctx.addInstruction(new CallInstruction(null, "__setindex_r", args));
+        }
+
+        // 4. 返回最终保存新建对象/数组的寄存器
+        return dest;
+    }
+
+
+    /**
+     * 构建函数或方法调用表达式的 IR 指令，并返回存放调用结果的寄存器。
+     * <p>
+     * 支持以下两大类调用：
+     * <ul>
+     *     <li>普通函数调用（如 foo(a, b)）</li>
+     *     <li>成员方法调用（如 obj.method(a, b) 或 ModuleName.func(a, b)）</li>
+     * </ul>
+     * 核心流程：
+     * <ol>
+     *     <li>递归生成所有参数的虚拟寄存器列表</li>
+     *     <li>根据 callee 类型区分结构体方法/模块静态函数/普通函数</li>
+     *     <li>规范化被调用方法名，并整理最终参数表</li>
+     *     <li>分配用于结果的新寄存器，生成 Call 指令</li>
+     * </ol>
      *
-     * @param call 函数/方法调用表达式节点
-     * @return 存放调用结果的虚拟寄存器
+     * @param call 函数或方法调用表达式节点
+     * @return 存放调用结果的目标虚拟寄存器
+     * @throws IllegalStateException 被调用表达式类型不支持或参数异常
      */
     private IRVirtualRegister buildCall(CallExpressionNode call) {
-        // 1. 递归生成所有参数的寄存器
-        List<IRVirtualRegister> argv = call.arguments().stream().map(this::build).toList();
+        // 1. 先递归生成所有参数表达式对应的虚拟寄存器
+        List<IRVirtualRegister> explicitRegs = new ArrayList<>();
+        for (ExpressionNode a : call.arguments()) explicitRegs.add(build(a));
 
-        // 2. 规范化被调用方法名（区分成员方法与普通函数）
-        String callee = switch (call.callee()) {
-            // 成员方法调用，如 obj.method()
-            case MemberExpressionNode m when m.object() instanceof IdentifierNode id -> id.name() + "." + m.member();
-            // 普通函数调用，或处理命名空间前缀（如当前方法名为 namespace.func）
-            case IdentifierNode id -> {
-                String current = ctx.getFunction().name();
-                int dot = current.lastIndexOf('.');
-                if (dot > 0)
-                    yield current.substring(0, dot) + "." + id.name(); // 同命名空间内调用
-                yield id.name(); // 全局函数调用
+        String callee;                // 被调用方法/函数规范化后的名称
+        List<IRValue> finalArgs = new ArrayList<>(); // 最终传递给 Call 指令的参数表
+
+        // 2. 判断被调用对象（callee）类型
+        if (call.callee() instanceof MemberExpressionNode m && m.object() instanceof IdentifierNode idObj) {
+            // ==== 成员方法/模块函数调用 ====
+            // 分为两种情况：
+            // a) 结构体实例方法（如 a.method(...)）
+            // b) 模块静态函数（如 ModuleName.func(...)）
+
+            String recvName = idObj.name();                      // 接收者名字
+            String recvType = ctx.getScope().lookupType(recvName); // 查找接收者类型
+
+            if (recvType == null || recvType.isEmpty()) {
+                // 情况 b：接收者不是变量，而是模块名（ModuleName.func）
+                // 规范化函数名为 "模块名.成员名"，参数直接用 explicitRegs
+                callee = recvName + "." + m.member();
+                finalArgs.addAll(explicitRegs);
+            } else {
+                // 情况 a：结构体实例方法（obj.method(...)）
+                // 方法名规范化为 "类型名.成员名"，并将实例自身作为第一个参数
+                callee = recvType + "." + m.member();
+                IRVirtualRegister thisReg = ctx.getScope().lookup(recvName);
+                if (thisReg == null)
+                    throw new IllegalStateException("未定义标识符: " + recvName);
+                finalArgs.add(thisReg);           // 隐式 this 作为第一个参数
+                finalArgs.addAll(explicitRegs);   // 其余参数
             }
-            // 其它类型不支持
-            default -> throw new IllegalStateException(
-                    "不支持的调用目标: " + call.callee().getClass().getSimpleName());
-        };
+        } else if (call.callee() instanceof IdentifierNode id) {
+            // ==== 普通函数调用 ====
+            // 继承当前命名空间前缀：若当前函数为 ModuleName.xxx，则 foo() 自动补前缀为 ModuleName.foo
+            String current = ctx.getFunction().name();  // 当前函数全名
+            int dot = current.lastIndexOf('.');
+            if (dot >= 0 && !id.name().contains(".")) {
+                callee = current.substring(0, dot) + "." + id.name();
+            } else {
+                callee = id.name();
+            }
+            finalArgs.addAll(explicitRegs);
+        } else {
+            // ==== 其它类型不支持 ====
+            throw new IllegalStateException("不支持的被调用表达式: " + call.callee().getClass().getSimpleName());
+        }
 
-        // 3. 分配用于存放返回值的新寄存器，并生成 Call 指令
+        // 3. 分配目标寄存器，生成函数/方法调用指令
         IRVirtualRegister dest = ctx.newRegister();
-        ctx.addInstruction(new CallInstruction(dest, callee, new ArrayList<>(argv)));
+        ctx.addInstruction(new CallInstruction(dest, callee, finalArgs));
         return dest;
     }
 
