@@ -1,24 +1,27 @@
 module: Main
-	// Animal结构体
+    import: os
+    // Animal结构体
     struct: Animal
         // 字段
         fields:
             declare name: string
+            declare age: int
         // 构造函数
         init:
             params:
                 n: string
+                a: int
             body:
                 this.name = n
+                this.age = a
             end body
         end init
 
-        // Animal结构体封装的函数
-        function: getName
-            returns: string
+        function: getAge
+            returns: int
             body:
-                // 返回字段 name
-                return this.name
+                // 获取字段 age
+                return this.age
             end body
         end function
     end struct
@@ -28,8 +31,9 @@ module: Main
         returns: void
         body:
             // 实例化一个叫A的Animal,并且调用构造函数
-			declare a: Animal = new Animal("GenericAnimal")
-			a.getName()
-		end body
+            declare a: Animal = new Animal("GenericAnimal", 1)
+            // 直接调用已导入模块内的静态函数
+            os.print(a.getAge())
+        end body
     end function
 end module
