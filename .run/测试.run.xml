@@ -26,4 +26,33 @@
     <toRun name="Demo9" type="Application" />
     <method v="2" />
   </configuration>
+  <configuration default="false" name="测试" type="CompoundRunConfigurationType">
+    <toRun name="Demo1" type="Application" />
+    <toRun name="Demo10" type="Application" />
+    <toRun name="Demo11" type="Application" />
+    <toRun name="Demo12" type="Application" />
+    <toRun name="Demo13" type="Application" />
+    <toRun name="Demo14" type="Application" />
+    <toRun name="Demo15" type="Application" />
+    <toRun name="Demo16" type="Application" />
+    <toRun name="Demo17" type="Application" />
+    <toRun name="Demo18" type="Application" />
+    <toRun name="Demo19" type="Application" />
+    <toRun name="Demo2" type="Application" />
+    <toRun name="Demo20" type="Application" />
+    <toRun name="Demo21" type="Application" />
+    <toRun name="Demo22" type="Application" />
+    <toRun name="Demo23" type="Application" />
+    <toRun name="Demo24" type="Application" />
+    <toRun name="Demo25" type="Application" />
+    <toRun name="Demo26" type="Application" />
+    <toRun name="Demo28" type="Application" />
+    <toRun name="Demo3" type="Application" />
+    <toRun name="Demo4" type="Application" />
+    <toRun name="Demo6" type="Application" />
+    <toRun name="Demo7" type="Application" />
+    <toRun name="Demo8" type="Application" />
+    <toRun name="Demo9" type="Application" />
+    <method v="2" />
+  </configuration>
 </component>
