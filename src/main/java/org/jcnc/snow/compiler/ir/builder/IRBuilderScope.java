@@ -3,6 +3,7 @@ package org.jcnc.snow.compiler.ir.builder;
 import org.jcnc.snow.compiler.ir.core.IRFunction;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,6 +17,7 @@ import java.util.Map;
  *   <li>支持变量的类型信息记录与查询</li>
  *   <li>支持变量的编译期常量值记录与查询（便于常量折叠等优化）</li>
  *   <li>支持跨模块全局常量（如 ModuleA.a）查找</li>
+ *   <li>维护结构体字段布局（全局共享）：字段名 → 槽位下标，用于对象字段读写</li>
  * </ul>
  */
 final class IRBuilderScope {
@@ -28,13 +30,22 @@ final class IRBuilderScope {
     private final Map<String, Object> varConstValues = new HashMap<>();
 
     /**
-     * 额外：存放跨模块导入的全局常量
-     * key 形如 "ModuleA.a"   value 为其常量值
+     * 存放跨模块导入的全局常量（如 ModuleA.a）。
+     * 键为 "ModuleA.a"，值为常量值。
      */
     private final Map<String, Object> externalConsts = new HashMap<>();
 
-    /** 当前作用域所绑定的 IRFunction 实例 */
+    /**
+     * 结构体字段布局的全局静态表：
+     * 结构体名 → (字段名 → 槽位下标)。
+     * 静态表设计，确保所有作用域、所有 IR 构建都能访问同一套布局。
+     */
+    private static final Map<String, Map<String, Integer>> STRUCT_LAYOUTS = new HashMap<>();
+
+    /** 当前作用域所绑定的 IRFunction 实例，用于变量分配新寄存器等。 */
     private IRFunction fn;
+
+    // ---------------- 作用域与变量 ----------------
 
     /**
      * 绑定当前作用域到指定 IRFunction。
@@ -55,7 +66,7 @@ final class IRBuilderScope {
         IRVirtualRegister reg = fn.newRegister();
         vars.put(name, reg);
         varTypes.put(name, type);
-        varConstValues.remove(name);
+        varConstValues.remove(name); // 声明新变量即清除原常量绑定
     }
 
     /**
@@ -68,7 +79,7 @@ final class IRBuilderScope {
     void declare(String name, String type, IRVirtualRegister reg) {
         vars.put(name, reg);
         varTypes.put(name, type);
-        varConstValues.remove(name);
+        varConstValues.remove(name); // 重复声明也会清除常量绑定
     }
 
     /**
@@ -104,16 +115,18 @@ final class IRBuilderScope {
     /**
      * 获取变量名到类型名映射的不可变副本。
      *
-     * @return 变量名→类型名映射的只读视图
+     * @return 变量名→类型名映射的只读视图（用于调试/全局分析）
      */
     Map<String, String> getVarTypes() {
-        return Map.copyOf(varTypes);
+        return Collections.unmodifiableMap(varTypes);
     }
 
     // ---------------- 编译期常量相关接口 ----------------
 
     /**
      * 设置变量的编译期常量值（本地变量）。
+     * <p>
+     * 便于 IR 生成时做常量折叠等优化，value 传 null 则清除绑定。
      *
      * @param name  变量名称
      * @param value 常量值（null 表示清除）
@@ -124,9 +137,9 @@ final class IRBuilderScope {
     }
 
     /**
-     * 获取变量的编译期常量值（本地变量或导入的外部常量）。
-     * <br>
-     * 优先查找本地常量，未命中再查外部（如 "ModuleA.a"）。
+     * 获取变量的编译期常量值（优先本地，再查跨模块导入）。
+     * <p>
+     * 常用于优化与折叠，支持 "Module.a" 这类跨模块全局常量查找。
      *
      * @param name 变量名称或"模块名.常量名"
      * @return 编译期常量值，或 null
@@ -134,7 +147,7 @@ final class IRBuilderScope {
     Object getConstValue(String name) {
         Object v = varConstValues.get(name);
         if (v != null) return v;
-        // 支持跨模块常量/全局变量
+        // 支持跨模块常量/全局变量（如 "ModuleA.a"）
         return externalConsts.get(name);
     }
 
@@ -157,5 +170,61 @@ final class IRBuilderScope {
      */
     void importExternalConst(String qualifiedName, Object value) {
         externalConsts.put(qualifiedName, value);
+    }
+
+    // ---------------- 结构体字段布局（全局静态） ----------------
+
+    /**
+     * 全局注册结构体的字段布局映射（字段名 -> 槽位下标）。
+     * 一般在语义分析/IR 前期由类型系统收集后调用。
+     *
+     * @param structName   结构体名（建议为简单名，如 "Animal"；如有模块前缀也可）
+     * @param fieldToIndex 字段名到下标的映射（下标从 0 递增）
+     */
+    static void registerStructLayout(String structName, Map<String, Integer> fieldToIndex) {
+        if (structName == null || fieldToIndex == null) return;
+        // 覆盖式注册：方便增量/重复编译时刷新
+        STRUCT_LAYOUTS.put(structName, new HashMap<>(fieldToIndex));
+    }
+
+    /**
+     * 查询字段槽位下标。
+     * 支持“模块.结构体”及简单名两种写法自动兼容。
+     *
+     * @param structName 结构体名（"Module.Struct" 或 "Struct"）
+     * @param fieldName  字段名
+     * @return 槽位下标；若未知返回 null
+     */
+    Integer lookupFieldIndex(String structName, String fieldName) {
+        // 先按原样查
+        Map<String, Integer> layout = STRUCT_LAYOUTS.get(structName);
+        // 兼容 “模块.结构体” 的写法：若没命中，退化为简单名再查
+        if (layout == null && structName != null) {
+            int dot = structName.lastIndexOf('.');
+            if (dot >= 0 && dot + 1 < structName.length()) {
+                String simple = structName.substring(dot + 1);
+                layout = STRUCT_LAYOUTS.get(simple);
+            }
+        }
+        if (layout == null) return null;
+        return layout.get(fieldName);
+    }
+
+    /**
+     * 读取某结构体的完整字段布局（返回只读 Map）。
+     * 支持“模块.结构体”及简单名两种写法。
+     *
+     * @param structName 结构体名
+     * @return 字段名到下标映射的只读视图，或 null
+     */
+    Map<String, Integer> getStructLayout(String structName) {
+        Map<String, Integer> layout = STRUCT_LAYOUTS.get(structName);
+        if (layout == null && structName != null) {
+            int dot = structName.lastIndexOf('.');
+            if (dot >= 0 && dot + 1 < structName.length()) {
+                layout = STRUCT_LAYOUTS.get(structName.substring(dot + 1));
+            }
+        }
+        return layout == null ? null : Collections.unmodifiableMap(layout);
     }
 }
