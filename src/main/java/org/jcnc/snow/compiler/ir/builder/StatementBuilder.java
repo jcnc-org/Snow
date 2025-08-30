@@ -84,8 +84,58 @@ public class StatementBuilder {
             expr.build(exp);
             return;
         }
+
+        // ===== 赋值语句 =====
         if (stmt instanceof AssignmentNode(String var, ExpressionNode rhs, NodeContext _)) {
+            // 1) 优先当作“已存在的局部/参数变量”赋值（保持原有行为）
             final String type = ctx.getScope().lookupType(var);
+            IRVirtualRegister localReg = ctx.getScope().lookup(var);
+            if (localReg != null) {
+                ctx.setVarType(type);
+                expr.buildInto(rhs, localReg);
+
+                // 赋值时尝试记录/清除常量
+                try {
+                    Object constVal = tryFoldConst(rhs);
+                    if (constVal != null) ctx.getScope().setConstValue(var, constVal);
+                    else ctx.getScope().clearConstValue(var);
+                } catch (Throwable ignored) {}
+                ctx.clearVarType();
+                return;
+            }
+
+            // 2) 若不是局部变量：尝试将“裸标识符”视为 this.<field> 的结构体字段赋值
+            IRVirtualRegister thisReg = ctx.getScope().lookup("this");
+            String thisType = ctx.getScope().lookupType("this");
+            if (thisReg != null && thisType != null) {
+                java.util.Map<String, Integer> layout = ctx.getScope().getStructLayout(thisType);
+                if (layout == null) {
+                    // 兼容 "Module.Struct" 与简单名 "Struct"
+                    int dot = thisType.lastIndexOf('.');
+                    if (dot >= 0 && dot + 1 < thisType.length()) {
+                        layout = ctx.getScope().getStructLayout(thisType.substring(dot + 1));
+                    }
+                }
+                Integer idx = (layout != null) ? layout.get(var) : null;
+
+                if (idx != null) {
+                    // 生成右值
+                    IRVirtualRegister valReg = expr.build(rhs);
+                    // 字段槽位下标常量
+                    IRVirtualRegister idxReg = InstructionFactory.loadConst(ctx, idx);
+                    // 用 __setindex_r 写入字段（与构造写入/读取对齐）
+                    java.util.List<org.jcnc.snow.compiler.ir.core.IRValue> argv =
+                            java.util.List.of(thisReg, idxReg, valReg);
+                    ctx.addInstruction(new org.jcnc.snow.compiler.ir.instruction.CallInstruction(
+                            null, "__setindex_r", argv));
+
+                    // 字段写入后清理该标识符的常量绑定（避免误当作本地常量）
+                    try { ctx.getScope().clearConstValue(var); } catch (Throwable ignored) {}
+                    return;
+                }
+            }
+
+            // 3) 否则退回为“声明/绑定一个新的局部变量并赋值”（与原逻辑一致）
             ctx.setVarType(type);
             IRVirtualRegister target = getOrDeclareRegister(var, type);
             expr.buildInto(rhs, target);
@@ -97,8 +147,7 @@ public class StatementBuilder {
                     ctx.getScope().setConstValue(var, constVal);
                 else
                     ctx.getScope().clearConstValue(var);
-            } catch (Throwable ignored) {
-            }
+            } catch (Throwable ignored) {}
 
             ctx.clearVarType();
             return;
@@ -163,11 +212,9 @@ public class StatementBuilder {
                 ctx.setVarType(decl.getType());
 
                 // 2. 为当前声明的变量分配一个全新的虚拟寄存器
-                //    这样可以保证该变量和初始值表达式中的变量物理上独立，不会发生别名/串扰
                 IRVirtualRegister dest = ctx.newRegister();
 
                 // 3. 将初始值表达式的计算结果写入新分配的寄存器
-                //    即使初始值是某个已存在变量（如 outer_i），这里是值的拷贝
                 expr.buildInto(decl.getInitializer().get(), dest);
 
                 // 声明赋初值时登记常量
@@ -177,8 +224,7 @@ public class StatementBuilder {
                         ctx.getScope().setConstValue(decl.getName(), constVal);
                     else
                         ctx.getScope().clearConstValue(decl.getName());
-                } catch (Throwable ignored) {
-                }
+                } catch (Throwable ignored) {}
 
                 ctx.clearVarType();
                 ctx.getScope().declare(decl.getName(), decl.getType(), dest);
@@ -188,18 +234,18 @@ public class StatementBuilder {
             }
             return;
         }
+
         if (stmt instanceof ReturnNode ret) {
             // return 语句
             if (ret.getExpression().isPresent()) {
-                // return 带返回值
                 IRVirtualRegister r = expr.build(ret.getExpression().get());
                 InstructionFactory.ret(ctx, r);
             } else {
-                // return 无返回值
                 InstructionFactory.retVoid(ctx);
             }
             return;
         }
+
         if (stmt instanceof BreakNode) {
             // break 语句：跳转到当前最近一层循环的结束标签
             if (breakTargets.isEmpty()) {
@@ -208,6 +254,7 @@ public class StatementBuilder {
             InstructionFactory.jmp(ctx, breakTargets.peek());
             return;
         }
+
         if (stmt instanceof ContinueNode) {
             // continue 语句：跳转到当前最近一层循环的 step 起始标签
             if (continueTargets.isEmpty()) {
@@ -216,9 +263,11 @@ public class StatementBuilder {
             InstructionFactory.jmp(ctx, continueTargets.peek());
             return;
         }
+
         // 不支持的语句类型
         throw new IllegalStateException("Unsupported statement: " + stmt.getClass().getSimpleName() + ": " + stmt);
     }
+
 
     /**
      * 获取变量名对应的寄存器，如果尚未声明则新声明一个并返回。
