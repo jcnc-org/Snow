@@ -1,5 +1,4 @@
 module: os
-    // 模块级静态函数（被 import 后可直接调用）
     function: print
         params:
             declare i1: int
@@ -8,4 +7,12 @@ module: os
             syscall("PRINT", i1)
         end body
     end function
+        function: println
+            params:
+                declare i1: int
+            returns: void
+            body:
+                syscall("PRINTLN", i1)
+            end body
+        end function
 end module

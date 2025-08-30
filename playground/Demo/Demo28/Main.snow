@@ -6,6 +6,7 @@ module: Main
         fields:
             declare name: string
             declare age: int
+
         // 构造函数
         init:
             params:
@@ -17,11 +18,20 @@ module: Main
             end body
         end init
 
-        function: getAge
-            returns: int
+    function: getAge
+        returns: int
+        body:
+            // 获取字段 age
+            return this.age
+        end body
+    end function
+
+        function: setAge
+            params:
+                declare a: int
             body:
-                // 获取字段 age
-                return this.age
+                // 设置字段 age
+                this.age = a
             end body
         end function
     end struct
@@ -33,7 +43,12 @@ module: Main
             // 实例化一个叫A的Animal,并且调用构造函数
             declare a: Animal = new Animal("GenericAnimal", 1)
             // 直接调用已导入模块内的静态函数
-            os.print(a.getAge())
+            a.setAge(2)
+            os.println(a.getAge())
+            a.setAge(3)
+            os.println(a.getAge())
+
+
         end body
     end function
 end module
