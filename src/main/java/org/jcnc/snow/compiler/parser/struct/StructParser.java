@@ -33,9 +33,13 @@ public class StructParser implements TopLevelParser {
 
     /**
      * 解析结构体声明块，并返回 AST 节点 {@link StructNode}。
+     *
      * <p>
-     * @param ctx 解析上下文
-     * @return 结构体节点 StructNode
+     * 该方法解析结构体声明的头部，结构体内部的字段块（fields）、构造函数块（init）、方法块（function）以及结束标记（end struct）。
+     * </p>
+     *
+     * @param ctx 解析上下文，包含 TokenStream 和符号表等信息。
+     * @return 解析得到的 {@link StructNode}，包含结构体的名称、字段、构造函数、方法等信息。
      */
     @Override
     public StructNode parse(ParserContext ctx) {
@@ -74,14 +78,17 @@ public class StructParser implements TopLevelParser {
                     ts.expect("fields");
                     ts.expect(":");
                     ts.expectType(TokenType.NEWLINE);
+                    // 字段块不强制 'end fields'，遇到非 declare 则退出
                     while (true) {
                         if (ts.peek().getType() == TokenType.NEWLINE) {
                             ts.next();
                             continue;
                         }
                         if ("declare".equals(ts.peek().getLexeme())) {
+                            // 字段声明使用通用 DeclarationStatementParser（其已支持 TYPE/IDENTIFIER 作为类型）
                             fields.add(declParser.parse(ctx));
-                        } else { // 非 declare 开头则结束 fields
+                        } else {
+                            // 非 declare 开头则结束 fields
                             break;
                         }
                     }
@@ -124,7 +131,8 @@ public class StructParser implements TopLevelParser {
     /**
      * 解析结构体构造函数 init 块，返回 FunctionNode。
      * <p>
-     * 允许包含 params 和 body 两部分。严格要求 "end init" 结束。
+     * 允许包含 params 和 body 两部分，顺序不限；以 "end init" 结束。
+     * </p>
      *
      * @param ctx        解析上下文
      * @param structName 结构体名称，用于构造函数唯一命名
@@ -143,7 +151,7 @@ public class StructParser implements TopLevelParser {
 
         /* -------- 初始化参数和方法体容器 -------- */
         List<ParameterNode> params = new ArrayList<>();
-        List<org.jcnc.snow.compiler.parser.ast.base.StatementNode> body = new ArrayList<>();
+        List<StatementNode> body = new ArrayList<>();
 
         // 主循环：支持 params/body 两块，顺序不限
         while (true) {
@@ -175,8 +183,11 @@ public class StructParser implements TopLevelParser {
     }
 
     /* ---------------- params: 参数块解析 ---------------- */
+
     /**
      * 解析 params 块，返回参数列表。
+     * <p>
+     * 且在类型位置同时接受内建类型（{@link TokenType#TYPE}）与自定义标识符（{@link TokenType#IDENTIFIER}）。
      *
      * @param ctx 解析上下文
      * @return 解析得到的参数节点列表
@@ -190,33 +201,58 @@ public class StructParser implements TopLevelParser {
 
         List<ParameterNode> list = new ArrayList<>();
         while (true) {
+            // 跳过空行
             if (ts.peek().getType() == TokenType.NEWLINE) {
                 ts.next();
                 continue;
             }
-            if (ts.peek().getType() != TokenType.IDENTIFIER) break;
+
+            // 碰到 body / end / returns 等其他小节，说明 params 结束
+            String lookaheadLex = ts.peek().getLexeme();
+            if ("body".equals(lookaheadLex) || "end".equals(lookaheadLex) || "returns".equals(lookaheadLex)) {
+                break;
+            }
 
             int line = ts.peek().getLine();
             int col = ts.peek().getCol();
 
+            // 支持两种前缀：有 declare / 无 declare
+            boolean hasDeclare = "declare".equals(ts.peek().getLexeme());
+            if (hasDeclare) {
+                ts.expect("declare");
+            }
+
+            // 参数名
             String pName = ts.expectType(TokenType.IDENTIFIER).getLexeme();
             ts.expect(":");
-            String pType = ts.expectType(TokenType.TYPE).getLexeme();
+
+            // 参数类型：既可为 TYPE（内置），也可为 IDENTIFIER（自定义）
+            String pType;
+            if (ts.peek().getType() == TokenType.TYPE || ts.peek().getType() == TokenType.IDENTIFIER) {
+                pType = ts.next().getLexeme();
+            } else {
+                var t = ts.peek();
+                throw new UnexpectedToken(
+                        "期望的标记类型为 TYPE 或 IDENTIFIER，但实际得到的是 " +
+                                t.getType() + " ('" + t.getLexeme() + "')",
+                        t.getLine(), t.getCol());
+            }
+
             ts.expectType(TokenType.NEWLINE);
-            list.add(new ParameterNode(pName, pType, new NodeContext(line, col,
-                    ctx.getSourceName())));
+            list.add(new ParameterNode(pName, pType, new NodeContext(line, col, ctx.getSourceName())));
         }
         return list;
     }
 
     /* ---------------- body: 方法体块解析 ---------------- */
+
     /**
      * 解析 body 块，返回语句节点列表。
      *
      * @param ctx 解析上下文
      * @return 解析得到的方法体语句列表
      */
-    private List<org.jcnc.snow.compiler.parser.ast.base.StatementNode> parseBody(ParserContext ctx) {
+    private List<StatementNode> parseBody(ParserContext ctx) {
         TokenStream ts = ctx.getTokens();
 
         ts.expect("body");
