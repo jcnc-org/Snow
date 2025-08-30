@@ -2,15 +2,16 @@ package org.jcnc.snow.compiler.parser.function;
 
 import org.jcnc.snow.compiler.lexer.token.Token;
 import org.jcnc.snow.compiler.lexer.token.TokenType;
-import org.jcnc.snow.compiler.parser.ast.ReturnNode;
-import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
-import org.jcnc.snow.compiler.parser.base.TopLevelParser;
 import org.jcnc.snow.compiler.parser.ast.FunctionNode;
 import org.jcnc.snow.compiler.parser.ast.ParameterNode;
+import org.jcnc.snow.compiler.parser.ast.ReturnNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
+import org.jcnc.snow.compiler.parser.base.TopLevelParser;
 import org.jcnc.snow.compiler.parser.context.ParseException;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
 import org.jcnc.snow.compiler.parser.context.TokenStream;
+import org.jcnc.snow.compiler.parser.context.UnexpectedToken;
 import org.jcnc.snow.compiler.parser.factory.StatementParserFactory;
 import org.jcnc.snow.compiler.parser.utils.FlexibleSectionParser;
 import org.jcnc.snow.compiler.parser.utils.FlexibleSectionParser.SectionDefinition;
@@ -22,15 +23,13 @@ import java.util.*;
  * 实现 {@link TopLevelParser} 接口，用于将源代码中的函数块解析为抽象语法树（AST）中的 {@link FunctionNode}。
  *
  * <p>
- * 本类使用 {@link FlexibleSectionParser} 机制，按照语义区块结构对函数进行模块化解析，支持以下部分: 
- * </p>
- *
+ * 使用 {@link FlexibleSectionParser} 机制，按照语义区块结构对函数进行模块化解析，支持以下部分:
  * <ul>
- *     <li>函数头（关键字 {@code function:} 与函数名）</li>
- *     <li>参数列表（params 区块）</li>
- *     <li>返回类型（returns 区块）</li>
- *     <li>函数体（body 区块）</li>
- *     <li>函数结束（关键字 {@code end function}）</li>
+ *   <li>函数头（关键字 {@code function:} 与函数名）</li>
+ *   <li>参数列表（params 区块）</li>
+ *   <li>返回类型（returns 区块）</li>
+ *   <li>函数体（body 区块）</li>
+ *   <li>函数结束（关键字 {@code end function}）</li>
  * </ul>
  *
  * <p>
@@ -47,76 +46,80 @@ public class FunctionParser implements TopLevelParser {
      * 顶层语法解析入口。
      *
      * <p>
-     * 该方法负责完整解析函数定义，包括其所有组成部分，并构建对应的 {@link FunctionNode}。
+     * 解析并生成函数的 AST。
+     * 该方法从源代码中获取 {@link TokenStream}，并按照函数定义的不同区块解析，最终生成 {@link FunctionNode}。
      * </p>
      *
-     * @param ctx 当前解析上下文，包含 {@link TokenStream} 和符号表等作用域信息。
-     * @return 构建完成的 {@link FunctionNode} 抽象语法树节点。
+     * @param ctx 当前解析上下文，包含 {@link TokenStream} 和符号表等信息
+     * @return 构建完成的 {@link FunctionNode} 对象
      */
     @Override
     public FunctionNode parse(ParserContext ctx) {
-        // 获取当前解析上下文中的 token 流
         TokenStream ts = ctx.getTokens();
 
-        // 记录当前 token 的行号、列号和源文件名，用于错误报告或生成节点上下文
-        int line = ctx.getTokens().peek().getLine();
-        int column = ctx.getTokens().peek().getCol();
+        int line = ts.peek().getLine();
+        int column = ts.peek().getCol();
         String file = ctx.getSourceName();
 
-        // 解析函数头（例如可能是 `function` 关键字等）
+        // 解析函数头 (function:)
         parseFunctionHeader(ts);
 
-        // 解析函数名
+        // 函数名
         String functionName = parseFunctionName(ts);
 
-        // 用于存放解析出来的参数列表
         List<ParameterNode> parameters = new ArrayList<>();
-        // 用于存放返回类型，这里用数组是为了在闭包中修改其值
-        String[] returnType = new String[1];
-        // 用于存放函数体语句列表
+        String[] returnType = new String[1];  // 使用数组模拟可变引用
         List<StatementNode> body = new ArrayList<>();
 
-        // 获取函数可以包含的可选节（如参数、返回类型、主体等）的定义映射
+        // 定义函数可选区块规则 (params, returns, body)
         Map<String, SectionDefinition> sections = getSectionDefinitions(parameters, returnType, body);
 
-        // 调用通用的多节解析器，实际根据 sections 中注册的规则解析各部分内容
+        // 解析这些区块
         FlexibleSectionParser.parse(ctx, ts, sections);
 
-        // 如果函数体为空且返回类型为 void，自动补充一个空的 return 语句
-        if (body.isEmpty() && returnType[0].equals("void")) {
+        // 如果函数体为空且返回 void，补充一个空 return
+        if (body.isEmpty() && "void".equals(returnType[0])) {
             body.add(new ReturnNode(null, new NodeContext(line, column, file)));
         }
 
-        // 检查参数名称是否重复
-        Set<String> set = new HashSet<>();
-        parameters.forEach((node) -> {
-            final String name = node.name();
-            if (set.contains(name)) {
-                // 如果参数名重复，抛出带具体行列信息的解析异常
-                throw new ParseException(String.format("参数 `%s` 重定义", name),
-                        node.context().line(), node.context().column());
+        // 检查参数名是否重复
+        Set<String> seen = new HashSet<>();
+        for (ParameterNode node : parameters) {
+            if (!seen.add(node.name())) {
+                throw new ParseException(
+                        String.format("参数 `%s` 重定义", node.name()),
+                        node.context().line(),
+                        node.context().column());
             }
-            set.add(name);
-        });
+        }
 
-        // 解析函数的尾部（例如右大括号或者 end 标志）
+        // 解析函数结尾
         parseFunctionFooter(ts);
 
-        // 返回完整的函数节点，包含函数名、参数、返回类型、函数体以及源位置信息
-        return new FunctionNode(functionName, parameters, returnType[0], body, new NodeContext(line, column, file));
+        return new FunctionNode(functionName, parameters, returnType[0], body,
+                new NodeContext(line, column, file));
     }
 
+    /* ====================================================================== */
+    /* -------------------------- Section Definitions ----------------------- */
+    /* ====================================================================== */
+
     /**
-     * 构造函数定义中各区块的解析规则（params、returns、body）。
+     * 定义函数的各个语义区块及其解析规则，包括参数列表、返回类型及函数体。
      *
      * <p>
-     * 每个 {@link SectionDefinition} 包含两个部分: 区块起始判断器（基于关键字）与具体的解析逻辑。
+     * 此方法将定义如下的三个区块：
+     * <ul>
+     *   <li>"params" 区块，解析参数列表。</li>
+     *   <li>"returns" 区块，解析返回类型。</li>
+     *   <li>"body" 区块，解析函数体。</li>
+     * </ul>
      * </p>
      *
-     * @param params 参数节点收集容器，解析结果将存入此列表。
-     * @param returnType 返回类型容器，以单元素数组方式模拟引用传递。
-     * @param body 函数体语句节点列表容器。
-     * @return 区块关键字到解析定义的映射表。
+     * @param params     存储函数参数列表的集合
+     * @param returnType 存储函数返回类型的字符串数组
+     * @param body       存储函数体的语句列表
+     * @return 各个区块的解析定义
      */
     private Map<String, SectionDefinition> getSectionDefinitions(
             List<ParameterNode> params,
@@ -142,8 +145,12 @@ public class FunctionParser implements TopLevelParser {
         return map;
     }
 
+    /* ====================================================================== */
+    /* ---------------------------- 函数头/尾 ------------------------------- */
+    /* ====================================================================== */
+
     /**
-     * 解析函数头部标识符 {@code function:}，并跳过其后多余注释与空行。
+     * 解析函数头部分，期望的格式为 `function:`。
      *
      * @param ts 当前使用的 {@link TokenStream}。
      */
@@ -158,7 +165,7 @@ public class FunctionParser implements TopLevelParser {
      * 解析函数名称（标识符）并跳过换行。
      *
      * @param ts 当前使用的 {@link TokenStream}。
-     * @return 函数名字符串。
+     * @return 函数名称字符串。
      */
     private String parseFunctionName(TokenStream ts) {
         String name = ts.expectType(TokenType.IDENTIFIER).getLexeme();
@@ -167,7 +174,7 @@ public class FunctionParser implements TopLevelParser {
     }
 
     /**
-     * 解析函数结束标记 {@code end function}。
+     * 解析函数结束标记 `end function`。
      *
      * @param ts 当前使用的 {@link TokenStream}。
      */
@@ -177,18 +184,14 @@ public class FunctionParser implements TopLevelParser {
     }
 
     /**
-     * 解析函数参数列表。
-     *
-     * <p>
-     * 支持声明后附加注释，格式示例: 
+     * 解析函数参数列表，支持附加注释，格式为：
      * <pre>
      * params:
      *   declare x: int   // 说明文字
      *   declare y: float
      * </pre>
-     * </p>
      *
-     * @param ctx 当前解析上下文，包含 {@link TokenStream} 和符号表等作用域信息。
+     * @param ctx 当前解析上下文，包含 {@link TokenStream} 和符号表等信息。
      * @return 所有参数节点的列表。
      */
     private List<ParameterNode> parseParameters(ParserContext ctx) {
@@ -208,19 +211,28 @@ public class FunctionParser implements TopLevelParser {
                 continue;
             }
             String lex = ts.peek().getLexeme();
-            if (lex.equals("returns") || lex.equals("body") || lex.equals("end")) {
-                break;
-            }
+            if (lex.equals("returns") || lex.equals("body") || lex.equals("end")) break;
 
-            // 获取当前 token 的行号、列号和文件名
-            int line = ctx.getTokens().peek().getLine();
-            int column = ctx.getTokens().peek().getCol();
+            int line = ts.peek().getLine();
+            int column = ts.peek().getCol();
             String file = ctx.getSourceName();
 
             ts.expect("declare");
             String pname = ts.expectType(TokenType.IDENTIFIER).getLexeme();
             ts.expect(":");
-            String ptype = ts.expectType(TokenType.TYPE).getLexeme();
+
+            // 既接受 TYPE 也接受 IDENTIFIER
+            String ptype;
+            if (ts.peek().getType() == TokenType.TYPE || ts.peek().getType() == TokenType.IDENTIFIER) {
+                ptype = ts.next().getLexeme();
+            } else {
+                var t = ts.peek();
+                throw new UnexpectedToken(
+                        "期望 TYPE 或 IDENTIFIER，但实际得到 " +
+                                t.getType() + " ('" + t.getLexeme() + "')",
+                        t.getLine(), t.getCol());
+            }
+
             skipComments(ts);
             ts.expectType(TokenType.NEWLINE);
             list.add(new ParameterNode(pname, ptype, new NodeContext(line, column, file)));
@@ -229,20 +241,27 @@ public class FunctionParser implements TopLevelParser {
     }
 
     /**
-     * 解析返回类型声明。
-     *
-     * <p>
-     * 格式为 {@code returns: TYPE}，支持前置或行尾注释。
-     * </p>
+     * 解析返回类型声明，格式为 `returns: TYPE`，支持注释。
      *
      * @param ts 当前使用的 {@link TokenStream}。
-     * @return 返回类型名称字符串。
+     * @return 返回类型字符串。
      */
     private String parseReturnType(TokenStream ts) {
         ts.expect("returns");
         ts.expect(":");
         skipComments(ts);
-        Token typeToken = ts.expectType(TokenType.TYPE);
+
+        Token typeToken;
+        if (ts.peek().getType() == TokenType.TYPE || ts.peek().getType() == TokenType.IDENTIFIER) {
+            typeToken = ts.next();
+        } else {
+            var t = ts.peek();
+            throw new UnexpectedToken(
+                    "期望 TYPE 或 IDENTIFIER，但实际得到 " +
+                            t.getType() + " ('" + t.getLexeme() + "')",
+                    t.getLine(), t.getCol());
+        }
+
         String rtype = typeToken.getLexeme();
         skipComments(ts);
         ts.expectType(TokenType.NEWLINE);
@@ -251,14 +270,10 @@ public class FunctionParser implements TopLevelParser {
     }
 
     /**
-     * 解析函数体区块，直到遇到 {@code end body}。
-     *
-     * <p>
-     * 每一行由对应的语句解析器处理，可嵌套控制结构、返回语句、表达式等。
-     * </p>
+     * 解析函数体区块，直到遇到 `end body`。
      *
      * @param ctx 当前解析上下文。
-     * @param ts 当前使用的 {@link TokenStream}。
+     * @param ts  当前使用的 {@link TokenStream}。
      * @return 所有函数体语句节点的列表。
      */
     private List<StatementNode> parseFunctionBody(ParserContext ctx, TokenStream ts) {
@@ -275,9 +290,8 @@ public class FunctionParser implements TopLevelParser {
                 ts.next();
                 continue;
             }
-            if ("end".equals(ts.peek().getLexeme())) {
-                break;
-            }
+            if ("end".equals(ts.peek().getLexeme())) break;
+
             stmts.add(StatementParserFactory.get(ts.peek().getLexeme()).parse(ctx));
         }
         ts.expect("end");
@@ -293,9 +307,7 @@ public class FunctionParser implements TopLevelParser {
      * @param ts 当前使用的 {@link TokenStream}。
      */
     private void skipComments(TokenStream ts) {
-        while (ts.peek().getType() == TokenType.COMMENT) {
-            ts.next();
-        }
+        while (ts.peek().getType() == TokenType.COMMENT) ts.next();
     }
 
     /**
@@ -304,8 +316,6 @@ public class FunctionParser implements TopLevelParser {
      * @param ts 当前使用的 {@link TokenStream}。
      */
     private void skipNewlines(TokenStream ts) {
-        while (ts.peek().getType() == TokenType.NEWLINE) {
-            ts.next();
-        }
+        while (ts.peek().getType() == TokenType.NEWLINE) ts.next();
     }
 }
