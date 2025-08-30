@@ -1,15 +1,13 @@
 module: Main
-
-    // 一个很简单的结构体，只有内建类型字段
+	import: os
     struct: Address
         fields:
-            declare country: string
-            declare city: string
-        // 构造函数（可要可不要，不影响触发点）
+            declare country: int
+            declare city: int
         init:
             params:
-                country: string
-                city: string
+                country: int
+                city: int
             body:
                 this.country = country
                 this.city = city
@@ -17,28 +15,35 @@ module: Main
         end init
     end struct
 
-    // 在这里做“嵌套字段”：Person.addr 的类型是 Address
     struct: Person
         fields:
-            declare name: string
-            declare addr: Address   // ← 触发点：自定义类型出现在字段类型位置
-        // 可选构造（同样不影响触发点）
+            declare name: int
+            declare addr: Address
         init:
             params:
-                name: string
+                name: int
                 addr: Address
             body:
                 this.name = name
                 this.addr = addr
             end body
         end init
+
+        function: getName
+            returns: int
+            body:
+                return this.name
+            end body
+        end function
     end struct
 
-    // 主函数可以是空体，避免其它解析干扰
     function: main
         returns: void
         body:
-            // 什么都不做；关键在于上面的“嵌套字段”声明
+            // 初始化 Person 和 Address 的实例
+            declare p: Person = new Person(123, new Address(1, 2))
+
+            os.print(p.getName)          // 打印 name
         end body
     end function
 
