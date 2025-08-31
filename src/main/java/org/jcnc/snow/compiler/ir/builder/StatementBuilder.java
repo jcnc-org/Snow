@@ -24,9 +24,6 @@ import java.util.ArrayDeque;
  *     <li>负责控制流跳转（分支、循环）的标签分配与维护。</li>
  *     <li>在变量赋值和声明时自动常量折叠和登记。</li>
  * </ul>
- *
- * @author [你的名字]
- * @since 1.0
  */
 public class StatementBuilder {
 
