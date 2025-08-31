@@ -13,6 +13,13 @@ module: Main
                 this.city = city
             end body
         end init
+
+        function: getCity
+            returns: int
+            body:
+                return this.city
+            end body
+        end function
     end struct
 
     struct: Person
@@ -35,6 +42,13 @@ module: Main
                 return this.name
             end body
         end function
+
+        function: getAddr
+            returns: Address
+            body:
+                return this.addr
+            end body
+        end function
     end struct
 
     function: main
@@ -42,8 +56,9 @@ module: Main
         body:
             // 初始化 Person 和 Address 的实例
             declare p: Person = new Person(123, new Address(1, 2))
+            os.println(p.getName())             // 打印 name
+            os.println(p.getAddr().getCity())   // 打印 city
 
-            os.print(p.getName())          // 打印 name
         end body
     end function
 
