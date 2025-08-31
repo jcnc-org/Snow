@@ -43,7 +43,7 @@ module: Main
             // 初始化 Person 和 Address 的实例
             declare p: Person = new Person(123, new Address(1, 2))
 
-            os.print(p.getName)          // 打印 name
+            os.print(p.getName())          // 打印 name
         end body
     end function
 
