@@ -66,6 +66,10 @@ public final class VMProgramBuilder {
         return slotType.getOrDefault(slot, 'I');
     }
 
+    /* ==========================================================
+       函数/标签管理
+       ========================================================== */
+
     /**
      * 标记一个函数或标签的起始位置。
      * <p>
@@ -162,14 +166,26 @@ public final class VMProgramBuilder {
     /**
      * 修补所有等待目标函数 name 的 CALL 指令。
      * <p>
-     * 只支持全名精确修补，不做模糊查找或短名回退。
-     *
-     * @param name 目标函数全名
+     * 支持两种匹配：
+     * <ul>
+     *   <li>全名匹配：f.target == name</li>
+     *   <li>简名匹配：f.target 不含 '.'，且等于 name 的最后一段</li>
+     * </ul>
+     * 这样 IR 里生成 CALL getCity 也能绑定到 Address.getCity。
      */
     private void patchCallFixes(String name) {
+        // 当前函数的简名（去掉前缀）
+        String simpleName = name.contains(".")
+                ? name.substring(name.lastIndexOf('.') + 1)
+                : name;
+
         for (Iterator<CallFix> it = callFixes.iterator(); it.hasNext();) {
             CallFix f = it.next();
-            if (f.target.equals(name)) {
+
+            boolean qualifiedMatch = f.target.equals(name);
+            boolean simpleMatch = !f.target.contains(".") && f.target.equals(simpleName);
+
+            if (qualifiedMatch || simpleMatch) {
                 code.set(f.index, VMOpCode.CALL + " " + addr.get(name) + " " + f.nArgs);
                 it.remove();
             }
