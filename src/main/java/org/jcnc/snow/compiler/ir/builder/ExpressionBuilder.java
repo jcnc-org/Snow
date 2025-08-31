@@ -411,46 +411,58 @@ public record ExpressionBuilder(IRContext ctx) {
      * @return 编译期常量值（支持 int、double、String、List），否则返回 null
      */
     private Object tryFoldConst(ExpressionNode expr) {
-        if (expr == null) return null;
-
-        // 数字字面量：尝试解析为 int 或 double
-        if (expr instanceof NumberLiteralNode n) {
-            String s = n.value();
-            try {
-                if (s.contains(".") || s.contains("e") || s.contains("E"))
-                    return Double.parseDouble(s); // 带小数或科学计数法为 double
-                return Integer.parseInt(s);      // 否则为 int
-            } catch (NumberFormatException e) {
-                return null; // 无法解析为数字
+        switch (expr) {
+            case null -> {
+                return null;
             }
-        }
 
-        // 字符串字面量：直接返回字符串
-        if (expr instanceof StringLiteralNode s) return s.value();
-
-        // 布尔字面量：true 返回 1，false 返回 0
-        if (expr instanceof BoolLiteralNode b) return b.getValue() ? 1 : 0;
-
-        // 数组字面量：递归折叠所有元素
-        if (expr instanceof ArrayLiteralNode arr) {
-            List<Object> list = new ArrayList<>();
-            for (ExpressionNode e : arr.elements()) {
-                Object v = tryFoldConst(e);
-                if (v == null) return null; // 有一项无法折叠则整体失败
-                list.add(v);
+            // 数字字面量：尝试解析为 int 或 double
+            case NumberLiteralNode n -> {
+                String s = n.value();
+                try {
+                    if (s.contains(".") || s.contains("e") || s.contains("E"))
+                        return Double.parseDouble(s); // 带小数或科学计数法为 double
+                    return Integer.parseInt(s);      // 否则为 int
+                } catch (NumberFormatException e) {
+                    return null; // 无法解析为数字
+                }
             }
-            return List.copyOf(list);
-        }
 
-        // 标识符：尝试查找作用域中的常量值
-        if (expr instanceof IdentifierNode id) {
-            Object v = null;
-            try {
-                v = ctx.getScope().getConstValue(id.name());
-            } catch (Throwable ignored) {
-                // 查不到常量或异常都视为无法折叠
+
+            // 字符串字面量：直接返回字符串
+            case StringLiteralNode s -> {
+                return s.value();
             }
-            return v;
+
+            // 布尔字面量：true 返回 1，false 返回 0
+            case BoolLiteralNode b -> {
+                return b.getValue() ? 1 : 0;
+            }
+
+            // 数组字面量：递归折叠所有元素
+            case ArrayLiteralNode arr -> {
+                List<Object> list = new ArrayList<>();
+                for (ExpressionNode e : arr.elements()) {
+                    Object v = tryFoldConst(e);
+                    if (v == null) return null; // 有一项无法折叠则整体失败
+                    list.add(v);
+                }
+                return List.copyOf(list);
+            }
+
+
+            // 标识符：尝试查找作用域中的常量值
+            case IdentifierNode id -> {
+                Object v = null;
+                try {
+                    v = ctx.getScope().getConstValue(id.name());
+                } catch (Throwable ignored) {
+                    // 查不到常量或异常都视为无法折叠
+                }
+                return v;
+            }
+            default -> {
+            }
         }
 
         // 其它类型：不支持折叠，返回 null
@@ -535,12 +547,13 @@ public record ExpressionBuilder(IRContext ctx) {
 
 
     /**
-     * 构建函数或方法调用表达式的 IR 指令，并返回存放调用结果的寄存器。
+     * 构建函数或方法调用表达式的 IR 指令，并返回结果寄存器。
      * <p>
-     * 支持以下两大类调用：
+     * 支持三类调用：
      * <ul>
-     *     <li>普通函数调用（如 foo(a, b)）</li>
-     *     <li>成员方法调用（如 obj.method(a, b) 或 ModuleName.func(a, b)）</li>
+     *   <li>普通函数调用（foo(a, b)）</li>
+     *   <li>成员方法调用（obj.method(a, b) 或 ModuleName.func(a, b)）</li>
+     *   <li>链式方法调用（obj.getAddr().getCity()）</li>
      * </ul>
      * 核心流程：
      * <ol>
@@ -555,52 +568,62 @@ public record ExpressionBuilder(IRContext ctx) {
      * @throws IllegalStateException 被调用表达式类型不支持或参数异常
      */
     private IRVirtualRegister buildCall(CallExpressionNode call) {
-        // 1. 先递归生成所有参数表达式对应的虚拟寄存器
+        // 1. 先递归生成“显式”参数的寄存器列表
         List<IRVirtualRegister> explicitRegs = new ArrayList<>();
         for (ExpressionNode a : call.arguments()) explicitRegs.add(build(a));
 
-        String callee;                // 被调用方法/函数规范化后的名称
-        List<IRValue> finalArgs = new ArrayList<>(); // 最终传递给 Call 指令的参数表
+        String callee;                          // 函数/方法的规范化名字
+        List<IRValue> finalArgs = new ArrayList<>(); // 最终传递给 CALL 的参数表
 
-        // 2. 判断被调用对象（callee）类型
-        if (call.callee() instanceof MemberExpressionNode m && m.object() instanceof IdentifierNode idObj) {
-            // ==== 成员方法/模块函数调用 ====
-            // 分为两种情况：
-            // a) 结构体实例方法（如 a.method(...)）
-            // b) 模块静态函数（如 ModuleName.func(...)）
+        // 2. 按 callee 类型分支
+        switch (call.callee()) {
+            case MemberExpressionNode m when m.object() instanceof IdentifierNode idObj -> {
+                // ========= 情况 1: obj.method(...) 或 ModuleName.func(...) =========
+                String recvName = idObj.name();
+                String recvType = ctx.getScope().lookupType(recvName);
 
-            String recvName = idObj.name();                      // 接收者名字
-            String recvType = ctx.getScope().lookupType(recvName); // 查找接收者类型
+                if (recvType == null || recvType.isEmpty()) {
+                    // 模块函数调用 —— "模块名.函数名"
+                    callee = recvName + "." + m.member();
+                    finalArgs.addAll(explicitRegs);
+                } else {
+                    // 结构体实例方法调用 —— "类型名.方法名"，且第一个参数为 this
+                    callee = recvType + "." + m.member();
+                    IRVirtualRegister thisReg = ctx.getScope().lookup(recvName);
+                    if (thisReg == null)
+                        throw new IllegalStateException("未定义标识符: " + recvName);
+                    finalArgs.add(thisReg);          // 隐式 this
+                    finalArgs.addAll(explicitRegs);  // 其它参数
+                }
+            }
+            case MemberExpressionNode m -> {
+                // ========= 情况 2: 通用成员调用 (支持链式调用) =========
+                // 例如 p.getAddr().getCity()
+                IRVirtualRegister objReg = build(m.object()); // 递归计算 object 表达式
 
-            if (recvType == null || recvType.isEmpty()) {
-                // 情况 b：接收者不是变量，而是模块名（ModuleName.func）
-                // 规范化函数名为 "模块名.成员名"，参数直接用 explicitRegs
-                callee = recvName + "." + m.member();
+                callee = m.member();                          // 直接用成员名
+
+                finalArgs.add(objReg);                        // 隐式 this
+
+                finalArgs.addAll(explicitRegs);               // 其它参数
+            }
+            case IdentifierNode id -> {
+                // ========= 情况 3: 普通函数调用 foo(...) =========
+                String current = ctx.getFunction().name();  // 当前函数全名
+
+                int dot = current.lastIndexOf('.');
+                if (dot >= 0 && !id.name().contains(".")) {
+                    // 自动补充模块名前缀
+                    callee = current.substring(0, dot) + "." + id.name();
+                } else {
+                    callee = id.name();
+                }
                 finalArgs.addAll(explicitRegs);
-            } else {
-                // 情况 a：结构体实例方法（obj.method(...)）
-                // 方法名规范化为 "类型名.成员名"，并将实例自身作为第一个参数
-                callee = recvType + "." + m.member();
-                IRVirtualRegister thisReg = ctx.getScope().lookup(recvName);
-                if (thisReg == null)
-                    throw new IllegalStateException("未定义标识符: " + recvName);
-                finalArgs.add(thisReg);           // 隐式 this 作为第一个参数
-                finalArgs.addAll(explicitRegs);   // 其余参数
             }
-        } else if (call.callee() instanceof IdentifierNode id) {
-            // ==== 普通函数调用 ====
-            // 继承当前命名空间前缀：若当前函数为 ModuleName.xxx，则 foo() 自动补前缀为 ModuleName.foo
-            String current = ctx.getFunction().name();  // 当前函数全名
-            int dot = current.lastIndexOf('.');
-            if (dot >= 0 && !id.name().contains(".")) {
-                callee = current.substring(0, dot) + "." + id.name();
-            } else {
-                callee = id.name();
-            }
-            finalArgs.addAll(explicitRegs);
-        } else {
-            // ==== 其它类型不支持 ====
-            throw new IllegalStateException("不支持的被调用表达式: " + call.callee().getClass().getSimpleName());
+            default ->
+                // ========= 其它不支持 =========
+                    throw new IllegalStateException(
+                            "不支持的被调用表达式: " + call.callee().getClass().getSimpleName());
         }
 
         // 3. 分配目标寄存器，生成函数/方法调用指令
@@ -608,7 +631,6 @@ public record ExpressionBuilder(IRContext ctx) {
         ctx.addInstruction(new CallInstruction(dest, callee, finalArgs));
         return dest;
     }
-
 
     /**
      * 二元表达式构建，结果存储到新寄存器。
