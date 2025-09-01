@@ -23,39 +23,44 @@ import java.util.*;
 public final class VMProgramBuilder {
 
     /**
-     * 未知目标的 CALL 指令修补记录(待目标地址确定后修正)。
-     * @param index CALL 指令在 code 列表中的位置
-     * @param target 目标函数的全名
-     * @param nArgs 参数个数
+     * 未解析地址的占位符，便于后期批量修补
      */
-    private record CallFix(int index, String target, int nArgs) {}
-
-    /**
-     * 未知目标的分支指令修补记录(待目标标签确定后修正)。
-     * @param index 分支指令在 code 列表中的位置
-     * @param label 跳转目标标签名
-     */
-    private record BranchFix(int index, String label) {}
-
-    /** 未解析地址的占位符，便于后期批量修补 */
     private static final String PLACEHOLDER = "-1";
-
-    /** VM 指令列表 */
+    /**
+     * VM 指令列表
+     */
     private final List<String> code = new ArrayList<>();
-    /** 槽位(寄存器)类型映射表(如 I/F...，用于类型检查或代码生成优化) */
+    /**
+     * 槽位(寄存器)类型映射表(如 I/F...，用于类型检查或代码生成优化)
+     */
     private final Map<Integer, Character> slotType = new HashMap<>();
-    /** 符号(函数名/标签)到指令序号的映射表 */
+    /**
+     * 符号(函数名/标签)到指令序号的映射表
+     */
     private final Map<String, Integer> addr = new HashMap<>();
-    /** 所有待修补的 CALL 指令集合 */
+    /**
+     * 所有待修补的 CALL 指令集合
+     */
     private final List<CallFix> callFixes = new ArrayList<>();
-    /** 所有待修补的分支指令集合 */
+    /**
+     * 所有待修补的分支指令集合
+     */
     private final List<BranchFix> branchFixes = new ArrayList<>();
-    /** 当前代码指针(已生成指令的数量/下一个指令的位置) */
+    /**
+     * 当前代码指针(已生成指令的数量/下一个指令的位置)
+     */
     private int pc = 0;
 
-    // ==============================
-    // 槽位类型操作
-    // ==============================
+    /**
+     * 获取符号名最后一段（即最后一个 '.' 之后的名字，若无 '.' 则为原名）。
+     *
+     * @param sym 符号全名
+     * @return 简名
+     */
+    private static String lastSegment(String sym) {
+        int p = sym.lastIndexOf('.');
+        return (p >= 0 && p < sym.length() - 1) ? sym.substring(p + 1) : sym;
+    }
 
     /**
      * 设置槽位(局部变量/虚拟寄存器)的类型前缀。
@@ -67,6 +72,8 @@ public final class VMProgramBuilder {
         slotType.put(slot, prefix);
     }
 
+    // ============================== 槽位类型操作 ==============================
+
     /**
      * 获取槽位的类型前缀，默认为 'I'(整数类型)。
      *
@@ -77,10 +84,9 @@ public final class VMProgramBuilder {
         return slotType.getOrDefault(slot, 'I');
     }
 
-    // =============函数/标签声明与指令生成=================
-
     /**
      * 声明一个函数/标签的起始地址，并尝试修补所有引用到此符号的 CALL/BRANCH。
+     *
      * @param name 函数或标签全名（如 "Person.getName"、"loop.start"）
      */
     public void beginFunction(String name) {
@@ -89,11 +95,17 @@ public final class VMProgramBuilder {
         patchBranchFixes(name);
     }
 
-    /** 函数结束接口，目前无具体实现，便于将来扩展。 */
-    public void endFunction() {}
+    // =============函数/标签声明与指令生成=================
+
+    /**
+     * 函数结束接口，目前无具体实现，便于将来扩展。
+     */
+    public void endFunction() {
+    }
 
     /**
      * 添加一条 VM 指令或标签（末尾':'视为标签）。
+     *
      * @param line 指令或标签
      */
     public void emit(String line) {
@@ -109,8 +121,9 @@ public final class VMProgramBuilder {
 
     /**
      * 添加一条 CALL 指令。目标尚未声明时，使用占位符并登记延迟修补。
-     * @param target  目标函数全名（IR 侧生成）
-     * @param nArgs   实参个数
+     *
+     * @param target 目标函数全名（IR 侧生成）
+     * @param nArgs  实参个数
      */
     public void emitCall(String target, int nArgs) {
         Integer a = resolve(target);
@@ -166,15 +179,13 @@ public final class VMProgramBuilder {
     }
 
     /**
-     * 对所有待修补的 CALL 指令进行补丁。
+     * 修补所有延迟 CALL。
      * 匹配规则：
-     *   1. 全限定名完全匹配
-     *   2. 简名(最后一段)匹配
-     *   3. super 调用：target 以 .super 结尾、name 以 .__init__ 结尾
-     * @param name 新声明的符号名
+     * 1. 全限定名完全匹配
+     * 2. super 调用支持多构造：target 以 .super 结尾，name 以 .__init__N 结尾且前缀匹配
+     * 3. 简名匹配（含 __init__N）
      */
     private void patchCallFixes(String name) {
-        // 当前函数的简名（去掉前缀）
         String nameSimple = lastSegment(name);
 
         for (Iterator<CallFix> it = callFixes.iterator(); it.hasNext(); ) {
@@ -182,13 +193,20 @@ public final class VMProgramBuilder {
 
             // 全限定名完全匹配
             boolean qualifiedMatch = f.target.equals(name);
-            // 简名匹配
+
+            // super 调用绑定：target 以 .super，name 以 .__init__N 且前缀匹配
+            boolean superMatch = false;
+            if (f.target.endsWith(".super") && name.contains(".__init__")) {
+                String tStruct = f.target.substring(0, f.target.length() - 6); // 去掉 ".super"
+                String nStruct = name.substring(0, name.indexOf(".__init__"));
+                superMatch = tStruct.equals(nStruct);
+            }
+
+            // 简名匹配（如 getName, __init__N 等）
             String targetSimple = lastSegment(f.target);
             boolean simpleMatch = targetSimple.equals(nameSimple);
-            // super 调用绑定
-            boolean superMatch = f.target.endsWith(".super") && name.endsWith(".__init__");
 
-            if (qualifiedMatch || simpleMatch || superMatch) {
+            if (qualifiedMatch || superMatch || simpleMatch) {
                 int targetAddr = addr.get(name);
                 code.set(f.index, VMOpCode.CALL + " " + targetAddr + " " + f.nArgs);
                 it.remove();
@@ -213,12 +231,21 @@ public final class VMProgramBuilder {
     }
 
     /**
-     * 获取符号名最后一段（即最后一个 '.' 之后的名字，若无 '.' 则为原名）。
-     * @param sym 符号全名
-     * @return 简名
+     * 未知目标的 CALL 指令修补记录(待目标地址确定后修正)。
+     *
+     * @param index  CALL 指令在 code 列表中的位置
+     * @param target 目标函数的全名
+     * @param nArgs  参数个数
      */
-    private static String lastSegment(String sym) {
-        int p = sym.lastIndexOf('.');
-        return (p >= 0 && p < sym.length() - 1) ? sym.substring(p + 1) : sym;
+    private record CallFix(int index, String target, int nArgs) {
+    }
+
+    /**
+     * 未知目标的分支指令修补记录(待目标标签确定后修正)。
+     *
+     * @param index 分支指令在 code 列表中的位置
+     * @param label 跳转目标标签名
+     */
+    private record BranchFix(int index, String label) {
     }
 }
