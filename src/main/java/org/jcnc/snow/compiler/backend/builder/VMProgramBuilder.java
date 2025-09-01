@@ -1,18 +1,25 @@
 package org.jcnc.snow.compiler.backend.builder;
 
 import org.jcnc.snow.vm.engine.VMOpCode;
+
 import java.util.*;
 
 /**
- * VMProgramBuilder 用于构建虚拟机(VM)的最终指令列表。
- * <p>
- * 主要职责：
+ * {@code VMProgramBuilder} 负责后端阶段的 VM 指令序列组装及符号修补。
  * <ul>
- *     <li>维护代码指令序列和符号地址表</li>
- *     <li>支持跨函数、标签跳转的延后修补(Call/Branch Fixup)</li>
- *     <li>支持虚拟机本地槽位类型的管理(如 I/F...)</li>
+ *     <li>管理函数与标签到指令地址的映射</li>
+ *     <li>支持 CALL 和分支指令的延迟回填（符号修补）</li>
+ *     <li>支持槽位类型标注（用于类型检查和后端优化，可选）</li>
+ * </ul>
+ *
+ * <p><b>符号修补机制：</b></p>
+ * <ul>
+ *     <li>支持根据函数简名进行匹配，例如 Student.getName 可匹配到 Person.getName，实现方法复用和继承支持。</li>
+ *     <li>自动处理 super 调用的符号绑定，例如 Student.super 可自动绑定到 Person.__init__。</li>
+ *     <li>所有未解决的 CALL 或分支符号在 build() 阶段将抛出异常，便于调试和定位错误。</li>
  * </ul>
  */
+
 public final class VMProgramBuilder {
 
     /**
@@ -46,6 +53,10 @@ public final class VMProgramBuilder {
     /** 当前代码指针(已生成指令的数量/下一个指令的位置) */
     private int pc = 0;
 
+    // ==============================
+    // 槽位类型操作
+    // ==============================
+
     /**
      * 设置槽位(局部变量/虚拟寄存器)的类型前缀。
      *
@@ -66,17 +77,11 @@ public final class VMProgramBuilder {
         return slotType.getOrDefault(slot, 'I');
     }
 
-    /* ==========================================================
-       函数/标签管理
-       ========================================================== */
+    // =============函数/标签声明与指令生成=================
 
     /**
-     * 标记一个函数或标签的起始位置。
-     * <p>
-     * 1. 记录符号到当前 pc 的映射；
-     * 2. 立即尝试修补之前所有针对该符号的延后调用和分支。
-     *
-     * @param name 函数名或标签名(全限定名)
+     * 声明一个函数/标签的起始地址，并尝试修补所有引用到此符号的 CALL/BRANCH。
+     * @param name 函数或标签全名（如 "Person.getName"、"loop.start"）
      */
     public void beginFunction(String name) {
         addr.put(name, pc);
@@ -84,17 +89,15 @@ public final class VMProgramBuilder {
         patchBranchFixes(name);
     }
 
-    /** 函数结尾的处理(占位，无需特殊处理)。 */
+    /** 函数结束接口，目前无具体实现，便于将来扩展。 */
     public void endFunction() {}
 
     /**
-     * 添加一条指令或标签到代码列表。
-     *
-     * @param line 指令字符串或标签字符串(若以冒号结尾为标签)
+     * 添加一条 VM 指令或标签（末尾':'视为标签）。
+     * @param line 指令或标签
      */
     public void emit(String line) {
         if (line.endsWith(":")) {
-            // 标签定义
             String label = line.substring(0, line.length() - 1);
             addr.put(label, pc);
             patchBranchFixes(label);
@@ -105,10 +108,9 @@ public final class VMProgramBuilder {
     }
 
     /**
-     * 添加一条 CALL 指令，若目标未定义则延后修补。
-     *
-     * @param target 目标函数全名
-     * @param nArgs  参数个数
+     * 添加一条 CALL 指令。目标尚未声明时，使用占位符并登记延迟修补。
+     * @param target  目标函数全名（IR 侧生成）
+     * @param nArgs   实参个数
      */
     public void emitCall(String target, int nArgs) {
         Integer a = resolve(target);
@@ -129,9 +131,9 @@ public final class VMProgramBuilder {
     public void emitBranch(String opcode, String label) {
         Integer a = resolve(label);
         if (a != null) {
-            emit(opcode + ' ' + a);
+            emit(opcode + " " + a);
         } else {
-            emit(opcode + ' ' + PLACEHOLDER);
+            emit(opcode + " " + PLACEHOLDER);
             branchFixes.add(new BranchFix(pc - 1, label));
         }
     }
@@ -147,8 +149,8 @@ public final class VMProgramBuilder {
     public List<String> build() {
         if (!callFixes.isEmpty() || !branchFixes.isEmpty()) {
             throw new IllegalStateException(
-                    "Unresolved symbols — CALL: " + callFixes +
-                            ", BRANCH: " + branchFixes);
+                    "Unresolved symbols — CALL: " + callFixes + ", BRANCH: " + branchFixes
+            );
         }
         return List.copyOf(code);
     }
@@ -164,29 +166,31 @@ public final class VMProgramBuilder {
     }
 
     /**
-     * 修补所有等待目标函数 name 的 CALL 指令。
-     * <p>
-     * 支持两种匹配：
-     * <ul>
-     *   <li>全名匹配：f.target == name</li>
-     *   <li>简名匹配：f.target 不含 '.'，且等于 name 的最后一段</li>
-     * </ul>
-     * 这样 IR 里生成 CALL getCity 也能绑定到 Address.getCity。
+     * 对所有待修补的 CALL 指令进行补丁。
+     * 匹配规则：
+     *   1. 全限定名完全匹配
+     *   2. 简名(最后一段)匹配
+     *   3. super 调用：target 以 .super 结尾、name 以 .__init__ 结尾
+     * @param name 新声明的符号名
      */
     private void patchCallFixes(String name) {
         // 当前函数的简名（去掉前缀）
-        String simpleName = name.contains(".")
-                ? name.substring(name.lastIndexOf('.') + 1)
-                : name;
+        String nameSimple = lastSegment(name);
 
-        for (Iterator<CallFix> it = callFixes.iterator(); it.hasNext();) {
+        for (Iterator<CallFix> it = callFixes.iterator(); it.hasNext(); ) {
             CallFix f = it.next();
 
+            // 全限定名完全匹配
             boolean qualifiedMatch = f.target.equals(name);
-            boolean simpleMatch = !f.target.contains(".") && f.target.equals(simpleName);
+            // 简名匹配
+            String targetSimple = lastSegment(f.target);
+            boolean simpleMatch = targetSimple.equals(nameSimple);
+            // super 调用绑定
+            boolean superMatch = f.target.endsWith(".super") && name.endsWith(".__init__");
 
-            if (qualifiedMatch || simpleMatch) {
-                code.set(f.index, VMOpCode.CALL + " " + addr.get(name) + " " + f.nArgs);
+            if (qualifiedMatch || simpleMatch || superMatch) {
+                int targetAddr = addr.get(name);
+                code.set(f.index, VMOpCode.CALL + " " + targetAddr + " " + f.nArgs);
                 it.remove();
             }
         }
@@ -198,7 +202,7 @@ public final class VMProgramBuilder {
      * @param label 目标标签
      */
     private void patchBranchFixes(String label) {
-        for (Iterator<BranchFix> it = branchFixes.iterator(); it.hasNext();) {
+        for (Iterator<BranchFix> it = branchFixes.iterator(); it.hasNext(); ) {
             BranchFix f = it.next();
             if (f.label.equals(label)) {
                 String patched = code.get(f.index).replace(PLACEHOLDER, addr.get(label).toString());
@@ -206,5 +210,15 @@ public final class VMProgramBuilder {
                 it.remove();
             }
         }
+    }
+
+    /**
+     * 获取符号名最后一段（即最后一个 '.' 之后的名字，若无 '.' 则为原名）。
+     * @param sym 符号全名
+     * @return 简名
+     */
+    private static String lastSegment(String sym) {
+        int p = sym.lastIndexOf('.');
+        return (p >= 0 && p < sym.length() - 1) ? sym.substring(p + 1) : sym;
     }
 }
