@@ -225,8 +225,8 @@ public record CompileTask(Project project, String[] args) implements Task {
         IRProgram program = new IRProgramBuilder().buildProgram(allAst);
         program = reorderForEntry(program);  // 确保 main 在首位
 
-        print("### AST");
-        if (SnowConfig.isDebug()) ASTPrinter.printJson(allAst);
+//        print("### AST");
+//        if (SnowConfig.isDebug()) ASTPrinter.printJson(allAst);
 
         print("### IR");
         print(program.toString());
