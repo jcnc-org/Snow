@@ -217,7 +217,7 @@ final class IRBuilderScope {
      * @param structName 结构体名
      * @return 字段名到下标映射的只读视图，或 null
      */
-    Map<String, Integer> getStructLayout(String structName) {
+    static Map<String, Integer> getStructLayout(String structName) {
         Map<String, Integer> layout = STRUCT_LAYOUTS.get(structName);
         if (layout == null && structName != null) {
             int dot = structName.lastIndexOf('.');
