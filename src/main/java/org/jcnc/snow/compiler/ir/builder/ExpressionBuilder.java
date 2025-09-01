@@ -128,10 +128,10 @@ public record ExpressionBuilder(IRContext ctx) {
 
         // ===== 2. 结构体/对象字段访问 =====
 
-        // (1) 递归构建成员对象（如 a.b，先获得 a 的寄存器）
+        // 1 递归构建成员对象（如 a.b，先获得 a 的寄存器）
         IRVirtualRegister objReg = build(mem.object());
 
-        // (2) 尝试解析成员访问接收者（object）的类型
+        // 2 尝试解析成员访问接收者（object）的类型
         String ownerType = null;
         if (mem.object() instanceof IdentifierNode oid) {
             // 如果对象是标识符，直接查询其类型（例如 a.x，a 的类型）
@@ -147,14 +147,14 @@ public record ExpressionBuilder(IRContext ctx) {
             throw new IllegalStateException("无法解析成员访问接收者的类型");
         }
 
-        // (3) 查找字段槽位下标：ownerType 的 mem.member() 字段的序号
+        // 3 查找字段槽位下标：ownerType 的 mem.member() 字段的序号
         Integer fieldIndex = ctx.getScope().lookupFieldIndex(ownerType, mem.member());
         if (fieldIndex == null) {
             // 字段不存在，抛出异常
             throw new IllegalStateException("类型 " + ownerType + " 不存在字段: " + mem.member());
         }
 
-        // (4) 生成读取字段的 IR 指令：CALL __index_r, objReg, const(fieldIndex)
+        // 4 生成读取字段的 IR 指令：CALL __index_r, objReg, const(fieldIndex)
         // 4.1 先将字段下标加载到寄存器
         IRVirtualRegister idxReg = ctx.newRegister();
         ctx.addInstruction(new LoadConstInstruction(
@@ -170,7 +170,6 @@ public record ExpressionBuilder(IRContext ctx) {
         ctx.addInstruction(new CallInstruction(out, "__index_r", args));
         return out;
     }
-
 
 
     /**
@@ -208,23 +207,34 @@ public record ExpressionBuilder(IRContext ctx) {
             // ===================== new 表达式（构造数组/对象） =====================
             // 生成空数组，然后按参数依次初始化每一项，使用 __setindex_r 填充目标寄存器
             case NewExpressionNode newExpr -> {
-                // 步骤1：先写入空 List（目标寄存器 dest）
+                // 1. 把空列表写入目标寄存器
                 InstructionFactory.loadConstInto(ctx, dest, new IRConstant(java.util.List.of()));
 
-                // 步骤2：依次写入构造参数（填充各下标项）
+                // 2. 依次写入构造实参，同时缓存参数寄存器
+                List<IRVirtualRegister> argRegs = new ArrayList<>();
                 for (int i = 0; i < newExpr.arguments().size(); i++) {
-                    IRVirtualRegister argReg = build(newExpr.arguments().get(i)); // 参数值寄存器
-                    IRVirtualRegister idxReg = ctx.newTempRegister();             // 下标寄存器
+                    IRVirtualRegister argReg = build(newExpr.arguments().get(i));
+                    argRegs.add(argReg);
+
+                    IRVirtualRegister idxReg = ctx.newTempRegister();
                     InstructionFactory.loadConstInto(ctx, idxReg, new IRConstant(i));
 
-                    // 组装参数：arr、idx、value，调用 runtime 的 __setindex_r 填充元素
-                    List<IRValue> args = new ArrayList<>();
-                    args.add(dest);   // 数组本身
-                    args.add(idxReg); // 下标
-                    args.add(argReg); // 元素值
-                    ctx.addInstruction(new CallInstruction(null, "__setindex_r", args));
+                    ctx.addInstruction(new CallInstruction(
+                            null,
+                            "__setindex_r",
+                            List.of(dest, idxReg, argReg)));
+                }
+
+                /* 3. 若确认为结构体，显式调用 <Struct>.__init__N 完成字段初始化 */
+                if (IRBuilderScope.getStructLayout(newExpr.typeName()) != null) {
+                    String ctor = newExpr.typeName() + ".__init__" + argRegs.size();
+                    List<IRValue> ctorArgs = new ArrayList<>();
+                    ctorArgs.add(dest);          // this
+                    ctorArgs.addAll(argRegs);    // 实参
+                    ctx.addInstruction(new CallInstruction(null, ctor, ctorArgs));
                 }
             }
+
 
             // ===================== 变量标识符 =====================
             // 如 x，查找符号表，move 到目标寄存器。未定义时报错。
@@ -514,6 +524,7 @@ public record ExpressionBuilder(IRContext ctx) {
      *     <li>遍历所有构造参数，依次写入目标列表的 [0..n-1] 位置</li>
      *     <li>最终返回该寄存器</li>
      * </ul>
+     *
      * @param node new 表达式节点，包含所有构造参数
      * @return 保存新创建对象/数组引用的目标寄存器
      */
@@ -521,27 +532,32 @@ public record ExpressionBuilder(IRContext ctx) {
         // 1. 分配新的寄存器作为 new 表达式的结果
         IRVirtualRegister dest = ctx.newRegister();
 
-        // 2. 先写入一个空列表常量（由后端 R_PUSH 等 runtime 扩展为动态对象/列表）
+        /* 1. 写入空列表 */
         InstructionFactory.loadConstInto(ctx, dest, new IRConstant(java.util.List.of()));
 
-        // 3. 遍历所有构造参数，依次写入目标列表的 [0..n-1] 下标位置
+        /* 2. 创建参数并写入列表，同时缓存参数寄存器 */
+        List<IRVirtualRegister> argRegs = new ArrayList<>();
         for (int i = 0; i < node.arguments().size(); i++) {
-            // 3.1 构造第 i 个参数的值，存入 argReg
             IRVirtualRegister argReg = build(node.arguments().get(i));
-            // 3.2 临时分配一个寄存器 idxReg 存储下标 i
+            argRegs.add(argReg);
+
             IRVirtualRegister idxReg = ctx.newTempRegister();
             InstructionFactory.loadConstInto(ctx, idxReg, new IRConstant(i));
 
-            // 3.3 调用 runtime 的 __setindex_r 写入元素
-            List<IRValue> args = new ArrayList<>();
-            args.add(dest);   // 目标列表对象
-            args.add(idxReg); // 当前下标
-            args.add(argReg); // 参数值
-
-            ctx.addInstruction(new CallInstruction(null, "__setindex_r", args));
+            ctx.addInstruction(new CallInstruction(
+                    null, "__setindex_r",
+                    List.of(dest, idxReg, argReg)));
         }
 
-        // 4. 返回最终保存新建对象/数组的寄存器
+        /* 3. 若为结构体实例，调用构造器 <Struct>.__init__N */
+        if (IRBuilderScope.getStructLayout(node.typeName()) != null) {
+            String ctorName = node.typeName() + ".__init__" + argRegs.size();
+            List<IRValue> ctorArgs = new ArrayList<>();
+            ctorArgs.add(dest);          // 隐式 this
+            ctorArgs.addAll(argRegs);    // 构造实参
+            ctx.addInstruction(new CallInstruction(null, ctorName, ctorArgs));
+        }
+
         return dest;
     }
 
