@@ -1,0 +1,56 @@
+module: main
+	struct: Student extends Person
+	    fields:
+	        declare studentId: int
+	    init:
+	        params:
+	            name: int
+	            studentId: int
+	        body:
+	            super(name)
+	            this.studentId = studentId
+	        end body
+	    end init
+
+	    // 新增：无参数构造
+	    init:
+	        params:
+	        body:
+	            super(0)
+	            this.studentId = 0
+	        end body
+	    end init
+
+	    // 新增：只带 name
+	    init:
+	        params:
+	            name: int
+	        body:
+	            super(name)
+	            this.studentId = -1
+	        end body
+	    end init
+
+	    function: getStudentId
+	        returns: int
+	        body:
+	            return this.studentId
+	        end body
+	    end function
+	end struct
+
+	function: main
+	    returns: void
+	    body:
+	        declare a: Student = new Student(123, 1001)
+	        declare b: Student = new Student()
+	        declare c: Student = new Student(88)
+	        os.println(a.getName())      // 123
+	        os.println(a.getStudentId()) // 1001
+	        os.println(b.getName())      // 0
+	        os.println(b.getStudentId()) // 0
+	        os.println(c.getName())      // 88
+	        os.println(c.getStudentId()) // -1
+	    end body
+	end function
+end module
