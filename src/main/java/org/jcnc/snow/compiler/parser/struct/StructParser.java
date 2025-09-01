@@ -65,7 +65,7 @@ public class StructParser implements TopLevelParser {
 
         /* -------- 初始化容器 -------- */
         List<DeclarationNode> fields = new ArrayList<>();
-        FunctionNode init = null;
+        List<FunctionNode> inits = new ArrayList<>();
         List<FunctionNode> methods = new ArrayList<>();
 
         DeclarationStatementParser declParser = new DeclarationStatementParser();
@@ -104,12 +104,17 @@ public class StructParser implements TopLevelParser {
 
                 /* ---------- 构造函数 init ---------- */
                 case "init" -> {
-                    if (init != null) {
-                        throw new UnexpectedToken(
-                                "重复定义 init 构造函数",
-                                ts.peek().getLine(), ts.peek().getCol());
+                    FunctionNode ctor = parseInit(ctx, structName);
+
+                    // 按参数个数去重
+                    for (FunctionNode ex : inits) {
+                        if (ex.parameters().size() == ctor.parameters().size()) {
+                            throw new UnexpectedToken(
+                                    "重复定义 init 构造函数 (参数数量冲突)",
+                                    ts.peek().getLine(), ts.peek().getCol());
+                        }
                     }
-                    init = parseInit(ctx, structName);
+                    inits.add(ctor);
                 }
 
                 /* ---------- 普通方法 function ---------- */
@@ -119,8 +124,8 @@ public class StructParser implements TopLevelParser {
                 case "end" -> {
                     ts.expect("end");
                     ts.expect("struct");
-                    // 返回完整结构体 AST 节点
-                    return new StructNode(structName, parentName, fields, init, methods,
+                    return new StructNode(structName, parentName,
+                            fields, inits, methods,
                             new NodeContext(line, col, file));
                 }
 
