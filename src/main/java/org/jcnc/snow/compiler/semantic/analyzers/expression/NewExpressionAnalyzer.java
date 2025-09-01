@@ -51,7 +51,7 @@ public class NewExpressionAnalyzer implements ExpressionAnalyzer<NewExpressionNo
 
         final String typeName = expr.typeName();
 
-        // 1) 解析目标类型（通过语义上下文统一入口，支持别名、跨模块等情况）
+        // 1. 解析目标类型（通过语义上下文统一入口，支持别名、跨模块等情况）
         Type parsed = ctx.parseType(typeName);
         if (parsed == null) {
             // 类型不存在，报错并降级
@@ -64,7 +64,7 @@ public class NewExpressionAnalyzer implements ExpressionAnalyzer<NewExpressionNo
             return BuiltinType.INT;
         }
 
-        // 2) 分析所有实参的类型
+        // 2. 分析所有实参的类型
         List<Type> argTypes = new ArrayList<>();
         for (ExpressionNode a : expr.arguments()) {
             Type at = ctx.getRegistry()
@@ -77,30 +77,25 @@ public class NewExpressionAnalyzer implements ExpressionAnalyzer<NewExpressionNo
             argTypes.add(at);
         }
 
-        // 3) 检查并获取结构体构造函数（init）签名
-        FunctionType ctor = st.getConstructor();
+        // 3. 选择并检查结构体构造函数（init）——支持重载：按“参数个数”匹配
+        FunctionType ctor = st.getConstructor(argTypes.size());
+
         if (ctor == null) {
-            // 未定义构造函数，仅允许零参数，否则报错
-            if (!argTypes.isEmpty()) {
-                ctx.errors().add(new SemanticError(expr,
-                        "结构体 " + st.name() + " 未定义构造函数 init，不能接收参数"));
+            // 若该结构体完全未声明任何 init，且调用为 0 实参，则允许隐式默认构造（保留旧行为）
+            if (st.getConstructors().isEmpty() && argTypes.isEmpty()) {
+                return st;
             }
-            // 允许 new T() 零参数构造
-            return st;
-        }
-
-        // 3.1) 构造函数参数数量检查
-        if (ctor.paramTypes().size() != argTypes.size()) {
+            // 否则报错：未找到对应形参个数的构造函数
             ctx.errors().add(new SemanticError(expr,
-                    String.format("构造函数参数数量不匹配: 期望 %d 个, 实际 %d 个",
-                            ctor.paramTypes().size(), argTypes.size())));
+                    "未找到参数个数为 " + argTypes.size() + " 的构造函数"));
             return st;
         }
 
-        // 3.2) 构造函数参数类型兼容性检查（包括数值类型宽化）
-        for (int i = 0; i < argTypes.size(); i++) {
-            Type expected = ctor.paramTypes().get(i); // 构造函数声明的参数类型
-            Type actual = argTypes.get(i);          // 实际传入的实参类型
+        // 3.1. 构造函数参数类型兼容性检查（包括数值类型宽化）
+        List<Type> expectedParams = ctor.paramTypes();
+        for (int i = 0; i < expectedParams.size(); i++) {
+            Type expected = expectedParams.get(i); // 构造函数声明的参数类型
+            Type actual   = argTypes.get(i);       // 实际传入的实参类型
 
             boolean compatible = expected.isCompatible(actual); // 直接类型兼容
             boolean widenOK = expected.isNumeric()
@@ -115,7 +110,7 @@ public class NewExpressionAnalyzer implements ExpressionAnalyzer<NewExpressionNo
             }
         }
 
-        // 4) new 表达式的类型就是结构体类型
+        // 4. new 表达式的类型就是结构体类型
         return st;
     }
 }
