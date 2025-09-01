@@ -54,20 +54,22 @@ public record SignatureRegistrar(Context ctx) {
                 StructType st = new StructType(mod.name(), stn.name());
                 mi.getStructs().put(stn.name(), st);
 
-                // --- 2.1 构造函数 init ---
-                if (stn.init() != null) {
-                    List<Type> ptypes = new ArrayList<>();
-                    for (ParameterNode p : stn.init().parameters()) {
-                        // 解析参数类型，不存在则报错降级为 int
-                        Type t = ctx.parseType(p.type());
-                        if (t == null) {
-                            ctx.errors().add(new SemanticError(p, "未知类型: " + p.type()));
-                            t = BuiltinType.INT;
+                // --- 2.1 多个构造函数 init（重载，按参数个数区分） ---
+                if (stn.inits() != null) {
+                    for (FunctionNode initFn : stn.inits()) {
+                        List<Type> ptypes = new ArrayList<>();
+                        for (ParameterNode p : initFn.parameters()) {
+                            // 解析参数类型，不存在则报错降级为 int
+                            Type t = ctx.parseType(p.type());
+                            if (t == null) {
+                                ctx.errors().add(new SemanticError(p, "未知类型: " + p.type()));
+                                t = BuiltinType.INT;
+                            }
+                            ptypes.add(t);
                         }
-                        ptypes.add(t);
+                        // 构造函数返回类型固定为 void
+                        st.addConstructor(new FunctionType(ptypes, BuiltinType.VOID));
                     }
-                    // 构造函数返回类型固定为 void
-                    st.setConstructor(new FunctionType(ptypes, BuiltinType.VOID));
                 }
 
                 // --- 2.2 结构体方法签名 ---
