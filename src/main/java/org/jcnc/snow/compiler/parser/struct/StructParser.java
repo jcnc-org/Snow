@@ -53,6 +53,14 @@ public class StructParser implements TopLevelParser {
         ts.expect("struct");
         ts.expect(":");
         String structName = ts.expectType(TokenType.IDENTIFIER).getLexeme();
+
+        // 解析可选 extends
+        String parentName = null;
+        if ("extends".equals(ts.peek().getLexeme())) {
+            ts.expect("extends");
+            parentName = ts.expectType(TokenType.IDENTIFIER).getLexeme();
+        }
+
         ts.expectType(TokenType.NEWLINE);
 
         /* -------- 初始化容器 -------- */
@@ -112,7 +120,7 @@ public class StructParser implements TopLevelParser {
                     ts.expect("end");
                     ts.expect("struct");
                     // 返回完整结构体 AST 节点
-                    return new StructNode(structName, fields, init, methods,
+                    return new StructNode(structName, parentName, fields, init, methods,
                             new NodeContext(line, col, file));
                 }
 
