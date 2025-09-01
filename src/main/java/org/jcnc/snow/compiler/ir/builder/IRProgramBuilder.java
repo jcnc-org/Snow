@@ -34,24 +34,16 @@ public final class IRProgramBuilder {
     /**
      * 将解析生成的 AST 根节点列表转换为 IRProgram。
      *
-     * @param roots 含 ModuleNode、FunctionNode 或 StatementNode 的顶层 AST 根节点列表
-     * @return 包含所有转换后 IRFunction 的 IRProgram 对象
+     * @param roots 顶层 AST 根节点列表（ModuleNode / FunctionNode / StatementNode）
+     * @return 构建好的 IRProgram
      * @throws IllegalStateException 遇到不支持的顶层节点类型时抛出
      *
-     *                               <p>
-     *                               主流程为：
+     *                               <p>主流程：</p>
      *                               <ol>
-     *                                   <li>首先登记全局常量（便于后续常量折叠优化）。</li>
-     *                                   <li>再注册所有 struct 的字段布局（为成员读写和 this.xx 做准备）。</li>
-     *                                   <li>随后依次遍历各顶层节点，根据类型进行分发处理：</li>
-     *                                   <ul>
-     *                                       <li>ModuleNode: 先降级并注册 struct 方法/构造，再处理普通函数。</li>
-     *                                       <li>FunctionNode: 直接构建为 IRFunction。</li>
-     *                                       <li>StatementNode: 作为脚本模式顶层语句包装进 "_start" 函数。</li>
-     *                                       <li>其他类型: 抛出异常。</li>
-     *                                   </ul>
+     *                                 <li>登记全局常量（便于后续常量折叠）。</li>
+     *                                 <li>注册所有 struct 的字段布局（为成员读写和 this.xx 做准备）。</li>
+     *                                 <li>遍历根节点：模块 → 先降级并注册 struct 的构造/方法，再处理模块函数；顶层函数直接构建；顶层语句打包为 "_start" 构建。</li>
      *                               </ol>
-     *                               </p>
      */
     public IRProgram buildProgram(List<Node> roots) {
         // 1. 先登记全局常量，便于后续常量折叠
@@ -95,29 +87,49 @@ public final class IRProgramBuilder {
     // ===================== 预扫描：注册结构体字段布局 =====================
 
     /**
-     * 遍历所有模块与结构体，按字段声明顺序构建“字段名 -> 槽位索引”的映射，
-     * 并注册到 {@link IRBuilderScope#registerStructLayout(String, Map)} 中。
-     * 这样在构建任意函数/方法时，成员访问（如 this.name）就能查询到正确的字段索引。
+     * 为每个结构体注册字段布局（字段名 → 槽位索引），并在有继承时将父类布局复制并续接。
      *
+     * <p>规则：</p>
+     * <ol>
+     *   <li>若存在父类：先取到父类布局（如果能找到），将其按顺序复制到当前布局中；起始索引 = 父类字段数。</li>
+     *   <li>再将当前结构体声明的字段按声明顺序追加；如果字段名与父类重复，跳过以避免覆盖。</li>
+     *   <li>最后将布局以 <code>StructName</code> 为键注册到 {@link IRBuilderScope} 的全局布局表。</li>
+     * </ol>
      * @param roots AST 顶层节点列表，包含模块/结构体信息
      */
     private void preloadStructLayouts(List<Node> roots) {
         for (Node n : roots) {
-            // 只处理模块节点
             if (!(n instanceof ModuleNode mod)) continue;
             if (mod.structs() == null) continue;
 
-            // 遍历每个 struct，收集字段布局
             for (StructNode s : mod.structs()) {
                 List<DeclarationNode> fields = s.fields();
                 if (fields == null) continue;
+
                 Map<String, Integer> layout = new LinkedHashMap<>();
                 int idx = 0;
-                for (DeclarationNode d : fields) {
-                    // 字段声明顺序决定槽位顺序（如0,1,2,...）
-                    layout.put(d.getName(), idx++);
+
+                // 1. 若有父类，先复制父类布局，并将索引起点置为父类字段数
+                String parentName = s.parent();
+                if (parentName != null && !parentName.isBlank()) {
+                    // 约定：IRBuilderScope 内部维护一个“结构体名 → 字段布局”的全局表
+                    // 这里假定提供静态查询方法 getStructLayout(String)
+                    Map<String, Integer> parentLayout = IRBuilderScope.getStructLayout(parentName);
+                    if (parentLayout != null && !parentLayout.isEmpty()) {
+                        layout.putAll(parentLayout);
+                        idx = parentLayout.size();
+                    }
                 }
-                // 注册字段布局。结构体名通常为简单名（如 Person），类型系统如支持 Module.Struct 在 IRBuilderScope 里兼容处理
+
+                // 2. 续接当前结构体声明的字段；若与父类同名，跳过（避免覆盖父类槽位）
+                for (DeclarationNode d : fields) {
+                    String name = d.getName();
+                    if (!layout.containsKey(name)) {
+                        layout.put(name, idx++);
+                    }
+                }
+
+                // 3. 注册：如 Person → {name:0}；Student(extends Person) → {name:0, studentId:1}
                 IRBuilderScope.registerStructLayout(s.name(), layout);
             }
         }
@@ -189,7 +201,7 @@ public final class IRProgramBuilder {
         );
     }
 
-    // ===================== 全局常量收集 =====================
+    // ===================== 预扫描：全局常量收集 =====================
 
     /**
      * 扫描所有模块节点，将其中声明的 const 全局变量（即编译期常量）
@@ -355,6 +367,7 @@ public final class IRProgramBuilder {
                 List.of(),
                 "void",
                 List.of(stmt),
+                // 用(-1,-1,"")占位，避免依赖真实位置信息
                 new NodeContext(-1, -1, "")
         );
     }
