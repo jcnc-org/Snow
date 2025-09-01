@@ -138,9 +138,9 @@ public final class IRProgramBuilder {
     // ===================== Struct 降级：方法/构造 → 普通函数 =====================
 
     /**
-     * 将一个 Struct 的构造函数（init）和方法（methods）降级为普通 Function，并注册进 IRProgram：
+     * 将一个 Struct 的所有构造函数（inits）和方法（methods）降级为普通 Function，并注册进 IRProgram：
      * <ul>
-     *     <li>构造函数：StructName.__init__(this:StructName, ...)</li>
+     *     <li>构造函数：StructName.__init__N(this:StructName, ...)，N为参数个数</li>
      *     <li>方法：StructName.method(this:StructName, ...)</li>
      * </ul>
      * <p>降级规则：</p>
@@ -155,17 +155,20 @@ public final class IRProgramBuilder {
     private void lowerAndRegisterStruct(StructNode structNode, IRProgram out) {
         String structName = structNode.name();
 
-        // 1) 降级处理构造函数（如有）
-        if (structNode.init() != null) {
-            FunctionNode loweredInit = lowerStructCallable(
-                    structNode.init(),
-                    structName + ".__init__",
-                    structName
-            );
-            out.add(buildFunction(loweredInit));
+        // 1. 多构造函数：降级为 StructName.__init__N
+        if (structNode.inits() != null) {
+            for (FunctionNode initFn : structNode.inits()) {
+                String loweredName = structName + ".__init__" + initFn.parameters().size();
+                FunctionNode loweredInit = lowerStructCallable(
+                        initFn,
+                        loweredName,
+                        structName
+                );
+                out.add(buildFunction(loweredInit));
+            }
         }
 
-        // 2) 降级处理所有普通方法
+        // 2. 降级处理所有普通方法
         if (structNode.methods() != null) {
             for (FunctionNode m : structNode.methods()) {
                 FunctionNode loweredMethod = lowerStructCallable(
