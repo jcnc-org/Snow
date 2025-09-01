@@ -101,20 +101,62 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
 
         // 处理数组读取和写入的内置函数
         switch (fn) {
-            case "__index_b" -> { generateIndexInstruction(ins, out, slotMap, 'B'); return; }
-            case "__index_s" -> { generateIndexInstruction(ins, out, slotMap, 'S'); return; }
-            case "__index_i" -> { generateIndexInstruction(ins, out, slotMap, 'I'); return; }
-            case "__index_l" -> { generateIndexInstruction(ins, out, slotMap, 'L'); return; }
-            case "__index_f" -> { generateIndexInstruction(ins, out, slotMap, 'F'); return; }
-            case "__index_d" -> { generateIndexInstruction(ins, out, slotMap, 'D'); return; }
-            case "__index_r" -> { generateIndexInstruction(ins, out, slotMap, 'R'); return; }
-            case "__setindex_b" -> { generateSetIndexInstruction(ins, out, slotMap, 'B'); return; }
-            case "__setindex_s" -> { generateSetIndexInstruction(ins, out, slotMap, 'S'); return; }
-            case "__setindex_i" -> { generateSetIndexInstruction(ins, out, slotMap, 'I'); return; }
-            case "__setindex_l" -> { generateSetIndexInstruction(ins, out, slotMap, 'L'); return; }
-            case "__setindex_f" -> { generateSetIndexInstruction(ins, out, slotMap, 'F'); return; }
-            case "__setindex_d" -> { generateSetIndexInstruction(ins, out, slotMap, 'D'); return; }
-            case "__setindex_r" -> { generateSetIndexInstruction(ins, out, slotMap, 'R'); return; }
+            case "__index_b" -> {
+                generateIndexInstruction(ins, out, slotMap, 'B');
+                return;
+            }
+            case "__index_s" -> {
+                generateIndexInstruction(ins, out, slotMap, 'S');
+                return;
+            }
+            case "__index_i" -> {
+                generateIndexInstruction(ins, out, slotMap, 'I');
+                return;
+            }
+            case "__index_l" -> {
+                generateIndexInstruction(ins, out, slotMap, 'L');
+                return;
+            }
+            case "__index_f" -> {
+                generateIndexInstruction(ins, out, slotMap, 'F');
+                return;
+            }
+            case "__index_d" -> {
+                generateIndexInstruction(ins, out, slotMap, 'D');
+                return;
+            }
+            case "__index_r" -> {
+                generateIndexInstruction(ins, out, slotMap, 'R');
+                return;
+            }
+            case "__setindex_b" -> {
+                generateSetIndexInstruction(ins, out, slotMap, 'B');
+                return;
+            }
+            case "__setindex_s" -> {
+                generateSetIndexInstruction(ins, out, slotMap, 'S');
+                return;
+            }
+            case "__setindex_i" -> {
+                generateSetIndexInstruction(ins, out, slotMap, 'I');
+                return;
+            }
+            case "__setindex_l" -> {
+                generateSetIndexInstruction(ins, out, slotMap, 'L');
+                return;
+            }
+            case "__setindex_f" -> {
+                generateSetIndexInstruction(ins, out, slotMap, 'F');
+                return;
+            }
+            case "__setindex_d" -> {
+                generateSetIndexInstruction(ins, out, slotMap, 'D');
+                return;
+            }
+            case "__setindex_r" -> {
+                generateSetIndexInstruction(ins, out, slotMap, 'R');
+                return;
+            }
         }
 
         // 默认：普通函数调用
@@ -190,10 +232,10 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
      * 首个参数为子命令，支持常量或寄存器引用；其余参数均以引用形式加载。
      * 若存在返回寄存器，则将结果存为整数类型。
      *
-     * @param ins    syscall 对应的 IR 调用指令
-     * @param out    VM 指令构建器
+     * @param ins     syscall 对应的 IR 调用指令
+     * @param out     VM 指令构建器
      * @param slotMap 寄存器到槽位的映射
-     * @param fn     函数名（"syscall" 或以 ".syscall" 结尾）
+     * @param fn      函数名（"syscall" 或以 ".syscall" 结尾）
      */
     private void generateSyscall(CallInstruction ins,
                                  VMProgramBuilder out,
@@ -306,7 +348,9 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
             throw new IllegalStateException("[CallGenerator] 未找到参数槽位");
         }
         char t = out.getSlotType(slot);
-        if (t == '\0') t = defaultType;
+        if (t == '\0' || (t == 'I' && defaultType != 'I')) {
+            t = defaultType;
+        }
         out.emit(OpHelper.opcode(t + "_LOAD") + " " + slot);
     }
 
