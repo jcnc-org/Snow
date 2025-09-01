@@ -14,19 +14,21 @@ import java.util.Optional;
 /**
  * {@code SignatureRegistrar}
  * <p>
- * 语义分析准备阶段：负责函数签名登记与 import 模块存在性校验。
+ * 语义分析准备阶段：负责函数签名登记、结构体签名登记与 import 校验。
+ *
  * <ul>
  *   <li>验证每个模块声明的 import 模块在全局模块表 {@link Context#modules()} 是否存在。</li>
  *   <li>将每个函数、结构体方法、构造函数的类型签名登记到 {@link ModuleInfo}，便于后续类型推断。</li>
+ *   <li>支持 {@code extends} 单继承：子类会继承父类的字段与方法。</li>
  *   <li>若参数或返回类型无法解析，则报错并降级为 int 或 void，保证语义分析流程健壮。</li>
  * </ul>
+ * <p>
  * 作为语义分析前置流程，为后续函数体和表达式分析提供类型环境。
- * </p>
  */
 public record SignatureRegistrar(Context ctx) {
 
     /**
-     * 遍历所有模块，注册函数/方法签名，校验 import 合法性，填充 {@link ModuleInfo} 元信息。
+     * 遍历所有模块，注册函数/方法/结构体签名，校验 import 合法性。
      *
      * @param modules 需要分析的所有模块列表（AST 顶层节点）
      */
@@ -72,7 +74,6 @@ public record SignatureRegistrar(Context ctx) {
                 for (FunctionNode fn : stn.methods()) {
                     List<Type> ptypes = new ArrayList<>();
                     for (ParameterNode p : fn.parameters()) {
-                        // 解析参数类型，不存在则报错降级为 int
                         Type t = ctx.parseType(p.type());
                         if (t == null) {
                             ctx.errors().add(new SemanticError(p, "未知类型: " + p.type()));
@@ -80,10 +81,31 @@ public record SignatureRegistrar(Context ctx) {
                         }
                         ptypes.add(t);
                     }
-                    // 返回类型未指定时降级为 void
                     Type ret = Optional.ofNullable(ctx.parseType(fn.returnType()))
                             .orElse(BuiltinType.VOID);
                     st.getMethods().put(fn.name(), new FunctionType(ptypes, ret));
+                }
+            }
+
+            // ========== 2.3 继承处理 ==========
+            for (StructNode stn : mod.structs()) {
+                if (stn.parent() != null) {
+                    StructType child = mi.getStructs().get(stn.name());
+                    StructType parent = mi.getStructs().get(stn.parent());
+
+                    if (parent == null) {
+                        // 父类不存在，报语义错误
+                        ctx.errors().add(new SemanticError(stn,
+                                "未知父类: " + stn.parent()));
+                    } else {
+                        // 将父类字段拷贝到子类（若子类未定义同名字段）
+                        parent.getFields().forEach(
+                                (k, v) -> child.getFields().putIfAbsent(k, v));
+                        // 将父类方法拷贝到子类（若子类未覆盖）
+                        parent.getMethods().forEach(
+                                (k, v) -> child.getMethods().putIfAbsent(k, v));
+                        // 构造函数不继承，由子类自行声明
+                    }
                 }
             }
 
@@ -91,7 +113,6 @@ public record SignatureRegistrar(Context ctx) {
             for (FunctionNode fn : mod.functions()) {
                 List<Type> params = new ArrayList<>();
                 for (ParameterNode p : fn.parameters()) {
-                    // 解析参数类型，不存在则报错降级为 int
                     Type t = ctx.parseType(p.type());
                     if (t == null) {
                         ctx.errors().add(new SemanticError(p, "未知类型: " + p.type()));
@@ -99,7 +120,6 @@ public record SignatureRegistrar(Context ctx) {
                     }
                     params.add(t);
                 }
-                // 返回类型未指定时降级为 void
                 Type ret = Optional.ofNullable(ctx.parseType(fn.returnType()))
                         .orElse(BuiltinType.VOID);
                 mi.getFunctions().put(fn.name(), new FunctionType(params, ret));
