@@ -182,7 +182,7 @@ public final class VMProgramBuilder {
      * 修补所有延迟 CALL。
      * 匹配规则：
      * 1. 全限定名完全匹配
-     * 2. super 调用支持多构造：target 以 .super 结尾，name 以 .__init__N 结尾且前缀匹配
+     * 2. super 调用支持多构造：target 以 .super 结尾，name 以 .__init__N 结尾且前缀匹配或参数数量匹配
      * 3. 简名匹配（含 __init__N）
      */
     private void patchCallFixes(String name) {
@@ -194,12 +194,23 @@ public final class VMProgramBuilder {
             // 全限定名完全匹配
             boolean qualifiedMatch = f.target.equals(name);
 
-            // super 调用绑定：target 以 .super，name 以 .__init__N 且前缀匹配
+            // super 调用绑定（支持参数数量匹配）
             boolean superMatch = false;
             if (f.target.endsWith(".super") && name.contains(".__init__")) {
                 String tStruct = f.target.substring(0, f.target.length() - 6); // 去掉 ".super"
                 String nStruct = name.substring(0, name.indexOf(".__init__"));
-                superMatch = tStruct.equals(nStruct);
+
+                // 匹配 __init__ 后面的数字得到参数个数
+                int initArgc = -1;
+                try {
+                    String num = name.substring(name.lastIndexOf("__init__") + 8);
+                    initArgc = Integer.parseInt(num);
+                } catch (NumberFormatException ignored) {}
+
+                // 前缀结构体名一致 或 参数数量一致，都可以认定为 super 匹配
+                if (tStruct.equals(nStruct) || initArgc == f.nArgs) {
+                    superMatch = true;
+                }
             }
 
             // 简名匹配（如 getName, __init__N 等）
