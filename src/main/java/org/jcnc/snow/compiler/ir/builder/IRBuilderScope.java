@@ -18,6 +18,7 @@ import java.util.Map;
  *   <li>支持变量的编译期常量值记录与查询（便于常量折叠等优化）</li>
  *   <li>支持跨模块全局常量（如 ModuleA.a）查找</li>
  *   <li>维护结构体字段布局（全局共享）：字段名 → 槽位下标，用于对象字段读写</li>
+ *   <li>维护结构体继承关系（子类 → 父类），super(...) 调用会用到</li>
  * </ul>
  */
 final class IRBuilderScope {
@@ -29,18 +30,14 @@ final class IRBuilderScope {
     /** 变量名到编译期常量值的映射表（本作用域） */
     private final Map<String, Object> varConstValues = new HashMap<>();
 
-    /**
-     * 存放跨模块导入的全局常量（如 ModuleA.a）。
-     * 键为 "ModuleA.a"，值为常量值。
-     */
+    /** 存放跨模块导入的全局常量（如 ModuleA.a） */
     private final Map<String, Object> externalConsts = new HashMap<>();
 
-    /**
-     * 结构体字段布局的全局静态表：
-     * 结构体名 → (字段名 → 槽位下标)。
-     * 静态表设计，确保所有作用域、所有 IR 构建都能访问同一套布局。
-     */
+    /** 结构体字段布局表：结构体名 → (字段名 → 槽位下标) */
     private static final Map<String, Map<String, Integer>> STRUCT_LAYOUTS = new HashMap<>();
+
+    /** 结构体继承关系表：子类名 → 父类名 */
+    private static final Map<String, String> STRUCT_PARENTS = new HashMap<>();
 
     /** 当前作用域所绑定的 IRFunction 实例，用于变量分配新寄存器等。 */
     private IRFunction fn;
@@ -121,7 +118,7 @@ final class IRBuilderScope {
         return Collections.unmodifiableMap(varTypes);
     }
 
-    // ---------------- 编译期常量相关接口 ----------------
+    // ---------------- 编译期常量 ----------------
 
     /**
      * 设置变量的编译期常量值（本地变量）。
@@ -202,8 +199,7 @@ final class IRBuilderScope {
         if (layout == null && structName != null) {
             int dot = structName.lastIndexOf('.');
             if (dot >= 0 && dot + 1 < structName.length()) {
-                String simple = structName.substring(dot + 1);
-                layout = STRUCT_LAYOUTS.get(simple);
+                layout = STRUCT_LAYOUTS.get(structName.substring(dot + 1));
             }
         }
         if (layout == null) return null;
@@ -227,4 +223,64 @@ final class IRBuilderScope {
         }
         return layout == null ? null : Collections.unmodifiableMap(layout);
     }
+
+    // ---------------- 结构体继承关系 ----------------
+    /**
+     * 注册结构体的父类信息。
+     * <p>
+     * 该方法用于维护结构体与其父类之间的映射关系。通过调用此方法，
+     * 可以为某个结构体名称指定其父结构体名称，并保存到全局的
+     * {@code STRUCT_PARENTS} 映射中。
+     * </p>
+     *
+     * @param structName  子结构体的名称，不能为空或 {@code null}
+     * @param parentName  父结构体的名称，不能为空、不能为 {@code null} 或空白
+     */
+    static void registerStructParent(String structName, String parentName) {
+        if (structName == null || parentName == null || parentName.isBlank()) return;
+        STRUCT_PARENTS.put(structName, parentName);
+    }
+
+    /**
+     * 获取某个结构体的父结构体名称。
+     * <p>
+     * 查询逻辑如下：
+     * <ol>
+     *     <li>首先直接从 {@code STRUCT_PARENTS} 中查找对应的父结构体。</li>
+     *     <li>如果未找到，且 {@code structName} 含有点号（.），则提取点号后的简单类名进行查找。</li>
+     *     <li>如果仍未找到，则遍历 {@code STRUCT_PARENTS} 的所有条目：
+     *         <ul>
+     *             <li>检查键（key）是否包含点号，若存在，则取其最后一个点号后的子串作为简单类名。</li>
+     *             <li>如果该简单类名与传入的 {@code structName} 相等，则返回对应的父类名称。</li>
+     *         </ul>
+     *     </li>
+     *     <li>如果所有方式都未找到，则返回 {@code null}。</li>
+     * </ol>
+     * </p>
+     *
+     * @param structName  需要查找父类的结构体名称，可以是完整类名或简单类名
+     * @return 父结构体名称；如果未找到，返回 {@code null}
+     */
+    static String getStructParent(String structName) {
+        if (structName == null || structName.isBlank()) return null;
+        String p = STRUCT_PARENTS.get(structName);
+        if (p != null) return p;
+
+        int dot = structName.lastIndexOf('.');
+        if (dot >= 0 && dot + 1 < structName.length()) {
+            String simple = structName.substring(dot + 1);
+            p = STRUCT_PARENTS.get(simple);
+            if (p != null) return p;
+        }
+
+        for (Map.Entry<String, String> e : STRUCT_PARENTS.entrySet()) {
+            String k = e.getKey();
+            int d = k.lastIndexOf('.');
+            if (d >= 0 && d + 1 < k.length() && k.substring(d + 1).equals(structName)) {
+                return e.getValue();
+            }
+        }
+        return null;
+    }
+
 }
