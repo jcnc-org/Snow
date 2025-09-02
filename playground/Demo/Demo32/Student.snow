@@ -1,0 +1,27 @@
+module: Student
+import : Person
+
+struct : Student extends Person
+	fields:
+	    declare	name: string
+		declare id: int
+
+	    init:
+            params:
+                declare name: int
+                declare id: int
+            body:
+                super(name)
+                this.id = id
+            end body
+        end init
+
+        function: getId
+            returns : int
+            body :
+                 return this.id
+            end body
+        end function
+
+end struct
+end module

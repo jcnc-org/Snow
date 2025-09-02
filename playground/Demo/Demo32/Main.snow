@@ -1,55 +1,12 @@
 module: main
-    import: os
+    import: os,Student
 
-    struct: Student
-        fields:
-            declare name: int
-            declare studentId: int
+	function: main
+	    returns: void
+	    body:
+	        declare a: Student = new Student(1,2)
 
-        init:
-            params:
-                name: int
-                studentId: int
-            body:
-                this.name = name
-                this.studentId = studentId
-            end body
-        end init
-
-        init:
-            params:
-            body:
-                this.name = 0
-                this.studentId = 0
-            end body
-        end init
-
-        init:
-            params:
-                name: int
-            body:
-                this.name = name
-                this.studentId = -1
-            end body
-        end init
-
-        function: getStudentId
-            returns: int
-            body:
-                return this.studentId
-            end body
-        end function
-    end struct
-
-    function: main
-        returns: void
-        body:
-            declare a: Student = new Student(123, 1001)
-            declare b: Student = new Student()
-            declare c: Student = new Student(88)
-            println(a.getStudentId())
-            println(b.getStudentId())
-            println(b.getStudentId())
-        end body
-    end function
+	       os.println(a.getName())
+	    end body
+	end function
 end module
