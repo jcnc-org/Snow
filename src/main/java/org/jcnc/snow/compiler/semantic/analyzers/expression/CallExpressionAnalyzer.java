@@ -55,8 +55,10 @@ import java.util.List;
  *   </li>
  *   <li>最终返回函数的返回类型；若分析过程中存在错误，返回 {@link BuiltinType#INT} 作为默认回退类型。</li>
  * </ul>
- *
- * <p>此分析器是编译器语义分析阶段的重要组成部分，确保调用表达式在类型系统和模块作用域中合法。</p>
+ * <p>
+ * 规则：
+ * - 外部模块函数必须显式写 `模块.函数`，不再支持未限定名。
+ * - 跨模块访问以下划线开头的私有函数禁止。
  */
 public class CallExpressionAnalyzer implements ExpressionAnalyzer<CallExpressionNode> {
 
@@ -97,14 +99,14 @@ public class CallExpressionAnalyzer implements ExpressionAnalyzer<CallExpression
                 // 左侧是标识符（可能是模块名或结构体变量）
                 String leftName = idNode.name();
 
-                // (1) 模块.函数调用
+                // 1. 模块.函数
                 if (ctx.getModules().containsKey(leftName) &&
                         (mi.getImports().contains(leftName) || mi.getName().equals(leftName))) {
                     targetModule = ctx.getModules().get(leftName);
                     functionName = member;
                     funcType = targetModule.getFunctions().get(functionName);
                 } else {
-                    // (2) 结构体实例.方法调用
+                    // 2. 结构体实例.函数
                     Symbol sym = locals.resolve(leftName);
                     if (sym != null && sym.type() instanceof StructType structType) {
                         funcType = structType.getMethods().get(member);
@@ -112,18 +114,16 @@ public class CallExpressionAnalyzer implements ExpressionAnalyzer<CallExpression
                         if (funcType == null) {
                             ctx.getErrors().add(new SemanticError(callee,
                                     "结构体方法未定义: " + structType + "." + member));
-                            ctx.log("错误: 结构体方法未定义 " + structType + "." + member);
                             return BuiltinType.INT;
                         }
                     } else {
                         ctx.getErrors().add(new SemanticError(callee,
                                 "未知或未导入模块: " + leftName));
-                        ctx.log("错误: 未导入模块或未声明变量 " + leftName);
                         return BuiltinType.INT;
                     }
                 }
             } else {
-                // (2 扩展) 任意表达式.方法调用
+                // 左边是任意表达式.方法
                 Type leftType = ctx.getRegistry()
                         .getExpressionAnalyzer(left)
                         .analyze(ctx, mi, fn, locals, left);
@@ -134,54 +134,50 @@ public class CallExpressionAnalyzer implements ExpressionAnalyzer<CallExpression
                     if (funcType == null) {
                         ctx.getErrors().add(new SemanticError(callee,
                                 "结构体方法未定义: " + structType + "." + member));
-                        ctx.log("错误: 结构体方法未定义 " + structType + "." + member);
                         return BuiltinType.INT;
                     }
                 } else {
                     ctx.getErrors().add(new SemanticError(callee,
                             "不支持的成员调用对象类型: " + leftType));
-                    ctx.log("错误: 不支持的成员调用对象类型 " + leftType);
                     return BuiltinType.INT;
                 }
             }
-        } else if (callee instanceof IdentifierNode idNode) {
-            // -------- 情况3: 普通函数调用 --------
+        }
+        // ===== 2. 普通函数调用 =====
+        else if (callee instanceof IdentifierNode idNode) {
             functionName = idNode.name();
-            funcType = mi.getFunctions().get(functionName); // 优先在当前模块查找
+            funcType = mi.getFunctions().get(functionName); // 仅在当前模块查找
 
-            // 若当前模块未定义，则尝试在导入模块中唯一解析
             if (funcType == null) {
-                ModuleInfo unique = null;
+                // 如果导入模块里存在该函数，提示必须写 模块.函数
+                List<String> candidates = new ArrayList<>();
                 for (String imp : mi.getImports()) {
                     ModuleInfo mod = ctx.getModules().get(imp);
                     if (mod != null && mod.getFunctions().containsKey(functionName)) {
-                        if (unique != null) {
-                            unique = null;
-                            break;
-                        } // 冲突: 不唯一
-                        unique = mod;
+                        candidates.add(mod.getName());
                     }
                 }
-                if (unique != null) {
-                    targetModule = unique;
-                    funcType = unique.getFunctions().get(functionName);
+                if (!candidates.isEmpty()) {
+                    ctx.getErrors().add(new SemanticError(idNode,
+                            "外部模块函数调用必须写为 模块.函数，例如: "
+                                    + candidates.get(0) + "." + functionName + "(...)"));
+                    return BuiltinType.INT;
                 }
             }
-        } else {
-            // 不支持的调用方式 (如直接 lambda/表达式调用)
+        }
+        // ===== 3. 其它情况，不支持 =====
+        else {
             ctx.getErrors().add(new SemanticError(callee,
                     "不支持的调用方式: " + callee));
-            ctx.log("错误: 不支持的调用方式 " + callee);
             return BuiltinType.INT;
         }
 
         // -------- 访问控制检查 --------
         if (functionName != null && funcType != null &&
-                functionName.startsWith("_") && !targetModule.getName().equals(mi.getName())) {
+                functionName.startsWith("_") &&
+                !targetModule.getName().equals(mi.getName())) {
             ctx.getErrors().add(new SemanticError(callee,
-                    "无法访问模块私有函数: " + targetModule.getName() + "." + functionName
-                            + "（下划线开头的函数只允许在定义模块内访问）"));
-            ctx.log("错误: 试图跨模块访问私有函数 " + targetModule.getName() + "." + functionName);
+                    "无法访问模块私有函数: " + targetModule.getName() + "." + functionName));
             return BuiltinType.INT;
         }
 
@@ -189,7 +185,6 @@ public class CallExpressionAnalyzer implements ExpressionAnalyzer<CallExpression
         if (funcType == null) {
             ctx.getErrors().add(new SemanticError(callee,
                     "函数未定义: " + functionName));
-            ctx.log("错误: 函数未定义 " + functionName);
             return BuiltinType.INT;
         }
 
@@ -200,15 +195,11 @@ public class CallExpressionAnalyzer implements ExpressionAnalyzer<CallExpression
                     .analyze(ctx, mi, fn, locals, arg));
         }
 
-        // -------- 参数数量检查 --------
         if (args.size() != funcType.paramTypes().size()) {
             ctx.getErrors().add(new SemanticError(call,
                     "参数数量不匹配: 期望 " + funcType.paramTypes().size()
-                            + " 个, 实际 " + args.size() + " 个"));
-            ctx.log("错误: 参数数量不匹配: 期望 "
-                    + funcType.paramTypes().size() + ", 实际 " + args.size());
+                            + ", 实际 " + args.size()));
         } else {
-            // -------- 参数类型检查与转换 --------
             for (int i = 0; i < args.size(); i++) {
                 Type expected = funcType.paramTypes().get(i);
                 Type actual = args.get(i);
@@ -217,21 +208,13 @@ public class CallExpressionAnalyzer implements ExpressionAnalyzer<CallExpression
                         || (expected.isNumeric() && actual.isNumeric()
                         && Type.widen(actual, expected) == expected);
 
-                // 特殊情况：数值自动转 string
                 if (!ok && expected == BuiltinType.STRING && actual.isNumeric()) {
-                    ctx.log(String.format(
-                            "隐式将参数 %d 的数值类型 %s 转换为 string (to_string)",
-                            i, actual
-                    ));
-                    ok = true;
+                    ok = true; // 自动数值→string
                 }
 
                 if (!ok) {
                     ctx.getErrors().add(new SemanticError(call,
-                            String.format("参数类型不匹配 (位置 %d): 期望 %s, 实际 %s",
-                                    i, expected, actual)));
-                    ctx.log("错误: 参数类型不匹配 (位置 " + i + "): 期望 "
-                            + expected + ", 实际 " + actual);
+                            "参数类型不匹配 (位置 " + i + "): 期望 " + expected + ", 实际 " + actual));
                 }
             }
         }
