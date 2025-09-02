@@ -190,15 +190,6 @@ public class Context {
                     }
                 }
             }
-            // 2.3 全局所有模块的结构体，作为兜底
-            if (base == null) {
-                for (ModuleInfo im : modules.values()) {
-                    if (im.getStructs().containsKey(name)) {
-                        base = im.getStructs().get(name);
-                        break;
-                    }
-                }
-            }
         }
 
         if (base == null) return null; // 所有路径均未找到
