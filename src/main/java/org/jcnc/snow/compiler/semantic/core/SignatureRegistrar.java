@@ -54,6 +54,18 @@ public record SignatureRegistrar(Context ctx) {
                 StructType st = new StructType(mod.name(), stn.name());
                 mi.getStructs().put(stn.name(), st);
 
+                // --- 2.0 字段签名登记 ---
+                if (stn.fields() != null) {
+                    for (DeclarationNode field : stn.fields()) {
+                        Type ft = ctx.parseType(field.getType());
+                        if (ft == null) {
+                            ctx.errors().add(new SemanticError(field, "未知类型: " + field.getType()));
+                            ft = BuiltinType.INT;
+                        }
+                        st.getFields().put(field.getName(), ft);
+                    }
+                }
+
                 // --- 2.1 多个构造函数 init（重载，按参数个数区分） ---
                 if (stn.inits() != null) {
                     for (FunctionNode initFn : stn.inits()) {
@@ -93,10 +105,10 @@ public record SignatureRegistrar(Context ctx) {
             for (StructNode stn : mod.structs()) {
                 if (stn.parent() != null) {
                     StructType child = mi.getStructs().get(stn.name());
-                    StructType parent = mi.getStructs().get(stn.parent());
+                    StructType parent = resolveParentStruct(mi, stn.parent());
 
                     if (parent == null) {
-                        // 父类不存在，报语义错误
+                        // 父类不存在（既不在本模块，也不在导入模块 / 限定名错误），报语义错误
                         ctx.errors().add(new SemanticError(stn,
                                 "未知父类: " + stn.parent()));
                     } else {
@@ -127,5 +139,42 @@ public record SignatureRegistrar(Context ctx) {
                 mi.getFunctions().put(fn.name(), new FunctionType(params, ret));
             }
         }
+    }
+
+    /**
+     * 解析父类结构体：
+     * <ul>
+     *   <li>支持限定名 {@code Module.Struct}。</li>
+     *   <li>支持在本模块与 import 的模块中按未限定名查找。</li>
+     * </ul>
+     */
+    private StructType resolveParentStruct(ModuleInfo mi, String parentName) {
+        // 1. 限定名：Module.Struct
+        int dot = parentName.indexOf('.');
+        if (dot > 0 && dot < parentName.length() - 1) {
+            String m = parentName.substring(0, dot);
+            String s = parentName.substring(dot + 1);
+            ModuleInfo pm = ctx.modules().get(m);
+            if (pm != null) {
+                StructType st = pm.getStructs().get(s);
+                if (st != null) return st;
+            }
+            return null;
+        }
+
+        // 2. 先在当前模块找
+        StructType local = mi.getStructs().get(parentName);
+        if (local != null) return local;
+
+        // 3. 在导入模块中找
+        for (String imported : mi.getImports()) {
+            ModuleInfo pim = ctx.modules().get(imported);
+            if (pim == null) continue;
+            StructType st = pim.getStructs().get(parentName);
+            if (st != null) return st;
+        }
+
+        // 未找到
+        return null;
     }
 }
