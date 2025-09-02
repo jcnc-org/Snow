@@ -8,55 +8,72 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * 维护 “虚拟 fd → Java NIO Channel” 的全局映射表。
+ * Maintains a global mapping table: “virtual fd → Java NIO Channel”.
  *
  * <pre>
  *   0  → stdin   (ReadableByteChannel)
  *   1  → stdout  (WritableByteChannel)
  *   2  → stderr  (WritableByteChannel)
- *   3+ → 运行期动态分配
+ *   3+ → Dynamically allocated at runtime
  * </pre>
  */
 public final class FDTable {
 
     private FDTable() {}
 
-    /** 下一次可用 fd（0‒2 保留给标准流） */
+    /** Next available fd (0‒2 are reserved for standard streams) */
     private static final AtomicInteger NEXT_FD = new AtomicInteger(3);
-    /** 主映射表：fd → Channel */
+    /** Main mapping table: fd → Channel */
     private static final ConcurrentHashMap<Integer, Channel> MAP = new ConcurrentHashMap<>();
 
     static {
-        // JVM 标准流包装成 NIO Channel 后放入表中
+        // Wrap JVM standard streams as NIO Channels and put them into the table
         MAP.put(0, Channels.newChannel(new BufferedInputStream(System.in)));
         MAP.put(1, Channels.newChannel(new BufferedOutputStream(System.out)));
         MAP.put(2, Channels.newChannel(new BufferedOutputStream(System.err)));
     }
 
-    /** 注册新 Channel，返回分配到的虚拟 fd */
+    /**
+     * Register a new Channel, returning the allocated virtual fd.
+     * @param ch Channel to register
+     * @return allocated fd
+     */
     public static int register(Channel ch) {
         int fd = NEXT_FD.getAndIncrement();
         MAP.put(fd, ch);
         return fd;
     }
 
-    /** 取得 Channel；如果 fd 不存在则返回 null */
+    /**
+     * Retrieve the Channel by fd; returns null if fd does not exist.
+     * @param fd file descriptor
+     * @return Channel or null if not found
+     */
     public static Channel get(int fd) {
         return MAP.get(fd);
     }
 
-    /** 关闭并移除 fd（0‒2 忽略） */
+    /**
+     * Close and remove the fd (0‒2 are ignored).
+     * @param fd file descriptor to close
+     * @throws IOException if an I/O error occurs
+     */
     public static void close(int fd) throws IOException {
-        if (fd <= 2) return;                                   // 标准流交由宿主 JVM 维护
+        if (fd <= 2) return;                                   // Standard streams are managed by the host JVM
         Channel ch = MAP.remove(fd);
         if (ch != null && ch.isOpen()) ch.close();
     }
 
-    /** 类似 dup(oldfd) —— 返回指向同一 Channel 的新 fd */
+    /**
+     * Similar to dup(oldfd) — returns a new fd referring to the same Channel.
+     * @param oldfd old file descriptor to duplicate
+     * @return new fd referring to the same Channel
+     * @throws IllegalArgumentException if fd does not exist
+     */
     public static int dup(int oldfd) {
         Channel ch = MAP.get(oldfd);
         if (ch == null)
             throw new IllegalArgumentException("Bad fd: " + oldfd);
-        return register(ch);                                   // 多个 fd 引用同一 Channel
+        return register(ch);                                   // Multiple fds refer to the same Channel
     }
 }
