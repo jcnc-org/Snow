@@ -94,6 +94,7 @@ public final class IRProgramBuilder {
      *   <li>若存在父类：先取到父类布局（如果能找到），将其按顺序复制到当前布局中；起始索引 = 父类字段数。</li>
      *   <li>再将当前结构体声明的字段按声明顺序追加；如果字段名与父类重复，跳过以避免覆盖。</li>
      *   <li>最后将布局以 <code>StructName</code> 为键注册到 {@link IRBuilderScope} 的全局布局表。</li>
+     *   <li>同时调用 {@link IRBuilderScope#registerStructParent} 登记继承关系（子类 → 父类）。</li>
      * </ol>
      * @param roots AST 顶层节点列表，包含模块/结构体信息
      */
@@ -104,16 +105,15 @@ public final class IRProgramBuilder {
 
             for (StructNode s : mod.structs()) {
                 List<DeclarationNode> fields = s.fields();
-                if (fields == null) continue;
-
                 Map<String, Integer> layout = new LinkedHashMap<>();
                 int idx = 0;
 
                 // 1. 若有父类，先复制父类布局，并将索引起点置为父类字段数
                 String parentName = s.parent();
                 if (parentName != null && !parentName.isBlank()) {
-                    // 约定：IRBuilderScope 内部维护一个“结构体名 → 字段布局”的全局表
-                    // 这里假定提供静态查询方法 getStructLayout(String)
+                    // 注册继承关系，供 super(...) 调用解析
+                    IRBuilderScope.registerStructParent(s.name(), parentName);
+
                     Map<String, Integer> parentLayout = IRBuilderScope.getStructLayout(parentName);
                     if (parentLayout != null && !parentLayout.isEmpty()) {
                         layout.putAll(parentLayout);
@@ -122,18 +122,21 @@ public final class IRProgramBuilder {
                 }
 
                 // 2. 续接当前结构体声明的字段；若与父类同名，跳过（避免覆盖父类槽位）
-                for (DeclarationNode d : fields) {
-                    String name = d.getName();
-                    if (!layout.containsKey(name)) {
-                        layout.put(name, idx++);
+                if (fields != null) {
+                    for (DeclarationNode d : fields) {
+                        String name = d.getName();
+                        if (!layout.containsKey(name)) {
+                            layout.put(name, idx++);
+                        }
                     }
                 }
 
-                // 3. 注册：如 Person → {name:0}；Student(extends Person) → {name:0, studentId:1}
+                // 3. 注册最终布局
                 IRBuilderScope.registerStructLayout(s.name(), layout);
             }
         }
     }
+
 
     // ===================== Struct 降级：方法/构造 → 普通函数 =====================
 
