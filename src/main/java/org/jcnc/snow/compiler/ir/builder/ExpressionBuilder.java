@@ -565,11 +565,12 @@ public record ExpressionBuilder(IRContext ctx) {
     /**
      * 构建函数或方法调用表达式的 IR 指令，并返回结果寄存器。
      * <p>
-     * 支持三类调用：
+     * 支持四类调用：
      * <ul>
      *   <li>普通函数调用（foo(a, b)）</li>
      *   <li>成员方法调用（obj.method(a, b) 或 ModuleName.func(a, b)）</li>
      *   <li>链式方法调用（obj.getAddr().getCity()）</li>
+     *   <li>super(...) 调用父类构造函数</li>
      * </ul>
      * 核心流程：
      * <ol>
@@ -593,6 +594,28 @@ public record ExpressionBuilder(IRContext ctx) {
 
         // 2. 按 callee 类型分支
         switch (call.callee()) {
+            case IdentifierNode id when "super".equals(id.name()) -> {
+                // ========= 情况 0: super(...) 调用父类构造函数 =========
+                String thisType = ctx.getScope().lookupType("this");
+                if (thisType == null)
+                    throw new IllegalStateException("super(...) 只能在结构体构造函数中使用");
+
+                // 查找父类名
+                String parent = IRBuilderScope.getStructParent(thisType);
+                if (parent == null)
+                    throw new IllegalStateException("类型 " + thisType + " 没有父类，无法调用 super(...)");
+
+                // 拼接父类构造函数名，例如 Person.__init__1
+                callee = parent + ".__init__" + explicitRegs.size();
+
+                // 参数表：第一个是 this，再加上传入的实参
+                IRVirtualRegister thisReg = ctx.getScope().lookup("this");
+                if (thisReg == null)
+                    throw new IllegalStateException("当前作用域未绑定 this，不能调用 super(...)");
+
+                finalArgs.add(thisReg);
+                finalArgs.addAll(explicitRegs);
+            }
             case MemberExpressionNode m when m.object() instanceof IdentifierNode idObj -> {
                 // ========= 情况 1: obj.method(...) 或 ModuleName.func(...) =========
                 String recvName = idObj.name();
@@ -614,13 +637,10 @@ public record ExpressionBuilder(IRContext ctx) {
             }
             case MemberExpressionNode m -> {
                 // ========= 情况 2: 通用成员调用 (支持链式调用) =========
-                // 例如 p.getAddr().getCity()
                 IRVirtualRegister objReg = build(m.object()); // 递归计算 object 表达式
 
                 callee = m.member();                          // 直接用成员名
-
                 finalArgs.add(objReg);                        // 隐式 this
-
                 finalArgs.addAll(explicitRegs);               // 其它参数
             }
             case IdentifierNode id -> {
