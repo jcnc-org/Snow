@@ -21,7 +21,7 @@ import java.util.Map;
  *   <li>维护结构体继承关系（子类 → 父类），super(...) 调用会用到</li>
  * </ul>
  */
-final class IRBuilderScope {
+public final class IRBuilderScope {
 
     /** 变量名到虚拟寄存器的映射表（本地变量） */
     private final Map<String, IRVirtualRegister> vars = new HashMap<>();
@@ -261,7 +261,7 @@ final class IRBuilderScope {
      * @param structName  需要查找父类的结构体名称，可以是完整类名或简单类名
      * @return 父结构体名称；如果未找到，返回 {@code null}
      */
-    static String getStructParent(String structName) {
+    public static String getStructParent(String structName) {
         if (structName == null || structName.isBlank()) return null;
         String p = STRUCT_PARENTS.get(structName);
         if (p != null) return p;
