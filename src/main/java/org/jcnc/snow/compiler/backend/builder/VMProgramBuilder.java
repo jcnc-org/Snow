@@ -51,19 +51,41 @@ public final class VMProgramBuilder {
      */
     private int pc = 0;
 
+
     /**
-     * 获取符号名最后一段（即最后一个 '.' 之后的名字，若无 '.' 则为原名）。
-     *
-     * @param sym 符号全名
-     * @return 简名
+     * 提取给定名称的最后一个片段。
+     * <p>
+     * 主要用于从“模块.类.方法”这样的全限定名中，
+     * 提取出末尾的简单标识符。
+     * </p>
+     * @param name 输入的符号全名（可能包含多个 '.' 分隔的层级）
+     * @return 最后一个 '.' 之后的子串；如果没有 '.'，则返回原始字符串
      */
-    private static String lastSegment(String sym) {
-        int p = sym.lastIndexOf('.');
-        return (p >= 0 && p < sym.length() - 1) ? sym.substring(p + 1) : sym;
+    private static String lastSegment(String name) {
+        int i = name.lastIndexOf('.');
+        return (i < 0) ? name : name.substring(i + 1);
     }
 
     /**
-     * 设置槽位(局部变量/虚拟寄存器)的类型前缀。
+     * 读取当前已生成的代码列表（不可变视图）。
+     */
+    public List<String> getCode() {
+        return Collections.unmodifiableList(code);
+    }
+
+    // ============================== 槽位类型操作 ==============================
+
+    /**
+     * 获取当前 pc。
+     */
+    public int getPc() {
+        return pc;
+    }
+
+    // ============================== 槽位类型操作 ==============================
+
+    /**
+     * 设置槽位的类型前缀（如 'I','F','R'）。
      *
      * @param slot   槽位编号
      * @param prefix 类型前缀(如 'I', 'F')
@@ -161,9 +183,11 @@ public final class VMProgramBuilder {
      */
     public List<String> build() {
         if (!callFixes.isEmpty() || !branchFixes.isEmpty()) {
-            throw new IllegalStateException(
-                    "Unresolved symbols — CALL: " + callFixes + ", BRANCH: " + branchFixes
-            );
+            throw new IllegalStateException("""
+                    Unresolved symbols while building:
+                      calls   = %s
+                      branches= %s
+                    """.formatted(callFixes, branchFixes));
         }
         return List.copyOf(code);
     }
@@ -179,11 +203,10 @@ public final class VMProgramBuilder {
     }
 
     /**
-     * 修补所有延迟 CALL。
-     * 匹配规则：
-     * 1. 全限定名完全匹配
-     * 2. super 调用支持多构造：target 以 .super 结尾，name 以 .__init__N 结尾且前缀匹配或参数数量匹配
-     * 3. 简名匹配（含 __init__N）
+     * * 修补所有延迟 CALL。：支持“全名精确匹配”、super 绑定；<br>
+     * <b>仅当原始目标是未限定名（不含 '.'）时</b>才允许“简名匹配”。
+     * <p>
+     * 这样可以避免把 <code>Student.getName</code> 的调用过早绑定到 <code>Person.getName</code>。
      */
     private void patchCallFixes(String name) {
         String nameSimple = lastSegment(name);
@@ -205,7 +228,8 @@ public final class VMProgramBuilder {
                 try {
                     String num = name.substring(name.lastIndexOf("__init__") + 8);
                     initArgc = Integer.parseInt(num);
-                } catch (NumberFormatException ignored) {}
+                } catch (NumberFormatException ignored) {
+                }
 
                 // 前缀结构体名一致 或 参数数量一致，都可以认定为 super 匹配
                 if (tStruct.equals(nStruct) || initArgc == f.nArgs) {
@@ -215,7 +239,8 @@ public final class VMProgramBuilder {
 
             // 简名匹配（如 getName, __init__N 等）
             String targetSimple = lastSegment(f.target);
-            boolean simpleMatch = targetSimple.equals(nameSimple);
+            // 只有当原始调用目标本来就是“未限定名”（不含 .）时，才允许用简名匹配
+            boolean simpleMatch = (!f.target.contains(".")) && targetSimple.equals(nameSimple);
 
             if (qualifiedMatch || superMatch || simpleMatch) {
                 int targetAddr = addr.get(name);
