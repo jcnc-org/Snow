@@ -1,5 +1,6 @@
 package org.jcnc.snow.compiler.backend.builder;
 
+import org.jcnc.snow.compiler.ir.builder.IRBuilderScope;
 import org.jcnc.snow.vm.engine.VMOpCode;
 
 import java.util.*;
@@ -204,9 +205,9 @@ public final class VMProgramBuilder {
 
     /**
      * * 修补所有延迟 CALL。：支持“全名精确匹配”、super 绑定；<br>
-     * <b>仅当原始目标是未限定名（不含 '.'）时</b>才允许“简名匹配”。
+     * <b>仅当原始目标是未限定名（不含 '.'）时</b>才允许“简名匹配”。同时支持基于继承链的匹配：
+     * 若目标为 Child.method，而当前声明的是 Ancestor.method，且 Ancestor 是 Child 的父类/祖先，则允许绑定。
      * <p>
-     * 这样可以避免把 <code>Student.getName</code> 的调用过早绑定到 <code>Person.getName</code>。
      */
     private void patchCallFixes(String name) {
         String nameSimple = lastSegment(name);
@@ -214,10 +215,10 @@ public final class VMProgramBuilder {
         for (Iterator<CallFix> it = callFixes.iterator(); it.hasNext(); ) {
             CallFix f = it.next();
 
-            // 全限定名完全匹配
+            // 1) 全限定名完全匹配
             boolean qualifiedMatch = f.target.equals(name);
 
-            // super 调用绑定（支持参数数量匹配）
+            // 2) super 调用绑定（支持参数数量匹配）
             boolean superMatch = false;
             if (f.target.endsWith(".super") && name.contains(".__init__")) {
                 String tStruct = f.target.substring(0, f.target.length() - 6); // 去掉 ".super"
@@ -237,12 +238,37 @@ public final class VMProgramBuilder {
                 }
             }
 
-            // 简名匹配（如 getName, __init__N 等）
+            // 3) 简名匹配（仅当原始调用目标本来就是未限定名时）
             String targetSimple = lastSegment(f.target);
-            // 只有当原始调用目标本来就是“未限定名”（不含 .）时，才允许用简名匹配
             boolean simpleMatch = (!f.target.contains(".")) && targetSimple.equals(nameSimple);
 
-            if (qualifiedMatch || superMatch || simpleMatch) {
+            // 4) 继承链匹配：Child.method 绑定到 Ancestor.method（Ancestor 是 Child 的父类/祖先）
+            boolean inheritsMatch = false;
+            if (!qualifiedMatch && !superMatch) {
+                int dotIdx = f.target.indexOf('.');
+                int nameDot = name.indexOf('.');
+                if (dotIdx > 0 && nameDot > 0) {
+                    String childStruct = f.target.substring(0, dotIdx);
+                    String targetMember = f.target.substring(dotIdx + 1);
+                    String declaredStruct = name.substring(0, nameDot);
+
+                    if (targetMember.equals(nameSimple)) {
+                        // 沿着 childStruct 的继承链向上查找
+                        String cur = childStruct;
+                        while (true) {
+                            String parent = IRBuilderScope.getStructParent(cur);
+                            if (parent == null) break;
+                            if (parent.equals(declaredStruct)) {
+                                inheritsMatch = true;
+                                break;
+                            }
+                            cur = parent;
+                        }
+                    }
+                }
+            }
+
+            if (qualifiedMatch || superMatch || simpleMatch || inheritsMatch) {
                 int targetAddr = addr.get(name);
                 code.set(f.index, VMOpCode.CALL + " " + targetAddr + " " + f.nArgs);
                 it.remove();
