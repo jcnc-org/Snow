@@ -1,12 +1,12 @@
 module: main
-    import: os,Student
+    import: os,Student, Person
 
 	function: main
 	    returns: void
 	    body:
-	        declare a: Student = new Student(1,2)
+	        declare a: Person = new Student(1,2)
 
-	       os.println(a.getName())
+	        os.println(a.getName())
 	    end body
 	end function
 end module

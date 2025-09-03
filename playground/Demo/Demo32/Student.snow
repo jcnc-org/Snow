@@ -2,26 +2,32 @@ module: Student
 import : Person
 
 struct : Student extends Person
-	fields:
-	    declare	name: string
-		declare id: int
+    fields:
+        declare id: int
 
-	    init:
-            params:
-                declare name: int
-                declare id: int
-            body:
-                super(name)
-                this.id = id
-            end body
-        end init
+    init:
+        params:
+            declare name: int
+            declare id: int
+        body:
+            super(name)
+            this.id = id
+        end body
+    end init
 
-        function: getId
-            returns : int
-            body :
-                 return this.id
-            end body
-        end function
+    function: getId
+        returns : int
+        body :
+             return this.id
+        end body
+    end function
 
+    // 重写父类方法，演示多态
+    function: getName
+        returns: int
+        body:
+            return super.getName() + 1000
+        end body
+    end function
 end struct
 end module
