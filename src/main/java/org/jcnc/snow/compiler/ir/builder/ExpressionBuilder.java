@@ -565,12 +565,13 @@ public record ExpressionBuilder(IRContext ctx) {
     /**
      * 构建函数或方法调用表达式的 IR 指令，并返回结果寄存器。
      * <p>
-     * 支持四类调用：
+     * 支持五类调用：
      * <ul>
      *   <li>普通函数调用（foo(a, b)）</li>
-     *   <li>成员方法调用（obj.method(a, b) 或 ModuleName.func(a, b)）</li>
-     *   <li>链式方法调用（obj.getAddr().getCity()）</li>
-     *   <li>super(...) 调用父类构造函数</li>
+     *   <li>成员/模块静态方法调用（obj.method(...) 或 Module.func(...)）</li>
+     *   <li>链式方法调用（obj.get().foo()）</li>
+     *   <li>super(...) 调父类构造函数</li>
+     *   <li><b>super.method(...)</b> 调父类实例方法 <b>(新增)</b></li>
      * </ul>
      * 核心流程：
      * <ol>
@@ -585,25 +586,25 @@ public record ExpressionBuilder(IRContext ctx) {
      * @throws IllegalStateException 被调用表达式类型不支持或参数异常
      */
     private IRVirtualRegister buildCall(CallExpressionNode call) {
-        // 1. 先递归生成“显式”参数的寄存器列表
+        // 1. 递归生成显式实参
         List<IRVirtualRegister> explicitRegs = new ArrayList<>();
-        for (ExpressionNode a : call.arguments()) explicitRegs.add(build(a));
+        for (ExpressionNode arg : call.arguments()) explicitRegs.add(build(arg));
 
-        String callee;                          // 函数/方法的规范化名字
-        List<IRValue> finalArgs = new ArrayList<>(); // 最终传递给 CALL 的参数表
+        String callee;                               // 规范化后的被调函数名
+        List<IRValue> finalArgs = new ArrayList<>(); // 最终 CALL 参数
 
-        // 2. 按 callee 类型分支
+        // 2. 根据 callee 类型分支
         switch (call.callee()) {
             case IdentifierNode id when "super".equals(id.name()) -> {
                 // ========= 情况 0: super(...) 调用父类构造函数 =========
                 String thisType = ctx.getScope().lookupType("this");
                 if (thisType == null)
-                    throw new IllegalStateException("super(...) 只能在结构体构造函数中使用");
+                    throw new IllegalStateException("super(...) 只能在构造函数中使用");
 
                 // 查找父类名
                 String parent = IRBuilderScope.getStructParent(thisType);
                 if (parent == null)
-                    throw new IllegalStateException("类型 " + thisType + " 没有父类，无法调用 super(...)");
+                    throw new IllegalStateException(thisType + " 没有父类，无法调用 super(...)");
 
                 // 拼接父类构造函数名，例如 Person.__init__1
                 callee = parent + ".__init__" + explicitRegs.size();
@@ -611,7 +612,7 @@ public record ExpressionBuilder(IRContext ctx) {
                 // 参数表：第一个是 this，再加上传入的实参
                 IRVirtualRegister thisReg = ctx.getScope().lookup("this");
                 if (thisReg == null)
-                    throw new IllegalStateException("当前作用域未绑定 this，不能调用 super(...)");
+                    throw new IllegalStateException("未绑定 this，不能调用 super(...)");
 
                 finalArgs.add(thisReg);
                 finalArgs.addAll(explicitRegs);
@@ -619,22 +620,47 @@ public record ExpressionBuilder(IRContext ctx) {
             case MemberExpressionNode m when m.object() instanceof IdentifierNode idObj -> {
                 // ========= 情况 1: obj.method(...) 或 ModuleName.func(...) =========
                 String recvName = idObj.name();
-                String recvType = ctx.getScope().lookupType(recvName);
 
-                if (recvType == null || recvType.isEmpty()) {
-                    // 模块函数调用 —— "模块名.函数名"
-                    callee = recvName + "." + m.member();
-                    finalArgs.addAll(explicitRegs);
-                } else {
-                    // 结构体实例方法调用 —— "类型名.方法名"，且第一个参数为 this
-                    callee = recvType + "." + m.member();
-                    IRVirtualRegister thisReg = ctx.getScope().lookup(recvName);
+                // super.method(...)
+                if ("super".equals(recvName)) {
+                    // super.method(...) 调父类实例方法
+                    String thisType = ctx.getScope().lookupType("this");
+                    if (thisType == null)
+                        throw new IllegalStateException("super.method(...) 只能在实例方法中使用");
+
+                    String parent = IRBuilderScope.getStructParent(thisType);
+                    if (parent == null)
+                        throw new IllegalStateException(thisType + " 没有父类，无法调用 super.method(...)");
+
+                    callee = parent + "." + m.member();
+
+                    IRVirtualRegister thisReg = ctx.getScope().lookup("this");
                     if (thisReg == null)
-                        throw new IllegalStateException("未定义标识符: " + recvName);
+                        throw new IllegalStateException("未绑定 this");
+
                     finalArgs.add(thisReg);          // 隐式 this
-                    finalArgs.addAll(explicitRegs);  // 其它参数
+                    finalArgs.addAll(explicitRegs);  // 显式参数
+                } else {
+                    // 普通 obj.method(...) 或 Module.func(...)
+                    String recvType = ctx.getScope().lookupType(recvName);
+
+                    if (recvType == null || recvType.isEmpty()) {
+                        // 模块函数调用 —— "模块名.函数名"
+                        callee = recvName + "." + m.member();
+                        finalArgs.addAll(explicitRegs);
+                    } else {
+                        // 结构体实例方法调用 —— "类型名.方法名"，且第一个参数为 this
+                        callee = recvType + "." + m.member();
+                        IRVirtualRegister thisReg = ctx.getScope().lookup(recvName);
+                        if (thisReg == null)
+                            throw new IllegalStateException("Undefined identifier: " + recvName);
+                        finalArgs.add(thisReg);         // 隐式 this
+                        finalArgs.addAll(explicitRegs); // 其它参数
+                    }
                 }
             }
+
+            /* ===== 递归链式调用 ===== */
             case MemberExpressionNode m -> {
                 // ========= 情况 2: 通用成员调用 (支持链式调用) =========
                 IRVirtualRegister objReg = build(m.object()); // 递归计算 object 表达式
@@ -643,6 +669,8 @@ public record ExpressionBuilder(IRContext ctx) {
                 finalArgs.add(objReg);                        // 隐式 this
                 finalArgs.addAll(explicitRegs);               // 其它参数
             }
+
+            /* ===== 普通函数 foo(...) ===== */
             case IdentifierNode id -> {
                 // ========= 情况 3: 普通函数调用 foo(...) =========
                 String current = ctx.getFunction().name();  // 当前函数全名
@@ -656,10 +684,10 @@ public record ExpressionBuilder(IRContext ctx) {
                 }
                 finalArgs.addAll(explicitRegs);
             }
-            default ->
-                // ========= 其它不支持 =========
-                    throw new IllegalStateException(
-                            "不支持的被调用表达式: " + call.callee().getClass().getSimpleName());
+
+            /* ===== 其它不支持 ===== */
+            default -> throw new IllegalStateException(
+                    "Unsupported callee type: " + call.callee().getClass().getSimpleName());
         }
 
         // 3. 分配目标寄存器，生成函数/方法调用指令
