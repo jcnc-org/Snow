@@ -84,7 +84,7 @@ public record SignatureRegistrar(Context ctx) {
                     }
                 }
 
-                // --- 2.2 结构体方法签名 ---
+                // --- 2.2 方法签名 ---
                 for (FunctionNode fn : stn.methods()) {
                     List<Type> ptypes = new ArrayList<>();
                     for (ParameterNode p : fn.parameters()) {
@@ -109,16 +109,18 @@ public record SignatureRegistrar(Context ctx) {
 
                     if (parent == null) {
                         // 父类不存在（既不在本模块，也不在导入模块 / 限定名错误），报语义错误
-                        ctx.errors().add(new SemanticError(stn,
-                                "未知父类: " + stn.parent()));
+                        ctx.errors().add(new SemanticError(stn, "未知父类: " + stn.parent()));
                     } else {
-                        // 将父类字段拷贝到子类（若子类未定义同名字段）
+                        // 建立继承链
+                        child.setParent(parent);
+
+                        // 继承字段
                         parent.getFields().forEach(
                                 (k, v) -> child.getFields().putIfAbsent(k, v));
-                        // 将父类方法拷贝到子类（若子类未覆盖）
+                        // 继承方法
                         parent.getMethods().forEach(
                                 (k, v) -> child.getMethods().putIfAbsent(k, v));
-                        // 构造函数不继承，由子类自行声明
+                        // 构造函数不继承
                     }
                 }
             }
@@ -156,8 +158,7 @@ public record SignatureRegistrar(Context ctx) {
             String s = parentName.substring(dot + 1);
             ModuleInfo pm = ctx.modules().get(m);
             if (pm != null) {
-                StructType st = pm.getStructs().get(s);
-                if (st != null) return st;
+                return pm.getStructs().get(s);
             }
             return null;
         }
