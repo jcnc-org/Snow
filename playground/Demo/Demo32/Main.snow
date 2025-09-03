@@ -4,9 +4,11 @@ module: main
 	function: main
 	    returns: void
 	    body:
-	        declare a: Person = new Student(1,2)
+	        declare a: Student = new Student(1)
 
 	        os.println(a.getName())
+
+
 	    end body
 	end function
 end module

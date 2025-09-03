@@ -8,19 +8,10 @@ struct : Student extends Person
     init:
         params:
             declare name: int
-            declare id: int
         body:
             super(name)
-            this.id = id
         end body
     end init
-
-    function: getId
-        returns : int
-        body :
-             return this.id
-        end body
-    end function
 
     // 重写父类方法，演示多态
     function: getName
