@@ -20,7 +20,6 @@ import java.util.*;
  *     <li>所有未解决的 CALL 或分支符号在 build() 阶段将抛出异常，便于调试和定位错误。</li>
  * </ul>
  */
-
 public final class VMProgramBuilder {
 
     /**
@@ -52,13 +51,11 @@ public final class VMProgramBuilder {
      */
     private int pc = 0;
 
-
     /**
      * 提取给定名称的最后一个片段。
-     * <p>
      * 主要用于从“模块.类.方法”这样的全限定名中，
      * 提取出末尾的简单标识符。
-     * </p>
+     *
      * @param name 输入的符号全名（可能包含多个 '.' 分隔的层级）
      * @return 最后一个 '.' 之后的子串；如果没有 '.'，则返回原始字符串
      */
@@ -74,8 +71,6 @@ public final class VMProgramBuilder {
         return Collections.unmodifiableList(code);
     }
 
-    // ============================== 槽位类型操作 ==============================
-
     /**
      * 获取当前 pc。
      */
@@ -83,25 +78,15 @@ public final class VMProgramBuilder {
         return pc;
     }
 
-    // ============================== 槽位类型操作 ==============================
-
     /**
      * 设置槽位的类型前缀（如 'I','F','R'）。
-     *
-     * @param slot   槽位编号
-     * @param prefix 类型前缀(如 'I', 'F')
      */
     public void setSlotType(int slot, char prefix) {
         slotType.put(slot, prefix);
     }
 
-    // ============================== 槽位类型操作 ==============================
-
     /**
      * 获取槽位的类型前缀，默认为 'I'(整数类型)。
-     *
-     * @param slot 槽位编号
-     * @return 类型前缀字符
      */
     public char getSlotType(int slot) {
         return slotType.getOrDefault(slot, 'I');
@@ -117,8 +102,6 @@ public final class VMProgramBuilder {
         patchCallFixes(name);
         patchBranchFixes(name);
     }
-
-    // =============函数/标签声明与指令生成=================
 
     /**
      * 函数结束接口，目前无具体实现，便于将来扩展。
@@ -177,12 +160,21 @@ public final class VMProgramBuilder {
     /**
      * 完成代码生成，输出最终 VM 指令序列。
      * <p>
-     * 如果存在未修补的调用或分支，将抛出异常。
+     * 在最终报错前，统一做一次“继承链回填”：
+     * <ol>
+     *   <li>优先尝试精确目标名（子类方法/重写优先）</li>
+     *   <li>否则递归查找父类同名方法</li>
+     *   <li>最后仅在唯一情况下允许“简名唯一匹配”</li>
+     * </ol>
+     * 如果还有未修补的调用或分支，将抛出异常（包含全部未解析符号，便于调试）。
      *
      * @return 指令序列(不可变)
      * @throws IllegalStateException 如果存在未修补符号
      */
     public List<String> build() {
+        // --- 统一做一次继承链回填 ---
+        patchRemainingFixesByInheritance();
+
         if (!callFixes.isEmpty() || !branchFixes.isEmpty()) {
             throw new IllegalStateException("""
                     Unresolved symbols while building:
@@ -204,27 +196,97 @@ public final class VMProgramBuilder {
     }
 
     /**
-     * * 修补所有延迟 CALL。：支持“全名精确匹配”、super 绑定；<br>
-     * <b>仅当原始目标是未限定名（不含 '.'）时</b>才允许“简名匹配”。同时支持基于继承链的匹配：
-     * 若目标为 Child.method，而当前声明的是 Ancestor.method，且 Ancestor 是 Child 的父类/祖先，则允许绑定。
-     * <p>
+     * 在所有函数都已落址后，统一对剩余 CALL 进行继承链/最终回填：
+     * 1. 若存在“精确目标名”，优先绑定到它（保证子类重写优先）；
+     * 2. 否则沿继承链向上查找第一个已定义的同名方法并绑定；
+     * 3. 若仍未命中，再尝试“简名唯一匹配”（避免多义性，只有唯一时才绑定）；
+     * 未能解析者保留给后续的未解析报错逻辑。
+     */
+    private void patchRemainingFixesByInheritance() {
+        for (Iterator<CallFix> it = callFixes.iterator(); it.hasNext(); ) {
+            CallFix f = it.next();
+
+            // 1) 精确目标名（如 Student.getName），保证优先匹配到子类重写方法
+            Integer exact = addr.get(f.target);
+            if (exact != null) {
+                code.set(f.index, VMOpCode.CALL + " " + exact + " " + f.nArgs);
+                it.remove();
+                continue;
+            }
+
+            // 2) 沿父类链向上查找第一个已定义的同名方法
+            int dot = f.target.indexOf('.');
+            if (dot > 0) {
+                String curStruct = f.target.substring(0, dot);
+                String member = f.target.substring(dot + 1);
+
+                while (curStruct != null) {
+                    String cand = curStruct + "." + member;
+                    Integer a = addr.get(cand);
+                    if (a != null) {
+                        code.set(f.index, VMOpCode.CALL + " " + a + " " + f.nArgs);
+                        it.remove();
+                        break;
+                    }
+                    curStruct = IRBuilderScope.getStructParent(curStruct);
+                }
+                if (!it.hasNext()) { // 防止迭代器状态错误的小优化
+                    // no-op
+                }
+                if (!callFixes.contains(f)) { // 已移除则继续
+                    continue;
+                }
+            }
+
+            // 3) 简名唯一匹配（只允许唯一目标，否则放弃防止二义性）
+            if (dot < 0) {
+                String simple = f.target;
+                String chosen = null;
+                for (String k : addr.keySet()) {
+                    int i = k.lastIndexOf('.');
+                    String ks = (i >= 0) ? k.substring(i + 1) : k;
+                    if (ks.equals(simple)) {
+                        if (chosen != null && !chosen.equals(k)) {
+                            chosen = null; // 多义性，放弃
+                            break;
+                        }
+                        chosen = k;
+                    }
+                }
+                if (chosen != null) {
+                    int a = addr.get(chosen);
+                    code.set(f.index, VMOpCode.CALL + " " + a + " " + f.nArgs);
+                    it.remove();
+                }
+            }
+        }
+    }
+
+    /**
+     * 逐个函数定义出现时的回填：
+     * 仅处理‘全名精确匹配’、‘super(...) 构造调用’和‘原本未限定名的简名匹配’。
+     * 继承链回填改为在全部定义完成后统一进行，避免过早把子类调用绑到父类。
+     *
+     * @param name 当前刚声明/定义的函数名（通常为全限定名）
      */
     private void patchCallFixes(String name) {
-        String nameSimple = lastSegment(name);
+        // 当前刚定义/落址的函数的“简名”（不含结构体前缀）
+        String nameSimple;
+        int cut = name.lastIndexOf('.');
+        nameSimple = (cut >= 0) ? name.substring(cut + 1) : name;
 
         for (Iterator<CallFix> it = callFixes.iterator(); it.hasNext(); ) {
             CallFix f = it.next();
 
-            // 1) 全限定名完全匹配
+            // 1) 全限定名精确匹配
             boolean qualifiedMatch = f.target.equals(name);
 
-            // 2) super 调用绑定（支持参数数量匹配）
+            // 2) super(...) 绑定（用于 __init__N）
             boolean superMatch = false;
             if (f.target.endsWith(".super") && name.contains(".__init__")) {
                 String tStruct = f.target.substring(0, f.target.length() - 6); // 去掉 ".super"
                 String nStruct = name.substring(0, name.indexOf(".__init__"));
 
-                // 匹配 __init__ 后面的数字得到参数个数
                 int initArgc = -1;
                 try {
                     String num = name.substring(name.lastIndexOf("__init__") + 8);
@@ -232,43 +294,19 @@ public final class VMProgramBuilder {
                 } catch (NumberFormatException ignored) {
                 }
 
-                // 前缀结构体名一致 或 参数数量一致，都可以认定为 super 匹配
+                // 结构名一致或参数个数一致即可认为匹配
                 if (tStruct.equals(nStruct) || initArgc == f.nArgs) {
                     superMatch = true;
                 }
             }
 
-            // 3) 简名匹配（仅当原始调用目标本来就是未限定名时）
-            String targetSimple = lastSegment(f.target);
-            boolean simpleMatch = (!f.target.contains(".")) && targetSimple.equals(nameSimple);
+            // 3) 简名匹配（仅当“原始目标本来就是未限定名”时才允许）
+            String targetSimple;
+            int p = f.target.lastIndexOf('.');
+            targetSimple = (p >= 0) ? f.target.substring(p + 1) : f.target;
+            boolean simpleMatch = (p < 0) && targetSimple.equals(nameSimple);
 
-            // 4) 继承链匹配：Child.method 绑定到 Ancestor.method（Ancestor 是 Child 的父类/祖先）
-            boolean inheritsMatch = false;
-            if (!qualifiedMatch && !superMatch) {
-                int dotIdx = f.target.indexOf('.');
-                int nameDot = name.indexOf('.');
-                if (dotIdx > 0 && nameDot > 0) {
-                    String childStruct = f.target.substring(0, dotIdx);
-                    String targetMember = f.target.substring(dotIdx + 1);
-                    String declaredStruct = name.substring(0, nameDot);
-
-                    if (targetMember.equals(nameSimple)) {
-                        // 沿着 childStruct 的继承链向上查找
-                        String cur = childStruct;
-                        while (true) {
-                            String parent = IRBuilderScope.getStructParent(cur);
-                            if (parent == null) break;
-                            if (parent.equals(declaredStruct)) {
-                                inheritsMatch = true;
-                                break;
-                            }
-                            cur = parent;
-                        }
-                    }
-                }
-            }
-
-            if (qualifiedMatch || superMatch || simpleMatch || inheritsMatch) {
+            if (qualifiedMatch || superMatch || simpleMatch) {
                 int targetAddr = addr.get(name);
                 code.set(f.index, VMOpCode.CALL + " " + targetAddr + " " + f.nArgs);
                 it.remove();
@@ -294,19 +332,12 @@ public final class VMProgramBuilder {
 
     /**
      * 未知目标的 CALL 指令修补记录(待目标地址确定后修正)。
-     *
-     * @param index  CALL 指令在 code 列表中的位置
-     * @param target 目标函数的全名
-     * @param nArgs  参数个数
      */
     private record CallFix(int index, String target, int nArgs) {
     }
 
     /**
      * 未知目标的分支指令修补记录(待目标标签确定后修正)。
-     *
-     * @param index 分支指令在 code 列表中的位置
-     * @param label 跳转目标标签名
      */
     private record BranchFix(int index, String label) {
     }
