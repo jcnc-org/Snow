@@ -258,7 +258,7 @@ public final class VMProgramBuilder {
                     }
                     curStruct = IRBuilderScope.getStructParent(curStruct);
                 }
-                if (!it.hasNext()) { // 防止迭代器状态错误的小优化
+                if (!it.hasNext()) { // 防止迭代器状态错误
                     // no-op
                 }
                 if (!callFixes.contains(f)) { // 已移除则继续
