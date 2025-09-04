@@ -400,9 +400,20 @@ public class SyscallCommand implements Command {
                         // 必须是可变 List
                         @SuppressWarnings("unchecked")
                         java.util.List<Object> mlist = (java.util.List<Object>) list;
-                        if (idx < 0 || idx >= mlist.size())
+                        if (idx < 0) {
                             throw new IndexOutOfBoundsException("数组下标越界: " + idx + " (长度 " + mlist.size() + ")");
-                        mlist.set(idx, value);
+                        }
+                        // 允许自动扩容：当 idx == size 时等价于 append；当 idx > size 时以 null 填充到 idx-1，再 set(idx, value)
+                        if (idx >= mlist.size()) {
+                            // 以 null 填充直到 size == idx
+                            while (mlist.size() < idx) {
+                                mlist.add(null);
+                            }
+                            // 此时 size == idx，直接追加
+                            mlist.add(value);
+                        } else {
+                            mlist.set(idx, value);
+                        }
                     } else if (arrObj != null && arrObj.getClass().isArray()) {
                         int len = java.lang.reflect.Array.getLength(arrObj);
                         if (idx < 0 || idx >= len)

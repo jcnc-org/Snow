@@ -1,0 +1,74 @@
+// 定义模块
+module: Main
+    // 定义一个结构体 Counter
+    struct: Counter
+        fields:
+            declare value: int
+
+        // 构造方法
+        init:
+            params:
+                v: int
+            body:
+                this.value = v
+            end body
+        end init
+
+        // 方法：打印 value
+        function: printValue
+            returns: void
+            body:
+                os.print(this.value)
+            end body
+        end function
+
+        // 方法：打印 value + 100
+        function: printSum
+            returns: void
+            body:
+                os.print(this.value + 100)
+            end body
+        end function
+    end struct
+
+
+    // 定义 AdvancedCounter，继承 Counter
+    struct: AdvancedCounter extends Counter
+        fields:
+            declare offset: int
+
+        // 构造方法：调用父类构造（使用 init）
+        init:
+            params:
+                v: int
+                o: int
+            body:
+                super(v)         // 调用父类构造方法
+                this.offset = o
+            end body
+        end init
+
+        // 重写 printSum：打印 value + offset
+        function: printSum
+            returns: void
+            body:
+                os.print(this.value + this.offset)
+            end body
+        end function
+    end struct
+
+
+    // 程序入口
+    function: main
+        returns: void
+        body:
+            declare c: Counter = new Counter(42)
+            c.printValue()   // 打印 42
+            c.printSum()     // 打印 142
+
+            declare ac: AdvancedCounter = new AdvancedCounter(42, 200)
+            ac.printValue()  // 打印 42 （继承自父类）
+            ac.printSum()    // 打印 242 （子类重写）
+        end body
+    end function
+end module

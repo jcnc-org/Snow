@@ -3,7 +3,7 @@
     <option name="ALTERNATIVE_JRE_PATH" value="graalvm-ce-23" />
     <option name="MAIN_CLASS_NAME" value="org.jcnc.snow.cli.SnowCLI" />
     <module name="Snow" />
-    <option name="PROGRAM_PARAMETERS" value="compile run -d playground/Demo/Demo9 -o target/Demo9 --debug" />
+    <option name="PROGRAM_PARAMETERS" value="compile run -d playground/Demo/Demo9 -o target/Demo9" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

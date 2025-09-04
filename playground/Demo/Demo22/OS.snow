@@ -1,11 +1,18 @@
 module: os
-    import: os
     function: print
         params:
             declare i1: int
         returns: void
         body:
-            syscall("PRINT",i1)
+            syscall("PRINT", i1)
+        end body
+    end function
+    function: println
+        params:
+            declare i1: int
+        returns: void
+        body:
+            syscall("PRINTLN", i1)
         end body
     end function
 end module

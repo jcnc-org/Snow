@@ -1,10 +1,15 @@
 module: Main
+	import:os
     function: main
         params:
-        returns: boolean
+        returns: void
         body:
             declare b1 :boolean = true
-            return !b1
+			if(!b1) then
+				os.println(0)
+				else
+				os.println(1)
+			end if
         end body
     end function
 end module

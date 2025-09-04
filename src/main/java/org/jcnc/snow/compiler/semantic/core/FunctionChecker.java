@@ -4,123 +4,110 @@ import org.jcnc.snow.compiler.parser.ast.DeclarationNode;
 import org.jcnc.snow.compiler.parser.ast.FunctionNode;
 import org.jcnc.snow.compiler.parser.ast.ModuleNode;
 import org.jcnc.snow.compiler.parser.ast.ReturnNode;
+import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
 import org.jcnc.snow.compiler.semantic.analyzers.base.StatementAnalyzer;
 import org.jcnc.snow.compiler.semantic.error.SemanticError;
 import org.jcnc.snow.compiler.semantic.symbol.Symbol;
 import org.jcnc.snow.compiler.semantic.symbol.SymbolKind;
 import org.jcnc.snow.compiler.semantic.symbol.SymbolTable;
 import org.jcnc.snow.compiler.semantic.type.BuiltinType;
+import org.jcnc.snow.compiler.semantic.type.Type;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * {@code FunctionChecker} 是 Snow 编译器语义分析阶段用于检查所有函数体合法性的总控调度器。
+ * {@code FunctionChecker} 负责对所有模块的函数体进行两遍扫描式的语义检查。
  * <p>
- * <b>设计核心：</b>采用“两遍扫描”方案，彻底解决跨模块全局变量/常量类型推断和引用依赖问题：
+ * 检查流程为：
+ * <ol>
+ *     <li>第一遍：为每个模块构建全局符号表，注册所有模块级变量与常量声明（并检查重复/未知类型）。</li>
+ *     <li>第二遍：在所有全局符号表准备好后，依次分析各模块下所有函数的参数和函数体语句。</li>
+ * </ol>
+ * 检查要点：
  * <ul>
- *   <li><b>第一遍</b>：为所有模块预先构建并注册其全局符号表（globals），保证跨模块引用时可见。</li>
- *   <li><b>第二遍</b>：在全局符号表全部就绪后，依次分析所有模块的函数体，实现局部作用域、类型推断、语义校验等任务。</li>
+ *     <li>类型未知或变量/常量重复声明时，均收集为语义错误。</li>
+ *     <li>所有函数参数注册为局部变量。</li>
+ *     <li>所有函数体语句分派到对应 StatementAnalyzer 实例做分析。</li>
+ *     <li>非 void 返回类型的函数，必须有至少一条 return。</li>
  * </ul>
- * <b>功能职责：</b>
- * <ul>
- *   <li>遍历所有模块，先建立 globals，再遍历并检查所有函数体语句。</li>
- *   <li>为每个函数体构建完整符号表，并注册参数变量。</li>
- *   <li>分发每条语句到对应 {@link StatementAnalyzer} 进行类型检查和错误校验。</li>
- *   <li>自动检查非 void 函数 return 完备性。</li>
- *   <li>记录所有语义错误，便于前端高亮和诊断。</li>
- * </ul>
- *
- * @param ctx 全局语义分析上下文，持有模块信息、符号表、错误收集等资源
  */
 public record FunctionChecker(Context ctx) {
 
     /**
-     * 主入口：对所有模块的所有函数体进行语义检查（两遍扫描实现）。
-     * <p>
-     * <b>第一遍</b>：为每个模块提前构建全局符号表（包含本模块所有全局变量和常量），
-     * 并注册到 {@link ModuleInfo}，确保跨模块引用时所有全局符号都已可用。
-     * <br>
-     * <b>第二遍</b>：遍历所有模块的所有函数，对每个函数体：
-     * <ul>
-     *   <li>构建局部作用域，父作用域为对应模块的 globals；</li>
-     *   <li>注册参数变量；</li>
-     *   <li>依次分发每条语句到对应 {@link StatementAnalyzer}，进行类型和语义检查；</li>
-     *   <li>自动校验非 void 函数 return 完备性；</li>
-     *   <li>将所有发现的问题统一记录到 {@link SemanticError} 列表。</li>
-     * </ul>
+     * 对传入的所有模块做函数体的两遍扫描式语义检查。
      *
-     * @param mods 所有模块的 AST 根节点集合
+     * @param mods 所有待分析的模块 AST 节点集合
      */
     public void check(Iterable<ModuleNode> mods) {
         List<ModuleNode> moduleList = new ArrayList<>();
-        // ---------- 第1遍：收集所有全局符号表 ----------
+
+        // ---------- 第一遍：构建并注册各模块全局符号表 ----------
         for (ModuleNode mod : mods) {
+            ctx.setCurrentModule(mod.name());   // 标记当前模块
             moduleList.add(mod);
 
-            // 获取当前模块的元信息
             ModuleInfo mi = ctx.modules().get(mod.name());
-            // 创建本模块全局作用域（无父作用域）
-            SymbolTable globalScope = new SymbolTable(null);
+            SymbolTable globalScope = new SymbolTable(null); // 模块级全局作用域
 
-            // 注册所有全局变量/常量到符号表
+            // 处理所有全局变量/常量声明
             for (DeclarationNode g : mod.globals()) {
-                var t = ctx.parseType(g.getType());
-                SymbolKind k = g.isConst() ? SymbolKind.CONSTANT : SymbolKind.VARIABLE;
+                Type t = ctx.parseType(g.getType()); // 解析声明类型
+                if (t == null) {
+                    // 类型未知，记录错误，兜底为 int 类型，避免后续 NullPointer
+                    ctx.errors().add(new SemanticError(g, "未知类型: " + g.getType()));
+                    t = BuiltinType.INT;
+                }
+                SymbolKind kind = g.isConst() ? SymbolKind.CONSTANT : SymbolKind.VARIABLE;
                 String dupType = g.isConst() ? "常量" : "变量";
-                // 检查重复声明
-                if (!globalScope.define(new Symbol(g.getName(), t, k))) {
-                    ctx.errors().add(new SemanticError(
-                            g,
-                            dupType + "重复声明: " + g.getName()
-                    ));
+                // 注册符号表（防止重名）
+                if (!globalScope.define(new Symbol(g.getName(), t, kind))) {
+                    ctx.errors().add(new SemanticError(g, dupType + "重复声明: " + g.getName()));
                 }
             }
-            // 注册到模块信息，供跨模块引用
+            // 将全局符号表挂载到模块信息对象
             mi.setGlobals(globalScope);
         }
 
-        // ---------- 第2遍：遍历所有函数，分析函数体 ----------
+        // ---------- 第二遍：遍历各模块函数并分析函数体 ----------
         for (ModuleNode mod : moduleList) {
+            ctx.setCurrentModule(mod.name());
             ModuleInfo mi = ctx.modules().get(mod.name());
-            SymbolTable globalScope = mi.getGlobals();
+            SymbolTable globalScope = mi.getGlobals(); // 全局作用域
 
             for (FunctionNode fn : mod.functions()) {
-                // 构建函数局部作用域，父作用域为 globalScope
+                // 构建函数的局部作用域（父作用域为模块全局）
                 SymbolTable locals = new SymbolTable(globalScope);
 
-                // 注册函数参数为局部变量
-                fn.parameters().forEach(p ->
-                        locals.define(new Symbol(
-                                p.name(),
-                                ctx.parseType(p.type()),
-                                SymbolKind.VARIABLE
-                        ))
-                );
+                // 注册所有函数参数到局部作用域，类型未知时兜底为 int
+                fn.parameters().forEach(p -> {
+                    Type t = ctx.parseType(p.type());
+                    if (t == null) {
+                        ctx.errors().add(new SemanticError(p, "未知类型: " + p.type()));
+                        t = BuiltinType.INT;
+                    }
+                    locals.define(new Symbol(p.name(), t, SymbolKind.VARIABLE));
+                });
 
-                // 分析函数体内每条语句
-                for (var stmt : fn.body()) {
-                    var analyzer = ctx.getRegistry().getStatementAnalyzer(stmt);
+                // 分析函数体所有语句
+                for (StatementNode stmt : fn.body()) {
+                    StatementAnalyzer<StatementNode> analyzer =
+                            ctx.getRegistry().getStatementAnalyzer(stmt);
                     if (analyzer != null) {
+                        // 传递语义分析器“实例”，避免类型擦除/反射调用
                         analyzer.analyze(ctx, mi, fn, locals, stmt);
                     } else {
-                        ctx.errors().add(new SemanticError(
-                                stmt,
-                                "不支持的语句类型: " + stmt
-                        ));
+                        // 语句类型未支持，收集错误
+                        ctx.errors().add(new SemanticError(stmt, "不支持的语句类型: " + stmt));
                     }
                 }
 
-                // 检查非 void 函数是否至少包含一条 return 语句
-                var returnType = ctx.parseType(fn.returnType());
-                if (returnType != BuiltinType.VOID) {
-                    boolean hasReturn = fn.body().stream()
-                            .anyMatch(stmtNode -> stmtNode instanceof ReturnNode);
+                // 非 void 函数，要求必须含至少一条 return 语句
+                Type ret = ctx.parseType(fn.returnType());
+                if (ret != null && ret != BuiltinType.VOID) {
+                    boolean hasReturn = fn.body().stream().anyMatch(s -> s instanceof ReturnNode);
                     if (!hasReturn) {
-                        ctx.errors().add(new SemanticError(
-                                fn,
-                                "非 void 函数必须包含至少一条 return 语句"
-                        ));
+                        ctx.errors().add(new SemanticError(fn, "非 void 函数必须包含至少一条 return 语句"));
                     }
                 }
             }

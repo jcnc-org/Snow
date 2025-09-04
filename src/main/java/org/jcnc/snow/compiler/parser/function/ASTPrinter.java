@@ -62,10 +62,38 @@ public class ASTPrinter {
                 for (ImportNode imp : m.imports()) {
                     System.out.println(pad + "  import " + imp.moduleName());
                 }
+                for (StructNode s : m.structs()) {
+                    print(s, indent + 1);
+                }
                 for (FunctionNode fn : m.functions()) {
                     print(fn, indent + 1);
                 }
             }
+
+            case StructNode s -> {
+                System.out.print(pad + "struct " + s.name());
+                if (s.parent() != null && !s.parent().isEmpty()) {
+                    System.out.print(" extends " + s.parent());
+                }
+                System.out.println();
+                for (DeclarationNode f : s.fields()) {
+                    print(f, indent + 1);
+                }
+                // 打印所有构造函数 inits
+                if (s.inits() != null && !s.inits().isEmpty()) {
+                    for (FunctionNode ctor : s.inits()) {
+                        System.out.println(pad + "  [init]");
+                        print(ctor, indent + 2);
+                    }
+                }
+                // 打印所有方法
+                if (s.methods() != null && !s.methods().isEmpty()) {
+                    for (FunctionNode m : s.methods()) {
+                        print(m, indent + 1);
+                    }
+                }
+            }
+
             case FunctionNode(
                     String name, List<ParameterNode> parameters, String returnType, List<StatementNode> body,
                     NodeContext _

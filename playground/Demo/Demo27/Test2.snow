@@ -1,0 +1,135 @@
+// 演示 Snow OOP 四大要点：封装、继承、多态、重载
+module: Main
+    // 封装：基类 Animal
+    struct: Animal
+        fields:
+            declare name: string
+
+        init:
+            params:
+                n: string
+            body:
+                this.name = n
+            end body
+        end init
+
+        // 封装：提供只读访问器
+        function: getName
+            returns: string
+            body:
+                return this.name
+            end body
+        end function
+
+        // 多态：基类方法，默认虚
+        function: speak
+            returns: void
+            body:
+                os.print(this.name + " makes a sound.")
+            end body
+        end function
+
+        // 重载示例：同名 eat，不同参数
+        function: eat
+            params:
+                food: string
+            returns: void
+            body:
+                os.print(this.name + " eats " + food)
+            end body
+        end function
+
+        function: eat
+            params:
+                times: int
+            returns: void
+            body:
+                os.print(this.name + " eats " + times + " times.")
+            end body
+        end function
+    end struct
+
+
+    // 继承 + 多态：Dog
+    struct: Dog extends Animal
+        init:
+            params:
+                n: string
+            body:
+                super(n)
+            end body
+        end init
+
+        // 重写 speak
+        function: speak
+            returns: void
+            body:
+                os.print(this.name + " says: Woof!")
+            end body
+        end function
+    end struct
+
+
+    // 继承 + 多态：Cat
+    struct: Cat extends Animal
+        init:
+            params:
+                n: string
+            body:
+                super(n)
+            end body
+        end init
+
+        // 重写 speak
+        function: speak
+            returns: void
+            body:
+                os.print(this.name + " says: Meow!")
+            end body
+        end function
+    end struct
+
+
+    // 多态演示函数
+    function: letAnimalSpeak
+        params:
+            a: Animal
+        returns: void
+        body:
+            // 调用多态方法
+            a.speak()
+        end body
+    end function
+
+
+    // 程序入口
+    function: main
+        returns: void
+        body:
+            // 基类结构体
+            declare a: Animal = new Animal("GenericAnimal")
+            a.speak()           // -> GenericAnimal makes a sound.
+            a.eat("food")       // -> GenericAnimal eats food
+            a.eat(2)            // -> GenericAnimal eats 2 times.
+
+            // 子结构体 Dog
+            declare d: Dog = new Dog("Buddy")
+            d.speak()           // -> Buddy says: Woof!
+            d.eat("bone")       // 调用基类 eat(String)
+            d.eat(3)            // 调用基类 eat(int)
+
+            // 子类结构体 Cat
+            declare c: Cat = new Cat("Kitty")
+            c.speak()           // -> Kitty says: Meow!
+            c.eat("fish")
+            c.eat(1)
+
+            // 多态：父类引用指向子类结构体
+            declare poly: Animal = new Dog("Max")
+            letAnimalSpeak(poly) // -> Max says: Woof!
+
+            poly = new Cat("Luna")
+            letAnimalSpeak(poly) // -> Luna says: Meow!
+        end body
+    end function
+end module
