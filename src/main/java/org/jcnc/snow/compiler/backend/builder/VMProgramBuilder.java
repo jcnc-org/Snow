@@ -126,20 +126,46 @@ public final class VMProgramBuilder {
     }
 
     /**
-     * 添加一条 CALL 指令。目标尚未声明时，使用占位符并登记延迟修补。
+     * 生成一条 {@code CALL} 指令。
+     * <p>
+     * 该方法根据目标字符串 {@code target} 的特征，决定生成的 CALL 指令类型：
+     * </p>
+     * <ul>
+     *     <li><b>静态可解析调用：</b>
+     *     如果 {@code target} 能够在编译/汇编期解析到绝对地址，
+     *     则生成形如 {@code CALL <addr> <nArgs>} 的指令。</li>
      *
-     * @param target 目标函数全名（IR 侧生成）
-     * @param nArgs  实参个数
+     *     <li><b>虚函数调用：</b>
+     *     如果 {@code target} 包含 {@code "::"}，但无法在静态期解析，
+     *     则认为是虚函数调用。此时生成形如
+     *     {@code CALL @Class::method <nArgs>} 的指令，
+     *     并在运行时通过 vtable 进行方法查找。</li>
+     *
+     *     <li><b>待回填调用：</b>
+     *     如果以上两种情况都不满足，则生成一个带占位符的指令
+     *     {@code CALL <PLACEHOLDER> <nArgs>}，
+     *     并将该调用信息记录到 {@code callFixes} 列表中，
+     *     以便在后续回填阶段修正目标地址。</li>
+     * </ul>
+     *
+     * @param target 调用目标，可以是绝对地址、类方法签名（如 {@code "Animal::speak"}）或符号引用。
+     * @param nArgs  调用参数个数。
      */
     public void emitCall(String target, int nArgs) {
-        Integer a = resolve(target);
-        if (a != null) {
-            emit(VMOpCode.CALL + " " + a + " " + nArgs);
+        Integer addr = resolve(target);
+        if (addr != null) {
+            /* 静态可解析：直接生成绝对地址调用 */
+            emit(VMOpCode.CALL + " " + addr + " " + nArgs);
+        } else if (target.contains("::")) {
+            /* 虚函数调用：运行时通过 vtable 查找 */
+            emit(VMOpCode.CALL + " @" + target + " " + nArgs);
         } else {
+            /* 待回填调用：记录占位符，稍后修正 */
             emit(VMOpCode.CALL + " " + PLACEHOLDER + " " + nArgs);
             callFixes.add(new CallFix(pc - 1, target, nArgs));
         }
     }
+
 
     /**
      * 添加一条分支指令(如 JMP/BR/BEQ)，若目标未定义则延后修补。
