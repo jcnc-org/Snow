@@ -98,6 +98,8 @@ public final class VMProgramBuilder {
      * @param name 函数或标签全名（如 "Person.getName"、"loop.start"）
      */
     public void beginFunction(String name) {
+        // 函数粒度隔离槽位类型，避免跨函数类型污染
+        slotType.clear();
         addr.put(name, pc);
         patchCallFixes(name);
         patchBranchFixes(name);
