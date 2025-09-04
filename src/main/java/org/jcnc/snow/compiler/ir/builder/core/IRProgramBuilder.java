@@ -1,5 +1,6 @@
-package org.jcnc.snow.compiler.ir.builder;
+package org.jcnc.snow.compiler.ir.builder.core;
 
+import org.jcnc.snow.compiler.ir.builder.statement.FunctionBuilder;
 import org.jcnc.snow.compiler.ir.common.GlobalConstTable;
 import org.jcnc.snow.compiler.ir.core.IRFunction;
 import org.jcnc.snow.compiler.ir.core.IRProgram;

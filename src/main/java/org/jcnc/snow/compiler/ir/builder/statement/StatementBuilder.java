@@ -1,5 +1,10 @@
-package org.jcnc.snow.compiler.ir.builder;
+package org.jcnc.snow.compiler.ir.builder.statement;
 
+import org.jcnc.snow.compiler.ir.builder.core.IRBuilderScope;
+import org.jcnc.snow.compiler.ir.builder.core.IRContext;
+import org.jcnc.snow.compiler.ir.builder.core.InstructionFactory;
+import org.jcnc.snow.compiler.ir.builder.expression.ExpressionBuilder;
+import org.jcnc.snow.compiler.ir.builder.utils.IndexRefHelper;
 import org.jcnc.snow.compiler.ir.core.IROpCode;
 import org.jcnc.snow.compiler.ir.utils.ComparisonUtils;
 import org.jcnc.snow.compiler.ir.utils.IROpCodeUtils;
@@ -105,12 +110,12 @@ public class StatementBuilder {
             IRVirtualRegister thisReg = ctx.getScope().lookup("this");
             String thisType = ctx.getScope().lookupType("this");
             if (thisReg != null && thisType != null) {
-                java.util.Map<String, Integer> layout = ctx.getScope().getStructLayout(thisType);
+                java.util.Map<String, Integer> layout = IRBuilderScope.getStructLayout(thisType);
                 if (layout == null) {
                     // 兼容 "Module.Struct" 与简单名 "Struct"
                     int dot = thisType.lastIndexOf('.');
                     if (dot >= 0 && dot + 1 < thisType.length()) {
-                        layout = ctx.getScope().getStructLayout(thisType.substring(dot + 1));
+                        layout = IRBuilderScope.getStructLayout(thisType.substring(dot + 1));
                     }
                 }
                 Integer idx = (layout != null) ? layout.get(var) : null;
@@ -156,7 +161,7 @@ public class StatementBuilder {
 
             // 1. 目标数组寄存器：多维时用 buildIndexRef 拿引用
             IRVirtualRegister arrReg = (target.array() instanceof IndexExpressionNode inner)
-                    ? expr.buildIndexRef(inner)
+                    ? new IndexRefHelper(expr).build(inner)
                     : expr.build(target.array());
 
             // 2. 下标与右值
