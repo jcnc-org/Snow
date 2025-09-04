@@ -13,7 +13,7 @@ module: Main
     function: abc
         returns: int
         body:
-            return 1
+            return 1 +num2
         end body
     end function
 

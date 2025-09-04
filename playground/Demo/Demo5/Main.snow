@@ -1,4 +1,5 @@
 module: Main
+	import:os
     function: main
         params:
         returns: int
@@ -12,7 +13,7 @@ module: Main
                 step:
                     i = i + 1
                 body:
-
+					os.println(i)
                 end body
             end loop
             return 0

@@ -1,11 +1,16 @@
 module: Main
+	import:os
     function: main
         params:
         returns: boolean
         body:
-           declare b1: boolean =true
+           declare b1: boolean =false
            
-
+			if (b1) then
+				os.print(0)
+			else
+				os.print(1)
+			end if
         return b1
         end body
     end function
