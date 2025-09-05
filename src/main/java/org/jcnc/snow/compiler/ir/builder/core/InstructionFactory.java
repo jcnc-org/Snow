@@ -1,4 +1,4 @@
-package org.jcnc.snow.compiler.ir.builder;
+package org.jcnc.snow.compiler.ir.builder.core;
 
 import org.jcnc.snow.compiler.ir.core.IROpCode;
 import org.jcnc.snow.compiler.ir.instruction.*;

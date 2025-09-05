@@ -1,4 +1,4 @@
-package org.jcnc.snow.compiler.ir.builder;
+package org.jcnc.snow.compiler.ir.builder.core;
 
 import org.jcnc.snow.compiler.ir.core.IRFunction;
 import org.jcnc.snow.compiler.ir.core.IRInstruction;
@@ -56,7 +56,7 @@ public class IRContext {
      * 获取当前函数的变量与寄存器映射作用域。
      * <p>包内可见，仅限 builder 包内部调用，避免被外部滥用。</p>
      */
-    IRBuilderScope getScope() {
+    public IRBuilderScope getScope() {
         return scope;
     }
 

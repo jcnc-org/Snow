@@ -1,6 +1,6 @@
 package org.jcnc.snow.compiler.ir.utils;
 
-import org.jcnc.snow.compiler.ir.builder.IRContext;
+import org.jcnc.snow.compiler.ir.builder.core.IRContext;
 import org.jcnc.snow.compiler.ir.core.IROpCode;
 import org.jcnc.snow.compiler.ir.core.IROpCodeMappings;
 import org.jcnc.snow.compiler.ir.value.IRConstant;

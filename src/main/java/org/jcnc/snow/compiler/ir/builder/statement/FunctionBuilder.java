@@ -1,5 +1,6 @@
-package org.jcnc.snow.compiler.ir.builder;
+package org.jcnc.snow.compiler.ir.builder.statement;
 
+import org.jcnc.snow.compiler.ir.builder.core.IRContext;
 import org.jcnc.snow.compiler.ir.common.GlobalConstTable;
 import org.jcnc.snow.compiler.ir.common.GlobalFunctionTable;
 import org.jcnc.snow.compiler.ir.core.IRFunction;
@@ -50,7 +51,7 @@ public class FunctionBuilder {
 
         // 2) 初始化 IR 容器与上下文
         IRFunction irFunction = new IRFunction(functionNode.name());
-        IRContext  irContext  = new IRContext(irFunction);
+        IRContext irContext  = new IRContext(irFunction);
 
         // 3) 导入所有全局/跨模块常量到当前作用域（便于常量折叠和跨模块引用）
         GlobalConstTable.all().forEach((k, v) ->

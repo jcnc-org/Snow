@@ -1,4 +1,4 @@
-package org.jcnc.snow.compiler.ir.builder;
+package org.jcnc.snow.compiler.ir.builder.core;
 
 import org.jcnc.snow.compiler.ir.core.IRFunction;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
@@ -59,7 +59,7 @@ public final class IRBuilderScope {
      * @param name 变量名称
      * @param type 变量类型名
      */
-    void declare(String name, String type) {
+    public void declare(String name, String type) {
         IRVirtualRegister reg = fn.newRegister();
         vars.put(name, reg);
         varTypes.put(name, type);
@@ -73,7 +73,7 @@ public final class IRBuilderScope {
      * @param type 变量类型名
      * @param reg  绑定的虚拟寄存器
      */
-    void declare(String name, String type, IRVirtualRegister reg) {
+    public void declare(String name, String type, IRVirtualRegister reg) {
         vars.put(name, reg);
         varTypes.put(name, type);
         varConstValues.remove(name); // 重复声明也会清除常量绑定
@@ -95,7 +95,7 @@ public final class IRBuilderScope {
      * @param name 变量名
      * @return 已绑定的虚拟寄存器，若未声明则返回 null
      */
-    IRVirtualRegister lookup(String name) {
+    public IRVirtualRegister lookup(String name) {
         return vars.get(name);
     }
 
@@ -105,7 +105,7 @@ public final class IRBuilderScope {
      * @param name 变量名
      * @return 已声明类型字符串，若未声明则返回 null
      */
-    String lookupType(String name) {
+    public String lookupType(String name) {
         return varTypes.get(name);
     }
 
@@ -114,7 +114,7 @@ public final class IRBuilderScope {
      *
      * @return 变量名→类型名映射的只读视图（用于调试/全局分析）
      */
-    Map<String, String> getVarTypes() {
+    public Map<String, String> getVarTypes() {
         return Collections.unmodifiableMap(varTypes);
     }
 
@@ -128,7 +128,7 @@ public final class IRBuilderScope {
      * @param name  变量名称
      * @param value 常量值（null 表示清除）
      */
-    void setConstValue(String name, Object value) {
+    public void setConstValue(String name, Object value) {
         if (value == null) varConstValues.remove(name);
         else varConstValues.put(name, value);
     }
@@ -141,7 +141,7 @@ public final class IRBuilderScope {
      * @param name 变量名称或"模块名.常量名"
      * @return 编译期常量值，或 null
      */
-    Object getConstValue(String name) {
+    public Object getConstValue(String name) {
         Object v = varConstValues.get(name);
         if (v != null) return v;
         // 支持跨模块常量/全局变量（如 "ModuleA.a"）
@@ -153,7 +153,7 @@ public final class IRBuilderScope {
      *
      * @param name 变量名称
      */
-    void clearConstValue(String name) {
+    public void clearConstValue(String name) {
         varConstValues.remove(name);
     }
 
@@ -165,7 +165,7 @@ public final class IRBuilderScope {
      * @param qualifiedName 形如 "ModuleA.a"
      * @param value         其常量值
      */
-    void importExternalConst(String qualifiedName, Object value) {
+    public void importExternalConst(String qualifiedName, Object value) {
         externalConsts.put(qualifiedName, value);
     }
 
@@ -192,7 +192,7 @@ public final class IRBuilderScope {
      * @param fieldName  字段名
      * @return 槽位下标；若未知返回 null
      */
-    Integer lookupFieldIndex(String structName, String fieldName) {
+    public Integer lookupFieldIndex(String structName, String fieldName) {
         // 先按原样查
         Map<String, Integer> layout = STRUCT_LAYOUTS.get(structName);
         // 兼容 “模块.结构体” 的写法：若没命中，退化为简单名再查
@@ -213,7 +213,7 @@ public final class IRBuilderScope {
      * @param structName 结构体名
      * @return 字段名到下标映射的只读视图，或 null
      */
-    static Map<String, Integer> getStructLayout(String structName) {
+    public static Map<String, Integer> getStructLayout(String structName) {
         Map<String, Integer> layout = STRUCT_LAYOUTS.get(structName);
         if (layout == null && structName != null) {
             int dot = structName.lastIndexOf('.');

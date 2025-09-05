@@ -1,6 +1,6 @@
 package org.jcnc.snow.compiler.backend.builder;
 
-import org.jcnc.snow.compiler.ir.builder.IRBuilderScope;
+import org.jcnc.snow.compiler.ir.builder.core.IRBuilderScope;
 import org.jcnc.snow.vm.engine.VMOpCode;
 
 import java.util.*;
