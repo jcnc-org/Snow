@@ -1,10 +1,9 @@
 module: Main
+	import:os
     function: main
-        returns: int
+        returns: void
         body:
-            foo()
-
-            return 0
+            os.print(foo())
         end body
     end function
 

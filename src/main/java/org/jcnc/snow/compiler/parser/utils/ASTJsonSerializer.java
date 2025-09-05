@@ -5,7 +5,10 @@ import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.base.Node;
 import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * {@code ASTJsonSerializer} 是抽象语法树（AST）序列化工具类。
@@ -83,7 +86,8 @@ public class ASTJsonSerializer {
         return switch (n) {
             // 模块节点
             case ModuleNode(
-                    String name, List<ImportNode> imports, List<DeclarationNode> globals, List<FunctionNode> functions, NodeContext _
+                    String name, List<ImportNode> imports, List<DeclarationNode> globals, List<StructNode> structs,
+                    List<FunctionNode> functions, NodeContext _
             ) -> {
                 Map<String, Object> map = newNodeMap("Module");
                 map.put("name", name);
@@ -105,9 +109,47 @@ public class ASTJsonSerializer {
                 for (FunctionNode f : functions) {
                     funcs.add(nodeToMap(f));
                 }
+                List<Object> lStructs = new ArrayList<>();
+                structs.forEach(s -> lStructs.add(nodeToMap(s)));
+                map.put("structs", lStructs);
                 map.put("functions", funcs);
                 yield map;
             }
+
+            // Struct 节点（多构造支持）
+            case StructNode(
+                    String name, String parent, List<DeclarationNode> fields, List<FunctionNode> inits,
+                    List<FunctionNode> methods, NodeContext _
+            ) -> {
+                Map<String, Object> map = newNodeMap("Struct");
+                map.put("name", name);
+                map.put("parent", parent);
+
+                List<Object> lFields = new ArrayList<>();
+                fields.forEach(d -> lFields.add(Map.of(
+                        "type", "Field",
+                        "name", d.getName(),
+                        "varType", d.getType())));
+                map.put("fields", lFields);
+
+                // 多构造函数序列化为 inits 数组
+                List<Object> lInits = new ArrayList<>();
+                if (inits != null) {
+                    for (FunctionNode ctor : inits) {
+                        lInits.add(nodeToMap(ctor));
+                    }
+                }
+                map.put("inits", lInits);
+
+                List<Object> lMethods = new ArrayList<>();
+                if (methods != null) {
+                    for (FunctionNode f : methods) lMethods.add(nodeToMap(f));
+                }
+                map.put("methods", lMethods);
+                yield map;
+            }
+
+
             // 函数定义节点
             case FunctionNode f -> {
                 Map<String, Object> map = newNodeMap("Function");
@@ -189,13 +231,12 @@ public class ASTJsonSerializer {
     private static Object exprToMap(ExpressionNode expr) {
         return switch (expr) {
             // 二元表达式
-            case BinaryExpressionNode(
-                    ExpressionNode left, String operator, ExpressionNode right, NodeContext _
-            ) -> exprMap("BinaryExpression",
-                    "left", exprToMap(left),
-                    "operator", operator,
-                    "right", exprToMap(right)
-            );
+            case BinaryExpressionNode(ExpressionNode left, String operator, ExpressionNode right, NodeContext _) ->
+                    exprMap("BinaryExpression",
+                            "left", exprToMap(left),
+                            "operator", operator,
+                            "right", exprToMap(right)
+                    );
             // 一元表达式
             case UnaryExpressionNode(String operator, ExpressionNode operand, NodeContext _) ->
                     exprMap("UnaryExpression",

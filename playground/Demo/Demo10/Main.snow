@@ -1,10 +1,13 @@
-function: main
-    returns: int
-    body:
-        declare res: boolean = 8L > 7L
-        if res then
-            return 131
-        end if
-        return 65537
-    end body
-end function
+module : Main
+	import:os
+	function: main
+	    returns: void
+	    body:
+	        declare res: boolean = 8L > 9L
+	        if res then
+	            os.println(131)
+	        end if
+	        os.println(65537)
+	    end body
+	end function
+end module

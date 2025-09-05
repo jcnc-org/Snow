@@ -1,4 +1,4 @@
-package org.jcnc.snow.compiler.ir.builder;
+package org.jcnc.snow.compiler.ir.builder.core;
 
 import org.jcnc.snow.compiler.ir.core.IROpCode;
 import org.jcnc.snow.compiler.ir.instruction.*;
@@ -104,7 +104,7 @@ public class InstructionFactory {
 
     /**
      * 生成“值拷贝”语义（src → dest）。
-     * 若类型无法推断，默认采用 int 方案（ADD_I32, src+0）。
+     * 通过在 IR 中构造 “src + 0” 的形式，触发 Peephole 优化折叠成 MOV。
      *
      * @param ctx  当前 IR 上下文
      * @param src  源寄存器
@@ -114,46 +114,50 @@ public class InstructionFactory {
         if (src == dest) {
             return;
         }
-        String varType = ctx.getVarType(); // 需要 IRContext 提供
-        char suffix = '\0';
+        String varType = ctx.getVarType();
+        IROpCode op;
+        IRConstant zeroConst;
+
         if (varType != null) {
             switch (varType) {
-                case "byte" -> suffix = 'b';
-                case "short" -> suffix = 's';
-                case "int" -> suffix = 'i';
-                case "long" -> suffix = 'l';
-                case "float" -> suffix = 'f';
-                case "double" -> suffix = 'd';
+                case "byte" -> {
+                    op = IROpCode.ADD_B8;
+                    zeroConst = new IRConstant((byte) 0);
+                }
+                case "short" -> {
+                    op = IROpCode.ADD_S16;
+                    zeroConst = new IRConstant((short) 0);
+                }
+                case "int" -> {
+                    op = IROpCode.ADD_I32;
+                    zeroConst = new IRConstant(0);
+                }
+                case "long" -> {
+                    op = IROpCode.ADD_L64;
+                    zeroConst = new IRConstant(0L);
+                }
+                case "float" -> {
+                    op = IROpCode.ADD_F32;
+                    zeroConst = new IRConstant(0.0f);
+                }
+                case "double" -> {
+                    op = IROpCode.ADD_D64;
+                    zeroConst = new IRConstant(0.0);
+                }
+                default -> {
+                    // 引用类型 / 结构体等统一走 int 路径
+                    op = IROpCode.ADD_I32;
+                    zeroConst = new IRConstant(0);
+                }
             }
+        } else {
+            // 无法推断类型时，退化为 int 方案
+            op = IROpCode.ADD_I32;
+            zeroConst = new IRConstant(0);
         }
-        IRVirtualRegister zero;
-        IROpCode op = switch (suffix) {
-            case 'd' -> {
-                zero = loadConst(ctx, 0.0);
-                yield IROpCode.ADD_D64;
-            }
-            case 'f' -> {
-                zero = loadConst(ctx, 0.0f);
-                yield IROpCode.ADD_F32;
-            }
-            case 'l' -> {
-                zero = loadConst(ctx, 0L);
-                yield IROpCode.ADD_L64;
-            }
-            case 's' -> {
-                zero = loadConst(ctx, 0);
-                yield IROpCode.ADD_S16;
-            }
-            case 'b' -> {
-                zero = loadConst(ctx, 0);
-                yield IROpCode.ADD_B8;
-            }
-            default -> {
-                zero = loadConst(ctx, 0);
-                yield IROpCode.ADD_I32;
-            }
-        };
-        ctx.addInstruction(new BinaryOperationInstruction(op, dest, src, zero));
+
+        // 注意：这里传入的是立即数 zeroConst，而不是寄存器
+        ctx.addInstruction(new BinaryOperationInstruction(op, dest, src, zeroConst));
     }
 
     /**

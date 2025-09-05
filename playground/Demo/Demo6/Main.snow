@@ -1,10 +1,11 @@
 module: Main
+	import:os
     function: main
         params:
-        returns: int
+        returns: void
         body:
-            declare b1 :int = -1
-            return b1
+            declare b1 :int = -1+(-2)
+			os.print(b1)
         end body
     end function
 end module

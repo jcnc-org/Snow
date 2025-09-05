@@ -1,9 +1,10 @@
 module: Main
+	import : os
     function: main
         params:
-        returns: int
+        returns: void
         body:
-           return (1+2) / 3 * 4 + 2 *2
+            os.print((1+2) / 3 * 4 + 2 *2)
         end body
     end function
 end module

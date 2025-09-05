@@ -56,17 +56,11 @@ public final class AnalyzerRegistrar {
         registry.registerExpressionAnalyzer(IdentifierNode.class, new IdentifierAnalyzer());
         registry.registerExpressionAnalyzer(CallExpressionNode.class, new CallExpressionAnalyzer());
         registry.registerExpressionAnalyzer(BinaryExpressionNode.class, new BinaryExpressionAnalyzer());
-
-        registry.registerExpressionAnalyzer(ArrayLiteralNode.class,   new ArrayLiteralAnalyzer());
-        registry.registerExpressionAnalyzer(IndexExpressionNode.class,new IndexExpressionAnalyzer()); // ★ 关键行
+        registry.registerExpressionAnalyzer(ArrayLiteralNode.class, new ArrayLiteralAnalyzer());
+        registry.registerExpressionAnalyzer(IndexExpressionNode.class, new IndexExpressionAnalyzer());
         registry.registerStatementAnalyzer(IndexAssignmentNode.class, new IndexAssignmentAnalyzer());
-
-
-        // ---------- 注册一元表达式分析器 ----------
         registry.registerExpressionAnalyzer(UnaryExpressionNode.class, new UnaryExpressionAnalyzer());
-
-        // ---------- 成员访问表达式 ----------
-        registry.registerExpressionAnalyzer(MemberExpressionNode.class,
-                new MemberExpressionAnalyzer());
+        registry.registerExpressionAnalyzer(NewExpressionNode.class, new NewExpressionAnalyzer());
+        registry.registerExpressionAnalyzer(MemberExpressionNode.class, new MemberExpressionAnalyzer());
     }
 }

@@ -54,7 +54,7 @@ public record CommandExecutionHandler(OperandStack operandStack, LocalVariableSt
         } catch (Exception e) {
             System.err.println("Command execution error (PC=" + currentPC + ") -> "
                     + e.getMessage());
-            return -1;   // 让 VM 主循环安全终止
+            return -1;   // Ensure the VM main loop terminates safely
         }
     }
 }

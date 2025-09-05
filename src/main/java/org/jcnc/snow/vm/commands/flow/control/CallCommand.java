@@ -57,29 +57,40 @@ public class CallCommand implements Command {
                        CallStack callStack) {
 
         if (parts.length < 3)
-            throw new IllegalArgumentException("CALL: need <addr> <nArgs>");
+            throw new IllegalArgumentException("CALL: need <addr | @methodSig> <nArgs>");
 
-        int targetAddr;
-        int nArgs;
-        try {
-            targetAddr = Integer.parseInt(parts[1]);
-            nArgs = Integer.parseInt(parts[2]);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("CALL: malformed operands", e);
-        }
+        /* ----------- Parse target address / method signature ----------- */
+        final String targetToken = parts[1];     // Can be a numeric address or "@Class::method"
+        final int     nArgs       = Integer.parseInt(parts[2]);
 
-        /* build new frame & local table for callee */
+        /* ----------- Build callee's local variable store ----------- */
         LocalVariableStore calleeLVS = new LocalVariableStore();
-
-        /* transfer arguments: operand stack top is last arg */
         for (int slot = nArgs - 1; slot >= 0; slot--) {
             if (operandStack.isEmpty())
                 throw new IllegalStateException("CALL: operand stack underflow");
             calleeLVS.setVariable(slot, operandStack.pop());
         }
 
-        StackFrame newFrame = new StackFrame(currentPC + 1, calleeLVS,
-                new MethodContext("subroutine@" + targetAddr, null));
+        /* ----------- Handle virtual call ----------- */
+        int targetAddr;
+        if (targetToken.startsWith("@")) {                       // "@Class::method" convention indicates a virtual call
+            Object thisRef = calleeLVS.getVariable(0);     // By convention, slot-0 stores "this"
+            if (!(thisRef instanceof Instance inst))
+                throw new IllegalStateException("VCALL: slot-0 is not an object reference");
+
+            String methodSig = targetToken.substring(1);   // Remove '@'
+            targetAddr = inst.vtable().lookup(methodSig);
+        } else {
+            /* Direct/static call (numeric address) */
+            targetAddr = Integer.parseInt(targetToken);
+        }
+
+        /* ----------- Push new stack frame and jump ----------- */
+        StackFrame newFrame = new StackFrame(
+                currentPC + 1,
+                calleeLVS,
+                new MethodContext("subroutine@" + targetAddr, null)
+        );
         callStack.pushFrame(newFrame);
 
         print("\nCalling function at address: " + targetAddr);

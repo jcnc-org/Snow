@@ -35,9 +35,6 @@ import java.util.List;
  *     R_PUSH [1, 2, 3]         // pushes ArrayList {1, 2, 3}
  *     R_PUSH [1, [2, 3], 4]    // pushes nested arrays as mutable lists
  * </pre>
- *
- * @author (your name or org)
- * @since 1.0
  */
 public class RPushCommand implements Command {
 

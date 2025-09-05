@@ -9,47 +9,61 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * {@code Context} 表示语义分析阶段的全局上下文环境。
+ * {@code Context} 表示语义分析阶段的全局上下文环境，贯穿于编译器语义分析流程中。
  * <p>
- * 该类贯穿整个语义分析流程，集中管理以下内容：
+ * 主要负责：
  * <ul>
- *   <li>模块信息管理（所有已加载模块，包括源模块和内置模块）；</li>
- *   <li>错误收集（集中存储语义分析期间产生的 {@link SemanticError}）；</li>
- *   <li>日志输出控制（可选，支持调试信息）；</li>
- *   <li>分析器调度（通过 {@link AnalyzerRegistry} 分发对应分析器）；</li>
+ *   <li>模块信息的统一管理（含模块、结构体、类型）；</li>
+ *   <li>收集和存储语义分析阶段产生的所有错误；</li>
+ *   <li>根据配置输出调试日志；</li>
+ *   <li>调度各类语义分析器执行；</li>
+ *   <li>类型解析（包括内建类型、数组类型、结构体等自定义类型）。</li>
  * </ul>
- * <p>
- * 提供便捷的 getter 方法和类型解析工具方法。
- * </p>
+ * 该类为所有分析器提供便捷的访问、查找和工具方法。
  */
 public class Context {
     /**
-     * 模块表：模块名 → {@link ModuleInfo}，用于模块查找与跨模块引用。
+     * 所有模块信息表。
+     * <p>
+     * 键为模块名，值为 {@link ModuleInfo} 实例。用于支持跨模块类型/结构体引用。
      */
     private final Map<String, ModuleInfo> modules;
 
     /**
-     * 错误列表：语义分析过程中收集的所有 {@link SemanticError}。
+     * 语义分析期间收集的所有错误对象。
+     * <p>
+     * 每当发现语义错误时，将 {@link SemanticError} 添加到该列表。
      */
     private final List<SemanticError> errors;
 
     /**
-     * 日志开关：若为 true，将启用 {@link #log(String)} 输出日志信息。
+     * 日志输出开关。
+     * <p>
+     * 为 true 时，调用 {@link #log(String)} 会输出日志信息，用于调试。
      */
     private final boolean verbose;
 
     /**
-     * 语义分析器注册表：用于按节点类型动态调度分析器。
+     * 语义分析器注册表。
+     * <p>
+     * 用于根据语法树节点类型动态分派对应的分析器。
      */
     private final AnalyzerRegistry registry;
 
     /**
-     * 构造语义分析上下文对象。
+     * 当前正在处理的模块名。
+     * <p>
+     * 主要用于类型解析时限定结构体查找的作用域。
+     */
+    private String currentModuleName;
+
+    /**
+     * 构造一个新的语义分析上下文实例。
      *
-     * @param modules  已注册的模块信息集合
-     * @param errors   错误收集器，分析器将所有语义错误写入此列表
-     * @param verbose  是否启用调试日志输出
-     * @param registry 分析器注册表，提供类型到分析器的映射与调度能力
+     * @param modules  所有已加载模块的映射表
+     * @param errors   用于收集错误的列表
+     * @param verbose  是否输出日志
+     * @param registry 分析器注册表
      */
     public Context(Map<String, ModuleInfo> modules,
                    List<SemanticError> errors,
@@ -61,102 +75,128 @@ public class Context {
         this.registry = registry;
     }
 
-    // ------------------ 模块信息 ------------------
+    // ==== Getter 方法（基本访问器） ====
 
     /**
-     * 获取所有模块信息映射表。
-     *
-     * @return 模块名到模块信息（{@link ModuleInfo}）的映射表
+     * 获取所有模块信息表（模块名 → ModuleInfo）。
+     */
+    public Map<String, ModuleInfo> modules() {
+        return modules;
+    }
+
+    /**
+     * 获取所有模块信息表（与 {@link #modules()} 等价）。
      */
     public Map<String, ModuleInfo> getModules() {
         return modules;
     }
 
     /**
-     * 模块信息 getter（快捷方式）。
-     *
-     * @return 模块名到模块信息（{@link ModuleInfo}）的映射表
+     * 获取语义分析期间收集的所有错误。
      */
-    public Map<String, ModuleInfo> modules() {
-        return modules;
+    public List<SemanticError> errors() {
+        return errors;
     }
 
-    // ------------------ 错误收集 ------------------
-
     /**
-     * 获取语义分析过程中记录的所有错误。
-     *
-     * @return 错误列表
+     * 获取语义分析期间收集的所有错误（与 {@link #errors()} 等价）。
      */
     public List<SemanticError> getErrors() {
         return errors;
     }
 
     /**
-     * 错误列表 getter（快捷方式）。
-     *
-     * @return 错误列表
-     */
-    public List<SemanticError> errors() {
-        return errors;
-    }
-
-    // ------------------ 分析器注册表 ------------------
-
-    /**
-     * 获取分析器注册表，用于分发语句与表达式分析器。
-     *
-     * @return {@link AnalyzerRegistry} 实例
+     * 获取语义分析器注册表。
      */
     public AnalyzerRegistry getRegistry() {
         return registry;
     }
 
     /**
-     * 注册表 getter（快捷方式）。
+     * 输出语义分析日志信息（受 verbose 控制）。
      *
-     * @return {@link AnalyzerRegistry} 实例
-     */
-    public AnalyzerRegistry registry() {
-        return registry;
-    }
-
-    // ------------------ 日志输出 ------------------
-
-    /**
-     * 打印日志信息，仅当 {@code verbose} 为 true 时生效。
-     *
-     * @param msg 日志内容
+     * @param msg 日志消息内容
      */
     public void log(String msg) {
-        if (verbose) {
-            System.out.println("[SemanticAnalyzer] " + msg);
-        }
+        if (verbose) System.out.println("[semantic] " + msg);
     }
 
-    // ------------------ 工具函数 ------------------
+    // ==== 当前模块管理 ====
 
     /**
-     * 将类型名称字符串解析为对应的类型实例（支持多维数组后缀）。
-     * <p>
-     * 例如，"int" → int 类型，"int[][]" → 二维整型数组类型。
-     * </p>
+     * 获取当前正在分析的模块名。
      *
-     * @param name 类型名称（支持 "[]" 数组后缀）
-     * @return 对应的 {@link Type} 实例，若无法识别返回 null
+     * @return 当前模块名，可能为 null
      */
-    public Type parseType(String name) {
-        int dims = 0;
+    public String getCurrentModule() {
+        return currentModuleName;
+    }
+
+    /**
+     * 设置当前正在分析的模块名。
+     * <p>
+     * 用于限定结构体查找的优先作用域。
+     *
+     * @param moduleName 当前模块名
+     */
+    public void setCurrentModule(String moduleName) {
+        this.currentModuleName = moduleName;
+    }
+
+    // ==== 类型解析工具 ====
+
+    /**
+     * 解析类型字符串为 {@link Type} 实例。
+     * <p>
+     * 支持内建类型、数组类型（带 "[]" 后缀）、用户自定义结构体类型。
+     * 类型解析的查找顺序为：<br>
+     * 1. 内建类型；<br>
+     * 2. 当前模块定义的结构体类型；<br>
+     * 3. 当前模块导入模块中的结构体类型；<br>
+     * 4. 全局所有模块的结构体类型。
+     *
+     * @param typeName 类型名称字符串，如 "int"、"Foo"、"Bar[][]"
+     * @return 解析出的 {@link Type} 实例，若找不到则返回 null
+     */
+    public Type parseType(String typeName) {
+        if (typeName == null) return null; // 处理空输入
+
+        String name = typeName; // 剥离数组后缀前的基本类型名
+        int dims = 0;           // 记录数组维度
+        // 支持多维数组：如 "int[][]" -> dims=2
         while (name.endsWith("[]")) {
             name = name.substring(0, name.length() - 2);
             dims++;
         }
+
+        // 1) 优先查找内建类型
         Type base = BuiltinTypeRegistry.BUILTIN_TYPES.get(name);
-        if (base == null) return null;
-        Type t = base;
-        for (int i = 0; i < dims; i++) {
-            t = new ArrayType(t);
+
+        // 2) 如果不是内建类型，则尝试查找结构体类型
+        if (base == null) {
+            // 2.1 当前模块下的结构体
+            if (currentModuleName != null && modules.containsKey(currentModuleName)) {
+                ModuleInfo mi = modules.get(currentModuleName);
+                if (mi.getStructs().containsKey(name)) {
+                    base = mi.getStructs().get(name);
+                } else {
+                    // 2.2 当前模块导入的模块中的结构体
+                    for (String imp : mi.getImports()) {
+                        ModuleInfo im = modules.get(imp);
+                        if (im != null && im.getStructs().containsKey(name)) {
+                            base = im.getStructs().get(name);
+                            break;
+                        }
+                    }
+                }
+            }
         }
+
+        if (base == null) return null; // 所有路径均未找到
+
+        // 包装数组类型：根据数组维度递归封装
+        Type t = base;
+        for (int i = 0; i < dims; i++) t = new ArrayType(t);
         return t;
     }
 }

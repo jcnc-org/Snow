@@ -1,10 +1,11 @@
 module: Math
+	import:os
     function: main
         params:
-        returns: int
+        returns: void
         body:
-            Math.factorial(6)
-            return 0
+	        declare n:int =Math.factorial(6)
+			os.print(n)
         end body
     end function
 

@@ -28,7 +28,9 @@ public class TokenFactory {
     private static final Set<String> KEYWORDS = Set.of
             ("module", "function", "params", "returns", "body", "end",
                     "if", "then", "else", "loop", "declare", "return", "import", "init",
-                    "cond", "step", "globals", "break", "continue", "const");
+                    "cond", "step", "globals", "break", "continue", "const",
+                    "new", "extends"
+            );
 
     /**
      * 内置类型名称集合，如 int、string 等。
