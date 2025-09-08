@@ -32,6 +32,7 @@ public record IndexExpressionNode(
 
     /**
      * 返回形如 "arr[i]" 的字符串表示。
+     *
      * @return 表达式的字符串形式
      */
     @Override

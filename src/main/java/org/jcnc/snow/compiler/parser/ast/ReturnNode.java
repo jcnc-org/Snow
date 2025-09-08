@@ -1,8 +1,8 @@
 package org.jcnc.snow.compiler.parser.ast;
 
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
-import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
 import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
+import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
 
 import java.util.Optional;
 
@@ -12,7 +12,7 @@ import java.util.Optional;
  * return 语句用于从当前函数中返回控制权，并可携带一个可选的返回值表达式。
  * </p>
  * <p>
- * 示例: 
+ * 示例:
  * <ul>
  *   <li>{@code return;}</li>
  *   <li>{@code return x + 1;}</li>
@@ -21,10 +21,14 @@ import java.util.Optional;
  */
 public class ReturnNode implements StatementNode {
 
-    /** 可选的返回值表达式 */
+    /**
+     * 可选的返回值表达式
+     */
     private final Optional<ExpressionNode> expression;
 
-    /** 节点上下文信息（包含行号、列号等） */
+    /**
+     * 节点上下文信息（包含行号、列号等）
+     */
     private final NodeContext context;
 
     /**

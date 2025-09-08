@@ -24,16 +24,14 @@ public class IRFunction {
      * IR 指令列表，组成函数体。
      */
     private final List<IRInstruction> body = new ArrayList<>();
-
-    /**
-     * 用于生成新的虚拟寄存器编号的计数器。
-     */
-    private int regCounter = 0;
-
     /**
      * 正式参数所对应的虚拟寄存器列表，按声明顺序排列。
      */
     private final List<IRVirtualRegister> parameters = new ArrayList<>();
+    /**
+     * 用于生成新的虚拟寄存器编号的计数器。
+     */
+    private int regCounter = 0;
 
     /**
      * 构造一个具有指定名称的 IRFunction 实例。
@@ -112,7 +110,7 @@ public class IRFunction {
     }
 
     /**
-     * 以IR代码表示，示例: 
+     * 以IR代码表示，示例:
      * <pre>
      * func 名称(%0, %1, ...) {
      *   指令0

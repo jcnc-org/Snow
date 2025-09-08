@@ -2,8 +2,8 @@ package org.jcnc.snow.compiler.ir.builder.statement.handlers;
 
 import org.jcnc.snow.compiler.ir.builder.core.InstructionFactory;
 import org.jcnc.snow.compiler.ir.builder.statement.IStatementHandler;
-import org.jcnc.snow.compiler.ir.builder.statement.utils.ConditionalJump;
 import org.jcnc.snow.compiler.ir.builder.statement.StatementBuilderContext;
+import org.jcnc.snow.compiler.ir.builder.statement.utils.ConditionalJump;
 import org.jcnc.snow.compiler.parser.ast.IfNode;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
 

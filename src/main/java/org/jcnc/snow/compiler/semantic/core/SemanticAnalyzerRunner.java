@@ -11,14 +11,14 @@ import java.util.stream.Collectors;
 /**
  * {@code SemanticAnalyzerRunner} 是语义分析阶段的统一入口与调度器。
  * <p>
- * 功能职责: 
+ * 功能职责:
  * <ul>
  *   <li>从原始 AST 列表中过滤并收集所有 {@link ModuleNode} 节点，作为模块分析的起点；</li>
  *   <li>调用 {@link SemanticAnalyzer} 对所有模块节点执行完整语义分析流程；</li>
  *   <li>汇总并报告所有 {@link SemanticError}；如有语义错误，自动中止编译流程，防止后续崩溃。</li>
  * </ul>
  * <p>
- * 推荐使用方式: 
+ * 推荐使用方式:
  * <pre>
  *     SemanticAnalyzerRunner.runSemanticAnalysis(ast, true);
  * </pre>

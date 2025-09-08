@@ -20,7 +20,7 @@ import java.util.StringJoiner;
  * @param name    结构体名称
  * @param parent  父类名称（无继承时为 {@code null}）
  * @param fields  字段声明列表
- * @param inits    构造函数（可为 null）
+ * @param inits   构造函数（可为 null）
  * @param methods 方法列表
  * @param context 源码位置信息
  */

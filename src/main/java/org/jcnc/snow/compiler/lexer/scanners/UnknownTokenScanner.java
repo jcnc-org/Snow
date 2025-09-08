@@ -20,6 +20,7 @@ public class UnknownTokenScanner extends AbstractTokenScanner {
     /**
      * 判断是否可以处理当前字符。
      * 对于 UnknownTokenScanner，始终返回 true（兜底扫描器，必须排在扫描器链末尾）。
+     *
      * @param c   当前待处理字符
      * @param ctx 词法上下文
      * @return 是否处理该字符（始终为 true）
@@ -32,7 +33,8 @@ public class UnknownTokenScanner extends AbstractTokenScanner {
     /**
      * 实际处理非法字符序列的方法。
      * 连续读取所有无法被其他扫描器识别的字符，组成错误片段并抛出异常。
-     * @param ctx 词法上下文
+     *
+     * @param ctx  词法上下文
      * @param line 错误发生行号
      * @param col  错误发生列号
      * @return 不会返回Token（始终抛异常）

@@ -4,7 +4,10 @@ import org.jcnc.snow.compiler.semantic.type.BuiltinType;
 import org.jcnc.snow.compiler.semantic.type.FunctionType;
 import org.jcnc.snow.compiler.semantic.type.Type;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <b>BuiltinTypeRegistry - 语言全部内置类型/模块/函数注册中心</b>
@@ -27,16 +30,17 @@ public final class BuiltinTypeRegistry {
      * </p>
      */
     public static final Map<String, Type> BUILTIN_TYPES;
+
     static {
         Map<String, Type> t = new HashMap<>();
-        t.put("byte",   BuiltinType.BYTE);     // 字节型
-        t.put("short",  BuiltinType.SHORT);    // 短整型
-        t.put("int",    BuiltinType.INT);      // 整型
-        t.put("long",   BuiltinType.LONG);     // 长整型
-        t.put("float",  BuiltinType.FLOAT);    // 单精度浮点
+        t.put("byte", BuiltinType.BYTE);     // 字节型
+        t.put("short", BuiltinType.SHORT);    // 短整型
+        t.put("int", BuiltinType.INT);      // 整型
+        t.put("long", BuiltinType.LONG);     // 长整型
+        t.put("float", BuiltinType.FLOAT);    // 单精度浮点
         t.put("double", BuiltinType.DOUBLE);   // 双精度浮点
         t.put("string", BuiltinType.STRING);   // 字符串
-        t.put("void",   BuiltinType.VOID);     // 无返回
+        t.put("void", BuiltinType.VOID);     // 无返回
         t.put("boolean", BuiltinType.BOOLEAN); // 布尔类型
 
         BUILTIN_TYPES = Collections.unmodifiableMap(t); // 不可变映射，防止被意外更改
@@ -45,7 +49,8 @@ public final class BuiltinTypeRegistry {
     /**
      * 私有构造方法，禁止实例化
      */
-    private BuiltinTypeRegistry() { }
+    private BuiltinTypeRegistry() {
+    }
 
     /**
      * <b>初始化内置模块和函数声明</b>

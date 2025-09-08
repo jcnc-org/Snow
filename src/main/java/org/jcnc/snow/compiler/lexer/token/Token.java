@@ -10,19 +10,29 @@ package org.jcnc.snow.compiler.lexer.token;
  */
 public class Token {
 
-    /** Token 的类型，如 KEYWORD、IDENTIFIER、TYPE 等。 */
+    /**
+     * Token 的类型，如 KEYWORD、IDENTIFIER、TYPE 等。
+     */
     private final TokenType type;
 
-    /** 清洗后的词素内容，例如去掉引号的字符串正文或注释正文。 */
+    /**
+     * 清洗后的词素内容，例如去掉引号的字符串正文或注释正文。
+     */
     private final String lexeme;
 
-    /** 源代码中对应的原始片段，可能包含引号、注释符号等。 */
+    /**
+     * 源代码中对应的原始片段，可能包含引号、注释符号等。
+     */
     private final String raw;
 
-    /** Token 在源文件中的行号，从 1 开始计数。 */
+    /**
+     * Token 在源文件中的行号，从 1 开始计数。
+     */
     private final int line;
 
-    /** Token 在源文件行中的列号，从 1 开始计数。 */
+    /**
+     * Token 在源文件行中的列号，从 1 开始计数。
+     */
     private final int col;
 
     /**
@@ -70,27 +80,37 @@ public class Token {
         return new Token(TokenType.EOF, "", "", line, 1);
     }
 
-    /** @return 此 Token 的类型 */
+    /**
+     * @return 此 Token 的类型
+     */
     public TokenType getType() {
         return type;
     }
 
-    /** @return 清洗后的词素内容（lexeme） */
+    /**
+     * @return 清洗后的词素内容（lexeme）
+     */
     public String getLexeme() {
         return lexeme;
     }
 
-    /** @return 源代码中的原始片段 */
+    /**
+     * @return 源代码中的原始片段
+     */
     public String getRaw() {
         return raw;
     }
 
-    /** @return Token 所在的源文件行号（从 1 开始） */
+    /**
+     * @return Token 所在的源文件行号（从 1 开始）
+     */
     public int getLine() {
         return line;
     }
 
-    /** @return Token 所在行的列号（从 1 开始） */
+    /**
+     * @return Token 所在行的列号（从 1 开始）
+     */
     public int getCol() {
         return col;
     }

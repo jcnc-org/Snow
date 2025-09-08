@@ -1,10 +1,10 @@
 package org.jcnc.snow.vm.commands.flow.control;
 
 import org.jcnc.snow.vm.interfaces.Command;
-import org.jcnc.snow.vm.utils.LoggingUtils;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.LoggingUtils;
 
 /**
  * The JumpCommand class implements the {@link Command} interface and represents an unconditional jump instruction in the virtual machine.

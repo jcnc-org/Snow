@@ -6,25 +6,6 @@ package org.jcnc.snow.compiler.semantic.type;
  */
 public interface Type {
     /**
-     * 判断当前类型是否与另一个类型兼容。
-     *
-     * @param other 要检查兼容性的另一个类型
-     * @return 如果兼容则返回 true，否则返回 false
-     */
-    boolean isCompatible(Type other);
-
-    /**
-     * 判断当前类型是否为数值类型（byte/short/int/long/float/double）。
-     * <p>
-     * 默认实现返回 false，BuiltinType 会覆盖此方法。
-     *
-     * @return 如果是数值类型则返回 true，否则返回 false
-     */
-    default boolean isNumeric() {
-        return false;
-    }
-
-    /**
      * 对两个数值类型执行宽化转换，返回“更宽”的那个类型。
      * <p>
      * 若 a 和 b 都是数值类型，则按 byte→short→int→long→float→double 顺序选更宽的类型；
@@ -47,6 +28,30 @@ public interface Type {
         int ia = order.indexOf(a), ib = order.indexOf(b);
         return order.get(Math.max(ia, ib));
     }
-    /** 类型名字符串（如 int、double[]） */
-    default String name() { return toString(); }
+
+    /**
+     * 判断当前类型是否与另一个类型兼容。
+     *
+     * @param other 要检查兼容性的另一个类型
+     * @return 如果兼容则返回 true，否则返回 false
+     */
+    boolean isCompatible(Type other);
+
+    /**
+     * 判断当前类型是否为数值类型（byte/short/int/long/float/double）。
+     * <p>
+     * 默认实现返回 false，BuiltinType 会覆盖此方法。
+     *
+     * @return 如果是数值类型则返回 true，否则返回 false
+     */
+    default boolean isNumeric() {
+        return false;
+    }
+
+    /**
+     * 类型名字符串（如 int、double[]）
+     */
+    default String name() {
+        return toString();
+    }
 }

@@ -3,7 +3,8 @@ package org.jcnc.snow.vm.io;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.nio.channels.*;
+import java.nio.channels.Channel;
+import java.nio.channels.Channels;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -19,11 +20,13 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public final class FDTable {
 
-    private FDTable() {}
-
-    /** Next available fd (0‒2 are reserved for standard streams) */
+    /**
+     * Next available fd (0‒2 are reserved for standard streams)
+     */
     private static final AtomicInteger NEXT_FD = new AtomicInteger(3);
-    /** Main mapping table: fd → Channel */
+    /**
+     * Main mapping table: fd → Channel
+     */
     private static final ConcurrentHashMap<Integer, Channel> MAP = new ConcurrentHashMap<>();
 
     static {
@@ -33,8 +36,12 @@ public final class FDTable {
         MAP.put(2, Channels.newChannel(new BufferedOutputStream(System.err)));
     }
 
+    private FDTable() {
+    }
+
     /**
      * Register a new Channel, returning the allocated virtual fd.
+     *
      * @param ch Channel to register
      * @return allocated fd
      */
@@ -46,6 +53,7 @@ public final class FDTable {
 
     /**
      * Retrieve the Channel by fd; returns null if fd does not exist.
+     *
      * @param fd file descriptor
      * @return Channel or null if not found
      */
@@ -55,6 +63,7 @@ public final class FDTable {
 
     /**
      * Close and remove the fd (0‒2 are ignored).
+     *
      * @param fd file descriptor to close
      * @throws IOException if an I/O error occurs
      */
@@ -66,6 +75,7 @@ public final class FDTable {
 
     /**
      * Similar to dup(oldfd) — returns a new fd referring to the same Channel.
+     *
      * @param oldfd old file descriptor to duplicate
      * @return new fd referring to the same Channel
      * @throws IllegalArgumentException if fd does not exist

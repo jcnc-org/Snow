@@ -10,8 +10,8 @@ import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
  * 节点内部仅保存不带引号的字符串内容，便于后续语义处理或编码。
  * </p>
  *
- * @param value    字符串常量的内容，原始值中不包含双引号
- * @param context  节点上下文信息（包含行号、列号等）
+ * @param value   字符串常量的内容，原始值中不包含双引号
+ * @param context 节点上下文信息（包含行号、列号等）
  */
 public record StringLiteralNode(
         String value,

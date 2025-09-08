@@ -1,6 +1,5 @@
 package org.jcnc.snow.vm.commands.flow.control;
 
-import org.jcnc.snow.common.Mode;
 import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.*;
 
@@ -61,7 +60,7 @@ public class CallCommand implements Command {
 
         /* ----------- Parse target address / method signature ----------- */
         final String targetToken = parts[1];     // Can be a numeric address or "@Class::method"
-        final int     nArgs       = Integer.parseInt(parts[2]);
+        final int nArgs = Integer.parseInt(parts[2]);
 
         /* ----------- Build callee's local variable store ----------- */
         LocalVariableStore calleeLVS = new LocalVariableStore();

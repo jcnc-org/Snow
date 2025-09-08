@@ -22,16 +22,21 @@ import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
  */
 public class IRContext {
 
-    /** label 自动生成计数器，用于保证唯一性 */
-    private int labelCounter = 0;
-
-    /** 当前正在构建的 IRFunction 对象，所有 IR 指令均将添加至此 */
+    /**
+     * 当前正在构建的 IRFunction 对象，所有 IR 指令均将添加至此
+     */
     private final IRFunction function;
-
-    /** 用于管理当前函数作用域内变量与虚拟寄存器、类型等的映射关系 */
+    /**
+     * 用于管理当前函数作用域内变量与虚拟寄存器、类型等的映射关系
+     */
     private final IRBuilderScope scope;
-
-    /** 当前 declare 编译阶段变量类型，不在变量声明流程时为 null */
+    /**
+     * label 自动生成计数器，用于保证唯一性
+     */
+    private int labelCounter = 0;
+    /**
+     * 当前 declare 编译阶段变量类型，不在变量声明流程时为 null
+     */
     private String varType;
 
     /**
@@ -47,7 +52,9 @@ public class IRContext {
         this.varType = null;
     }
 
-    /** 获取当前正在构建的 IRFunction 对象。 */
+    /**
+     * 获取当前正在构建的 IRFunction 对象。
+     */
     public IRFunction getFunction() {
         return function;
     }
@@ -60,7 +67,9 @@ public class IRContext {
         return scope;
     }
 
-    /** 为当前函数分配一个新的虚拟寄存器。 */
+    /**
+     * 为当前函数分配一个新的虚拟寄存器。
+     */
     public IRVirtualRegister newRegister() {
         return function.newRegister();
     }
@@ -76,7 +85,9 @@ public class IRContext {
         return newRegister();
     }
 
-    /** 将指定的 IRInstruction 添加到当前 IRFunction 的指令列表中。 */
+    /**
+     * 将指定的 IRInstruction 添加到当前 IRFunction 的指令列表中。
+     */
     public void addInstruction(IRInstruction instr) {
         function.add(instr);
     }
@@ -91,17 +102,23 @@ public class IRContext {
         return "L" + (labelCounter++);
     }
 
-    /** 获取当前 declare 编译阶段变量类型（声明流程中临时记录） */
+    /**
+     * 获取当前 declare 编译阶段变量类型（声明流程中临时记录）
+     */
     public String getVarType() {
         return varType;
     }
 
-    /** 设置当前 declare 编译阶段变量类型（一般在变量声明时赋值） */
+    /**
+     * 设置当前 declare 编译阶段变量类型（一般在变量声明时赋值）
+     */
     public void setVarType(String type) {
         this.varType = type;
     }
 
-    /** 清除当前 declare 编译阶段变量类型（声明流程结束时调用） */
+    /**
+     * 清除当前 declare 编译阶段变量类型（声明流程结束时调用）
+     */
     public void clearVarType() {
         this.varType = null;
     }

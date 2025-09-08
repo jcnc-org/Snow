@@ -8,7 +8,7 @@ public class JsonFormatter {
 
     /**
      * 对一个紧凑的 JSON 字符串进行缩进美化。
-     * 例如: 
+     * 例如:
      * <pre>{@code
      * {"a":1,"b":[2,3]} →
      * {

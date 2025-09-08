@@ -17,10 +17,14 @@ import java.util.List;
  */
 public final class LoadConstInstruction extends IRInstruction {
 
-    /** 要加载的常量值，类型为 IRConstant */
+    /**
+     * 要加载的常量值，类型为 IRConstant
+     */
     private final IRConstant k;
 
-    /** 存放常量结果的目标虚拟寄存器 */
+    /**
+     * 存放常量结果的目标虚拟寄存器
+     */
     private final IRVirtualRegister dest;
 
     /**

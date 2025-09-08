@@ -2,8 +2,8 @@ package org.jcnc.snow.compiler.parser.expression;
 
 import org.jcnc.snow.common.StringEscape;
 import org.jcnc.snow.compiler.lexer.token.Token;
-import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.StringLiteralNode;
+import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
 import org.jcnc.snow.compiler.parser.expression.base.PrefixParselet;

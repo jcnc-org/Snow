@@ -1,8 +1,16 @@
 package org.jcnc.snow.vm.engine;
 
+import org.jcnc.snow.vm.commands.flow.control.CallCommand;
+import org.jcnc.snow.vm.commands.flow.control.JumpCommand;
+import org.jcnc.snow.vm.commands.flow.control.RetCommand;
 import org.jcnc.snow.vm.commands.ref.control.RLoadCommand;
 import org.jcnc.snow.vm.commands.ref.control.RPushCommand;
 import org.jcnc.snow.vm.commands.ref.control.RStoreCommand;
+import org.jcnc.snow.vm.commands.register.control.MovCommand;
+import org.jcnc.snow.vm.commands.stack.control.DupCommand;
+import org.jcnc.snow.vm.commands.stack.control.PopCommand;
+import org.jcnc.snow.vm.commands.stack.control.SwapCommand;
+import org.jcnc.snow.vm.commands.system.control.HaltCommand;
 import org.jcnc.snow.vm.commands.system.control.SyscallCommand;
 import org.jcnc.snow.vm.commands.type.control.byte8.*;
 import org.jcnc.snow.vm.commands.type.control.double64.*;
@@ -10,39 +18,7 @@ import org.jcnc.snow.vm.commands.type.control.float32.*;
 import org.jcnc.snow.vm.commands.type.control.int32.*;
 import org.jcnc.snow.vm.commands.type.control.long64.*;
 import org.jcnc.snow.vm.commands.type.control.short16.*;
-import org.jcnc.snow.vm.commands.type.control.int32.IAndCommand;
-import org.jcnc.snow.vm.commands.type.control.int32.IOrCommand;
-import org.jcnc.snow.vm.commands.type.control.int32.IXorCommand;
-import org.jcnc.snow.vm.commands.type.control.long64.LAndCommand;
-import org.jcnc.snow.vm.commands.type.control.long64.LOrCommand;
-import org.jcnc.snow.vm.commands.type.control.long64.LXorCommand;
-import org.jcnc.snow.vm.commands.flow.control.JumpCommand;
-import org.jcnc.snow.vm.commands.flow.control.CallCommand;
-import org.jcnc.snow.vm.commands.flow.control.RetCommand;
-import org.jcnc.snow.vm.commands.register.control.MovCommand;
-import org.jcnc.snow.vm.commands.type.control.byte8.BLoadCommand;
-import org.jcnc.snow.vm.commands.type.control.byte8.BStoreCommand;
-import org.jcnc.snow.vm.commands.type.control.double64.DLoadCommand;
-import org.jcnc.snow.vm.commands.type.control.double64.DStoreCommand;
-import org.jcnc.snow.vm.commands.type.control.float32.FLoadCommand;
-import org.jcnc.snow.vm.commands.type.control.float32.FStoreCommand;
-import org.jcnc.snow.vm.commands.type.control.int32.ILoadCommand;
-import org.jcnc.snow.vm.commands.type.control.int32.IStoreCommand;
-import org.jcnc.snow.vm.commands.type.control.long64.LLoadCommand;
-import org.jcnc.snow.vm.commands.type.control.long64.LStoreCommand;
-import org.jcnc.snow.vm.commands.type.control.short16.SLoadCommand;
-import org.jcnc.snow.vm.commands.type.control.short16.SStoreCommand;
-import org.jcnc.snow.vm.commands.stack.control.DupCommand;
-import org.jcnc.snow.vm.commands.stack.control.PopCommand;
-import org.jcnc.snow.vm.commands.stack.control.SwapCommand;
-import org.jcnc.snow.vm.commands.type.control.byte8.BPushCommand;
-import org.jcnc.snow.vm.commands.type.control.double64.DPushCommand;
-import org.jcnc.snow.vm.commands.type.control.float32.FPushCommand;
-import org.jcnc.snow.vm.commands.type.control.int32.IPushCommand;
-import org.jcnc.snow.vm.commands.type.control.long64.LPushCommand;
-import org.jcnc.snow.vm.commands.type.control.short16.SPushCommand;
 import org.jcnc.snow.vm.commands.type.conversion.*;
-import org.jcnc.snow.vm.commands.system.control.HaltCommand;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 
 /**
@@ -2487,71 +2463,71 @@ public class VMOpCode {
     // endregion Conversion
 
     // region Reference Control (0x00E0-0x00EF)
-        /**
-         * R_PUSH Opcode: Represents an operation that pushes an object reference (such as a String or any reference type)
-         * onto the operand stack.
-         * <p>This opcode is implemented by the {@link RPushCommand} class, which defines its specific execution logic.</p>
-         *
-         * <p>Execution Steps:</p>
-         * <ol>
-         *     <li>Parses the object reference literal (e.g., a string) from the instruction parameters.</li>
-         *     <li>Creates or interprets the reference as an object instance if necessary.</li>
-         *     <li>Pushes the reference object onto the operand stack.</li>
-         *     <li>Increments the program counter (PC) to proceed with the next sequential instruction.</li>
-         * </ol>
-         *
-         * <p>This opcode is commonly used for:</p>
-         * <ul>
-         *     <li>Pushing string literals, objects, or other references needed for subsequent operations.</li>
-         *     <li>Supplying parameters for method calls that expect reference types.</li>
-         *     <li>Initializing the operand stack with reference values for computation or storage.</li>
-         * </ul>
-         */
-        public static final int R_PUSH  = 0x00E0;
-        /**
-         * R_LOAD Opcode: Represents an operation that loads an object reference from the local variable table
-         * and pushes it onto the operand stack.
-         * <p>This opcode is implemented by the {@link RLoadCommand} class, which defines its specific execution logic.</p>
-         *
-         * <p>Execution Steps:</p>
-         * <ol>
-         *     <li>Parses the target slot index from the instruction parameters.</li>
-         *     <li>Retrieves the reference object stored at the specified slot in the local variable table
-         *         of the current stack frame.</li>
-         *     <li>Pushes the retrieved reference onto the operand stack.</li>
-         *     <li>Increments the program counter (PC) to proceed with the next sequential instruction.</li>
-         * </ol>
-         *
-         * <p>This opcode is commonly used for:</p>
-         * <ul>
-         *     <li>Accessing local variables (such as function arguments or local object references) during method execution.</li>
-         *     <li>Preparing reference values for operations or method invocations.</li>
-         *     <li>Reusing objects previously stored in local variables.</li>
-         * </ul>
-         */
-        public static final int R_LOAD  = 0x00E1;
-        /**
-         * R_STORE Opcode: Represents an operation that pops an object reference from the top of the operand stack
-         * and stores it into the local variable table at the specified slot index.
-         * <p>This opcode is implemented by the {@link RStoreCommand} class, which defines its specific execution logic.</p>
-         *
-         * <p>Execution Steps:</p>
-         * <ol>
-         *     <li>Parses the target slot index from the instruction parameters.</li>
-         *     <li>Pops the top reference object from the operand stack.</li>
-         *     <li>Stores the popped reference object into the specified slot in the local variable table
-         *         of the current stack frame.</li>
-         *     <li>Increments the program counter (PC) to proceed with the next sequential instruction.</li>
-         * </ol>
-         *
-         * <p>This opcode is commonly used for:</p>
-         * <ul>
-         *     <li>Storing computation results or intermediate reference values for later use.</li>
-         *     <li>Passing object references to local variables in preparation for further operations or method calls.</li>
-         *     <li>Managing object lifetimes and ensuring correct referencing in scoped execution contexts.</li>
-         * </ul>
-         */
-        public static final int R_STORE = 0x00E2;
+    /**
+     * R_PUSH Opcode: Represents an operation that pushes an object reference (such as a String or any reference type)
+     * onto the operand stack.
+     * <p>This opcode is implemented by the {@link RPushCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the object reference literal (e.g., a string) from the instruction parameters.</li>
+     *     <li>Creates or interprets the reference as an object instance if necessary.</li>
+     *     <li>Pushes the reference object onto the operand stack.</li>
+     *     <li>Increments the program counter (PC) to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Pushing string literals, objects, or other references needed for subsequent operations.</li>
+     *     <li>Supplying parameters for method calls that expect reference types.</li>
+     *     <li>Initializing the operand stack with reference values for computation or storage.</li>
+     * </ul>
+     */
+    public static final int R_PUSH = 0x00E0;
+    /**
+     * R_LOAD Opcode: Represents an operation that loads an object reference from the local variable table
+     * and pushes it onto the operand stack.
+     * <p>This opcode is implemented by the {@link RLoadCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target slot index from the instruction parameters.</li>
+     *     <li>Retrieves the reference object stored at the specified slot in the local variable table
+     *         of the current stack frame.</li>
+     *     <li>Pushes the retrieved reference onto the operand stack.</li>
+     *     <li>Increments the program counter (PC) to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Accessing local variables (such as function arguments or local object references) during method execution.</li>
+     *     <li>Preparing reference values for operations or method invocations.</li>
+     *     <li>Reusing objects previously stored in local variables.</li>
+     * </ul>
+     */
+    public static final int R_LOAD = 0x00E1;
+    /**
+     * R_STORE Opcode: Represents an operation that pops an object reference from the top of the operand stack
+     * and stores it into the local variable table at the specified slot index.
+     * <p>This opcode is implemented by the {@link RStoreCommand} class, which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Parses the target slot index from the instruction parameters.</li>
+     *     <li>Pops the top reference object from the operand stack.</li>
+     *     <li>Stores the popped reference object into the specified slot in the local variable table
+     *         of the current stack frame.</li>
+     *     <li>Increments the program counter (PC) to proceed with the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Storing computation results or intermediate reference values for later use.</li>
+     *     <li>Passing object references to local variables in preparation for further operations or method calls.</li>
+     *     <li>Managing object lifetimes and ensuring correct referencing in scoped execution contexts.</li>
+     * </ul>
+     */
+    public static final int R_STORE = 0x00E2;
     // endregion
 
     // region Stack Control (0x0100-0x01FF)

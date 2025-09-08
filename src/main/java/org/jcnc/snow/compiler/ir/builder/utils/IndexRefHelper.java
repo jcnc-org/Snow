@@ -25,7 +25,7 @@ public record IndexRefHelper(ExpressionBuilder builder) {
      * 若可做常量折叠，直接返回常量寄存器；否则递归处理每层，最终生成 __index_r 指令，返回中间层的引用。
      *
      * @param node 多维下标 AST 节点
-     * @return     存放下标引用的虚拟寄存器
+     * @return 存放下标引用的虚拟寄存器
      */
     public IRVirtualRegister build(IndexExpressionNode node) {
         // 1. 常量折叠：编译期求值优化

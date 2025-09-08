@@ -2,8 +2,8 @@ package org.jcnc.snow.compiler.parser.factory;
 
 import org.jcnc.snow.compiler.parser.statement.*;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * {@code StatementParserFactory} 是一个语句解析器工厂类，
@@ -18,20 +18,22 @@ import java.util.HashMap;
  */
 public class StatementParserFactory {
 
-    /** 注册表: 语句关键字 -> 对应语句解析器 */
+    /**
+     * 注册表: 语句关键字 -> 对应语句解析器
+     */
     private static final Map<String, StatementParser> registry = new HashMap<>();
 
     static {
         // 注册各类语句解析器
         registry.put("declare", new DeclarationStatementParser());
-        registry.put("if",      new IfStatementParser());
-        registry.put("loop",    new LoopStatementParser());
-        registry.put("return",  new ReturnStatementParser());
-        registry.put("break",   new BreakStatementParser());
-        registry.put("continue",new ContinueStatementParser());
+        registry.put("if", new IfStatementParser());
+        registry.put("loop", new LoopStatementParser());
+        registry.put("return", new ReturnStatementParser());
+        registry.put("break", new BreakStatementParser());
+        registry.put("continue", new ContinueStatementParser());
 
         // 默认处理器: 表达式语句
-        registry.put("",        new ExpressionStatementParser());
+        registry.put("", new ExpressionStatementParser());
     }
 
     /**

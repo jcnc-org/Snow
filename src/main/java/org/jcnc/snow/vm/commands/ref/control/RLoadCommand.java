@@ -33,10 +33,10 @@ public final class RLoadCommand implements Command {
      * Executes the {@code R_LOAD} instruction, loading a reference from the local variable table and pushing it onto the operand stack.
      *
      * @param parts The instruction parameters. {@code parts[0]} is the operator ("R_LOAD"), {@code parts[1]} is the slot index.
-     * @param pc The current program counter value, indicating the instruction address being executed.
+     * @param pc    The current program counter value, indicating the instruction address being executed.
      * @param stack The operand stack manager. The loaded reference will be pushed onto this stack.
-     * @param lvs The local variable store. (Not used directly, as this command uses the store from the current stack frame.)
-     * @param cs The call stack manager. The reference will be loaded from the local variable store of the top stack frame.
+     * @param lvs   The local variable store. (Not used directly, as this command uses the store from the current stack frame.)
+     * @param cs    The call stack manager. The reference will be loaded from the local variable store of the top stack frame.
      * @return The next program counter value ({@code pc + 1}), pointing to the next instruction.
      * @throws NumberFormatException if the slot parameter cannot be parsed as an integer.
      */

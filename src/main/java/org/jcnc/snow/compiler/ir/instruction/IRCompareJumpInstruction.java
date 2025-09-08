@@ -6,8 +6,8 @@ import org.jcnc.snow.compiler.ir.core.IRVisitor;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 
 /**
- * “比较 + 条件跳转” 复合指令: 
- *   if ( left <cmpOp> right ) jump targetLabel;
+ * “比较 + 条件跳转” 复合指令:
+ * if ( left <cmpOp> right ) jump targetLabel;
  * <p>
  * 其中 cmpOp 只能是 IROpCode.CMP_* 六种比较操作码。
  */
@@ -22,7 +22,7 @@ public final class IRCompareJumpInstruction extends IRInstruction {
                                     IRVirtualRegister right,
                                     String targetLabel) {
         this.cmpOp = cmpOp;
-        this.left  = left;
+        this.left = left;
         this.right = right;
         this.targetLabel = targetLabel;
     }
@@ -32,16 +32,26 @@ public final class IRCompareJumpInstruction extends IRInstruction {
         return cmpOp;
     }
 
-    public IRVirtualRegister left()  { return left;  }
-    public IRVirtualRegister right() { return right; }
-    public String            label() { return targetLabel; }
+    public IRVirtualRegister left() {
+        return left;
+    }
+
+    public IRVirtualRegister right() {
+        return right;
+    }
+
+    public String label() {
+        return targetLabel;
+    }
 
     @Override
     public String toString() {
         return cmpOp + " " + left + ", " + right + " -> " + targetLabel;
     }
 
-    /** 暂无访问者实现，留空 */
+    /**
+     * 暂无访问者实现，留空
+     */
     @Override
     public void accept(IRVisitor visitor) { /* no-op */ }
 }

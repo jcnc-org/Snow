@@ -21,19 +21,29 @@ public class LexerContext {
 
     /* ───────────────────────────────── 私有字段 ───────────────────────────────── */
 
-    /** 源代码字符串（换行符已标准化为 \n） */
+    /**
+     * 源代码字符串（换行符已标准化为 \n）
+     */
     private final String source;
 
-    /** 当前扫描位置（自 0 起算的全局偏移量） */
+    /**
+     * 当前扫描位置（自 0 起算的全局偏移量）
+     */
     private int pos = 0;
 
-    /** 当前行号（从 1 开始） */
+    /**
+     * 当前行号（从 1 开始）
+     */
     private int line = 1;
 
-    /** 当前列号（从 1 开始） */
+    /**
+     * 当前列号（从 1 开始）
+     */
     private int col = 1;
 
-    /** 上一个字符对应的列号（用于异常定位） */
+    /**
+     * 上一个字符对应的列号（用于异常定位）
+     */
     private int lastCol = 1;
 
     /* ──────────────────────────────── 构造 & 基本信息 ─────────────────────────────── */
@@ -122,15 +132,31 @@ public class LexerContext {
 
     /* ──────────────────────────────── 坐标查询 ─────────────────────────────── */
 
-    /** @return 当前行号 (1-based) */
-    public int getLine()    { return line; }
+    /**
+     * @return 当前行号 (1-based)
+     */
+    public int getLine() {
+        return line;
+    }
 
-    /** @return 当前列号 (1-based) */
-    public int getCol()     { return col;  }
+    /**
+     * @return 当前列号 (1-based)
+     */
+    public int getCol() {
+        return col;
+    }
 
-    /** @return 上一个字符的列号 */
-    public int getLastCol() { return lastCol; }
+    /**
+     * @return 上一个字符的列号
+     */
+    public int getLastCol() {
+        return lastCol;
+    }
 
-    /** @return 当前指针在源文件中的全局偏移 (0-based) */
-    public int getPos()     { return pos;  }
+    /**
+     * @return 当前指针在源文件中的全局偏移 (0-based)
+     */
+    public int getPos() {
+        return pos;
+    }
 }

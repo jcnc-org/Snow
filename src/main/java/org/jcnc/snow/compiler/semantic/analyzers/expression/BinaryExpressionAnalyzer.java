@@ -13,7 +13,7 @@ import org.jcnc.snow.compiler.semantic.type.Type;
 /**
  * {@code BinaryExpressionAnalyzer} 负责对二元表达式做语义分析并返回其类型。
  * <p>
- * 支持特性: 
+ * 支持特性:
  * 1. 字符串拼接「+」
  * 2. 数值运算与自动宽化
  * 3. 比较 / 关系运算
@@ -34,7 +34,7 @@ public class BinaryExpressionAnalyzer implements ExpressionAnalyzer<BinaryExpres
         ctx.log("检查二元表达式: " + bin.operator());
 
         /* ----------- 先递归分析左右子表达式类型 ----------- */
-        Type left  = ctx.getRegistry()
+        Type left = ctx.getRegistry()
                 .getExpressionAnalyzer(bin.left())
                 .analyze(ctx, mi, fn, locals, bin.left());
 

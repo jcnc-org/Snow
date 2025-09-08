@@ -4,10 +4,13 @@
 
 ## 项目简介
 
-**CLI（Command Line Interface）** 是 Snow 项目对外的统一入口，提供从初始化项目、解析依赖、编译、打包、运行到发布的一站式指令集。  
-该模块以**薄封装/强委托**为设计目标：在 CLI 层完成参数解析、子命令分发与生命周期编排，将实际业务逻辑（编译/运行/打包/依赖解析等）委托给 `pkg` 层的任务与工具执行。
+**CLI（Command Line Interface）** 是 Snow
+项目对外的统一入口，提供从初始化项目、解析依赖、编译、打包、运行到发布的一站式指令集。  
+该模块以**薄封装/强委托**为设计目标：在 CLI 层完成参数解析、子命令分发与生命周期编排，将实际业务逻辑（编译/运行/打包/依赖解析等）委托给
+`pkg` 层的任务与工具执行。
 
-核心入口类 `SnowCLI` 通过注册一组 `CLICommand` 子命令（如 `build` / `compile` / `run` / `publish` 等），统一处理**全局帮助**、**版本信息**、**未知命令兜底**与**退出码约定**，并支持在将来通过 `ServiceLoader`/注册表扩展新的命令。
+核心入口类 `SnowCLI` 通过注册一组 `CLICommand` 子命令（如 `build` / `compile` / `run` / `publish` 等），统一处理**全局帮助
+**、**版本信息**、**未知命令兜底**与**退出码约定**，并支持在将来通过 `ServiceLoader`/注册表扩展新的命令。
 
 ## 核心功能
 
@@ -34,7 +37,8 @@
 
     * DSL 解析：`CloudDSLParser` 读取 `project.cloud` 为 `Project` 模型
     * 依赖解析与缓存：`DependencyResolver`（默认缓存目录位于用户主目录 `~/.snow/cache`）
-    * 生命周期编排：`LifecycleManager` / `LifecyclePhase` 注册并顺序执行任务（如 `RESOLVE_DEPENDENCIES` / `COMPILE` / `PACKAGE` / `PUBLISH` / `CLEAN` / `INIT` 等）
+    * 生命周期编排：`LifecycleManager` / `LifecyclePhase` 注册并顺序执行任务（如 `RESOLVE_DEPENDENCIES` / `COMPILE` /
+      `PACKAGE` / `PUBLISH` / `CLEAN` / `INIT` 等）
     * 具体任务：`CompileTask`、`RunTask`、`PackageTask`、`GenerateTask`、`CleanTask`、`PublishTask`（CLI 仅做参数组装与委托）
 
 * **错误处理与退出码约定**

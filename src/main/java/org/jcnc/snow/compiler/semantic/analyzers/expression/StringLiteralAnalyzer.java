@@ -1,7 +1,7 @@
 package org.jcnc.snow.compiler.semantic.analyzers.expression;
 
-import org.jcnc.snow.compiler.parser.ast.StringLiteralNode;
 import org.jcnc.snow.compiler.parser.ast.FunctionNode;
+import org.jcnc.snow.compiler.parser.ast.StringLiteralNode;
 import org.jcnc.snow.compiler.semantic.analyzers.base.ExpressionAnalyzer;
 import org.jcnc.snow.compiler.semantic.core.Context;
 import org.jcnc.snow.compiler.semantic.core.ModuleInfo;

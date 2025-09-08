@@ -13,16 +13,16 @@ import org.jcnc.snow.compiler.semantic.type.Type;
 /**
  * {@code UnaryExpressionAnalyzer} — 一元表达式的语义分析器。
  *
- * <p>目前实现两种一元运算: 
+ * <p>目前实现两种一元运算:
  * <ul>
  *   <li>{@code -x} 取负: 仅允许作用于数值类型（int / float 等）。</li>
  *   <li>{@code !x} 逻辑非: 仅允许作用于 {@code boolean} 类型。</li>
  * </ul>
  *
- * <p>分析流程: 
+ * <p>分析流程:
  * <ol>
  *   <li>递归分析操作数表达式，获取其类型 {@code operandType}。</li>
- *   <li>根据运算符检查类型合法性: 
+ *   <li>根据运算符检查类型合法性:
  *       <ul>
  *         <li>若类型不符，记录 {@link SemanticError} 并返回一个占位类型
  *             （取负返回 {@link BuiltinType#INT}，逻辑非返回

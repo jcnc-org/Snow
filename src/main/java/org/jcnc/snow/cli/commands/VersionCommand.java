@@ -10,7 +10,7 @@ import org.jcnc.snow.cli.api.CLICommand;
  * </p>
  *
  * <pre>
- * 用法示例: 
+ * 用法示例:
  * $ snow version
  * </pre>
  */

@@ -19,7 +19,7 @@ import java.util.List;
  *   <li>{@link CallStack} — manages stack frames and return addresses</li>
  *   <li>{@link CommandExecutionHandler} — dispatches opcodes</li>
  * </ul>
- *
+ * <p>
  * Root-frame contract:
  * <p>
  * A <strong>root stack frame</strong> is pushed <em>once</em> via
@@ -31,10 +31,14 @@ public class VirtualMachineEngine {
 
     /* ---------- Constants ---------- */
 
-    /** Sentinel PC value that signals “terminate program gracefully”. */
+    /**
+     * Sentinel PC value that signals “terminate program gracefully”.
+     */
     private static final int PROGRAM_END = Integer.MAX_VALUE;
 
-    /** Sentinel returned by {@link CommandExecutionHandler#handle} to halt immediately. */
+    /**
+     * Sentinel returned by {@link CommandExecutionHandler#handle} to halt immediately.
+     */
     private static final int HALT = -1;
 
     /* ---------- Runtime state ---------- */
@@ -52,8 +56,8 @@ public class VirtualMachineEngine {
      * Builds a VM engine with fresh runtime structures.
      */
     public VirtualMachineEngine() {
-        this.operandStack       = new OperandStack();
-        this.callStack          = new CallStack();
+        this.operandStack = new OperandStack();
+        this.callStack = new CallStack();
         this.localVariableStore = new LocalVariableStore(); // shared with root frame
         this.commandExecutionHandler =
                 new CommandExecutionHandler(operandStack, localVariableStore, callStack);
@@ -61,7 +65,9 @@ public class VirtualMachineEngine {
     }
 
     /* package-private accessor used by debug helpers */
-    CallStack getCallStack() { return callStack; }
+    CallStack getCallStack() {
+        return callStack;
+    }
 
     /* ---------- Execution ---------- */
 
@@ -144,19 +150,23 @@ public class VirtualMachineEngine {
 
         /* The returnAddress of the root frame must be PROGRAM_END so that the main loop can exit correctly when the root function RETs.*/
         MethodContext rootCtx = new MethodContext("root", null);
-        StackFrame rootFrame  = new StackFrame(PROGRAM_END, localVariableStore, rootCtx);
+        StackFrame rootFrame = new StackFrame(PROGRAM_END, localVariableStore, rootCtx);
         callStack.pushFrame(rootFrame);
     }
 
     /* ---------- Debug helpers ---------- */
 
-    /** Prints operand stack + call-stack snapshot. */
+    /**
+     * Prints operand stack + call-stack snapshot.
+     */
     public void printStack() {
         operandStack.printOperandStack();
         callStack.printCallStack();
     }
 
-    /** Prints the local-variable table of the current top frame. */
+    /**
+     * Prints the local-variable table of the current top frame.
+     */
     public void printLocalVariables() {
         if (callStack.isEmpty()) {
             System.out.println("Local variable table is empty");
@@ -167,7 +177,9 @@ public class VirtualMachineEngine {
 
     /* ---------- Utility ---------- */
 
-    /** Parses textual opcode to integer. */
+    /**
+     * Parses textual opcode to integer.
+     */
     private int parseOpCode(String opCodeStr) {
         try {
             return Integer.parseInt(opCodeStr);

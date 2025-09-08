@@ -49,7 +49,7 @@ public class BXorCommand implements Command {
         final byte a = (byte) operandStack.pop();
 
         // Perform the byte8 bitwise XOR operation and push the result back onto the stack
-        operandStack.push((byte)(a ^ b));
+        operandStack.push((byte) (a ^ b));
 
         return currentPC + 1;
     }

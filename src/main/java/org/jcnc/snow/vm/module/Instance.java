@@ -25,10 +25,14 @@ import java.util.Map;
  */
 public final class Instance {
 
-    /** The virtual table associated with this instance (immutable). */
+    /**
+     * The virtual table associated with this instance (immutable).
+     */
     private final VirtualTable vtable;
 
-    /** A mapping of field names to their runtime values. */
+    /**
+     * A mapping of field names to their runtime values.
+     */
     private final Map<String, Object> fields = new HashMap<>();
 
     /**

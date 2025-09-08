@@ -22,7 +22,9 @@ import java.util.Map;
  */
 public final class VirtualTable {
 
-    /** Mapping from method signature to its entry address in the VM code segment. */
+    /**
+     * Mapping from method signature to its entry address in the VM code segment.
+     */
     private final Map<String, Integer> table = new HashMap<>();
 
     /**

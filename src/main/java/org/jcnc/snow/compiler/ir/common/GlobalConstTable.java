@@ -26,7 +26,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class GlobalConstTable {
 
-    /** 存储全局常量: “ModuleName.constName” → 常量值。线程安全。 */
+    /**
+     * 存储全局常量: “ModuleName.constName” → 常量值。线程安全。
+     */
     private static final Map<String, Object> CONSTS = new ConcurrentHashMap<>();
 
     /**

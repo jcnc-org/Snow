@@ -10,7 +10,7 @@ import org.jcnc.snow.compiler.parser.context.ParserContext;
  * 构建一个有效的 {@link ExpressionNode} 抽象语法树结构。
  * </p>
  * <p>
- * 不同的实现可以采用不同的解析技术: 
+ * 不同的实现可以采用不同的解析技术:
  * <ul>
  *     <li>递归下降（Recursive Descent）</li>
  *     <li>Pratt Parser（前缀/中缀优先级驱动）</li>

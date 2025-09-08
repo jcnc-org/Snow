@@ -8,4 +8,5 @@ package org.jcnc.snow.compiler.parser.ast.base;
  * 实现此接口的类应表示程序在运行时执行的具体语法行为。
  * </p>
  */
-public interface StatementNode extends Node {}
+public interface StatementNode extends Node {
+}

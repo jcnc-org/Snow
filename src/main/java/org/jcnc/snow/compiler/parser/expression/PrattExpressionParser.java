@@ -48,19 +48,19 @@ public class PrattExpressionParser implements ExpressionParser {
         // ----------------- 前缀解析器注册 -----------------
         // 各种字面量/标识符
         prefixes.put(TokenType.NUMBER_LITERAL.name(), new NumberLiteralParselet());
-        prefixes.put(TokenType.IDENTIFIER.name(),     new IdentifierParselet());
+        prefixes.put(TokenType.IDENTIFIER.name(), new IdentifierParselet());
         prefixes.put(TokenType.STRING_LITERAL.name(), new StringLiteralParselet());
-        prefixes.put(TokenType.BOOL_LITERAL.name(),   new BoolLiteralParselet());
+        prefixes.put(TokenType.BOOL_LITERAL.name(), new BoolLiteralParselet());
 
         // 分组与数组字面量（两种索引方式）
-        prefixes.put(TokenType.LPAREN.name(),   new GroupingParselet());
+        prefixes.put(TokenType.LPAREN.name(), new GroupingParselet());
         prefixes.put(TokenType.LBRACKET.name(), new ArrayLiteralParselet());
         prefixes.put("(", new GroupingParselet());
         prefixes.put("[", new ArrayLiteralParselet());
 
         // 一元前缀运算符（如负号、逻辑非），同样用两种方式注册
         prefixes.put(TokenType.MINUS.name(), new UnaryOperatorParselet());
-        prefixes.put(TokenType.NOT.name(),   new UnaryOperatorParselet());
+        prefixes.put(TokenType.NOT.name(), new UnaryOperatorParselet());
         prefixes.put("-", new UnaryOperatorParselet());
         prefixes.put("!", new UnaryOperatorParselet());
 
@@ -69,14 +69,14 @@ public class PrattExpressionParser implements ExpressionParser {
 
         // ----------------- 中缀解析器注册 -----------------
         // 常见二元算数运算符
-        infixes.put("+",  new BinaryOperatorParselet(Precedence.SUM,     true));
-        infixes.put("-",  new BinaryOperatorParselet(Precedence.SUM,     true));
-        infixes.put("*",  new BinaryOperatorParselet(Precedence.PRODUCT, true));
-        infixes.put("/",  new BinaryOperatorParselet(Precedence.PRODUCT, true));
-        infixes.put("%",  new BinaryOperatorParselet(Precedence.PRODUCT, true));
+        infixes.put("+", new BinaryOperatorParselet(Precedence.SUM, true));
+        infixes.put("-", new BinaryOperatorParselet(Precedence.SUM, true));
+        infixes.put("*", new BinaryOperatorParselet(Precedence.PRODUCT, true));
+        infixes.put("/", new BinaryOperatorParselet(Precedence.PRODUCT, true));
+        infixes.put("%", new BinaryOperatorParselet(Precedence.PRODUCT, true));
         // 比较运算符
-        infixes.put(">",  new BinaryOperatorParselet(Precedence.COMPARISON, true));
-        infixes.put("<",  new BinaryOperatorParselet(Precedence.COMPARISON, true));
+        infixes.put(">", new BinaryOperatorParselet(Precedence.COMPARISON, true));
+        infixes.put("<", new BinaryOperatorParselet(Precedence.COMPARISON, true));
         infixes.put(">=", new BinaryOperatorParselet(Precedence.COMPARISON, true));
         infixes.put("<=", new BinaryOperatorParselet(Precedence.COMPARISON, true));
         // 相等性判断
@@ -84,7 +84,7 @@ public class PrattExpressionParser implements ExpressionParser {
         infixes.put("!=", new BinaryOperatorParselet(Precedence.EQUALITY, true));
         // 逻辑运算
         infixes.put("&&", new BinaryOperatorParselet(Precedence.AND, true));
-        infixes.put("||", new BinaryOperatorParselet(Precedence.OR,  true));
+        infixes.put("||", new BinaryOperatorParselet(Precedence.OR, true));
         // 函数调用、数组下标、成员访问
         infixes.put("(", new CallParselet());
         infixes.put("[", new IndexParselet());

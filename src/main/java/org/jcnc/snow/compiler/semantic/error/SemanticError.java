@@ -26,7 +26,7 @@ import org.jcnc.snow.compiler.parser.ast.base.Node;
 public record SemanticError(Node node, String message) {
 
     /**
-     * 返回该语义错误的字符串描述，格式如下: 
+     * 返回该语义错误的字符串描述，格式如下:
      * <pre>
      * [文件绝对路径: ]行 X, 列 Y: [错误信息]
      * </pre>

@@ -1,7 +1,7 @@
 package org.jcnc.snow.compiler.lexer.scanners;
 
-import org.jcnc.snow.compiler.lexer.core.LexerContext;
 import org.jcnc.snow.compiler.lexer.base.TokenScanner;
+import org.jcnc.snow.compiler.lexer.core.LexerContext;
 import org.jcnc.snow.compiler.lexer.token.Token;
 
 import java.util.List;

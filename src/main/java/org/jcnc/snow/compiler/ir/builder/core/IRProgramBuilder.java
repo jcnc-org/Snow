@@ -97,6 +97,7 @@ public final class IRProgramBuilder {
      *   <li>最后将布局以 <code>StructName</code> 为键注册到 {@link IRBuilderScope} 的全局布局表。</li>
      *   <li>同时调用 {@link IRBuilderScope#registerStructParent} 登记继承关系（子类 → 父类）。</li>
      * </ol>
+     *
      * @param roots AST 顶层节点列表，包含模块/结构体信息
      */
     private void preloadStructLayouts(List<Node> roots) {

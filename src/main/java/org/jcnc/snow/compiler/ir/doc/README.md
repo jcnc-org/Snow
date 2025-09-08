@@ -7,7 +7,9 @@
 **IR（Intermediate Representation）** 是 Snow 编译器项目的核心模块，承担中间表示的构建、组织与管理任务。
 它用于在前端语法分析与后端目标代码生成之间，提供结构清晰、便于优化和转换的抽象表示形式。
 
-本 IR 模块采用**类 SSA（Static Single Assignment）** 的思路：以**虚拟寄存器**为中心组织数据流，配合**统一的操作码集（`IROpCode`）**、**访问者模式（`IRVisitor`）**与**构建器体系**，形成可扩展、可调试、且便于后续优化与代码生成的 IR 层。
+本 IR 模块采用**类 SSA（Static Single Assignment）** 的思路：以**虚拟寄存器**为中心组织数据流，配合*
+*统一的操作码集（`IROpCode`）**、**访问者模式（`IRVisitor`）**与**构建器体系**，形成可扩展、可调试、且便于后续优化与代码生成的
+IR 层。
 
 ## 核心功能
 
@@ -36,7 +38,8 @@
 * **操作码与类型提升**
 
     * `IROpCode` 定义全量操作码（整数/浮点不同位宽的算术、比较、转换，`LOAD/STORE/CONST`，`JUMP/LABEL/CALL/RET` 等）
-    * `IROpCodeMappings`/`ExpressionUtils`/`ComparisonUtils` 负责从 AST 运算符与操作数类型推导到具体 IR 操作码，并进行必要的类型提升与比较归类
+    * `IROpCodeMappings`/`ExpressionUtils`/`ComparisonUtils` 负责从 AST 运算符与操作数类型推导到具体 IR
+      操作码，并进行必要的类型提升与比较归类
 * **IR 打印与调试支持**
 
     * `IRPrinter`：基于访问者输出 IR（便于调试/测试）

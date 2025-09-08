@@ -15,16 +15,12 @@ import java.util.Map;
  * 表达式分析与操作符选择工具类。
  * <p>
  * 主要功能:
- *   - 解析字面量常量，自动推断类型
- *   - 自动匹配并选择适合的算术/比较操作码
- *   - 表达式类型的合并与类型提升
- *   - 支持线程隔离的函数级默认类型后缀
+ * - 解析字面量常量，自动推断类型
+ * - 自动匹配并选择适合的算术/比较操作码
+ * - 表达式类型的合并与类型提升
+ * - 支持线程隔离的函数级默认类型后缀
  */
 public final class ExpressionUtils {
-
-    private ExpressionUtils() {}
-
-    // ───────────── 线程级默认类型后缀 ─────────────
 
     /**
      * 当前线程的默认类型后缀（如当前函数返回类型等），用于类型推断兜底。
@@ -32,17 +28,26 @@ public final class ExpressionUtils {
     private static final ThreadLocal<Character> DEFAULT_SUFFIX =
             ThreadLocal.withInitial(() -> '\0');
 
+    // ───────────── 线程级默认类型后缀 ─────────────
+
+    private ExpressionUtils() {
+    }
+
     /**
      * 设置当前线程的默认类型后缀。
      *
      * @param suffix 类型后缀字符（b/s/i/l/f/d），'\0'表示无
      */
-    public static void setDefaultSuffix(char suffix) { DEFAULT_SUFFIX.set(suffix); }
+    public static void setDefaultSuffix(char suffix) {
+        DEFAULT_SUFFIX.set(suffix);
+    }
 
     /**
      * 清除当前线程的默认类型后缀，重置为无。
      */
-    public static void clearDefaultSuffix()           { DEFAULT_SUFFIX.set('\0'); }
+    public static void clearDefaultSuffix() {
+        DEFAULT_SUFFIX.set('\0');
+    }
 
     // ───────────── 字面量常量解析 ─────────────
 
@@ -73,19 +78,19 @@ public final class ExpressionUtils {
                 : Character.toLowerCase(value.charAt(value.length() - 1));
 
         String digits = switch (suffix) {
-            case 'b','s','l','f','d' -> value.substring(0, value.length() - 1);
+            case 'b', 's', 'l', 'f', 'd' -> value.substring(0, value.length() - 1);
             default -> {
                 // 无后缀，优先参考变量类型
                 if (ctx.getVarType() != null) {
                     String t = ctx.getVarType();
                     suffix = switch (t) {
-                        case "byte"   -> 'b';
-                        case "short"  -> 's';
-                        case "int"    -> 'i';
-                        case "long"   -> 'l';
-                        case "float"  -> 'f';
+                        case "byte" -> 'b';
+                        case "short" -> 's';
+                        case "int" -> 'i';
+                        case "long" -> 'l';
+                        case "float" -> 'f';
                         case "double" -> 'd';
-                        default       -> '\0';
+                        default -> '\0';
                     };
                 }
                 yield value;
@@ -99,7 +104,7 @@ public final class ExpressionUtils {
             case 'l' -> new IRConstant(Long.parseLong(digits));
             case 'f' -> new IRConstant(Float.parseFloat(digits));
             case 'd' -> new IRConstant(Double.parseDouble(digits));
-            default  -> looksLikeFloat(digits)
+            default -> looksLikeFloat(digits)
                     ? new IRConstant(Double.parseDouble(digits))
                     : new IRConstant(Integer.parseInt(digits));
         };
@@ -121,7 +126,7 @@ public final class ExpressionUtils {
             case 'l' -> IROpCode.NEG_L64;
             case 'f' -> IROpCode.NEG_F32;
             case 'd' -> IROpCode.NEG_D64;
-            default  -> IROpCode.NEG_I32;      // 无法推断或为 int
+            default -> IROpCode.NEG_I32;      // 无法推断或为 int
         };
     }
 
@@ -173,7 +178,7 @@ public final class ExpressionUtils {
         if (node instanceof NumberLiteralNode(String value, NodeContext _)) {
             char last = Character.toLowerCase(value.charAt(value.length() - 1));
             return switch (last) {
-                case 'b','s','i','l','f','d' -> last;
+                case 'b', 's', 'i', 'l', 'f', 'd' -> last;
                 default -> looksLikeFloat(value) ? 'd' : '\0';
             };
         }
@@ -236,7 +241,7 @@ public final class ExpressionUtils {
             case 'l' -> IROpCodeMappings.OP_L64;
             case 'f' -> IROpCodeMappings.OP_F32;
             case 'd' -> IROpCodeMappings.OP_D64;
-            default  -> IROpCodeMappings.OP_I32;
+            default -> IROpCodeMappings.OP_I32;
         };
         return table.get(op);
     }
