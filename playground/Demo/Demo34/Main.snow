@@ -1,14 +1,13 @@
 module: main
-    import: os,Student, Person
+    import: os,Student, Person, Graduate
 
 	function: main
 	    returns: void
 	    body:
 	        declare a: Person = new Student(1)
-
 	        os.println(a.getName())
-
-
+	        declare p: Person = new Graduate(10, 2024)
+            os.println(p.getName())
 	    end body
 	end function
 end module
