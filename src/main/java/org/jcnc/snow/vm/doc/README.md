@@ -8,8 +8,8 @@
 它采用**命令（Command）模式 + 统一操作码表（`VMOpCode`）+ 工厂注册（`CommandFactory`）**的结构，配合**运行时栈/局部变量表/调用栈
 **与**方法栈帧**，构成清晰可扩展的执行层。
 
-执行流程：`VMLauncher/VMInitializer` 解析指令文件 → `CommandLoader` 读入并清洗文本 → `VirtualMachineEngine` 主循环按 **PC
-** 逐条解释执行（跳过空行与 `#` 注释），通过 `CommandExecutionHandler` 分发到各具体指令类，直到 `RET`（根帧）或 `HALT` 正常终止。
+执行流程：`VMLauncher/VMInitializer` 解析指令文件 → `CommandLoader` 读入并清洗文本 → `VirtualMachineEngine` 主循环按 PC
+逐条解释执行（跳过空行与 `#` 注释），通过 `CommandExecutionHandler` 分发到各具体指令类，直到 `RET`（根帧）或 `HALT` 正常终止。
 
 ## 核心功能
 
@@ -43,12 +43,11 @@
     * **栈操作**：`PopCommand`（`POP`）、`DupCommand`（`DUP`）、`SwapCommand`（`SWAP`）
     * **寄存器移动**：`MovCommand`（`MOV src,dst`，在同一局部变量表内复制槽位）
 
-* **引用/对象与虚方法支持**
+* **引用/对象支持**
     * 引用操作：`R_PUSH / R_LOAD / R_STORE`（分别用于将引用压栈、从局部变量表加载/存储引用）
     * 运行时模型：
         * `module.StackFrame`（保存返回地址、`LocalVariableStore`、`OperandStack`、`MethodContext`）
         * `module.CallStack`（带上限保护的调用栈）
-        * `module.Instance`、`module.VirtualTable`（vtable：方法签名 → 入口地址，支持动态分派）
 
 * **系统调用与 I/O**
     * 统一入口：`SyscallCommand`（`SYSCALL`），失败时约定**向栈压 `-1`**
@@ -106,9 +105,7 @@ vm/
   │   ├── LocalVariableStore          // 局部变量表（自动扩容/紧凑化）
   │   ├── CallStack                   // 调用栈（含深度保护）
   │   ├── StackFrame                  // 栈帧：返回地址 + 局部表 + 栈 + 方法元信息
-  │   ├── MethodContext               // 方法上下文（名称/实参，用于调试）
-  │   ├── Instance                    // 对象实例占位
-  │   └── VirtualTable                // vtable：方法签名 → 入口地址
+  │   └── MethodContext               // 方法上下文（名称/实参，用于调试）
   │
   ├── io/                             // I/O 与文件系统桥接
   │   ├── FDTable                     // 虚拟 fd ↔ NIO Channel 映射（含 0/1/2）
