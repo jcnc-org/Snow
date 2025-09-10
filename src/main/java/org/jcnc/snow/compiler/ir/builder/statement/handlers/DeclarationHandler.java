@@ -31,11 +31,6 @@ import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
  *     <li>如无初始化器，仅做类型和符号表注册，并清空常量绑定。</li>
  * </ol>
  * <p>
- * 注意事项:
- * <ul>
- *     <li>本实现不会影响已有运行时结构，适用于现有虚拟机/IR，不依赖对象 vtable 派发。</li>
- *     <li>如需支持运行时真正多态，请在对象结构及方法调用指令层面额外设计。</li>
- * </ul>
  */
 public class DeclarationHandler implements IStatementHandler {
 
