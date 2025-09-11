@@ -4,7 +4,7 @@ module: main
 	function: main
 	    returns: void
 	    body:
-	        os.print("1"+"1")
+	        os.print("1"+2*4)
 
 	    end body
 	end function
