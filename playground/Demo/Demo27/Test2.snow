@@ -13,7 +13,7 @@ module: Main
             end body
         end init
 
-        // 封装：提供只读访问器
+        // 封装：提供只读访问器`
         function: getName
             returns: string
             body:
