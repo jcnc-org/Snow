@@ -1,12 +1,10 @@
 module: os
     function: print
         params:
-            declare i1: double
+            declare i1: any
         returns: void
         body:
             syscall("PRINT", i1)
         end body
     end function
-
-
 end module
