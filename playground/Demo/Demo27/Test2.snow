@@ -32,7 +32,7 @@ module: Main
         // 重载示例：同名 eat，不同参数
         function: eat
             params:
-                food: string
+               declare food: string
             returns: void
             body:
                 os.print(this.name + " eats " + food)
@@ -41,7 +41,7 @@ module: Main
 
         function: eat
             params:
-                times: int
+                declare times: int
             returns: void
             body:
                 os.print(this.name + " eats " + times + " times.")
@@ -93,7 +93,7 @@ module: Main
     // 多态演示函数
     function: letAnimalSpeak
         params:
-            a: Animal
+            declare a: Animal
         returns: void
         body:
             // 调用多态方法
