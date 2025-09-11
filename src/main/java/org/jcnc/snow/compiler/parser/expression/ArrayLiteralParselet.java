@@ -26,6 +26,17 @@ import java.util.List;
 public class ArrayLiteralParselet implements PrefixParselet {
 
     /**
+     * 跳过词法流中连续的换行符，允许数组元素跨多行书写。
+     *
+     * @param ts 词法流
+     */
+    private static void skipNewlines(TokenStream ts) {
+        while (ts.peek().getType() == TokenType.NEWLINE) {
+            ts.next();
+        }
+    }
+
+    /**
      * 解析数组字面量表达式。
      *
      * @param ctx   解析上下文（包含词法流、源文件信息等）
@@ -36,7 +47,7 @@ public class ArrayLiteralParselet implements PrefixParselet {
     public ExpressionNode parse(ParserContext ctx, Token token) {
         // token 为已消费的 LBRACKET，使用其位置生成 NodeContext
         int line = token.getLine();
-        int col  = token.getCol();
+        int col = token.getCol();
         String file = ctx.getSourceName();
 
         TokenStream ts = ctx.getTokens();
@@ -65,16 +76,5 @@ public class ArrayLiteralParselet implements PrefixParselet {
         // 期望并消费右中括号
         ts.expectType(TokenType.RBRACKET);
         return new ArrayLiteralNode(elements, new NodeContext(line, col, file));
-    }
-
-    /**
-     * 跳过词法流中连续的换行符，允许数组元素跨多行书写。
-     *
-     * @param ts 词法流
-     */
-    private static void skipNewlines(TokenStream ts) {
-        while (ts.peek().getType() == TokenType.NEWLINE) {
-            ts.next();
-        }
     }
 }

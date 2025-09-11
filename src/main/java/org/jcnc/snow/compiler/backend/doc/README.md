@@ -4,8 +4,10 @@
 
 ## 项目简介
 
-**Backend（IR→VM）** 模块承接 IR 层产物，完成**寄存器分配**、**操作码映射与类型提升**、**指令选择与输出组装**，最终生成可在 Snow VM 上执行的指令流。
-模块采用“**指令生成器（InstructionGenerator）+ 注册表**”的可插拔架构：每种 IR 指令对应一个生成器；`VMCodeGenerator` 负责分发与调度；`VMProgramBuilder` 负责落盘（emit）、标签/调用回填（fixup）与函数边界管理。
+**Backend（IR→VM）** 模块承接 IR 层产物，完成**寄存器分配**、**操作码映射与类型提升**、**指令选择与输出组装**，最终生成可在
+Snow VM 上执行的指令流。
+模块采用“**指令生成器（InstructionGenerator）+ 注册表**”的可插拔架构：每种 IR 指令对应一个生成器；`VMCodeGenerator` 负责分发与调度；
+`VMProgramBuilder` 负责落盘（emit）、标签/调用回填（fixup）与函数边界管理。
 
 ## 核心功能
 
@@ -84,7 +86,8 @@ backend/
 
 1. **寄存器分配**：对每个 `IRFunction` 调用 `RegisterAllocator#allocate(fn)` → 产出 `slotMap`。
 2. **创建输出器**：`VMProgramBuilder out = new VMProgramBuilder()`。
-3. **构建代码生成器**：`VMCodeGenerator gen = new VMCodeGenerator(slotMap, out, InstructionGeneratorProvider.defaultGenerators())`。
+3. **构建代码生成器**：
+   `VMCodeGenerator gen = new VMCodeGenerator(slotMap, out, InstructionGeneratorProvider.defaultGenerators())`。
 4. **逐函数生成**：`gen.generate(fn)`（内部：遍历 IR 指令 → 分派到对应 `InstructionGenerator` → 结束处自动发出 `HALT/RET`）。
 5. **收集结果**：`out.build()` / `out.getCode()` 取得最终 VM 指令序列（`String` 列表），可直接喂给 VM 或写出文本。
 

@@ -30,7 +30,7 @@ public class DeclarationStatementParser implements StatementParser {
         var tokens = ctx.getTokens(); // 获取词法单元流
 
         // 记录声明语句在源码中的位置信息（行、列、文件名）
-        int line   = tokens.peek().getLine();
+        int line = tokens.peek().getLine();
         int column = tokens.peek().getCol();
         String file = ctx.getSourceName();
 

@@ -10,9 +10,9 @@ import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
  * 成员访问常见于结构体、模块、对象导入等上下文中，是表达式链中常见的构件之一。
  * </p>
  *
- * @param object   左侧对象表达式，表示成员所属的作用域或容器
- * @param member   要访问的成员名称（字段名或方法名）
- * @param context  节点上下文信息（包含行号、列号等）
+ * @param object  左侧对象表达式，表示成员所属的作用域或容器
+ * @param member  要访问的成员名称（字段名或方法名）
+ * @param context 节点上下文信息（包含行号、列号等）
  */
 public record MemberExpressionNode(
         ExpressionNode object,

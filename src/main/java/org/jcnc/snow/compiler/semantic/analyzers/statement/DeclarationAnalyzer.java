@@ -15,7 +15,7 @@ import org.jcnc.snow.compiler.semantic.type.Type;
 /**
  * {@code DeclarationAnalyzer} 是变量声明语句的语义分析器。
  * <p>
- * 它负责处理类似 {@code int x = 10;} 的声明语句，具体分析内容包括: 
+ * 它负责处理类似 {@code int x = 10;} 的声明语句，具体分析内容包括:
  * <ul>
  *   <li>类型解析: 将声明中的类型字符串转换为语义层的 {@link Type} 对象；</li>
  *   <li>符号定义: 将变量注册到当前作用域的 {@link SymbolTable} 中；</li>

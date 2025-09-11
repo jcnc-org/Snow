@@ -1,9 +1,9 @@
 package org.jcnc.snow.vm;
 
 import org.jcnc.snow.common.Mode;
-import org.jcnc.snow.vm.execution.CommandLoader;
 import org.jcnc.snow.vm.engine.VMCommandExecutor;
 import org.jcnc.snow.vm.engine.VirtualMachineEngine;
+import org.jcnc.snow.vm.execution.CommandLoader;
 import org.jcnc.snow.vm.io.FilePathResolver;
 import org.jcnc.snow.vm.utils.VMStateLogger;
 

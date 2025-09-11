@@ -50,7 +50,7 @@ public class SAddCommand implements Command {
         short a = (short) operandStack.pop();
 
         // Perform the addition and push the result back onto the stack
-        operandStack.push((short)(a + b));
+        operandStack.push((short) (a + b));
 
         // Return the updated program counter (next instruction)
         return currentPC + 1;

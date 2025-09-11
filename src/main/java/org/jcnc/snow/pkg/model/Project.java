@@ -19,28 +19,50 @@ import java.util.Map;
  */
 public final class Project {
 
-    /** 组织/分组名（如 com.example） */
+    /**
+     * 组织/分组名（如 com.example）
+     */
     private final String group;
-    /** 构件/模块名（如 app-core） */
+    /**
+     * 构件/模块名（如 app-core）
+     */
     private final String artifact;
-    /** 项目展示名称 */
+    /**
+     * 项目展示名称
+     */
     private final String name;
-    /** 版本号（如 1.0.0） */
+    /**
+     * 版本号（如 1.0.0）
+     */
     private final String version;
-    /** 项目描述 */
+    /**
+     * 项目描述
+     */
     private final String description;
-    /** 许可证标识 */
+    /**
+     * 许可证标识
+     */
     private final String license;
-    /** 项目主页 URL */
+    /**
+     * 项目主页 URL
+     */
     private final String homepage;
 
-    /** 额外属性（不影响主字段，可用于模板/占位符） */
+    /**
+     * 额外属性（不影响主字段，可用于模板/占位符）
+     */
     private final Map<String, String> properties;
-    /** 仓库列表（仓库 ID -> 仓库对象） */
+    /**
+     * 仓库列表（仓库 ID -> 仓库对象）
+     */
     private final Map<String, Repository> repositories;
-    /** 依赖列表 */
+    /**
+     * 依赖列表
+     */
     private final List<Dependency> dependencies;
-    /** 构建配置 */
+    /**
+     * 构建配置
+     */
     private final BuildConfiguration build;
 
     /**
@@ -73,7 +95,7 @@ public final class Project {
     }
 
     /**
-     * 通过扁平 Map 创建 Project 实例。key 格式约定如下: 
+     * 通过扁平 Map 创建 Project 实例。key 格式约定如下:
      * <ul>
      *   <li>project.*      —— 项目元数据</li>
      *   <li>properties.*   —— 额外属性</li>
@@ -133,57 +155,79 @@ public final class Project {
         return new Project(group, artifact, name, version, description, license, homepage, props, repos, deps, buildCfg);
     }
 
-    /** @return 组织/分组名 */
+    /**
+     * @return 组织/分组名
+     */
     public String getGroup() {
         return group;
     }
 
-    /** @return 构件/模块名 */
+    /**
+     * @return 构件/模块名
+     */
     public String getArtifact() {
         return artifact;
     }
 
-    /** @return 项目名称 */
+    /**
+     * @return 项目名称
+     */
     public String getName() {
         return name;
     }
 
-    /** @return 版本号 */
+    /**
+     * @return 版本号
+     */
     public String getVersion() {
         return version;
     }
 
-    /** @return 项目描述 */
+    /**
+     * @return 项目描述
+     */
     public String getDescription() {
         return description;
     }
 
-    /** @return 许可证标识 */
+    /**
+     * @return 许可证标识
+     */
     public String getLicense() {
         return license;
     }
 
-    /** @return 项目主页 URL */
+    /**
+     * @return 项目主页 URL
+     */
     public String getHomepage() {
         return homepage;
     }
 
-    /** @return 额外属性映射 */
+    /**
+     * @return 额外属性映射
+     */
     public Map<String, String> getProperties() {
         return properties;
     }
 
-    /** @return 仓库映射 */
+    /**
+     * @return 仓库映射
+     */
     public Map<String, Repository> getRepositories() {
         return repositories;
     }
 
-    /** @return 依赖列表 */
+    /**
+     * @return 依赖列表
+     */
     public List<Dependency> getDependencies() {
         return dependencies;
     }
 
-    /** @return 构建配置 */
+    /**
+     * @return 构建配置
+     */
     public BuildConfiguration getBuild() {
         return build;
     }

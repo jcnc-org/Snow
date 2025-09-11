@@ -14,7 +14,7 @@ import java.util.List;
  * 用于对单个操作数 val 执行指定的一元运算 OP（例如取负 NEG），
  * 并将结果写入目标虚拟寄存器 dest。
  * <p>
- * 支持的操作由 {@link IROpCode} 定义，目前常见的一元操作包括: 
+ * 支持的操作由 {@link IROpCode} 定义，目前常见的一元操作包括:
  * <ul>
  *   <li>NEG_I32 —— 整数取负: dest = -val</li>
  *   <li>（可扩展）逻辑非、按位非等</li>
@@ -22,13 +22,19 @@ import java.util.List;
  */
 public final class UnaryOperationInstruction extends IRInstruction {
 
-    /** 一元运算操作符（如 NEG_I32） */
+    /**
+     * 一元运算操作符（如 NEG_I32）
+     */
     private final IROpCode op;
 
-    /** 运算结果写入的目标虚拟寄存器 */
+    /**
+     * 运算结果写入的目标虚拟寄存器
+     */
     private final IRVirtualRegister dest;
 
-    /** 被操作的值（唯一操作数） */
+    /**
+     * 被操作的值（唯一操作数）
+     */
     private final IRValue val;
 
     /**

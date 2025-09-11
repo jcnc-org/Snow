@@ -14,25 +14,31 @@ package org.jcnc.snow.compiler.parser.context;
 public sealed class ParseException extends RuntimeException
         permits MissingToken, UnexpectedToken, UnsupportedFeature {
 
-    /** 出错行号（从 1 开始） */
+    /**
+     * 出错行号（从 1 开始）
+     */
     private final int line;
-    /** 出错列号（从 1 开始） */
+    /**
+     * 出错列号（从 1 开始）
+     */
     private final int column;
-    /** 错误原因描述 */
+    /**
+     * 错误原因描述
+     */
     private final String reason;
 
     /**
      * 构造语法分析异常。
      *
-     * @param reason  错误原因描述
-     * @param line    出错行号（从 1 开始）
-     * @param column  出错列号（从 1 开始）
+     * @param reason 错误原因描述
+     * @param line   出错行号（从 1 开始）
+     * @param column 出错列号（从 1 开始）
      */
     public ParseException(String reason, int line, int column) {
         // 禁用 cause / suppression / stackTrace，确保 CLI 输出简洁
         super(reason, null, false, false);
         this.reason = reason;
-        this.line   = line;
+        this.line = line;
         this.column = column;
     }
 

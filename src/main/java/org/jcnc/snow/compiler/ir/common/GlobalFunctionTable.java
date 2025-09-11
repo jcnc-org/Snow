@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 此工具类用于在编译前端构建每个函数 IR（中间表示）时登记函数的返回类型，
  * 以便后端在生成 {@code CALL} 指令时判断是否需要保存返回值。
  * </p>
- *
+ * <p>
  * 使用说明
  * <ul>
  *   <li>在函数 IR 构建阶段，调用 {@link #register(String, String)} 方法登记函数名与返回类型。</li>

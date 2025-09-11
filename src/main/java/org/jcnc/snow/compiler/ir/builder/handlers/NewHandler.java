@@ -16,7 +16,9 @@ import java.util.List;
 /**
  * 数组字面量表达式处理器。
  * <p>
- * 负责将 <code>[a, b, c]</code> 数组字面量节点编译为 IR 常量表达式，转换流程包括：
+ * 负责将 <code>[a, b, c]</code> 数组字面量节点编译为 IR 常量表达式
+ * <p>
+ * 转换流程:
  * <ol>
  *   <li>递归遍历每个元素，确保全为编译期常量</li>
  *   <li>生成对应的 IRConstant 及 LoadConstInstruction 指令</li>

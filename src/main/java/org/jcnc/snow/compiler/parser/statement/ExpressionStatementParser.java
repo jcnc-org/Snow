@@ -20,7 +20,7 @@ import org.jcnc.snow.compiler.parser.expression.PrattExpressionParser;
  * doSomething()    // 一般表达式语句
  * this.name = n    // 将 this.name 赋值语法糖为对 name 的赋值
  * }</pre>
- *
+ * <p>
  * - 以标识符开头且后接 '=' 时，解析为 {@link AssignmentNode}。
  * - 否则先解析为一般表达式；若后续遇到 '='，则回退为“<expr> = <expr>”赋值语句。
  * - 所有表达式语句必须以换行符（NEWLINE）结尾。

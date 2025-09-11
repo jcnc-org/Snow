@@ -11,7 +11,7 @@ import org.jcnc.snow.pkg.tasks.RunTask;
  * </p>
  *
  * <pre>
- * 用法示例: 
+ * 用法示例:
  * $ snow run main.water
  * </pre>
  */

@@ -1,0 +1,20 @@
+module: Student
+	import : Person
+
+	struct : Student extends Person
+	    init:
+	        params:
+	            declare name: int
+	        body:
+	            super(name)
+	        end body
+	    end init
+
+	    function: getName
+	        returns: int
+	        body:
+	            return super.getName() + 1000
+	        end body
+	    end function
+	end struct
+end module

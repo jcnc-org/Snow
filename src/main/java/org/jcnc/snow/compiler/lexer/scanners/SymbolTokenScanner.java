@@ -7,7 +7,7 @@ import org.jcnc.snow.compiler.lexer.token.TokenType;
 /**
  * 符号扫描器: 识别常见的单字符符号，如冒号、逗号、括号和算术符号。
  * <p>
- * 支持的符号包括: 
+ * 支持的符号包括:
  * <ul>
  *     <li>标点符号: : , .</li>
  *     <li>括号: ( )</li>

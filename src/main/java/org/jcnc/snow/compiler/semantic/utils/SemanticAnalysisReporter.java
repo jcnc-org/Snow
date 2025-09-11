@@ -9,7 +9,7 @@ import static org.jcnc.snow.common.SnowConfig.print;
 /**
  * {@code SemanticAnalysisReporter} 用于在语义分析结束后汇总并打印所有收集到的
  * {@link SemanticError}。为了同时满足“完整错误收集”与“按需快速失败”两种使用场景，
- * 现在提供两个公共 API: 
+ * 现在提供两个公共 API:
  * <ul>
  *   <li>{@link #report(List)} ‑ 仅打印，不终止；</li>
  *   <li>{@link #reportAndExitIfNecessary(List)} ‑ 若存在错误则 <b>打印并退出</b>。</li>
@@ -18,7 +18,8 @@ import static org.jcnc.snow.common.SnowConfig.print;
  */
 public final class SemanticAnalysisReporter {
 
-    private SemanticAnalysisReporter() { }
+    private SemanticAnalysisReporter() {
+    }
 
     /**
      * 打印语义分析结果；<b>不会</b>退出进程。

@@ -51,7 +51,7 @@ public class FunctionBuilder {
 
         // 2) 初始化 IR 容器与上下文
         IRFunction irFunction = new IRFunction(functionNode.name());
-        IRContext irContext  = new IRContext(irFunction);
+        IRContext irContext = new IRContext(irFunction);
 
         // 3) 导入所有全局/跨模块常量到当前作用域（便于常量折叠和跨模块引用）
         GlobalConstTable.all().forEach((k, v) ->
@@ -66,11 +66,11 @@ public class FunctionBuilder {
         // 仅在浮点/整型长短类型上设置；其它/void 情况不设置（使用 '\0' 表示不设置）
         char defaultSuffix = switch (rtLower) {
             case "double" -> 'd';
-            case "float"  -> 'f';
-            case "long"   -> 'l';
-            case "short"  -> 's';
-            case "byte"   -> 'b';
-            default       -> '\0';
+            case "float" -> 'f';
+            case "long" -> 'l';
+            case "short" -> 's';
+            case "byte" -> 'b';
+            default -> '\0';
         };
         ExpressionUtils.setDefaultSuffix(defaultSuffix);
 

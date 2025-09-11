@@ -1,99 +1,83 @@
 package org.jcnc.snow.vm.commands.flow.control;
 
-import org.jcnc.snow.common.Mode;
 import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.*;
 
 import static org.jcnc.snow.common.SnowConfig.print;
 
 /**
- * The CallCommand class implements the {@link Command} interface and represents a subroutine/function call
- * instruction in the virtual machine.
- * <p>
- * This command facilitates method invocation by creating a new stack frame, transferring arguments
- * from the operand stack to the callee's local variable store, and jumping to the specified target address.
- * </p>
+ * Implements the CALL instruction for the virtual machine.
  *
- * <p>Specific behavior:</p>
+ * <p>
+ * Encoding (by {@code VMProgramBuilder.emitCall}):
  * <ul>
- *     <li>Parses the target address and the number of arguments from the instruction parameters.</li>
- *     <li>Validates the operands and checks for correct argument count.</li>
- *     <li>Builds a new local variable store for the callee and transfers arguments from the operand stack
- *         (left-to-right order, where the top of the stack is the last argument).</li>
- *     <li>Pushes a new stack frame onto the call stack, saving the return address and local variables.</li>
- *     <li>Jumps to the specified target address to begin execution of the callee function.</li>
- *     <li>If any error occurs (e.g., malformed operands, stack underflow), an exception is thrown.</li>
+ *     <li>{@code CALL <addr> <nArgs>} — static/known target</li>
  * </ul>
+ * The arguments are pushed to the operand stack from left to right before the call,
+ * so the last argument is on the top of the stack when this instruction executes.
+ * </p>
  */
 public class CallCommand implements Command {
 
     /**
-     * Executes the CALL instruction, initiating a subroutine/function call within the virtual machine.
+     * Executes the CALL instruction.
+     *
      * <p>
-     * This method handles the creation of a new stack frame for the callee, argument passing,
-     * and control transfer to the target function address.
+     * The CALL instruction transfers control to a subroutine at the given address,
+     * passing arguments from the operand stack to a new local variable store.
      * </p>
      *
-     * @param parts        The instruction parameters. Must include:
-     *                     <ul>
-     *                         <li>{@code parts[0]}: The "CALL" operator.</li>
-     *                         <li>{@code parts[1]}: The target address of the callee function.</li>
-     *                         <li>{@code parts[2]}: The number of arguments to pass.</li>
-     *                     </ul>
-     * @param currentPC    The current program counter, used to record the return address for after the call.
-     * @param operandStack The operand stack manager. Arguments are popped from this stack.
-     * @param callerLVS    The local variable store of the caller function (not directly modified here).
-     * @param callStack    The virtual machine's call stack manager, used to push the new stack frame.
-     * @return The new program counter value, which is the address of the callee function (i.e., jump target).
-     * The VM should transfer control to this address after setting up the call frame.
-     * @throws IllegalArgumentException If the instruction parameters are malformed or missing.
-     * @throws IllegalStateException    If the operand stack does not contain enough arguments.
+     * @param parts            the parts of the instruction; expects: [CALL, targetAddress, nArgs]
+     * @param currentPC        the current program counter (PC)
+     * @param operandStack     the VM's operand stack (used for passing arguments)
+     * @param ignoredCallerLVS the local variable store of the caller (unused in this implementation)
+     * @param callStack        the VM's call stack (where new frames are pushed)
+     * @return the target address to transfer control to (i.e., jump to)
+     * @throws IllegalStateException if the instruction format is invalid
      */
     @Override
     public int execute(String[] parts,
                        int currentPC,
                        OperandStack operandStack,
-                       LocalVariableStore callerLVS,
+                       LocalVariableStore /* caller LVT, unused */ ignoredCallerLVS,
                        CallStack callStack) {
 
-        if (parts.length < 3)
-            throw new IllegalArgumentException("CALL: need <addr | @methodSig> <nArgs>");
+        // 1. Validate instruction arguments.
+        if (parts.length < 3) {
+            throw new IllegalStateException("CALL requires 2 operands: target and nArgs");
+        }
 
-        /* ----------- Parse target address / method signature ----------- */
-        final String targetToken = parts[1];     // Can be a numeric address or "@Class::method"
-        final int     nArgs       = Integer.parseInt(parts[2]);
+        final String rawTarget = parts[1].trim();
+        final int nArgs = Integer.parseInt(parts[2].trim());
 
-        /* ----------- Build callee's local variable store ----------- */
+        // 2. Pop arguments from the operand stack and restore left-to-right order.
+        //    Arguments are pushed left-to-right, so we pop them and reverse into the args array.
+        final Object[] args = new Object[nArgs];
+        for (int i = nArgs - 1; i >= 0; i--) {
+            args[i] = operandStack.pop();
+        }
+
+        // 3. Resolve the target address for the subroutine (currently supports only static calls).
+        int targetAddr = Integer.parseInt(rawTarget);
+        String methodNameForCtx = "subroutine@" + targetAddr;
+        print("\nCALL -> " + targetAddr);
+
+        // 4. Build the callee's local variable store and copy arguments into it.
         LocalVariableStore calleeLVS = new LocalVariableStore();
-        for (int slot = nArgs - 1; slot >= 0; slot--) {
-            if (operandStack.isEmpty())
-                throw new IllegalStateException("CALL: operand stack underflow");
-            calleeLVS.setVariable(slot, operandStack.pop());
+        for (int i = 0; i < nArgs; i++) {
+            calleeLVS.setVariable(i, args[i]);
         }
 
-        /* ----------- Handle virtual call ----------- */
-        int targetAddr;
-        if (targetToken.startsWith("@")) {                       // "@Class::method" convention indicates a virtual call
-            Object thisRef = calleeLVS.getVariable(0);     // By convention, slot-0 stores "this"
-            if (!(thisRef instanceof Instance inst))
-                throw new IllegalStateException("VCALL: slot-0 is not an object reference");
-
-            String methodSig = targetToken.substring(1);   // Remove '@'
-            targetAddr = inst.vtable().lookup(methodSig);
-        } else {
-            /* Direct/static call (numeric address) */
-            targetAddr = Integer.parseInt(targetToken);
-        }
-
-        /* ----------- Push new stack frame and jump ----------- */
+        // 5. Create a new stack frame for the callee and push it onto the call stack.
+        //    The return address is set to the next instruction after CALL.
         StackFrame newFrame = new StackFrame(
                 currentPC + 1,
                 calleeLVS,
-                new MethodContext("subroutine@" + targetAddr, null)
+                new MethodContext(methodNameForCtx, null) // Don't log full args to avoid heavy logs
         );
         callStack.pushFrame(newFrame);
 
-        print("\nCalling function at address: " + targetAddr);
-        return targetAddr;   // jump
+        // 6. Transfer control to the target address (subroutine entry point).
+        return targetAddr;
     }
 }

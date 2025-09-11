@@ -13,10 +13,9 @@ import java.util.List;
  */
 public final class InstructionGeneratorProvider {
 
-    /** 工具类禁止实例化。 */
-    private InstructionGeneratorProvider() { /* no-instance */ }
-
-    /** 缺省指令生成器列表（不可修改，顺序即执行顺序）。 */
+    /**
+     * 缺省指令生成器列表（不可修改，顺序即执行顺序）。
+     */
     private static final List<InstructionGenerator<? extends IRInstruction>> DEFAULT =
             List.of(
                     new LoadConstGenerator(),  // 常量加载
@@ -28,6 +27,11 @@ public final class InstructionGeneratorProvider {
                     new JumpGenerator(),       // 无条件跳转
                     new CmpJumpGenerator()     // 条件跳转
             );
+
+    /**
+     * 工具类禁止实例化。
+     */
+    private InstructionGeneratorProvider() { /* no-instance */ }
 
     /**
      * 返回生产环境使用的缺省指令生成器列表。

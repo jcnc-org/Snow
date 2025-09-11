@@ -22,7 +22,7 @@ public class UnaryHandler implements ExpressionHandler<UnaryExpressionNode> {
      *
      * @param b  表达式构建器
      * @param un 一元表达式 AST 节点
-     * @return   存放一元表达式结果的虚拟寄存器
+     * @return 存放一元表达式结果的虚拟寄存器
      */
     @Override
     public IRVirtualRegister handle(ExpressionBuilder b, UnaryExpressionNode un) {

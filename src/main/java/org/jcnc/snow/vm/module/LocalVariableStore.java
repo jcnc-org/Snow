@@ -9,70 +9,113 @@ import java.util.ArrayList;
 import static org.jcnc.snow.vm.utils.VMUtils.isNativeImage;
 
 /**
- * The {@code LocalVariableStore} represents a simple dynamically-sized
- * local-variable table (<em>frame locals</em>) of the VM.
+ * The {@code LocalVariableStore} represents a simple, dynamically-sized
+ * local-variable table (<em>frame locals</em>) for the virtual machine (VM).
  *
- * <p>It supports random access via {@link #setVariable(int, Object)}
- * / {@link #getVariable(int)} and can <strong>compact</strong> itself
- * by trimming trailing {@code null} slots after execution has finished.</p>
+ * <p>This class supports random access for storing and retrieving variables
+ * via {@link #setVariable(int, Object)} and {@link #getVariable(int)}.
+ * It can also <strong>compact</strong> itself by trimming trailing {@code null}
+ * slots after execution, for cleaner debug output.
+ *
+ * <p>Internally, it uses an {@link ArrayList} to store variables, automatically
+ * expanding as needed to support random index writes. This structure is designed
+ * for VM stack frame management and debug inspection.
  */
 public class LocalVariableStore {
 
+    /**
+     * The backing list storing the local variables.
+     */
     private final ArrayList<Object> localVariables;
-    /* ---------- construction ---------- */
 
+    /* ---------- Construction ---------- */
+
+    /**
+     * Constructs a new {@code LocalVariableStore} with the given initial capacity.
+     *
+     * @param initialCapacity the initial capacity for the local variable list
+     */
     public LocalVariableStore(int initialCapacity) {
         this.localVariables = new ArrayList<>(initialCapacity);
         handleMode();
     }
 
+    /**
+     * Constructs a new {@code LocalVariableStore} with default capacity.
+     */
     public LocalVariableStore() {
         this.localVariables = new ArrayList<>();
         handleMode();
     }
 
-    /* ---------- public API ---------- */
+    /* ---------- Public API ---------- */
 
     /**
-     * Sets the value at {@code index}, expanding the list if necessary.
+     * Sets the value at the specified index, expanding the list if necessary.
+     * <p>If the list is smaller than {@code index + 1}, it will be padded
+     * with {@code null} until the required capacity is reached.
+     *
+     * @param index the index to set (0-based)
+     * @param value the value to store at the specified index
+     * @throws IndexOutOfBoundsException if {@code index} is negative
      */
     public void setVariable(int index, Object value) {
         ensureCapacity(index + 1);
         localVariables.set(index, value);
     }
 
-    /* ------------------------------------------------------------
-     * Backward compatibility: VM instruction decoder can directly call
-     * store / load methods without caring about internal naming differences.
-     * ------------------------------------------------------------ */
+    /**
+     * Stores a value at the specified index (alias for {@link #setVariable}).
+     * <p>This method is provided for VM instruction decoder compatibility.
+     *
+     * @param index the index to set
+     * @param value the value to store
+     */
     public void store(int index, Object value) {
         setVariable(index, value);
     }
 
+    /**
+     * Loads the value from the specified index (alias for {@link #getVariable}).
+     * <p>This method is provided for VM instruction decoder compatibility.
+     *
+     * @param index the index to retrieve
+     * @return the value at the given index
+     */
     public Object load(int index) {
         return getVariable(index);
     }
 
     /**
-     * Returns the value at {@code index}.
+     * Returns the value at the specified index.
+     * <p>If the list is not large enough, it is automatically expanded,
+     * filling new slots with {@code null} values.
+     *
+     * @param index the index to retrieve (0-based)
+     * @return the value at the specified index, or {@code null} if not set
+     * @throws IndexOutOfBoundsException if {@code index} is negative
      */
     public Object getVariable(int index) {
-        /* 修改点 #1 —— 自动扩容以避免 LOAD 越界异常  */
+        // Automatic expansion to avoid LOAD out-of-bounds exception.
         if (index < 0)
             throw new IndexOutOfBoundsException("Negative LV index: " + index);
         ensureCapacity(index + 1);
-        return localVariables.get(index);   // 可能为 null，符合 JVM 语义
+        return localVariables.get(index);
     }
 
     /**
-     * Exposes the backing list (read-only preferred).
+     * Returns the backing {@link ArrayList} storing the local variables.
+     * <p>Direct modification is not recommended. Prefer read-only usage.
+     *
+     * @return the internal list of local variables
      */
     public ArrayList<Object> getLocalVariables() {
         return localVariables;
     }
 
     /**
-     * Prints every slot to the logger.
+     * Prints the contents of each slot in the local variable table to the logger.
+     * <p>If the table is empty, a corresponding message is printed instead.
      */
     public void printLv() {
         if (localVariables.isEmpty()) {
@@ -86,24 +129,23 @@ public class LocalVariableStore {
         }
     }
 
-
-    /* ---------- internal helpers ---------- */
+    /* ---------- Internal Helpers ---------- */
 
     /**
-     * Clears all variables (used when a stack frame is popped).
+     * Clears all variables in the table.
+     * <p>This method is typically called when a stack frame is popped.
      */
     public void clearVariables() {
         localVariables.clear();
     }
 
     /**
-     * Compacts the table by <b>removing trailing {@code null} slots</b>.
-     * <p>Call this once after program termination (e.g. in
-     * {@code VirtualMachineEngine.execute()} before printing) to get
-     * cleaner debug output without affecting execution-time indices.</p>
+     * Compacts the table by removing only trailing {@code null} slots.
+     * <p>This should be called after program termination, for cleaner debug output.
+     * Does not affect non-null slots or internal indices during execution.
      */
     public void compact() {
-        /* 修改点 #2 —— 仅删除“尾部” null，而不是整表过滤 */
+        // Only delete the "tail" null values, not filter the entire table.
         int i = localVariables.size() - 1;
         while (i >= 0 && localVariables.get(i) == null) {
             localVariables.remove(i);
@@ -112,22 +154,22 @@ public class LocalVariableStore {
     }
 
     /**
-     * Ensures backing list can hold {@code minCapacity} slots.
+     * Ensures that the backing list has at least the specified minimum capacity.
+     * <p>New slots are filled with {@code null} values if the list needs to grow.
+     *
+     * @param minCapacity the minimum capacity required
      */
     private void ensureCapacity(int minCapacity) {
-        /* 修改点 #3 —— 使用 while 循环填充 null，确保 slot 可随机写入 */
         while (localVariables.size() < minCapacity) {
             localVariables.add(null);
         }
     }
 
     /**
-     * Mode-specific UI hook for debugging.
-     * <p>
-     * If debug mode is enabled and not running inside a GraalVM native-image,
-     * this method will open the Swing-based variable inspector window.
-     * In native-image environments (where AWT/Swing is unavailable),
-     * the window will not be displayed.
+     * Handles debug mode hooks. If debug mode is enabled and not running inside a
+     * GraalVM native-image, this method will open a Swing-based variable inspector
+     * window for debugging purposes.
+     * <p>In native-image environments, this window is not displayed.
      */
     private void handleMode() {
         if (SnowConfig.isDebug()) {

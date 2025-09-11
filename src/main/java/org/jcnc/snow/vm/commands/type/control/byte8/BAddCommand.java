@@ -50,7 +50,7 @@ public class BAddCommand implements Command {
         byte a = (byte) operandStack.pop();
 
         // Perform the addition and push the result back onto the stack
-        operandStack.push((byte)(a + b));
+        operandStack.push((byte) (a + b));
 
         // Return the updated program counter (next instruction)
         return currentPC + 1;

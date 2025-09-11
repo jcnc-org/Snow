@@ -11,4 +11,5 @@ package org.jcnc.snow.compiler.parser.ast.base;
  * 所有实现此接口的节点可参与表达式求值、语义分析、类型检查与中间代码生成等处理流程。
  * </p>
  */
-public interface ExpressionNode extends Node {}
+public interface ExpressionNode extends Node {
+}

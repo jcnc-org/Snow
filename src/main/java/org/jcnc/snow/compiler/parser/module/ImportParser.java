@@ -1,9 +1,9 @@
 package org.jcnc.snow.compiler.parser.module;
 
 import org.jcnc.snow.compiler.lexer.token.TokenType;
+import org.jcnc.snow.compiler.parser.ast.ImportNode;
 import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
-import org.jcnc.snow.compiler.parser.ast.ImportNode;
 
 import java.util.ArrayList;
 import java.util.List;

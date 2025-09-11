@@ -17,7 +17,7 @@ public class TokenPrinter {
     /**
      * 将给定的 Token 列表打印到标准输出（控制台）。
      * <p>
-     * 输出格式: 
+     * 输出格式:
      * <pre>
      * line   col    type             lexeme
      * ----------------------------------------------------

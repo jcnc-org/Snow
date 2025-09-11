@@ -14,7 +14,7 @@ import java.nio.file.Paths;
  * </p>
  *
  * <pre>
- * 用法示例: 
+ * 用法示例:
  * $ snow install
  * </pre>
  */

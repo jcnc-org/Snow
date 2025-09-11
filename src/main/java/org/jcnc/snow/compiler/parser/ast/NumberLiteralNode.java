@@ -11,8 +11,8 @@ import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
  * 在语义分析或类型推导阶段再行解析为具体数值类型。
  * </p>
  *
- * @param value    数字字面量的原始字符串表示
- * @param context  节点上下文信息（包含行号、列号等）
+ * @param value   数字字面量的原始字符串表示
+ * @param context 节点上下文信息（包含行号、列号等）
  */
 public record NumberLiteralNode(
         String value,

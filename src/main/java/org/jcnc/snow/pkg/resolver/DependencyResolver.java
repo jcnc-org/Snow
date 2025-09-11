@@ -22,7 +22,9 @@ import java.util.Optional;
  */
 public final class DependencyResolver {
 
-    /** 本地缓存目录 */
+    /**
+     * 本地缓存目录
+     */
     private final Path localCache;
 
     /**

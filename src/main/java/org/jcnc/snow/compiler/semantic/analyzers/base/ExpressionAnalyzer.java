@@ -34,7 +34,7 @@ public interface ExpressionAnalyzer<E extends ExpressionNode> {
      * @param fn     当前函数节点，可用于返回类型校验或其他函数级上下文
      * @param locals 当前作用域的符号表，包含已声明的变量及其类型
      * @param expr   待分析的表达式节点
-     * @return       表达式的推导类型，用于后续类型兼容性检查和类型传播
+     * @return 表达式的推导类型，用于后续类型兼容性检查和类型传播
      */
     Type analyze(Context ctx,
                  ModuleInfo mi,

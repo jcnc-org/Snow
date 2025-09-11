@@ -1,8 +1,8 @@
 package org.jcnc.snow.compiler.parser.expression.base;
 
+import org.jcnc.snow.compiler.lexer.token.Token;
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
-import org.jcnc.snow.compiler.lexer.token.Token;
 
 /**
  * {@code PrefixParselet} 是用于解析前缀表达式的通用接口。

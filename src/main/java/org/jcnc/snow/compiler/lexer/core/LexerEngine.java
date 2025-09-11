@@ -1,11 +1,9 @@
 package org.jcnc.snow.compiler.lexer.core;
 
-import org.jcnc.snow.common.SnowConfig;
 import org.jcnc.snow.compiler.lexer.base.TokenScanner;
 import org.jcnc.snow.compiler.lexer.scanners.*;
 import org.jcnc.snow.compiler.lexer.token.Token;
 import org.jcnc.snow.compiler.lexer.token.TokenType;
-import org.jcnc.snow.compiler.lexer.utils.TokenPrinter;
 
 import java.io.File;
 import java.util.ArrayList;

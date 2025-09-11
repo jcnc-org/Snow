@@ -46,7 +46,7 @@ public final class CleanTask implements Task {
      * 内部使用 try-with-resources 保证文件流自动关闭，避免资源泄漏。
      * </p>
      *
-     * @param dir 需要删除的目录路径
+     * @param dir         需要删除的目录路径
      * @param containSelf 是否删除指定目录本身
      * @throws IOException 删除目录或文件过程中发生 IO 错误时抛出
      */

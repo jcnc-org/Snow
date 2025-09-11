@@ -41,7 +41,7 @@ public final class RStoreCommand implements Command {
      * @param lvs   The local variable store. (Not used directly, as the store from the current stack frame is used.)
      * @param cs    The call stack manager. The reference will be stored in the local variable store of the top stack frame.
      * @return The next program counter value ({@code pc + 1}), pointing to the next instruction.
-     * @throws NumberFormatException if the slot parameter cannot be parsed as an integer.
+     * @throws NumberFormatException         if the slot parameter cannot be parsed as an integer.
      * @throws java.util.EmptyStackException if the operand stack is empty when popping.
      */
     @Override

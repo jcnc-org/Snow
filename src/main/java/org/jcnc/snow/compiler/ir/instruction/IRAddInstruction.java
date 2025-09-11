@@ -17,13 +17,19 @@ import java.util.List;
  */
 public class IRAddInstruction extends IRInstruction {
 
-    /** 运算结果存放的目标虚拟寄存器 */
+    /**
+     * 运算结果存放的目标虚拟寄存器
+     */
     private final IRVirtualRegister dest;
 
-    /** 左操作数 */
+    /**
+     * 左操作数
+     */
     private final IRValue lhs;
 
-    /** 右操作数 */
+    /**
+     * 右操作数
+     */
     private final IRValue rhs;
 
     /**

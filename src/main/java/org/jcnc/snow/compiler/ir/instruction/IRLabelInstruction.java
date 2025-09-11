@@ -31,7 +31,9 @@ public final class IRLabelInstruction extends IRInstruction {
         return name + ":";
     }
 
-    /** 目前尚未对 Label 做访问者处理，空实现即可 */
+    /**
+     * 目前尚未对 Label 做访问者处理，空实现即可
+     */
     @Override
     public void accept(IRVisitor visitor) {
         /* no-op */

@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * <pre>
- * 示例用法: 
+ * 示例用法:
  * Dependency dep = Dependency.fromString(
  *     "core", "com.example:core:@{version}",
  *     Map.of("version", "1.2.3")
@@ -30,7 +30,9 @@ public record Dependency(
         String version
 ) {
 
-    /** 匹配 group:artifact:version 格式的正则表达式。 */
+    /**
+     * 匹配 group:artifact:version 格式的正则表达式。
+     */
     private static final Pattern GAV = Pattern.compile("([^:]+):([^:]+):(.+)");
 
     /**

@@ -1,7 +1,5 @@
 package org.jcnc.snow.vm.module;
 
-import org.jcnc.snow.vm.utils.LoggingUtils;
-
 /**
  * The {@code StackFrame} class represents a single frame in the call stack during program execution.
  * It holds the execution context for a method invocation, including information such as the return

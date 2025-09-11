@@ -38,7 +38,7 @@ public record ModuleNode(
      * 列出模块名、导入、全局变量、结构体、函数等简明内容。
      *
      * @return 字符串形式，如
-     *         Module(name=main, imports=[math], globals=[int x], structs=[Foo], functions=[bar])
+     * Module(name=main, imports=[math], globals=[int x], structs=[Foo], functions=[bar])
      */
     @Override
     public String toString() {
@@ -59,10 +59,10 @@ public record ModuleNode(
         functions.forEach(f -> funcJ.add(f.name()));
 
         // 5) 综合输出
-        return "Module(name="   + name +
-                ", imports=["    + impJ    + "]" +
-                ", globals=["    + globJ   + "]" +
-                ", structs=["    + structJ + "]" +
-                ", functions=["  + funcJ   + "])";
+        return "Module(name=" + name +
+                ", imports=[" + impJ + "]" +
+                ", globals=[" + globJ + "]" +
+                ", structs=[" + structJ + "]" +
+                ", functions=[" + funcJ + "])";
     }
 }

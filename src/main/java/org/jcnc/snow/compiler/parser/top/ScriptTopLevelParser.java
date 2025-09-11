@@ -1,8 +1,8 @@
 package org.jcnc.snow.compiler.parser.top;
 
-import org.jcnc.snow.compiler.parser.base.TopLevelParser;
 import org.jcnc.snow.compiler.parser.ast.base.Node;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
+import org.jcnc.snow.compiler.parser.base.TopLevelParser;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
 import org.jcnc.snow.compiler.parser.factory.StatementParserFactory;
 import org.jcnc.snow.compiler.parser.statement.StatementParser;
