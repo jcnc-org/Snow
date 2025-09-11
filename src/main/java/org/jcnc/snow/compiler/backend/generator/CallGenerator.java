@@ -245,7 +245,7 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
         if (args.isEmpty()) {
             throw new IllegalStateException("[CallGenerator] syscall 至少需要一个子命令");
         }
-        String subcmd = resolveSyscallSubcmd(args.get(0), fn);
+        String subcmd = resolveSyscallSubcmd(args.getFirst(), fn);
         for (int i = 1; i < args.size(); i++) {
             loadArgument(out, slotMap, args.get(i), 'R', fn);
         }
