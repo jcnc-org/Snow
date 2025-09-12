@@ -7,4 +7,12 @@ module: os
             syscall("PRINT", i1)
         end body
     end function
+    function: println
+        params:
+            declare i1: any
+        returns: void
+        body:
+            syscall("PRINTLN", i1)
+        end body
+    end function
 end module
