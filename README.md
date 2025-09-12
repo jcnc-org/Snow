@@ -4,8 +4,9 @@
 
 <p align="center">
 <a href='https://gitee.com/jcnc-org/snow/stargazers'><img src='https://gitee.com/jcnc-org/snow/badge/star.svg?theme=dark' alt='star'></a>
-<a href='https://gitee.com/jcnc-org/snow/members'><img src='https://gitee.com/jcnc-org/snow/badge/fork.svg?theme=dark' alt='fork'></a>
+<a href='https://gitcode.com/JCNC/snow'><img src='https://gitcode.com/JCNC/snow/star/badge.svg' alt='fork'></a> 
 </p>
+
 
 <p align="center">
     <a href="https://gitee.com/jcnc-org/snow/blob/main/LICENSE">
@@ -15,6 +16,8 @@
         <img src="https://img.shields.io/badge/version-v0.10.0-blue" alt="">
     </a>
 </p>
+
+
 
 <p align="center">
     <a href="https://gitee.com/jcnc-org/snow/releases">
