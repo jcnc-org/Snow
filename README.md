@@ -4,7 +4,7 @@
 
 <p align="center">
 <a href='https://gitee.com/jcnc-org/snow/stargazers'><img src='https://gitee.com/jcnc-org/snow/badge/star.svg?theme=dark' alt='star'></a>
-<a href='https://gitcode.com/JCNC/snow'><img src='https://gitcode.com/JCNC/snow/star/badge.svg' alt='fork'></a> 
+<a href='https://gitcode.com/jcnc-org/snow'><img src='https://gitcode.com/jcnc-org/snow/star/badge.svg' alt='fork'></a> 
 </p>
 
 
