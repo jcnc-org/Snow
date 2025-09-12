@@ -106,10 +106,10 @@ public class CallExpressionAnalyzer implements ExpressionAnalyzer<CallExpression
                     functionName = member;
                     funcType = targetModule.getFunctions().get(functionName);
                 } else {
-                    // 2. 结构体实例.函数
+                    // 2. 结构体实例.方法（重载）
                     Symbol sym = locals.resolve(leftName);
                     if (sym != null && sym.type() instanceof StructType structType) {
-                        funcType = structType.getMethods().get(member);
+                        funcType = structType.getMethod(member, call.arguments().size());
                         functionName = member;
                         if (funcType == null) {
                             ctx.getErrors().add(new SemanticError(callee,
@@ -123,13 +123,13 @@ public class CallExpressionAnalyzer implements ExpressionAnalyzer<CallExpression
                     }
                 }
             } else {
-                // 左边是任意表达式.方法
+                // 任意表达式.方法（重载）
                 Type leftType = ctx.getRegistry()
                         .getExpressionAnalyzer(left)
                         .analyze(ctx, mi, fn, locals, left);
 
                 if (leftType instanceof StructType structType) {
-                    funcType = structType.getMethods().get(member);
+                    funcType = structType.getMethod(member, call.arguments().size());
                     functionName = member;
                     if (funcType == null) {
                         ctx.getErrors().add(new SemanticError(callee,
@@ -143,7 +143,7 @@ public class CallExpressionAnalyzer implements ExpressionAnalyzer<CallExpression
                 }
             }
         }
-        // ===== 2. 普通函数调用 =====
+        // 普通函数调用
         else if (callee instanceof IdentifierNode idNode) {
             functionName = idNode.name();
             funcType = mi.getFunctions().get(functionName); // 仅在当前模块查找
@@ -165,7 +165,7 @@ public class CallExpressionAnalyzer implements ExpressionAnalyzer<CallExpression
                 }
             }
         }
-        // ===== 3. 其它情况，不支持 =====
+        // 其它情况
         else {
             ctx.getErrors().add(new SemanticError(callee,
                     "不支持的调用方式: " + callee));
