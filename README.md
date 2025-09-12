@@ -49,6 +49,10 @@ Snow 专属 IDE — **IDEology**
 
 > 目前 IDEology 尚未提供正式发行版，开发者可通过源码自行编译获得使用体验。
 
+![IMG_IDE_1.png](docs/README/IMG/IMG_IDE_1.png)
+![IMG_IDE_2.png](docs/README/IMG/IMG_IDE_2.png)
+![IMG_IDE_3.png](docs/README/IMG/IMG_IDE_3.png)
+![IMG_IDE_4.png](docs/README/IMG/IMG_IDE_4.png)
 
 ## 背景理念
 
