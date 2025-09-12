@@ -60,7 +60,7 @@ public class CallCommand implements Command {
         // 3. Resolve the target address for the subroutine (currently supports only static calls).
         int targetAddr = Integer.parseInt(rawTarget);
         String methodNameForCtx = "subroutine@" + targetAddr;
-        print("\nCALL -> " + targetAddr);
+//        print("\nCALL -> " + targetAddr);
 
         // 4. Build the callee's local variable store and copy arguments into it.
         LocalVariableStore calleeLVS = new LocalVariableStore();

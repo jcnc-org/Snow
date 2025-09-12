@@ -50,7 +50,7 @@ public class RetCommand implements Command {
         finished.getLocalVariableStore().clearVariables();
 
         int returnAddr = finished.getReturnAddress();
-        print("\nReturn " + returnAddr);
+//        print("\nReturn " + returnAddr);
         return returnAddr;
     }
 }
