@@ -22,7 +22,7 @@ import java.util.*;
  *   <li>预扫描所有模块，将 <code>declare const</code> 常量登记到全局常量表，支持跨模块常量折叠。</li>
  *   <li>预扫描并注册所有 struct 的字段布局（字段→下标），供 IR 阶段对象字段读写使用。</li>
  *   <li>对模块内的普通函数加上模块前缀（ModuleName.func），保证命名唯一，并将本模块全局声明注入到函数体前部。</li>
- *   <li>将 struct 的 init 与 methods 降级为普通 IR 函数并注册为 <code>StructName.__init__</code>、<code>StructName.method</code>；同时在其参数列表首位插入隐式 <code>this: StructName</code>。</li>
+ *   <li>将 struct 的 init 与 methods 降级为普通 IR 函数并注册为 <code>StructName.__init__N</code>、<code>StructName.method_N</code>；同时在其参数列表首位插入隐式 <code>this: StructName</code>。</li>
  *   <li>将独立顶层语句自动包装为特殊的 "_start" 函数（脚本模式支持）。</li>
  * </ul>
  *
@@ -146,12 +146,13 @@ public final class IRProgramBuilder {
      * 将一个 Struct 的所有构造函数（inits）和方法（methods）降级为普通 Function，并注册进 IRProgram：
      * <ul>
      *     <li>构造函数：StructName.__init__N(this:StructName, ...)，N为参数个数</li>
-     *     <li>方法：StructName.method(this:StructName, ...)</li>
+     *     <li>方法：StructName.method_N(this:StructName, ...)，N为参数个数（含this）</li>
      * </ul>
      * <p>降级规则：</p>
      * <ol>
      *     <li>构造/方法函数名前缀加上结构体名（便于唯一定位）。</li>
      *     <li>参数列表最前添加隐式 this:StructName 参数。</li>
+     *     <li>重载方法名追加“_N”后缀，N为参数总个数，防止覆盖。</li>
      * </ol>
      *
      * @param structNode 当前结构体节点
@@ -176,9 +177,11 @@ public final class IRProgramBuilder {
         // 2. 降级处理所有普通方法
         if (structNode.methods() != null) {
             for (FunctionNode m : structNode.methods()) {
+                int argCount = m.parameters().size() + 1; // +1 for this
+                String loweredName = structName + "." + m.name() + "_" + argCount;
                 FunctionNode loweredMethod = lowerStructCallable(
                         m,
-                        structName + "." + m.name(),
+                        loweredName,
                         structName
                 );
                 out.add(buildFunction(loweredMethod));

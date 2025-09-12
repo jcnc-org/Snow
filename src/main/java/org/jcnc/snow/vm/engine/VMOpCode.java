@@ -3,6 +3,7 @@ package org.jcnc.snow.vm.engine;
 import org.jcnc.snow.vm.commands.flow.control.CallCommand;
 import org.jcnc.snow.vm.commands.flow.control.JumpCommand;
 import org.jcnc.snow.vm.commands.flow.control.RetCommand;
+import org.jcnc.snow.vm.commands.ref.control.RAddCommand;
 import org.jcnc.snow.vm.commands.ref.control.RLoadCommand;
 import org.jcnc.snow.vm.commands.ref.control.RPushCommand;
 import org.jcnc.snow.vm.commands.ref.control.RStoreCommand;
@@ -2528,6 +2529,34 @@ public class VMOpCode {
      * </ul>
      */
     public static final int R_STORE = 0x00E2;
+
+
+    /**
+     * R_ADD Opcode: Represents an operation that pops two object references from the top of the operand stack,
+     * converts them to their {@code String} representations, concatenates them in order (left + right),
+     * and pushes the resulting string back onto the operand stack.
+     * <p>This opcode is implemented by the {@link RAddCommand} class,
+     * which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pops the right operand (reference object) from the top of the operand stack.</li>
+     *     <li>Pops the left operand (reference object) from the operand stack.</li>
+     *     <li>Converts both operands to their string representations using {@code String.valueOf()}.</li>
+     *     <li>Concatenates the left and right string representations ({@code left + right}).</li>
+     *     <li>Pushes the resulting string onto the operand stack.</li>
+     *     <li>Increments the program counter (PC) to proceed to the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>String concatenation operations in expressions, such as {@code "a" + "b"}.</li>
+     *     <li>Combining the string representations of different object references for output or further processing.</li>
+     *     <li>Supporting dynamic string construction in high-level language features.</li>
+     * </ul>
+     */
+    public static final int R_ADD = 0x00E3;
+
     // endregion
 
     // region Stack Control (0x0100-0x01FF)

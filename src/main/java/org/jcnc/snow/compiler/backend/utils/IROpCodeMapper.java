@@ -141,6 +141,9 @@ public final class IROpCodeMapper {
         opcodeMap.put(IROpCode.STORE, "I_STORE");   // 存储
         opcodeMap.put(IROpCode.CONST, "I_PUSH");    // 常量入栈
 
+
+        opcodeMap.put(IROpCode.ADD_R, "R_ADD");     // 引用/字符串运算
+
         // 跳转与标签
         opcodeMap.put(IROpCode.JUMP, "JMP");        // 无条件跳转
         opcodeMap.put(IROpCode.LABEL, "LABEL");     // 标签

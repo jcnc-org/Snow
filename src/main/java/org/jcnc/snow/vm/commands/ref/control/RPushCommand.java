@@ -16,20 +16,20 @@ import java.util.List;
  * <b>Function:</b> Pushes a reference-type value (String literal or array literal) onto the operand stack.
  * </p>
  *
- * <h2>Supported Literals</h2>
+ * <p>Supported Literals</p>
  * <ul>
  *     <li><b>String Literals:</b> Quoted strings (e.g., {@code "hello\nworld"}) with escape sequence support.</li>
  *     <li><b>Array Literals:</b> Bracketed array forms (e.g., {@code [1, 2, [3, 4]]}), including nested arrays.</li>
  * </ul>
  *
- * <h2>Implementation Details</h2>
+ * <p>Implementation Details</p>
  * <ul>
  *     <li>Array literals are parsed into <b>mutable</b> {@link java.util.ArrayList} objects, to support in-place modification (e.g., by {@code ARR_SET}).</li>
  *     <li>String literals wrapped in quotes are automatically unescaped according to Java string escape rules.</li>
  *     <li>Handles atomic values: numbers (including hex, binary, float, long, short, byte), booleans, and fallback to string.</li>
  * </ul>
  *
- * <h2>Example Usage</h2>
+ * <p>Example Usage</p>
  * <pre>
  *     R_PUSH "hello\nworld"     // pushes String "hello\nworld" (with actual newline)
  *     R_PUSH [1, 2, 3]         // pushes ArrayList {1, 2, 3}

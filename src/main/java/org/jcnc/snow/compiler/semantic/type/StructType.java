@@ -27,7 +27,7 @@ public class StructType implements Type {
     private final String name;
 
     /**
-     * 构造函数签名表：参数个数 → 构造函数类型
+     * 所有构造函数：以参数个数为键的重载表
      */
     private final Map<Integer, FunctionType> constructors = new HashMap<>();
 
@@ -38,8 +38,14 @@ public class StructType implements Type {
 
     /**
      * 方法签名表：方法名 → 函数类型
+     * <p>保留“最后一次定义”的视图，用于兼容旧逻辑（如成员引用时取一个函数类型）。</p>
      */
     private final Map<String, FunctionType> methods = new HashMap<>();
+
+    /**
+     * 方法重载表：方法名 → (参数个数 → 函数类型)
+     */
+    private final Map<String, Map<Integer, FunctionType>> methodOverloads = new HashMap<>();
 
     /**
      * 父类类型（可为 null，表示没有继承）
@@ -83,7 +89,7 @@ public class StructType implements Type {
     /**
      * 设置父类类型。
      *
-     * @param parent 父类 {@link StructType}
+     * @param parent 父类结构体类型；可为 {@code null}
      */
     public void setParent(StructType parent) {
         this.parent = parent;
@@ -160,12 +166,47 @@ public class StructType implements Type {
     }
 
     /**
-     * 获取所有方法签名。
+     * 获取所有方法签名（“最后一次定义”的兼容视图）。
      *
      * @return 方法签名表：方法名 → 函数类型
      */
     public Map<String, FunctionType> getMethods() {
         return methods;
+    }
+
+    /**
+     * 添加一个方法签名（支持重载）。
+     * <p>按“方法名 + 参数个数”建立索引；同名且同参数个数的方法将被覆盖。</p>
+     *
+     * @param name 方法名
+     * @param ft   函数类型签名
+     */
+    public void addMethod(String name, FunctionType ft) {
+        // 保持原有行为：最后一次定义覆盖 getMethods() 返回值
+        methods.put(name, ft);
+        // 支持按参数个数区分的重载集合
+        methodOverloads.computeIfAbsent(name, k -> new HashMap<>())
+                .put(ft.paramTypes().size(), ft);
+    }
+
+    /**
+     * 根据方法名和参数个数获取相应的重载。
+     *
+     * @param name 方法名
+     * @param argc 参数个数
+     * @return 若存在匹配的重载则返回其函数类型；否则返回 {@code null}
+     */
+    public FunctionType getMethod(String name, int argc) {
+        Map<Integer, FunctionType> byArity = methodOverloads.get(name);
+        if (byArity == null) return null;
+        return byArity.get(argc);
+    }
+
+    /**
+     * 获取整个方法重载表（只读用途）。
+     */
+    public Map<String, Map<Integer, FunctionType>> getMethodOverloads() {
+        return methodOverloads;
     }
 
     /* ---------------- 类型兼容性（支持继承链） ---------------- */
@@ -182,10 +223,17 @@ public class StructType implements Type {
      */
     @Override
     public boolean isCompatible(Type other) {
-        if (!(other instanceof StructType s)) return false;
-        // 沿着继承链查找
-        for (StructType cur = s; cur != null; cur = cur.parent) {
-            if (this.equals(cur)) return true;
+        if (!(other instanceof StructType o)) return false;
+        if (Objects.equals(moduleName, o.moduleName) && Objects.equals(name, o.name)) {
+            return true;
+        }
+        // 支持父类引用：当前类型是 other 的父类
+        StructType p = o.parent;
+        while (p != null) {
+            if (Objects.equals(moduleName, p.moduleName) && Objects.equals(name, p.name)) {
+                return true;
+            }
+            p = p.parent;
         }
         return false;
     }
