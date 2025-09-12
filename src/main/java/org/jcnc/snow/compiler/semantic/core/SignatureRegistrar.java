@@ -12,49 +12,67 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * {@code SignatureRegistrar}
+ * {@code SignatureRegistrar} 是语义分析前置阶段的注册器。
  * <p>
- * 语义分析准备阶段：负责函数签名登记、结构体签名登记与 import 校验。
+ * 它负责函数签名登记、结构体签名登记以及 import 模块引用校验，
+ * 为后续的类型推断和语义分析建立完整的类型环境。
  *
+ * <p>本类通过多阶段处理逻辑，确保跨模块引用和继承在类型推断时可用：
+ * <ol>
+ *   <li>校验模块的 import 是否存在，并预注册结构体的名称占位符。</li>
+ *   <li>解析结构体字段、构造函数和方法的签名信息。</li>
+ *   <li>处理结构体继承关系，并继承字段与方法。</li>
+ *   <li>注册模块级函数签名。</li>
+ * </ol>
+ * <p>错误处理策略：
  * <ul>
- *   <li>验证每个模块声明的 import 模块在全局模块表 {@link Context#modules()} 是否存在。</li>
- *   <li>将每个函数、结构体方法、构造函数的类型签名登记到 {@link ModuleInfo}，便于后续类型推断。</li>
- *   <li>支持 {@code extends} 单继承：子类会继承父类的字段与方法。</li>
- *   <li>若参数或返回类型无法解析，则报错并降级为 int 或 void，保证语义分析流程健壮。</li>
+ *   <li>若引用未知模块、类型或父类，均会记录为 {@link SemanticError} 错误。</li>
+ *   <li>若字段、参数、返回类型无法解析，将默认降级为 {@code int} 或 {@code void} 类型以保证流程健壮性。</li>
  * </ul>
- * <p>
- * 作为语义分析前置流程，为后续函数体和表达式分析提供类型环境。
+ *
+ * @param ctx 语义分析上下文，记录所有模块、类型信息与错误列表
  */
 public record SignatureRegistrar(Context ctx) {
 
     /**
-     * 遍历所有模块，注册函数/方法/结构体签名，校验 import 合法性。
+     * 注册传入的所有模块的类型签名信息，包括 import 检查、结构体与函数签名建立。
+     * <p>
+     * 采用三阶段设计确保跨模块结构体引用/继承不会出错。
      *
-     * @param modules 需要分析的所有模块列表（AST 顶层节点）
+     * @param modules 所有模块 AST 节点列表
      */
     public void register(Iterable<ModuleNode> modules) {
+        // 第一阶段：验证模块 imports 与预注册结构体名称
         for (ModuleNode mod : modules) {
-            ctx.setCurrentModule(mod.name()); // 切换上下文到当前模块
+            ctx.setCurrentModule(mod.name());
             ModuleInfo mi = ctx.modules().get(mod.name());
 
-            // ========== 1) 校验 imports ==========
+            // 检查 import 的模块是否存在
             for (ImportNode imp : mod.imports()) {
                 if (!ctx.modules().containsKey(imp.moduleName())) {
-                    // 导入的模块在全局表中不存在，报错
                     ctx.errors().add(new SemanticError(imp, "未知模块: " + imp.moduleName()));
                 } else {
-                    // 添加到本模块导入集合
                     mi.getImports().add(imp.moduleName());
                 }
             }
 
-            // ========== 2) 结构体签名登记 ==========
+            // 为每个 struct 创建占位 StructType
             for (StructNode stn : mod.structs()) {
-                // 构造结构体类型对象，唯一标识为 (模块名, 结构体名)
-                StructType st = new StructType(mod.name(), stn.name());
-                mi.getStructs().put(stn.name(), st);
+                if (!mi.getStructs().containsKey(stn.name())) {
+                    mi.getStructs().put(stn.name(), new StructType(mod.name(), stn.name()));
+                }
+            }
+        }
 
-                // --- 2.0 字段签名登记 ---
+        // 第二阶段：解析 struct 字段、构造函数与方法签名
+        for (ModuleNode mod : modules) {
+            ctx.setCurrentModule(mod.name());
+            ModuleInfo mi = ctx.modules().get(mod.name());
+
+            for (StructNode stn : mod.structs()) {
+                StructType st = mi.getStructs().get(stn.name());
+
+                // 2.0 解析字段类型
                 if (stn.fields() != null) {
                     for (DeclarationNode field : stn.fields()) {
                         Type ft = ctx.parseType(field.getType());
@@ -66,12 +84,11 @@ public record SignatureRegistrar(Context ctx) {
                     }
                 }
 
-                // --- 2.1 多个构造函数 init（重载，按参数个数区分） ---
+                // 2.1 构造函数（支持重载）
                 if (stn.inits() != null) {
                     for (FunctionNode initFn : stn.inits()) {
                         List<Type> ptypes = new ArrayList<>();
                         for (ParameterNode p : initFn.parameters()) {
-                            // 解析参数类型，不存在则报错降级为 int
                             Type t = ctx.parseType(p.type());
                             if (t == null) {
                                 ctx.errors().add(new SemanticError(p, "未知类型: " + p.type()));
@@ -79,53 +96,68 @@ public record SignatureRegistrar(Context ctx) {
                             }
                             ptypes.add(t);
                         }
-                        // 构造函数返回类型固定为 void
                         st.addConstructor(new FunctionType(ptypes, BuiltinType.VOID));
                     }
                 }
 
-                // --- 2.2 方法签名 ---
-                for (FunctionNode fn : stn.methods()) {
-                    List<Type> ptypes = new ArrayList<>();
-                    for (ParameterNode p : fn.parameters()) {
-                        Type t = ctx.parseType(p.type());
-                        if (t == null) {
-                            ctx.errors().add(new SemanticError(p, "未知类型: " + p.type()));
-                            t = BuiltinType.INT;
+                // 2.2 方法（支持重载）
+                if (stn.methods() != null) {
+                    for (FunctionNode fn : stn.methods()) {
+                        List<Type> ptypes = new ArrayList<>();
+                        for (ParameterNode p : fn.parameters()) {
+                            Type t = ctx.parseType(p.type());
+                            if (t == null) {
+                                ctx.errors().add(new SemanticError(p, "未知类型: " + p.type()));
+                                t = BuiltinType.INT;
+                            }
+                            ptypes.add(t);
                         }
-                        ptypes.add(t);
+                        Type ret = Optional.ofNullable(ctx.parseType(fn.returnType()))
+                                .orElse(BuiltinType.VOID);
+                        st.addMethod(fn.name(), new FunctionType(ptypes, ret));
                     }
-                    Type ret = Optional.ofNullable(ctx.parseType(fn.returnType()))
-                            .orElse(BuiltinType.VOID);
-                    st.getMethods().put(fn.name(), new FunctionType(ptypes, ret));
                 }
             }
+        }
 
-            // ========== 2.3 继承处理 ==========
+        // 第三阶段：解析并建立 struct 的继承关系
+        for (ModuleNode mod : modules) {
+            ctx.setCurrentModule(mod.name());
+            ModuleInfo mi = ctx.modules().get(mod.name());
+
             for (StructNode stn : mod.structs()) {
-                if (stn.parent() != null) {
-                    StructType child = mi.getStructs().get(stn.name());
-                    StructType parent = resolveParentStruct(mi, stn.parent());
+                if (stn.parent() == null) continue;
+                StructType child = mi.getStructs().get(stn.name());
+                StructType parent = resolveParentStruct(mi, stn.parent());
 
-                    if (parent == null) {
-                        // 父类不存在（既不在本模块，也不在导入模块 / 限定名错误），报语义错误
-                        ctx.errors().add(new SemanticError(stn, "未知父类: " + stn.parent()));
-                    } else {
-                        // 建立继承链
-                        child.setParent(parent);
-
-                        // 继承字段
-                        parent.getFields().forEach(
-                                (k, v) -> child.getFields().putIfAbsent(k, v));
-                        // 继承方法
-                        parent.getMethods().forEach(
-                                (k, v) -> child.getMethods().putIfAbsent(k, v));
-                        // 构造函数不继承
-                    }
+                if (parent == null) {
+                    ctx.errors().add(new SemanticError(stn, "未知父类: " + stn.parent()));
+                    continue;
                 }
-            }
 
-            // ========== 3) 模块级函数签名登记 ==========
+                // 建立继承
+                child.setParent(parent);
+
+                // 继承字段
+                parent.getFields().forEach((k, v) -> child.getFields().putIfAbsent(k, v));
+
+                // 继承方法（逐个重载）
+                parent.getMethodOverloads().forEach((name, byArity) -> {
+                    byArity.forEach((argc, ft) -> {
+                        child.getMethodOverloads()
+                                .computeIfAbsent(name, _k -> new java.util.HashMap<>())
+                                .putIfAbsent(argc, ft);
+                        child.getMethods().putIfAbsent(name, ft);
+                    });
+                });
+            }
+        }
+
+        // 第四阶段：模块顶层函数
+        for (ModuleNode mod : modules) {
+            ctx.setCurrentModule(mod.name());
+            ModuleInfo mi = ctx.modules().get(mod.name());
+
             for (FunctionNode fn : mod.functions()) {
                 List<Type> params = new ArrayList<>();
                 for (ParameterNode p : fn.parameters()) {
@@ -144,14 +176,16 @@ public record SignatureRegistrar(Context ctx) {
     }
 
     /**
-     * 解析父类结构体：
-     * <ul>
-     *   <li>支持限定名 {@code Module.Struct}。</li>
-     *   <li>支持在本模块与 import 的模块中按未限定名查找。</li>
-     * </ul>
+     * 解析父类结构体类型。
+     * <p>支持限定名形式（如 {@code Module.Struct}），
+     * 也支持在当前模块或导入模块中查找非限定名结构体。
+     *
+     * @param mi         当前模块信息
+     * @param parentName 父类名称（可以是限定名或非限定名）
+     * @return 对应的 StructType，找不到则返回 null
      */
     private StructType resolveParentStruct(ModuleInfo mi, String parentName) {
-        // 1. 限定名：Module.Struct
+        // 限定名 Module.Struct
         int dot = parentName.indexOf('.');
         if (dot > 0 && dot < parentName.length() - 1) {
             String m = parentName.substring(0, dot);
@@ -163,11 +197,11 @@ public record SignatureRegistrar(Context ctx) {
             return null;
         }
 
-        // 2. 先在当前模块找
+        // 当前模块中查找
         StructType local = mi.getStructs().get(parentName);
         if (local != null) return local;
 
-        // 3. 在导入模块中找
+        // 导入模块中查找
         for (String imported : mi.getImports()) {
             ModuleInfo pim = ctx.modules().get(imported);
             if (pim == null) continue;
@@ -175,7 +209,7 @@ public record SignatureRegistrar(Context ctx) {
             if (st != null) return st;
         }
 
-        // 未找到
+        // 均找不到
         return null;
     }
 }

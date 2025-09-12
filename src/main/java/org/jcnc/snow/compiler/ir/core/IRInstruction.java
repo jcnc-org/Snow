@@ -1,6 +1,7 @@
 package org.jcnc.snow.compiler.ir.core;
 
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
+
 import java.util.List;
 
 /**

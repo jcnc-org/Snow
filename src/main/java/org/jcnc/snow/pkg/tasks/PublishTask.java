@@ -11,7 +11,9 @@ import org.jcnc.snow.pkg.model.Project;
  */
 public final class PublishTask implements Task {
 
-    /** 目标项目元数据 */
+    /**
+     * 目标项目元数据
+     */
     private final Project project;
 
     /**

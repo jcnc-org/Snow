@@ -95,7 +95,7 @@ public class NewExpressionAnalyzer implements ExpressionAnalyzer<NewExpressionNo
         List<Type> expectedParams = ctor.paramTypes();
         for (int i = 0; i < expectedParams.size(); i++) {
             Type expected = expectedParams.get(i); // 构造函数声明的参数类型
-            Type actual   = argTypes.get(i);       // 实际传入的实参类型
+            Type actual = argTypes.get(i);       // 实际传入的实参类型
 
             boolean compatible = expected.isCompatible(actual); // 直接类型兼容
             boolean widenOK = expected.isNumeric()

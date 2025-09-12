@@ -25,7 +25,8 @@ import java.util.Map.Entry;
  */
 public class JSONParser {
 
-    private JSONParser() {}
+    private JSONParser() {
+    }
 
     /**
      * 解析 JSON 格式字符串为对应的 Java 对象。
@@ -170,21 +171,29 @@ public class JSONParser {
                     c = currentChar();
                     switch (c) {
                         case '"':
-                            sb.append('"'); break;
+                            sb.append('"');
+                            break;
                         case '\\':
-                            sb.append('\\'); break;
+                            sb.append('\\');
+                            break;
                         case '/':
-                            sb.append('/'); break;
+                            sb.append('/');
+                            break;
                         case 'b':
-                            sb.append('\b'); break;
+                            sb.append('\b');
+                            break;
                         case 'f':
-                            sb.append('\f'); break;
+                            sb.append('\f');
+                            break;
                         case 'n':
-                            sb.append('\n'); break;
+                            sb.append('\n');
+                            break;
                         case 'r':
-                            sb.append('\r'); break;
+                            sb.append('\r');
+                            break;
                         case 't':
-                            sb.append('\t'); break;
+                            sb.append('\t');
+                            break;
                         case 'u':
                             String hex = new String(buf, pos + 1, 4);
                             sb.append((char) Integer.parseInt(hex, 16));
@@ -211,7 +220,9 @@ public class JSONParser {
             if (currentChar() == '-') advance();
             while (isDigit(currentChar())) advance();
             if (currentChar() == '.') {
-                do { advance(); } while (isDigit(currentChar()));
+                do {
+                    advance();
+                } while (isDigit(currentChar()));
             }
             if (currentChar() == 'e' || currentChar() == 'E') {
                 advance();
@@ -253,7 +264,8 @@ public class JSONParser {
         private void advance() {
             if (pos < buf.length) {
                 if (buf[pos] == '\n') {
-                    line++; col = 1;
+                    line++;
+                    col = 1;
                 } else {
                     col++;
                 }
@@ -358,15 +370,20 @@ public class JSONParser {
             for (char c : s.toCharArray()) {
                 switch (c) {
                     case '\\':
-                        sb.append("\\\\"); break;
+                        sb.append("\\\\");
+                        break;
                     case '"':
-                        sb.append("\\\""); break;
+                        sb.append("\\\"");
+                        break;
                     case '\n':
-                        sb.append("\\n"); break;
+                        sb.append("\\n");
+                        break;
                     case '\r':
-                        sb.append("\\r"); break;
+                        sb.append("\\r");
+                        break;
                     case '\t':
-                        sb.append("\\t"); break;
+                        sb.append("\\t");
+                        break;
                     default:
                         sb.append(c);
                 }

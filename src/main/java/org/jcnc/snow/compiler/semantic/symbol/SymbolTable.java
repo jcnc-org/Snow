@@ -9,7 +9,7 @@ import java.util.Map;
  * 本类支持嵌套作用域结构（Nested Scope），适用于块级作用域、函数作用域、模块作用域等语义环境建模。
  * 每个符号表可挂接一个“父作用域”，以支持多层级作用域链上的符号解析。
  *
- * <p>核心特性包括: 
+ * <p>核心特性包括:
  * <ul>
  *   <li>符号定义（局部作用域内唯一）；</li>
  *   <li>符号查找（向上查找父作用域）；</li>
@@ -19,10 +19,14 @@ import java.util.Map;
  */
 public class SymbolTable {
 
-    /** 父作用域引用，若为 {@code null} 则表示为最外层作用域（全局或根作用域） */
+    /**
+     * 父作用域引用，若为 {@code null} 则表示为最外层作用域（全局或根作用域）
+     */
     private final SymbolTable parent;
 
-    /** 当前作用域内定义的符号映射表（符号名 → {@link Symbol}） */
+    /**
+     * 当前作用域内定义的符号映射表（符号名 → {@link Symbol}）
+     */
     private final Map<String, Symbol> symbols = new HashMap<>();
 
     /**
@@ -53,7 +57,7 @@ public class SymbolTable {
 
     /**
      * 根据名称解析符号，支持作用域链向上递归查找。
-     * <p>查找策略: 
+     * <p>查找策略:
      * <ol>
      *   <li>优先在当前作用域中查找该符号名称；</li>
      *   <li>若未找到且存在父作用域，则递归向上查找；</li>

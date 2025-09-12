@@ -14,7 +14,7 @@ import org.jcnc.snow.compiler.semantic.type.Type;
 /**
  * {@code ReturnAnalyzer} 是用于分析 {@link ReturnNode} 返回语句的语义分析器。
  * <p>
- * 它负责检查函数中的 return 语句是否与函数定义的返回类型匹配。分析流程包括: 
+ * 它负责检查函数中的 return 语句是否与函数定义的返回类型匹配。分析流程包括:
  * <ul>
  *   <li>获取当前函数的返回类型 {@link FunctionType#returnType()}；</li>
  *   <li>若 return 语句包含返回值表达式，检查其类型与函数定义是否兼容；</li>

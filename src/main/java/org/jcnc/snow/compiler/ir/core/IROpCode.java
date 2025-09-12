@@ -72,6 +72,8 @@ public enum IROpCode {
     NEG_D64,   // 64位浮点取负
     MOD_D64,   // 64位浮点取余
 
+    ADD_R,  // 引用拼接
+
     /* ───── 逻辑与比较运算指令（8位整数: byte） ───── */
     CMP_BEQ,    // 8位整数相等比较: a == b
     CMP_BNE,    // 8位整数不等比较: a != b

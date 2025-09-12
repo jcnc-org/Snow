@@ -2,7 +2,6 @@ package org.jcnc.snow.compiler.ir.builder.statement.utils;
 
 import org.jcnc.snow.compiler.ir.builder.statement.StatementBuilderContext;
 import org.jcnc.snow.compiler.parser.ast.*;
-
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 
 import java.util.ArrayList;

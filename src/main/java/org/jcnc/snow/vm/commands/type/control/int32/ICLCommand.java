@@ -1,10 +1,10 @@
 package org.jcnc.snow.vm.commands.type.control.int32;
 
 import org.jcnc.snow.vm.interfaces.Command;
-import org.jcnc.snow.vm.utils.LoggingUtils;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.LoggingUtils;
 
 /**
  * The ICLCommand class implements the {@link Command} interface and represents a conditional jump command in the virtual machine.

@@ -7,16 +7,28 @@ package org.jcnc.snow.pkg.lifecycle;
  * </p>
  */
 public enum LifecyclePhase {
-    /** 初始化阶段 */
+    /**
+     * 初始化阶段
+     */
     INIT,
-    /** 解析依赖阶段 */
+    /**
+     * 解析依赖阶段
+     */
     RESOLVE_DEPENDENCIES,
-    /** 编译阶段 */
+    /**
+     * 编译阶段
+     */
     COMPILE,
-    /** 打包阶段 */
+    /**
+     * 打包阶段
+     */
     PACKAGE,
-    /** 发布阶段 */
+    /**
+     * 发布阶段
+     */
     PUBLISH,
-    /** 清理阶段 */
+    /**
+     * 清理阶段
+     */
     CLEAN
 }

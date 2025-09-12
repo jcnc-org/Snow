@@ -20,7 +20,9 @@ import java.util.zip.ZipOutputStream;
  */
 public final class PackageTask implements Task {
 
-    /** 目标项目元数据 */
+    /**
+     * 目标项目元数据
+     */
     private final Project project;
 
     /**

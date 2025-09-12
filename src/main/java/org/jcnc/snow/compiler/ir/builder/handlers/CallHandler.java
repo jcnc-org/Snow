@@ -81,6 +81,9 @@ public class CallHandler implements ExpressionHandler<CallExpressionNode> {
                     // 调用父类方法，第一个参数为 this
                     finalArgs.add(thisReg);
                     finalArgs.addAll(explicitRegs);
+
+                    // 追加 _N 后缀（N=总参数，包括this）
+                    callee = callee + "_" + finalArgs.size();
                 } else {
                     // 常规对象方法调用 recv.method(...)
                     String recvType = b.ctx().getScope().lookupType(recvName);
@@ -96,6 +99,9 @@ public class CallHandler implements ExpressionHandler<CallExpressionNode> {
                             throw new IllegalStateException("Undefined identifier: " + recvName);
                         finalArgs.add(thisReg);
                         finalArgs.addAll(explicitRegs);
+
+                        //  追加 _N 后缀（N=总参数，包括this）
+                        callee = callee + "_" + finalArgs.size();
                     }
                 }
             }
@@ -108,6 +114,9 @@ public class CallHandler implements ExpressionHandler<CallExpressionNode> {
                 // 第一个参数是对象寄存器
                 finalArgs.add(objReg);
                 finalArgs.addAll(explicitRegs);
+
+                // 追加 _N 后缀（N=总参数，包括this
+                callee = callee + "_" + finalArgs.size();
             }
 
             // 普通函数调用/本地方法调用 foo(...)
@@ -122,6 +131,7 @@ public class CallHandler implements ExpressionHandler<CallExpressionNode> {
                     callee = id.name();
                 }
                 finalArgs.addAll(explicitRegs);
+                // 普通函数无需追加 _N
             }
 
             // 其它类型均视为不支持

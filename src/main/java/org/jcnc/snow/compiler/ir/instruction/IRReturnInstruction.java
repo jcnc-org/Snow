@@ -16,7 +16,9 @@ import java.util.List;
  */
 public class IRReturnInstruction extends IRInstruction {
 
-    /** 要返回的值，可以是常量、虚拟寄存器等 */
+    /**
+     * 要返回的值，可以是常量、虚拟寄存器等
+     */
     private final IRValue returnValue;
 
     /**

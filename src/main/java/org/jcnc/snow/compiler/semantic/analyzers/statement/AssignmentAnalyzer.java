@@ -20,12 +20,14 @@ import org.jcnc.snow.compiler.semantic.type.Type;
  *   <li><b>常量保护</b>：禁止修改 {@link SymbolKind#CONSTANT}；</li>
  *   <li><b>类型兼容</b>：验证右值类型与目标类型兼容，若均为数值类型则允许宽化转换（如 <code>int → double</code>）。</li>
  * </ul>
- *
+ * <p>
  * 任何不满足条件的情况都会向 {@link Context#getErrors()} 记录 {@link SemanticError}。
  */
 public class AssignmentAnalyzer implements StatementAnalyzer<AssignmentNode> {
 
-    /** 错误消息前缀，统一便于搜索定位 */
+    /**
+     * 错误消息前缀，统一便于搜索定位
+     */
     private static final String ERR_PREFIX = "赋值错误: ";
 
     /**

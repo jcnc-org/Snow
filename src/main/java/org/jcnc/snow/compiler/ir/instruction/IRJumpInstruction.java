@@ -12,7 +12,9 @@ import org.jcnc.snow.compiler.ir.core.IRVisitor;
  */
 public class IRJumpInstruction extends IRInstruction {
 
-    /** 跳转目标的标签名 */
+    /**
+     * 跳转目标的标签名
+     */
     private final String label;
 
     /**

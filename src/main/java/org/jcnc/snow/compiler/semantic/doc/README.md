@@ -5,9 +5,11 @@
 ## 项目简介
 
 **语义分析（Semantic Analysis）** 是 Snow 编译器在语法之后、IR 之前的关键阶段。
-该模块在遍历 AST 的同时，完成**类型推断与检查**、**符号与作用域解析**、**模块/结构体/函数签名登记**、以及**错误汇总与报告**，为后续 IR 生成与优化提供可靠、结构化的类型与符号信息。
+该模块在遍历 AST 的同时，完成**类型推断与检查**、**符号与作用域解析**、**模块/结构体/函数签名登记**、以及**错误汇总与报告**
+，为后续 IR 生成与优化提供可靠、结构化的类型与符号信息。
 
-语义层采用“**注册表 + 访问器接口 + 分析器实现**”的可插拔设计：以 `AnalyzerRegistry` 为分发中心、`ExpressionAnalyzer`/`StatementAnalyzer` 为契约、配套 **模块/函数签名三阶段流程** 与 **类型系统**，形成清晰、易扩展、便于调试的语义分析框架。
+语义层采用“**注册表 + 访问器接口 + 分析器实现**”的可插拔设计：以 `AnalyzerRegistry` 为分发中心、`ExpressionAnalyzer`/
+`StatementAnalyzer` 为契约、配套 **模块/函数签名三阶段流程** 与 **类型系统**，形成清晰、易扩展、便于调试的语义分析框架。
 
 ## 核心功能
 
@@ -49,7 +51,8 @@
 * **类型系统与类型提升**
 
     * 核心接口：`Type`（`isCompatible`/`isNumeric`/`name`/`widen`）
-    * 具体类型：`BuiltinType`（byte/short/int/long/float/double/string/boolean/void）、`ArrayType`、`FunctionType`、`StructType`
+    * 具体类型：`BuiltinType`（byte/short/int/long/float/double/string/boolean/void）、`ArrayType`、`FunctionType`、
+      `StructType`
     * 内建注册：`BuiltinTypeRegistry`（注册所有内置基本类型；示例内置模块 `os` 及函数 `syscall(string,int):void`）
     * 类型解析：`Context#parseType` 支持 **多维数组**（如 `int[][]`）、**结构体类型**（`模块.结构体`）
     * 数值宽化：在声明/赋值/调用/构造场景支持 **数值类型自动宽化**（`Type.widen`）
@@ -144,7 +147,8 @@ semantic/
 * **阶段化**：将“全局签名收集”和“函数体检查”解耦，避免前向引用/跨模块依赖导致的顺序问题。
 * **作用域安全**：`SymbolTable` 通过父指针实现块级/函数级/模块级多层作用域；`If`/`Loop` 分支各自使用独立作用域。
 * **解析顺序**：成员与调用遵循“先模块、后结构体、再本地符号”的解析策略，结合 `imports` 做跨模块访问控制。
-* **类型宽化**：对数值类型在声明/赋值/调用/构造时按 `Type.widen` 进行安全宽化；字符串调用形参支持从数值到 string 的隐式接收（见 `CallExpressionAnalyzer`）。
+* **类型宽化**：对数值类型在声明/赋值/调用/构造时按 `Type.widen` 进行安全宽化；字符串调用形参支持从数值到 string 的隐式接收（见
+  `CallExpressionAnalyzer`）。
 
 ## 扩展
 

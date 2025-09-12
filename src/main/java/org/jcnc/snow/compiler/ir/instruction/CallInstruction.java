@@ -19,11 +19,17 @@ import java.util.List;
  * 并且不会参与寄存器分配。
  */
 public class CallInstruction extends IRInstruction {
-    /** 调用结果目标寄存器；void 返回时可为 null */
+    /**
+     * 调用结果目标寄存器；void 返回时可为 null
+     */
     private final IRVirtualRegister dest;
-    /** 被调用的函数名（含模块限定） */
+    /**
+     * 被调用的函数名（含模块限定）
+     */
     private final String functionName;
-    /** 实参列表 */
+    /**
+     * 实参列表
+     */
     private final List<IRValue> arguments;
 
     public CallInstruction(IRVirtualRegister dest,
@@ -40,13 +46,17 @@ public class CallInstruction extends IRInstruction {
         return IROpCode.CALL;
     }
 
-    /** 仅在函数有返回值时才暴露目标寄存器 */
+    /**
+     * 仅在函数有返回值时才暴露目标寄存器
+     */
     @Override
     public IRVirtualRegister dest() {
         return isVoidReturn() ? null : dest;
     }
 
-    /** 操作数列表: void 调用不包含 dest */
+    /**
+     * 操作数列表: void 调用不包含 dest
+     */
     @Override
     public List<IRValue> operands() {
         List<IRValue> ops = new ArrayList<>();
@@ -71,7 +81,10 @@ public class CallInstruction extends IRInstruction {
     }
 
     // === 帮助方法 ===
-    /** 判断被调函数是否返回 void */
+
+    /**
+     * 判断被调函数是否返回 void
+     */
     private boolean isVoidReturn() {
         return "void".equals(GlobalFunctionTable.getReturnType(functionName));
     }

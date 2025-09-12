@@ -25,10 +25,10 @@ public interface InstructionGenerator<T extends IRInstruction> {
     /**
      * 将一条 IR 指令翻译为对应的 VM 指令序列。
      *
-     * @param ins        当前待翻译的 IR 指令
-     * @param out        虚拟机程序构建器，用于输出 VM 指令
-     * @param slotMap    虚拟寄存器与实际槽号的映射关系
-     * @param currentFn  当前函数名称（用于作用域或调试等）
+     * @param ins       当前待翻译的 IR 指令
+     * @param out       虚拟机程序构建器，用于输出 VM 指令
+     * @param slotMap   虚拟寄存器与实际槽号的映射关系
+     * @param currentFn 当前函数名称（用于作用域或调试等）
      */
     void generate(T ins, VMProgramBuilder out, Map<IRVirtualRegister, Integer> slotMap, String currentFn);
 }

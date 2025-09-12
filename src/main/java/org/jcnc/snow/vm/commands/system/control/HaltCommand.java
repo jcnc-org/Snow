@@ -1,10 +1,10 @@
 package org.jcnc.snow.vm.commands.system.control;
 
 import org.jcnc.snow.vm.interfaces.Command;
-import org.jcnc.snow.vm.utils.LoggingUtils;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.LoggingUtils;
 
 /**
  * The HaltCommand class implements the {@link Command} interface and represents the stop instruction in the virtual machine.

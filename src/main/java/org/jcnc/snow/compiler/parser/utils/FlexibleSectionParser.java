@@ -18,7 +18,7 @@ import java.util.function.Predicate;
  * </p>
  *
  * <p>
- * 典型用途包括: 
+ * 典型用途包括:
  * <ul>
  *   <li>函数体解析中的 {@code params}、{@code returns}、{@code body} 等部分</li>
  *   <li>模块定义中的 {@code imports}、{@code functions} 等部分</li>
@@ -42,7 +42,7 @@ public class FlexibleSectionParser {
      * @param ctx                解析上下文
      * @param tokens             词法流
      * @param sectionDefinitions 区块处理注册表，key 为区块关键字，value 为对应的处理定义
-     * @throws UnexpectedToken   遇到未注册或条件不符的关键字时抛出
+     * @throws UnexpectedToken 遇到未注册或条件不符的关键字时抛出
      */
     public static void parse(ParserContext ctx,
                              TokenStream tokens,

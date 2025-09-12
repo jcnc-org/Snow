@@ -17,16 +17,24 @@ import java.util.List;
  */
 public final class BinaryOperationInstruction extends IRInstruction {
 
-    /** 指令操作符，如 ADD_I32、SUB_I32 等，取自 IROpCode 枚举 */
+    /**
+     * 指令操作符，如 ADD_I32、SUB_I32 等，取自 IROpCode 枚举
+     */
     private final IROpCode op;
 
-    /** 运算结果将写入的目标虚拟寄存器 */
+    /**
+     * 运算结果将写入的目标虚拟寄存器
+     */
     private final IRVirtualRegister dest;
 
-    /** 运算的左操作数 */
+    /**
+     * 运算的左操作数
+     */
     private final IRValue lhs;
 
-    /** 运算的右操作数 */
+    /**
+     * 运算的右操作数
+     */
     private final IRValue rhs;
 
     /**
@@ -38,10 +46,10 @@ public final class BinaryOperationInstruction extends IRInstruction {
      * @param rhs  右操作数
      */
     public BinaryOperationInstruction(IROpCode op, IRVirtualRegister dest, IRValue lhs, IRValue rhs) {
-        this.op   = op;
+        this.op = op;
         this.dest = dest;
-        this.lhs  = lhs;
-        this.rhs  = rhs;
+        this.lhs = lhs;
+        this.rhs = rhs;
     }
 
     /**

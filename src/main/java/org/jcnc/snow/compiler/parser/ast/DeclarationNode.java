@@ -1,8 +1,8 @@
 package org.jcnc.snow.compiler.parser.ast;
 
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
-import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
 import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
+import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
 
 import java.util.Optional;
 
@@ -14,13 +14,19 @@ import java.util.Optional;
  */
 public class DeclarationNode implements StatementNode {
 
-    /** 声明的变量名称。 */
+    /**
+     * 声明的变量名称。
+     */
     private final String name;
 
-    /** 变量的数据类型（如 "int", "string"）。 */
+    /**
+     * 变量的数据类型（如 "int", "string"）。
+     */
     private final String type;
 
-    /** 是否为常量声明（true 表示 const 变量，false 表示普通变量）。 */
+    /**
+     * 是否为常量声明（true 表示 const 变量，false 表示普通变量）。
+     */
     private final boolean isConst;
 
     /**
@@ -29,7 +35,9 @@ public class DeclarationNode implements StatementNode {
      */
     private final Optional<ExpressionNode> initializer;
 
-    /** 节点上下文信息（如源码中的行号、列号等）。 */
+    /**
+     * 节点上下文信息（如源码中的行号、列号等）。
+     */
     private final NodeContext context;
 
     /**

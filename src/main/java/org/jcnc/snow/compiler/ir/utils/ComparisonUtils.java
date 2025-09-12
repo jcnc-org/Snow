@@ -15,8 +15,8 @@ import java.util.Map;
  * 该类主要用于根据左右操作数的静态类型，自动选择正确的 IR 层比较操作码。
  * 支持自动类型提升，保证 int、long、float、double 等类型的比较均能得到正确的 IR 指令。
  * </p>
- *
- * 类型判定支持: 
+ * <p>
+ * 类型判定支持:
  * <ul>
  *     <li>字面量后缀: 支持 B/S/I/L/F/D（大小写均可）</li>
  *     <li>浮点数支持: 如无后缀但有小数点，视为 double</li>
@@ -24,7 +24,8 @@ import java.util.Map;
  * </ul>
  */
 public final class ComparisonUtils {
-    private ComparisonUtils() {}
+    private ComparisonUtils() {
+    }
 
     /**
      * 判断给定字符串是否为受支持的比较运算符（==, !=, <, >, <=, >=）。
@@ -39,14 +40,14 @@ public final class ComparisonUtils {
     }
 
     /**
-     * 返回类型宽度优先级（越大代表类型越宽）。类型对应的优先级: 
-     *   - D (double): 6
-     *   - F (float): 5
-     *   - L (long): 4
-     *   - I (int): 3
-     *   - S (short): 2
-     *   - B (byte): 1
-     *   - 未知类型: 0
+     * 返回类型宽度优先级（越大代表类型越宽）。类型对应的优先级:
+     * - D (double): 6
+     * - F (float): 5
+     * - L (long): 4
+     * - I (int): 3
+     * - S (short): 2
+     * - B (byte): 1
+     * - 未知类型: 0
      *
      * @param p 类型标记字符
      * @return 类型优先级数值
@@ -129,12 +130,18 @@ public final class ComparisonUtils {
             final String type = variables.get(name);
             if (type != null) {
                 switch (type) {
-                    case "byte":   return 'B';
-                    case "short":  return 'S';
-                    case "int":    return 'I';
-                    case "long":   return 'L';
-                    case "float":  return 'F';
-                    case "double": return 'D';
+                    case "byte":
+                        return 'B';
+                    case "short":
+                        return 'S';
+                    case "int":
+                        return 'I';
+                    case "long":
+                        return 'L';
+                    case "float":
+                        return 'F';
+                    case "double":
+                        return 'D';
                 }
             }
         }

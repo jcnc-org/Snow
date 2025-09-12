@@ -11,6 +11,7 @@ import java.util.Deque;
 public class CallStack {
     private static final int MAX_STACK_DEPTH = 1024; // Stack overflow protection
     private final Deque<StackFrame> stack = new ArrayDeque<>();
+
     /**
      * Default constructor for creating an instance of CallStack.
      * This constructor is empty as no specific initialization is required.

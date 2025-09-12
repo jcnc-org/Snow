@@ -22,33 +22,12 @@ public final class SnowExample {
      */
     public static String getMainModule() {
         return """
-                module: Math
+                module: main
                     import: os
                     function: main
                         returns: void
                         body:
-                            os.print(Math.factorial(6))
-                        end body
-                    end function
-                
-                    function: factorial
-                        params:
-                            declare n: int
-                        returns: int
-                        body:
-                            declare num1: int = 1
-                            loop:
-                                init:
-                                    declare counter:int = 1
-                                cond:
-                                    counter <= n
-                                step:
-                                    counter = counter + 1
-                                body:
-                                    num1 = num1 * counter
-                                end body
-                            end loop
-                            return num1
+                            os.print("Hello" + " "+"World!")
                         end body
                     end function
                 end module
@@ -63,13 +42,20 @@ public final class SnowExample {
     public static String getOsModule() {
         return """
                 module: os
-                    import: os
                     function: print
                         params:
-                            declare i1: int
+                            declare i1: any
                         returns: void
                         body:
                             syscall("PRINT", i1)
+                        end body
+                    end function
+                    function: println
+                        params:
+                            declare i1: any
+                        returns: void
+                        body:
+                            syscall("PRINTLN", i1)
                         end body
                     end function
                 end module

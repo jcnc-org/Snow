@@ -56,7 +56,7 @@ public class SDivCommand implements Command {
         }
 
         // Perform the division and push the result back onto the stack
-        operandStack.push((short)(a / b));
+        operandStack.push((short) (a / b));
 
         // Return the updated program counter (next instruction)
         return currentPC + 1;

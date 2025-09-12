@@ -8,12 +8,13 @@ import org.jcnc.snow.compiler.ir.utils.ComparisonUtils;
 import org.jcnc.snow.compiler.ir.utils.ExpressionUtils;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 import org.jcnc.snow.compiler.parser.ast.BinaryExpressionNode;
+import org.jcnc.snow.compiler.parser.ast.StringLiteralNode;
 
 /**
  * 二元表达式处理器。
  * <p>
  * 负责将二元运算表达式（如 +, -, *, /, ==, <, ...）节点转换为对应的 IR 指令。
- * 区分比较运算符与普通算术/位运算等，分别分派不同的 IR 生成策略。
+ * 区分比较运算符、字符串拼接与普通算术/位运算等，分别分派不同的 IR 生成策略。
  */
 public class BinaryHandler implements ExpressionHandler<BinaryExpressionNode> {
 
@@ -32,18 +33,23 @@ public class BinaryHandler implements ExpressionHandler<BinaryExpressionNode> {
         IRVirtualRegister c = b.build(bin.right());
         String op = bin.operator();
 
-        // 2. 判断是否为比较运算符（==, !=, <, >, <=, >= 等）
+        // 2. 判断是否为字符串拼接（+ 且任意一边是字符串字面量/类型）
+        if ("+".equals(op) &&
+                (bin.left() instanceof StringLiteralNode || bin.right() instanceof StringLiteralNode)) {
+            return InstructionFactory.binOp(b.ctx(), IROpCode.ADD_R, a, c);
+        }
+
+        // 3. 判断是否为比较运算符（==, !=, <, >, <=, >= 等）
         if (ComparisonUtils.isComparisonOperator(op)) {
             return InstructionFactory.binOp(
                     b.ctx(),
-                    // 自动分析类型，选择正确的比较指令
                     ComparisonUtils.cmpOp(
                             b.ctx().getScope().getVarTypes(),
                             op, bin.left(), bin.right()),
                     a, c);
         }
 
-        // 3. 普通二元运算（+ - * / & | ^ ...），查找对应 IR 操作码
+        // 4. 普通二元运算（+ - * / & | ^ ...），查找对应 IR 操作码
         IROpCode code = ExpressionUtils.resolveOpCode(op, bin.left(), bin.right());
         if (code == null) {
             throw new IllegalStateException("不支持的运算符: " + op);
@@ -66,7 +72,14 @@ public class BinaryHandler implements ExpressionHandler<BinaryExpressionNode> {
         IRVirtualRegister c = b.build(bin.right());
         String op = bin.operator();
 
-        // 2. 比较运算符直接写入目标寄存器
+        // 2. 字符串拼接直接写入目标寄存器
+        if ("+".equals(op) &&
+                (bin.left() instanceof StringLiteralNode || bin.right() instanceof StringLiteralNode)) {
+            InstructionFactory.binOpInto(b.ctx(), IROpCode.ADD_R, a, c, dest);
+            return;
+        }
+
+        // 3. 比较运算符直接写入目标寄存器
         if (ComparisonUtils.isComparisonOperator(op)) {
             InstructionFactory.binOpInto(
                     b.ctx(),
@@ -75,7 +88,7 @@ public class BinaryHandler implements ExpressionHandler<BinaryExpressionNode> {
                             op, bin.left(), bin.right()),
                     a, c, dest);
         } else {
-            // 3. 普通二元运算符
+            // 4. 普通二元运算符
             IROpCode code = ExpressionUtils.resolveOpCode(op, bin.left(), bin.right());
             if (code == null) {
                 throw new IllegalStateException("不支持的运算符: " + op);

@@ -1,9 +1,8 @@
 package org.jcnc.snow.vm.execution;
 
 
-
-import org.jcnc.snow.vm.utils.LoggingUtils;
 import org.jcnc.snow.vm.io.FileIOUtils;
+import org.jcnc.snow.vm.utils.LoggingUtils;
 
 import java.util.List;
 

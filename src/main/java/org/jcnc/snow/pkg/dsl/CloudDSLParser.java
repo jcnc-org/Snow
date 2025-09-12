@@ -33,7 +33,9 @@ import java.util.regex.Pattern;
  */
 public final class CloudDSLParser {
 
-    /** 匹配 sectionName { 的行 */
+    /**
+     * 匹配 sectionName { 的行
+     */
     private static final Pattern SECTION_HEADER = Pattern.compile("^(\\w+)\\s*\\{\\s*$");
 
     /**
@@ -42,11 +44,16 @@ public final class CloudDSLParser {
      */
     private static final Pattern KEY_VALUE = Pattern.compile("^(\\w+)\\s*=\\s*(.*?)\\s*(?:#.*)?$");
 
-    /** 匹配仅为 } 的行 */
+    /**
+     * 匹配仅为 } 的行
+     */
     private static final Pattern BLOCK_END = Pattern.compile("^}\\s*$");
 
-    /** 工具类禁止实例化 */
-    private CloudDSLParser() {}
+    /**
+     * 工具类禁止实例化
+     */
+    private CloudDSLParser() {
+    }
 
     /**
      * 解析指定 .cloud 文件为 {@link Project} 对象。
@@ -130,7 +137,7 @@ public final class CloudDSLParser {
     private static String unquote(String s) {
         if (s == null || s.length() < 2) return s;
         char first = s.charAt(0);
-        char last  = s.charAt(s.length() - 1);
+        char last = s.charAt(s.length() - 1);
         if ((first == '"' && last == '"') || (first == '\'' && last == '\'')) {
             return s.substring(1, s.length() - 1);
         }

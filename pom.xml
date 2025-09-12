@@ -7,7 +7,7 @@
 
     <groupId>org.jcnc.snow</groupId>
     <artifactId>Snow</artifactId>
-    <version>0.9.0</version>
+    <version>0.10.0</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -169,6 +169,54 @@
                                 <buildArg>-O2</buildArg>
                             </buildArgs>
                         </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>native-mac</id>
+            <activation>
+                <os>
+                    <family>unix</family>
+                </os>
+            </activation>
+
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <version>${native.maven.plugin.version}</version>
+                        <extensions>true</extensions>
+
+                        <configuration>
+                            <mainClass>org.jcnc.snow.cli.SnowCLI</mainClass>
+                            <imageName>Snow</imageName>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                            <buildArgs>
+                                <buildArg>--emit=build-report</buildArg>
+                                <buildArg>-O2</buildArg>
+                                <buildArg>-H:Class=org.jcnc.snow.cli.SnowCLI</buildArg>
+                            </buildArgs>
+                        </configuration>
+
+                        <executions>
+                            <execution>
+                                <id>build-native</id>
+                                <goals>
+                                    <goal>compile-no-fork</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+
+                            <execution>
+                                <id>test-native</id>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <phase>test</phase>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>

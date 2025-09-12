@@ -2,8 +2,8 @@ package org.jcnc.snow.compiler.parser.statement;
 
 import org.jcnc.snow.compiler.lexer.token.TokenType;
 import org.jcnc.snow.compiler.parser.ast.AssignmentNode;
-import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.LoopNode;
+import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
@@ -21,7 +21,7 @@ import java.util.Map;
 /**
  * {@code LoopStatementParser} 类负责解析自定义结构化的 {@code loop} 语句块。
  * <p>
- * 该语法结构参考了传统的 for-loop，并将其拆解为命名的语义区块: 
+ * 该语法结构参考了传统的 for-loop，并将其拆解为命名的语义区块:
  * <pre>{@code
  * loop:
  *     init:
@@ -35,8 +35,8 @@ import java.util.Map;
  *     end body
  * end loop
  * }</pre>
- *
- * 各区块说明: 
+ * <p>
+ * 各区块说明:
  * <ul>
  *   <li>{@code init}: 初始化语句，通常为变量声明。</li>
  *   <li>{@code cond}: 循环判断条件，必须为布尔或数值表达式。</li>
@@ -50,7 +50,7 @@ public class LoopStatementParser implements StatementParser {
     /**
      * 解析 {@code loop} 语句块，构建出对应的 {@link LoopNode} 抽象语法树节点。
      * <p>
-     * 本方法会按顺序检查各个命名区块（可乱序书写），并分别绑定其对应语义解析器: 
+     * 本方法会按顺序检查各个命名区块（可乱序书写），并分别绑定其对应语义解析器:
      * <ul>
      *   <li>通过 {@link ParserUtils#matchHeader} 匹配区块开头；</li>
      *   <li>通过 {@link FlexibleSectionParser} 派发区块逻辑；</li>

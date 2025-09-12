@@ -1,9 +1,9 @@
 package org.jcnc.snow.compiler.backend.generator;
 
-import org.jcnc.snow.compiler.backend.utils.IROpCodeMapper;
-import org.jcnc.snow.compiler.backend.utils.OpHelper;
 import org.jcnc.snow.compiler.backend.builder.VMProgramBuilder;
 import org.jcnc.snow.compiler.backend.core.InstructionGenerator;
+import org.jcnc.snow.compiler.backend.utils.IROpCodeMapper;
+import org.jcnc.snow.compiler.backend.utils.OpHelper;
 import org.jcnc.snow.compiler.ir.instruction.UnaryOperationInstruction;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 
@@ -43,10 +43,10 @@ public class UnaryOpGenerator implements InstructionGenerator<UnaryOperationInst
                          String currentFn) {
 
         /* -------- 1. 源槽位与类型 -------- */
-        int srcSlot  = slotMap.get((IRVirtualRegister) ins.operands().getFirst());
-        char prefix  = out.getSlotType(srcSlot);          // 未登记则返回默认 'I'
+        int srcSlot = slotMap.get((IRVirtualRegister) ins.operands().getFirst());
+        char prefix = out.getSlotType(srcSlot);          // 未登记则返回默认 'I'
 
-        String loadOp  = prefix + "_LOAD";
+        String loadOp = prefix + "_LOAD";
         String storeOp = prefix + "_STORE";
 
         /* -------- 2. 指令序列 -------- */

@@ -1,7 +1,7 @@
 package org.jcnc.snow.pkg.model;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 构建配置对象，封装构建过程中的所有选项。
@@ -11,7 +11,9 @@ import java.util.HashMap;
  */
 public final class BuildConfiguration {
 
-    /** 存储所有配置项 */
+    /**
+     * 存储所有配置项
+     */
     private final Map<String, String> options;
 
     /**

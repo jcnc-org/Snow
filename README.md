@@ -4,17 +4,20 @@
 
 <p align="center">
 <a href='https://gitee.com/jcnc-org/snow/stargazers'><img src='https://gitee.com/jcnc-org/snow/badge/star.svg?theme=dark' alt='star'></a>
-<a href='https://gitee.com/jcnc-org/snow/members'><img src='https://gitee.com/jcnc-org/snow/badge/fork.svg?theme=dark' alt='fork'></a>
+<a href='https://gitcode.com/jcnc-org/snow'><img src='https://gitcode.com/jcnc-org/snow/star/badge.svg' alt='fork'></a> 
 </p>
+
 
 <p align="center">
     <a href="https://gitee.com/jcnc-org/snow/blob/main/LICENSE">
         <img src="https://img.shields.io/badge/%20license-Apache--2.0%20-blue" alt="">
     </a>
-    <a href="https://gitee.com/jcnc-org/snow/tree/v0.9.0/">
-        <img src="https://img.shields.io/badge/version-v0.9.0-blue" alt="">
+    <a href="https://gitee.com/jcnc-org/snow/tree/v0.10.0/">
+        <img src="https://img.shields.io/badge/version-v0.10.0-blue" alt="">
     </a>
 </p>
+
+
 
 <p align="center">
     <a href="https://gitee.com/jcnc-org/snow/releases">
@@ -30,35 +33,34 @@
 
 ## 项目简介
 
-Snow 是一门受 LLM 时代启发的、面向 AI 友好的编程语言。它设计目标是让 LLM 更容易生成和理解编程代码。
+**Snow** 是一门面向 AI 时代的新型编程语言，灵感源自大模型（LLM）的发展趋势。它的设计初衷是让 LLM 更容易生成和理解代码，从而提升人与 AI 协同编程的效率。
 
-该项目实现了 Snow
-语言的完整编译流程,包括词法分析,语法分析,语义分析,中间表示（IR）生成以及最终的虚拟机（VM）指令生成和执行器，提供从源码到字节码再到自研编程语言虚拟机 (
-SnowVM) 的完整编译-执行链路。
-
-通过 Snow 编译器,可以将 `.snow` 源文件编译为 `.water`虚拟机指令,并在 SnowVM 上直接运行。
+该项目完整实现了 Snow 语言的编译流程，包括 **词法分析、语法分析、语义分析、中间表示（IR）生成**，以及最终的 **虚拟机（VM）指令生成与执行**。通过这一完整的编译-执行链路，开发者可以将 `.snow` 源文件编译为 `.water` 虚拟机指令，并直接在 **SnowVM** 上运行。
 
 从源码编译、构建管理、依赖管理、项目标准化、可视化调试面板到原生镜像发布，全部由 Snow 官方工具完成，降低学习与集成成本。
+
+
+
+## 集成开发环境
+
+Snow 专属 IDE — **IDEology**
+
+仓库地址：[https://gitee.com/jcnc-org/IDEology](https://gitee.com/jcnc-org/IDEology)
+
+> 目前 IDEology 尚未提供正式发行版，开发者可通过源码自行编译获得使用体验。
+
+![IMG_IDE_1.png](docs/README/IMG/IMG_IDE_1.png)
+![IMG_IDE_2.png](docs/README/IMG/IMG_IDE_2.png)
+![IMG_IDE_3.png](docs/README/IMG/IMG_IDE_3.png)
+![IMG_IDE_4.png](docs/README/IMG/IMG_IDE_4.png)
 
 ## 背景理念
 
 Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的语法和严格的类型系统,以帮助 LLM 更好地理解程序。
 
-语言使用显式的 `module` 声明来组织代码,用 `function`,`params`,`returns`,`body` 等关键字分隔不同代码块,语法结构固定且易读。此外,Snow
-实现了语义分析来检查变量作用域和类型一致性,在编译阶段捕获错误并确保生成的中间代码正确无误。这种自上而下的编译流程,使得代码设计和生成更加模块化,可解释,也有利于调试和优化。
 
 相关背景: [心路历程](docs/Snow-Lang-Journey/Snow-Lang-Journey.md)
 
-## 功能特性
-
-| 类别       | 关键特性                                                                                              |
-|----------|---------------------------------------------------------------------------------------------------|
-| 语言层      | module / import / function / loop / if–else / Pratt 表达式解析<br>静态类型检查 & 作用域分析                       |
-| 编译器前端    | Lexer / Parser / Semantic Analyzer 全栈自研，生成 JSON-AST                                               |
-| IR & 后端  | 三地址式 IR ➜ 线性扫描寄存器分配 ➜ SnowVM 指令                                                                   |
-| 虚拟机      | 栈 + 寄存器混合架构、GUI 局部变量监视                                                                            |
-| snow pkg | - `.cloud` DSL 描述项目、依赖与构建<br>- 预设 `clean / compile / run / package / publish` 任务<br>- 离线缓存与远程仓库解析 |
-| CLI      | init, compile,  run, clean,  build, generate,debug                                                |
 
 ## Snow-Lang 官网
 

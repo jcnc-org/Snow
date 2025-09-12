@@ -9,13 +9,21 @@ package org.jcnc.snow.compiler.parser.context;
  */
 public class ParseError {
 
-    /** 出错的文件名 */
+    /**
+     * 出错的文件名
+     */
     private final String file;
-    /** 出错的行号 */
+    /**
+     * 出错的行号
+     */
     private final int line;
-    /** 出错的列号 */
+    /**
+     * 出错的列号
+     */
     private final int column;
-    /** 错误信息描述 */
+    /**
+     * 错误信息描述
+     */
     private final String message;
 
     /**
@@ -27,9 +35,9 @@ public class ParseError {
      * @param message 错误信息描述
      */
     public ParseError(String file, int line, int column, String message) {
-        this.file    = file;
-        this.line    = line;
-        this.column  = column;
+        this.file = file;
+        this.line = line;
+        this.column = column;
         this.message = message;
     }
 

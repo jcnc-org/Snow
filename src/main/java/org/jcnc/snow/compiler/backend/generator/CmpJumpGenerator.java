@@ -1,9 +1,9 @@
 package org.jcnc.snow.compiler.backend.generator;
 
-import org.jcnc.snow.compiler.backend.utils.IROpCodeMapper;
-import org.jcnc.snow.compiler.backend.utils.OpHelper;
 import org.jcnc.snow.compiler.backend.builder.VMProgramBuilder;
 import org.jcnc.snow.compiler.backend.core.InstructionGenerator;
+import org.jcnc.snow.compiler.backend.utils.IROpCodeMapper;
+import org.jcnc.snow.compiler.backend.utils.OpHelper;
 import org.jcnc.snow.compiler.backend.utils.TypePromoteUtils;
 import org.jcnc.snow.compiler.ir.instruction.IRCompareJumpInstruction;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
@@ -17,7 +17,7 @@ import java.util.Map;
  * 负责将 IR 中的 {@link IRCompareJumpInstruction}（条件比较并跳转指令）
  * 转换为目标虚拟机（VM）可执行的指令序列。
  * </p>
- *
+ * <p>
  * 主要功能
  * <ul>
  *     <li>根据 IR 比较指令左右操作数的类型，自动进行类型提升与转换</li>
@@ -52,17 +52,17 @@ public class CmpJumpGenerator implements InstructionGenerator<IRCompareJumpInstr
      * @param currentFn 当前处理的函数名（调试用，当前未使用）
      */
     @Override
-    public void generate(IRCompareJumpInstruction  ins,
-                         VMProgramBuilder          out,
-                         Map<IRVirtualRegister,Integer> slotMap,
-                         String                    currentFn) {
+    public void generate(IRCompareJumpInstruction ins,
+                         VMProgramBuilder out,
+                         Map<IRVirtualRegister, Integer> slotMap,
+                         String currentFn) {
 
         // 1. 获取左右操作数的槽位与静态类型
-        int  leftSlot  = slotMap.get(ins.left());
-        int  rightSlot = slotMap.get(ins.right());
-        char lType     = out.getSlotType(leftSlot);
-        char rType     = out.getSlotType(rightSlot);
-        char tType     = TypePromoteUtils.promote(lType, rType);        // 公共类型提升
+        int leftSlot = slotMap.get(ins.left());
+        int rightSlot = slotMap.get(ins.right());
+        char lType = out.getSlotType(leftSlot);
+        char rType = out.getSlotType(rightSlot);
+        char tType = TypePromoteUtils.promote(lType, rType);        // 公共类型提升
 
         // 2. 加载左右操作数并按需类型转换
         // 左操作数

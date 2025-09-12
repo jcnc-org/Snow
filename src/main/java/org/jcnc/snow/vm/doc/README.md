@@ -5,15 +5,18 @@
 ## 项目简介
 
 本模块实现了 Snow 的**指令集虚拟机（VM）**，用于运行由编译器/汇编器生成的“文本化指令序列”。  
-它采用**命令（Command）模式 + 统一操作码表（`VMOpCode`）+ 工厂注册（`CommandFactory`）**的结构，配合**运行时栈/局部变量表/调用栈**与**方法栈帧**，构成清晰可扩展的执行层。
+它采用**命令（Command）模式 + 统一操作码表（`VMOpCode`）+ 工厂注册（`CommandFactory`）**的结构，配合**运行时栈/局部变量表/调用栈
+**与**方法栈帧**，构成清晰可扩展的执行层。
 
-执行流程：`VMLauncher/VMInitializer` 解析指令文件 → `CommandLoader` 读入并清洗文本 → `VirtualMachineEngine` 主循环按 **PC** 逐条解释执行（跳过空行与 `#` 注释），通过 `CommandExecutionHandler` 分发到各具体指令类，直到 `RET`（根帧）或 `HALT` 正常终止。
+执行流程：`VMLauncher/VMInitializer` 解析指令文件 → `CommandLoader` 读入并清洗文本 → `VirtualMachineEngine` 主循环按 PC
+逐条解释执行（跳过空行与 `#` 注释），通过 `CommandExecutionHandler` 分发到各具体指令类，直到 `RET`（根帧）或 `HALT` 正常终止。
 
 ## 核心功能
 
 * **统一的指令与分发模型**
     * 抽象接口：`interfaces.Command#execute(String[] parts, int pc, OperandStack, LocalVariableStore, CallStack)`
-    * 操作码表：`engine.VMOpCode`（以 `int` 编码，分段保留：**0x0000–0x00DF 类型算术/比较/装载**、**0x00E0–0x00E2 引用操作**、**0x0100– 栈操作**、**0x0200– 流程控制**、**0x0300– 寄存器移动**、**0x0400– 系统**）
+    * 操作码表：`engine.VMOpCode`（以 `int` 编码，分段保留：**0x0000–0x00DF 类型算术/比较/装载**、**0x00E0–0x00E2 引用操作**、
+      **0x0100– 栈操作**、**0x0200– 流程控制**、**0x0300– 寄存器移动**、**0x0400– 系统**）
     * 指令工厂：`factories.CommandFactory` 将 `opCode → Command` 静态注册，`CommandExecutionHandler#handle` 统一查表并调用
 
 * **执行引擎与运行时**
@@ -35,20 +38,21 @@
 
 * **控制流与调用**
     * **无条件跳转**：`JumpCommand`（`JUMP`）
-    * **调用/返回**：`CallCommand`（`CALL`，从栈按**左到右**顺序取实参，建立新 `StackFrame` 并设置返回地址），`RetCommand`（`RET`，弹栈帧并回到调用点；根帧返回触发终止）
+    * **调用/返回**：`CallCommand`（`CALL`，从栈按**左到右**顺序取实参，建立新 `StackFrame` 并设置返回地址），`RetCommand`（
+      `RET`，弹栈帧并回到调用点；根帧返回触发终止）
     * **栈操作**：`PopCommand`（`POP`）、`DupCommand`（`DUP`）、`SwapCommand`（`SWAP`）
     * **寄存器移动**：`MovCommand`（`MOV src,dst`，在同一局部变量表内复制槽位）
 
-* **引用/对象与虚方法支持**
+* **引用/对象支持**
     * 引用操作：`R_PUSH / R_LOAD / R_STORE`（分别用于将引用压栈、从局部变量表加载/存储引用）
     * 运行时模型：
         * `module.StackFrame`（保存返回地址、`LocalVariableStore`、`OperandStack`、`MethodContext`）
         * `module.CallStack`（带上限保护的调用栈）
-        * `module.Instance`、`module.VirtualTable`（vtable：方法签名 → 入口地址，支持动态分派）
 
 * **系统调用与 I/O**
     * 统一入口：`SyscallCommand`（`SYSCALL`），失败时约定**向栈压 `-1`**
-    * 文件/网络/控制台子命令（示例）：`PRINT/PRINTLN`、`OPEN/CLOSE/READ/WRITE/SEEK`、`PIPE/DUP`、`SOCKET/CONNECT/BIND/LISTEN/ACCEPT`、`SELECT`，以及**数组访问** `ARR_GET/ARR_SET`
+    * 文件/网络/控制台子命令（示例）：`PRINT/PRINTLN`、`OPEN/CLOSE/READ/WRITE/SEEK`、`PIPE/DUP`、
+      `SOCKET/CONNECT/BIND/LISTEN/ACCEPT`、`SELECT`，以及**数组访问** `ARR_GET/ARR_SET`
     * 文件描述符表：`io.FDTable` 维护 **虚拟 fd → NIO Channel** 映射（内置 `0:stdin / 1:stdout / 2:stderr`）
     * 路径与装载：`io.FilePathResolver`、`io.FileIOUtils` 负责解析参数、读取文本并**去注释/去空行**
 
@@ -101,9 +105,7 @@ vm/
   │   ├── LocalVariableStore          // 局部变量表（自动扩容/紧凑化）
   │   ├── CallStack                   // 调用栈（含深度保护）
   │   ├── StackFrame                  // 栈帧：返回地址 + 局部表 + 栈 + 方法元信息
-  │   ├── MethodContext               // 方法上下文（名称/实参，用于调试）
-  │   ├── Instance                    // 对象实例占位
-  │   └── VirtualTable                // vtable：方法签名 → 入口地址
+  │   └── MethodContext               // 方法上下文（名称/实参，用于调试）
   │
   ├── io/                             // I/O 与文件系统桥接
   │   ├── FDTable                     // 虚拟 fd ↔ NIO Channel 映射（含 0/1/2）

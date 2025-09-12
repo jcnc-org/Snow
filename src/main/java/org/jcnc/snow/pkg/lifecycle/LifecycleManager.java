@@ -21,7 +21,9 @@ import java.util.Map;
  */
 public final class LifecycleManager {
 
-    /** 生命周期阶段与对应任务的映射关系 */
+    /**
+     * 生命周期阶段与对应任务的映射关系
+     */
     private final Map<LifecyclePhase, Task> tasks = new EnumMap<>(LifecyclePhase.class);
 
     /**

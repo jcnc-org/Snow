@@ -1,0 +1,9 @@
+module: main
+    import: os
+	function: main
+	    returns: void
+	    body:
+	        os.print("Hello" + " "+"World!")
+	    end body
+	end function
+end module

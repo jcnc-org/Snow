@@ -6,9 +6,9 @@ import org.jcnc.snow.compiler.ir.core.IROpCode;
 import org.jcnc.snow.compiler.ir.utils.ComparisonUtils;
 import org.jcnc.snow.compiler.ir.utils.IROpCodeUtils;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
+import org.jcnc.snow.compiler.parser.ast.BinaryExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
-import org.jcnc.snow.compiler.parser.ast.BinaryExpressionNode;
 
 /**
  * 条件跳转指令工具类。
