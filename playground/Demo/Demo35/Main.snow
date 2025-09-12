@@ -1,11 +1,9 @@
 module: main
     import: os
-
 	function: main
 	    returns: void
 	    body:
-	        os.print("1"+2*4)
-
+	        os.print("Helo" + " "+"World!")
 	    end body
 	end function
 end module
