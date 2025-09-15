@@ -1,0 +1,10 @@
+module: main
+    import: file
+
+    function: main
+        returns: void
+        body:
+            file.view("README.md")
+        end body
+    end function
+end module
