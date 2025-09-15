@@ -15,10 +15,6 @@ import org.jcnc.snow.vm.module.OperandStack;
  * <p>
  * 打印操作完成后，向操作数栈压入 0 作为返回值，表示操作成功。
  * </p>
- *
- * <p>
- * 使用场景示例：用于脚本或虚拟机指令中输出文本或变量，并换行。
- * </p>
  */
 public class PrintlnHandler implements SyscallHandler {
 

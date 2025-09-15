@@ -9,15 +9,11 @@ import org.jcnc.snow.vm.module.OperandStack;
 /**
  * <p>
  * {@code PrintHandler} 是一个系统调用处理器，实现虚拟机中的标准输出功能（类似于控制台打印）。
- * 该处理器会从操作数栈弹出一个对象，并通过 {@link SyscallUtils#output(Object, boolean)} 方法打印到输出流（通常为标准输出）。
+ * 该处理器会从操作数栈弹出一个对象，并通过 {@link SyscallUtils#output(Object, boolean)} 方法打印到输出流。
  * </p>
  *
  * <p>
  * 打印操作完成后，向操作数栈压入 0 作为返回值，表示操作成功。
- * </p>
- *
- * <p>
- * 使用场景示例：用于脚本或虚拟机指令中输出文本或变量值。
  * </p>
  */
 public class PrintHandler implements SyscallHandler {
