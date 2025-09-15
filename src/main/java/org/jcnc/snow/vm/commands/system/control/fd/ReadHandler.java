@@ -10,79 +10,71 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 
 /**
- * {@code ReadHandler} 用于实现系统调用 READ。
- *
+ * {@code ReadHandler} 实现虚拟机的系统调用 {@code READ} 逻辑。
  * <p>
- * 功能：从虚拟文件描述符（fd）对应的通道中读取数据，并将结果返回为字节数组。
- * </p>
+ * 支持从指定虚拟 fd（文件描述符）对应的通道读取数据，并将实际读取到的字节数组返回。
  *
- * <p>调用约定：</p>
+ * <p><b>调用约定：</b></p>
  * <ul>
- *   <li>入参：{@code fd:int}, {@code length:int}</li>
- *   <li>出参：{@code byte[]} （实际读取到的数据，可能比 length 短）</li>
+ *   <li>参数顺序（自底向上）：fd（int），length（int）</li>
+ *   <li>返回值：{@code byte[]}，即实际读取到的数据；可能比 length 小，也可能为 0</li>
  * </ul>
  *
- * <p>说明：</p>
+ * <p><b>行为说明：</b></p>
  * <ul>
- *   <li>如果读取到 EOF，则返回长度为 0 的数组。</li>
- *   <li>如果 fd 无效或不是可读通道，会抛出异常。</li>
+ *   <li>如果读取到 EOF 或 size 小于等于 0，则返回长度为 0 的数组</li>
+ *   <li>若 fd 无效或不是可读通道，将抛出 {@link IllegalArgumentException}</li>
+ *   <li>读取过程中如遇 I/O 错误，将抛出 {@link java.io.IOException}</li>
  * </ul>
  *
- * <p>异常：</p>
+ * <p><b>异常：</b></p>
  * <ul>
- *   <li>如果 fd 不是整数，抛出 {@link IllegalArgumentException}</li>
- *   <li>如果 length 不是整数或小于 0，抛出 {@link IllegalArgumentException}</li>
- *   <li>如果通道不可读，抛出 {@link IllegalArgumentException}</li>
+ *   <li>fd 不是整数，抛出 {@link IllegalArgumentException}</li>
+ *   <li>length 不是整数或小于 0，抛出 {@link IllegalArgumentException}</li>
+ *   <li>通道不可读，抛出 {@link IllegalArgumentException}</li>
  *   <li>I/O 操作失败时，抛出 {@link java.io.IOException}</li>
  * </ul>
  */
 public class ReadHandler implements SyscallHandler {
 
+    /**
+     * 处理 READ 系统调用，从指定 fd 对应通道读取数据。
+     *
+     * @param stack     虚拟机操作数栈，参数和返回值均通过此栈传递
+     * @param locals    当前方法的本地变量表
+     * @param callStack 当前调用栈
+     * @throws Exception 读取出错或参数非法时抛出
+     */
     @Override
     public void handle(OperandStack stack,
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
-        // 从操作数栈中弹出参数：先 length:int（栈顶），再 fd:int（栈底）
-        Object lengthObj = stack.pop();
-        Object fdObj = stack.pop();
+        // 栈顶依次为：size、fd（与源码参数顺序相反）
+        int size = (Integer) stack.pop();
+        int fd = (Integer) stack.pop();
 
-        // 校验参数类型
-        if (!(fdObj instanceof Number)) {
-            throw new IllegalArgumentException("READ: fd must be an int, got: " + fdObj);
-        }
-        if (!(lengthObj instanceof Number)) {
-            throw new IllegalArgumentException("READ: length must be an int, got: " + lengthObj);
+        if (size <= 0) {
+            stack.push(new byte[0]);
+            return;
         }
 
-        int fd = ((Number) fdObj).intValue();
-        int length = ((Number) lengthObj).intValue();
-
-        if (length < 0) {
-            throw new IllegalArgumentException("READ: length must be >= 0");
-        }
-
-        // 从 FDTable 获取通道
         var ch = FDTable.get(fd);
-        if (!(ch instanceof ReadableByteChannel rch)) {
+        if (!(ch instanceof ReadableByteChannel)) {
             throw new IllegalArgumentException("READ: fd " + fd + " is not readable");
         }
+        ReadableByteChannel rch = (ReadableByteChannel) ch;
 
-        // 分配缓冲区并读取数据
-        ByteBuffer buffer = ByteBuffer.allocate(length);
+        ByteBuffer buffer = ByteBuffer.allocate(size);
         int bytesRead = rch.read(buffer);
-
-        // 如果到达 EOF，返回空数组
         if (bytesRead <= 0) {
             stack.push(new byte[0]);
             return;
         }
 
-        // 拷贝实际读取到的数据
         byte[] data = new byte[bytesRead];
         buffer.flip();
         buffer.get(data);
 
-        // 将结果压回操作数栈
         stack.push(data);
     }
 }
