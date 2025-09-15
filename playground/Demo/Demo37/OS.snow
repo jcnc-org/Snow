@@ -7,12 +7,23 @@ module: os
             syscall("0x1200", i1)
         end body
     end function
+
     function: println
         params:
             declare i1: any
         returns: void
         body:
             syscall("0x1201", i1)
+        end body
+    end function
+
+    function: readstr
+        params:
+            declare fd: int
+            declare n: int
+        returns: any       // 改成 any，而不是 string
+        body:
+            return syscall("0x1001", fd, n)   // 直接返回 byte[]
         end body
     end function
 end module
