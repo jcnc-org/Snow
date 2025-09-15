@@ -13,75 +13,59 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * {@code OpenHandler} 用于实现系统调用 OPEN。
- *
+ * {@code OpenHandler} 实现虚拟机系统调用 {@code OPEN} 的语义。
  * <p>
- * 功能：根据传入的路径和标志位打开一个文件，并在虚拟机的
- * {@link FDTable} 中注册对应的 {@link SeekableByteChannel}，
- * 最终返回一个虚拟文件描述符（fd）。
- * </p>
+ * 用于在 VM 中打开文件、创建文件描述符，并注册到全局 fd 表。
  *
- * <p>调用约定：</p>
+ * <p><b>调用约定：</b></p>
  * <ul>
- *   <li>入参：{@code path:string}, {@code flags:int}</li>
- *   <li>出参：{@code fd:int}</li>
+ *   <li>参数顺序（自底向上）：path (String), flags (int)</li>
+ *   <li>参数类型不正确时抛出 {@link IllegalArgumentException}</li>
+ *   <li>flags 会进行一致性校验，发现冲突立即抛出异常</li>
  * </ul>
  *
- * <p>flags 说明：</p>
- * <p>
- * flags 采用 POSIX 风格定义（见 {@link OpenFlags}），
- * 会被映射为 Java NIO 的 {@link java.nio.file.StandardOpenOption}。
- * 支持的典型组合：
- * </p>
+ * <p><b>返回值：</b></p>
  * <ul>
- *   <li>{@code O_RDONLY}：只读</li>
- *   <li>{@code O_WRONLY | O_CREAT | O_TRUNC}：覆盖写（类似 "w" 模式）</li>
- *   <li>{@code O_WRONLY | O_CREAT | O_APPEND}：追加写（类似 "a" 模式）</li>
- *   <li>{@code O_RDWR | O_CREAT | O_EXCL}：读写，且文件必须不存在</li>
+ *   <li>返回新分配的虚拟 fd（int），通过操作数栈顶返回</li>
  * </ul>
  *
- * <p>异常：</p>
- * <ul>
- *   <li>如果 path 不是字符串，抛出 {@link IllegalArgumentException}</li>
- *   <li>如果 flags 不是整数，抛出 {@link IllegalArgumentException}</li>
- *   <li>底层 I/O 操作失败时，抛出 {@link java.io.IOException}</li>
- * </ul>
+ * <p><b>实现流程：</b></p>
+ * <ol>
+ *   <li>弹出 <code>flags</code> 和 <code>path</code> 参数</li>
+ *   <li>校验并转换 <code>flags</code>，生成 Java NIO 的 <code>OpenOption</code> 集合</li>
+ *   <li>调用 {@link java.nio.file.Files#newByteChannel(java.nio.file.Path, java.util.Set, java.nio.file.attribute.FileAttribute...) Files.newByteChannel(Path, Set, FileAttribute...)} 打开文件通道</li>
+ *   <li>通过 {@link org.jcnc.snow.vm.io.FDTable#register(java.nio.channels.Channel) FDTable.register(Channel)} 分配 fd 并压入栈返回</li>
+ * </ol>
  */
-
 public class OpenHandler implements SyscallHandler {
 
+    /**
+     * 处理 OPEN 系统调用，打开或创建文件并分配 fd。
+     *
+     * @param stack     当前虚拟机操作数栈，参数和返回值均通过此栈传递
+     * @param locals    当前方法的本地变量表
+     * @param callStack 当前调用栈
+     * @throws Exception 文件不存在、权限不足、参数错误等原因均可能抛出异常
+     */
     @Override
     public void handle(OperandStack stack,
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
-        // 从操作数栈中弹出参数：先 flags:int（栈顶），再 path:string（栈底）
-        Object flagsObj = stack.pop();
+        // 栈顶依次为：flags、path（与源码参数从左到右相反）
+        int flags = (Integer) stack.pop();
         Object pathObj = stack.pop();
-
-        // 校验 path 参数类型，必须是字符串
         if (!(pathObj instanceof String pathStr)) {
-            throw new IllegalArgumentException("OPEN: path must be a String, got: " + pathObj);
-        }
-        // 校验 flags 参数类型，必须是整数
-        if (!(flagsObj instanceof Number)) {
-            throw new IllegalArgumentException("OPEN: flags must be an int, got: " + flagsObj);
+            throw new IllegalArgumentException("OPEN: path must be a String");
         }
 
-        // 将 flags 转换为 int
-        int flags = ((Number) flagsObj).intValue();
-
-        // 校验 flags 组合是否合法（例如 O_TRUNC 不能和只读一起用）
+        // 校验并转换 flags
         OpenFlags.validate(flags);
-        // 根据传入的 path 字符串生成 Path 对象
-        Path path = Paths.get(pathStr);
 
-        // 使用 Files.newByteChannel 打开文件通道，
-        // 并根据 flags 转换出来的 OpenOption 集合指定打开方式
+        Path path = Paths.get(pathStr);
         SeekableByteChannel ch = Files.newByteChannel(path, OpenFlags.toOpenOptions(flags));
 
-        // 将通道注册到 FDTable，得到一个新的虚拟 fd
+        // 注册并返回 fd
         int fd = FDTable.register(ch);
-        // 把 fd 压回操作数栈，作为返回值交给调用方
         stack.push(fd);
     }
 }
