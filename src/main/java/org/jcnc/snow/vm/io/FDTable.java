@@ -86,4 +86,31 @@ public final class FDTable {
             throw new IllegalArgumentException("Bad fd: " + oldfd);
         return register(ch);                                   // Multiple fds refer to the same Channel
     }
+
+    /**
+     * dup2(oldfd, newfd) 将 oldfd 复制到指定的 newfd。
+     *
+     * @param oldfd 原 fd
+     * @param newfd 指定的新 fd
+     * @return newfd
+     * @throws IllegalArgumentException 如果 oldfd 无效
+     * @throws IOException 如果关闭 newfd 时发生 I/O 错误
+     */
+    public static int dup2(int oldfd, int newfd) throws IOException {
+        Channel ch = MAP.get(oldfd);
+        if (ch == null) {
+            throw new IllegalArgumentException("Bad fd: " + oldfd);
+        }
+        if (oldfd == newfd) {
+            return newfd;
+        }
+        // 如果 newfd 已经存在，先关闭
+        close(newfd);
+        // 绑定 oldfd 的 Channel 到 newfd
+        MAP.put(newfd, ch);
+        // 确保 NEXT_FD 不会比 newfd 小
+        NEXT_FD.updateAndGet(n -> Math.max(n, newfd + 1));
+        return newfd;
+    }
+
 }
