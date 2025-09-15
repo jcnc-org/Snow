@@ -21,9 +21,9 @@ module: os
         params:
             declare fd: int
             declare n: int
-        returns: any       // 改成 any，而不是 string
+        returns: any
         body:
-            return syscall("0x1001", fd, n)   // 直接返回 byte[]
+            return syscall("0x1001", fd, n)
         end body
     end function
 end module
