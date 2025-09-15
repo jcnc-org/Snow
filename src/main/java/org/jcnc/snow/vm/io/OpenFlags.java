@@ -7,95 +7,130 @@ import java.util.Set;
 import static java.nio.file.StandardOpenOption.*;
 
 /**
- * {@code OpenFlags} 定义了系统调用 {@code OPEN} 所使用的标志位，
- * 并提供辅助方法将这些标志转换为 Java NIO 的 {@link OpenOption} 集合。
- *
+ * {@code OpenFlags} 定义了 Snow VM 系统调用 {@code OPEN} 使用的全部标志位，
+ * 并提供工具方法将这些标志转换为 Java NIO 的 {@link OpenOption} 集合。
  * <p>
- * 这些标志与 POSIX 风格保持一致（取值范围及含义参考 UNIX 的 open 系统调用），
- * 在虚拟机内部用于描述文件的访问模式和创建语义。
- * </p>
+ * 本类的常量和语义与 POSIX 标准（UNIX/Linux 的 open(2)）保持一致，
+ * 用于描述虚拟机内部文件访问模式和创建行为。
  *
- * <p>常量定义：</p>
+ * <p><b>标志定义：</b></p>
  * <ul>
  *   <li>{@code O_RDONLY = 0}：只读（默认）</li>
  *   <li>{@code O_WRONLY = 1}：只写</li>
  *   <li>{@code O_RDWR   = 2}：读写</li>
  *   <li>{@code O_CREAT  = 0x40}：文件不存在时创建</li>
- *   <li>{@code O_EXCL   = 0x80}：与 O_CREAT 同用，若文件已存在则失败</li>
- *   <li>{@code O_TRUNC  = 0x200}：打开时将文件长度截断为 0</li>
+ *   <li>{@code O_EXCL   = 0x80}：与 O_CREAT 配合，仅在文件不存在时创建，否则报错</li>
+ *   <li>{@code O_TRUNC  = 0x200}：打开时将文件截断为长度为 0</li>
  *   <li>{@code O_APPEND = 0x400}：追加写，每次写入都追加到末尾</li>
  * </ul>
  *
- * <p>工具方法：</p>
+ * <p><b>工具方法说明：</b></p>
  * <ul>
  *   <li>{@link #has(int, int)}：判断某一标志位是否被设置</li>
- *   <li>{@link #toOpenOptions(int)}：
- *       将 flags 翻译为 Java 的 {@link OpenOption} 集合，
- *       供 {@link java.nio.file.Files#newByteChannel} 使用</li>
- *   <li>{@link #validate(int)}：
- *       对 flags 组合进行基本一致性校验，
- *       发现明显冲突时抛出 {@link IllegalArgumentException}</li>
+ *   <li>{@link #toOpenOptions(int)}：将 flags 转为 Java 的 {@link OpenOption} 集合，供 NIO 使用</li>
+ *   <li>{@link #validate(int)}：检查 flags 组合的基本一致性，发现冲突时抛出异常</li>
  * </ul>
  *
- * <p>一致性校验示例：</p>
+ * <p><b>一致性校验举例：</b></p>
  * <ul>
- *   <li>如果是只读模式，却指定了 {@code O_TRUNC} 或 {@code O_APPEND} → 抛错</li>
- *   <li>如果同时指定了 {@code O_TRUNC} 和 {@code O_APPEND} → 抛错</li>
- *   <li>{@code O_EXCL} 未与 {@code O_CREAT} 同用时无实际意义（但默认不抛错）</li>
+ *   <li>只读模式下使用 {@code O_TRUNC} 或 {@code O_APPEND} 时抛错</li>
+ *   <li>{@code O_TRUNC} 与 {@code O_APPEND} 同时设置时抛错</li>
+ *   <li>{@code O_EXCL} 未与 {@code O_CREAT} 配合时不报错（但无效）</li>
  * </ul>
  */
 public final class OpenFlags {
-    // 访问模式（通常占用低两位）
-    public static final int O_RDONLY = 0;       // 只读（默认）
-    public static final int O_WRONLY = 1;       // 只写
-    public static final int O_RDWR   = 2;       // 读写
 
-    // 语义控制位
-    public static final int O_CREAT  = 0x40;    // 不存在则创建
-    public static final int O_EXCL   = 0x80;    // 与 O_CREAT 配合，存在则失败
-    public static final int O_TRUNC  = 0x200;   // 打开时将文件截断为 0
-    public static final int O_APPEND = 0x400;   // 追加写
-
-    private OpenFlags() {} // 工具类，禁止实例化
-
-    /** 某一位是否被设置 */
-    public static boolean has(int flags, int bit) {
-        return (flags & bit) != 0;
+    private OpenFlags() {
     }
 
-    /** 将 flags 翻译为 Java 的 OpenOption 集合（供 Files.newByteChannel 使用） */
+    /**
+     * 只读访问
+     */
+    public static final int O_RDONLY = 0x0;
+    /**
+     * 只写访问
+     */
+    public static final int O_WRONLY = 0x1;
+    /**
+     * 读写访问
+     */
+    public static final int O_RDWR = 0x2;
+
+    /**
+     * 文件不存在时创建
+     */
+    public static final int O_CREAT = 0x40;
+    /**
+     * 仅当文件不存在时创建（必须与 O_CREAT 配合）
+     */
+    public static final int O_EXCL = 0x80;
+    /**
+     * 打开时截断为 0
+     */
+    public static final int O_TRUNC = 0x200;
+    /**
+     * 追加写
+     */
+    public static final int O_APPEND = 0x400;
+
+    /**
+     * 判断 flags 是否包含指定标志位。
+     *
+     * @param flags 全部标志的 bitmask
+     * @param f     需判断的标志位
+     * @return 如果包含该标志位则为 true，否则为 false
+     */
+    private static boolean has(int flags, int f) {
+        return (flags & f) != 0;
+    }
+
+    /**
+     * 将 Snow VM 的 open 标志转换为 Java NIO 的 {@link OpenOption} 集合。
+     *
+     * @param flags 标志位 bitmask
+     * @return 对应的 {@link OpenOption} 集合
+     */
     public static Set<OpenOption> toOpenOptions(int flags) {
-        // 使用 HashSet<OpenOption>，避免 EnumSet<StandardOpenOption> 的泛型不匹配
         Set<OpenOption> opts = new HashSet<>();
 
-        // 访问模式
         int acc = (flags & 0x3);
-        if (acc == O_WRONLY) {
-            opts.add(WRITE);
-        } else if (acc == O_RDWR) {
-            opts.add(READ);
-            opts.add(WRITE);
-        } else {
-            // 默认或未识别 -> READ
-            opts.add(READ);
+        switch (acc) {
+            case O_WRONLY -> opts.add(WRITE);
+            case O_RDWR -> {
+                opts.add(READ);
+                opts.add(WRITE);
+            }
+            default -> opts.add(READ);
         }
 
-        // 创建 / 独占 / 截断 / 追加
-        if (has(flags, O_EXCL)) {
-            opts.add(CREATE_NEW);        // 已存在则失败
+        if (has(flags, O_CREAT) && has(flags, O_EXCL)) {
+            opts.add(CREATE_NEW);
         } else if (has(flags, O_CREAT)) {
-            opts.add(CREATE);            // 不存在则创建
+            opts.add(CREATE);
         }
+
         if (has(flags, O_TRUNC)) {
-            opts.add(TRUNCATE_EXISTING); // 若文件存在则清空
+            opts.add(TRUNCATE_EXISTING);
         }
+
         if (has(flags, O_APPEND)) {
-            opts.add(APPEND);            // 末尾追加
+            opts.add(APPEND);
         }
+
         return opts;
     }
 
-    /** 基本一致性校验（发现明显冲突时抛错） */
+    /**
+     * 校验标志位组合的基本一致性，发现明显冲突时抛出异常。
+     * <ul>
+     *   <li>只读模式下禁止 {@code O_TRUNC}/{@code O_APPEND}</li>
+     *   <li>{@code O_TRUNC} 与 {@code O_APPEND} 不能同时设置</li>
+     *   <li>{@code O_EXCL} 未与 {@code O_CREAT} 配合不报错，但无实际意义</li>
+     * </ul>
+     *
+     * @param flags open 标志位
+     * @throws IllegalArgumentException 如果组合冲突
+     */
     public static void validate(int flags) {
         int acc = (flags & 0x3);
         boolean write = (acc == O_WRONLY || acc == O_RDWR);
@@ -106,6 +141,6 @@ public final class OpenFlags {
         if (has(flags, O_TRUNC) && has(flags, O_APPEND)) {
             throw new IllegalArgumentException("O_TRUNC 与 O_APPEND 不能同时使用");
         }
-        // O_EXCL 未与 O_CREAT 同用时通常无意义，如需更严格可在此抛错
+        // O_EXCL 未与 O_CREAT 配合时无实际意义，这里不抛错
     }
 }
