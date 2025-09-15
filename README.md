@@ -2,21 +2,17 @@
   <img src="docs/README/IMG/icon/IMG_Snow_icon_128.svg" alt="Snow Icon">
 <h1 align="center" style="margin: 30px 0 30px; font-weight: bold;">Snow编程语言</h1>
 
-<style>
-  .badge {
-    height: 20px;
-    vertical-align: middle; 
-  }
-</style>
-
 <p align="center">
   <a href="https://gitee.com/jcnc-org/snow/stargazers">
-    <img class="badge" src="https://gitee.com/jcnc-org/snow/badge/star.svg?theme=dark" alt="Gitee Star"/>
+    <img src="https://gitee.com/jcnc-org/snow/badge/star.svg?theme=dark"
+         alt="Gitee Star" height="20">
   </a>
   <a href="https://gitcode.com/jcnc-org/snow">
-    <img class="badge" src="https://gitcode.com/jcnc-org/snow/star/badge.svg" alt="GitCode Star"/>
+    <img src="https://gitcode.com/jcnc-org/snow/star/badge.svg"
+         alt="GitCode Star" height="20">
   </a>
 </p>
+
 
 <p align="center">
     <a href="https://gitee.com/jcnc-org/snow/blob/main/LICENSE">
