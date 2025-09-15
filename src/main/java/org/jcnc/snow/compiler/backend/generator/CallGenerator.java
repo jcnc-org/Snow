@@ -182,7 +182,7 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
         loadArgument(out, slotMap, args.get(0), 'R', ins.getFunctionName()); // 数组引用
         loadArgument(out, slotMap, args.get(1), 'I', ins.getFunctionName()); // 索引
         loadArgument(out, slotMap, args.get(2), valType, ins.getFunctionName()); // 值
-        out.emit(VMOpCode.SYSCALL + " ARR_SET");
+        out.emit(VMOpCode.SYSCALL + " 0x1803");
     }
 
     /**
@@ -204,7 +204,7 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
         }
         loadArgument(out, slotMap, args.get(0), 'R', fn); // 数组引用
         loadArgument(out, slotMap, args.get(1), 'I', fn); // 索引
-        out.emit(VMOpCode.SYSCALL + " ARR_GET");
+        out.emit(VMOpCode.SYSCALL + " 0x1802");
 
         IRVirtualRegister dest = ins.getDest();
         if (dest == null) {
