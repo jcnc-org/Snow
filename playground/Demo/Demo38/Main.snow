@@ -6,8 +6,15 @@ module: app
             declare args: any
         body:
             declare fd: int
-            fd = syscall("0x1000", "README.md", 0)   // 打开文件
-            os.println(os.read(fd, 100000))   // 一次性读并打印
+            // 打开 .env 文件（只读，flags=0）
+            fd = os.open(".env", 0)
+            // 读取100000
+            declare content: any
+            content = os.read(fd, 100000)
+            // 打印文件内容（带自动换行）
+            os.println(content)
+            // 关闭文件
+            os.close(fd)
         end body
     end function
 end module
