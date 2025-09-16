@@ -1,28 +1,45 @@
+//  • 0x1200  PRINT   →  将对象输出到标准输出（不自动换行）
+//  • 0x1201  PRINTLN →  将对象输出到标准输出并追加换行
+//  • 0x1001  READ    →  从文件描述符读取最多 n 字节并返回 byte[]
+
 module: os
+    // print(obj): 输出对象到 stdout，不附加换行。
+    // 对应系统调用：PRINT (0x1200)，成功返回 0。
     function: print
         params:
+            // 要打印的对象
             declare i1: any
         returns: void
         body:
+            // 调用底层 PRINT 系统调用
             syscall("0x1200", i1)
         end body
     end function
 
+    // println(obj): 输出对象到 stdout，并自动换行。
+    // 对应系统调用：PRINTLN (0x1201)，成功返回 0。
     function: println
         params:
+            // 要打印的对象
             declare i1: any
         returns: void
         body:
+            // 调用底层 PRINTLN 系统调用
             syscall("0x1201", i1)
         end body
     end function
 
+    // read(fd, n): 从文件描述符 fd 读取最多 n 字节。
+    // 对应系统调用：READ (0x1001)。
+    // · 若到达 EOF 或 n ≤ 0，返回长度 0 的字节数组。
+    // · 可能抛出：fd 非法/不可读、n 为负或 I/O 错误。
     function: read
         params:
-            declare fd: int
-            declare n: int
-        returns: any
+            declare fd: int  // 可读文件描述符
+            declare n:  int  // 期望读取的最大字节数
+        returns: any         // 读取到的 byte[] 数据
         body:
+            // 调用底层 READ 系统调用并返回结果
             return syscall("0x1001", fd, n)
         end body
     end function
