@@ -644,10 +644,48 @@ public final class SyscallOpCode {
     public static final int RWLOCK_UNLOCK = 0x160E;
 
     // ================= 时间 & 计时 (0x1700 – 0x17FF) =================
+    /**
+     * 获取时钟的纳秒时间戳。
+     *
+     * <p><b>Stack</b>：入参 {@code (clockId:int)} → 出参 {@code (nanos:long)}</p>
+     * <p><b>语义</b>：
+     * 根据 {@code clockId} 返回纳秒时间戳。常见取值包括 {@code REALTIME=0}（自 Unix 纪元的墙钟时间，单位纳秒）
+     * 与 {@code MONO=1}（单调时钟，适用于测量时间间隔）。</p>
+     * <p><b>返回</b>：成功返回纳秒时间 {@code (long)}。</p>
+     * <p><b>异常</b>：若 {@code clockId} 非法或不被支持，可能抛出 {@link IllegalArgumentException}。</p>
+     */
     public static final int CLOCK_GETTIME = 0x1700;
+
+    /**
+     * 按纳秒级别挂起当前线程。
+     *
+     * <p><b>Stack</b>：入参 {@code (ns:long)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：让当前线程挂起指定的纳秒数（尽量靠近请求的时长，但不保证精确到每个纳秒）。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：被中断时可能抛出 {@link InterruptedException}（或以实现定义的方式报告中断）；调用者应处理或恢复中断状态。</p>
+     */
     public static final int NANOSLEEP = 0x1701;
+
+    /**
+     * 兼容式获取当前时间（秒 + 微秒 部分）。
+     *
+     * <p><b>Stack</b>：入参 {@code ()} → 出参 {@code (sec:long, usec:int)}</p>
+     * <p><b>语义</b>：返回自 Unix 纪元（1970-01-01T00:00:00Z）以来的秒数（{@code sec}）和当前秒内的微秒部分（{@code usec}, 0..999_999）。</p>
+     * <p><b>返回</b>：成功返回两个值：{@code sec:long} 和 {@code usec:int}（注意压栈顺序由实现约定）。</p>
+     * <p><b>异常</b>：通常不抛出异常，但实现可能在极特殊环境下抛出运行时异常。</p>
+     */
     public static final int TIMEOFDAY = 0x1702;
+
+    /**
+     * 获取单调时钟的毫秒数（用于计时/测量）。
+     *
+     * <p><b>Stack</b>：入参 {@code ()} → 出参 {@code (ms:long)}</p>
+     * <p><b>语义</b>：返回一个单调时间的毫秒表示（例如基于 {@code System.nanoTime()} 的转换），适合计算时间间隔；该值不是绝对墙钟时间，可能没有固定的参考起点。</p>
+     * <p><b>返回</b>：成功返回单调毫秒数 {@code (long)}。</p>
+     * <p><b>异常</b>：通常不抛出异常。</p>
+     */
     public static final int TICK_MS = 0x1703;
+
 
     // ================= 数组操作 (0x1800 – 0x18FF) =================
     public static final int ARR_LOAD = 0x1800;

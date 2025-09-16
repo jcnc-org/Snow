@@ -10,6 +10,8 @@ public class TickMsHandler implements SyscallHandler {
     public void handle(OperandStack stack,
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
-        // TODO: 实现 TICK_MS () -> ms:long
+        // 使用单调时钟（System.nanoTime）转换为毫秒，避免受系统时间调整影响
+        long ms = System.nanoTime() / 1_000_000L;
+        stack.push(ms);
     }
 }
