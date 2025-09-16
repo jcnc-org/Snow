@@ -1,7 +1,5 @@
 package org.jcnc.snow.vm.engine;
 
-import java.util.Stack;
-
 /**
  * SyscallOpCode —— 系统调用操作码表
  */
@@ -179,7 +177,7 @@ public final class SyscallOpCode {
      *
      * <p><b>Stack</b>：入参 {@code (path:String, mode:int?)} → 出参 {@code (rc:int)}</p>
      * <p><b>语义</b>：在 {@code path} 处创建目录；{@code mode} 如未提供可由实现采用默认权限。
-     *   在不支持 POSIX 权限的平台上，{@code mode} 可能被忽略或部分生效。</p>
+     * 在不支持 POSIX 权限的平台上，{@code mode} 可能被忽略或部分生效。</p>
      * <p><b>返回</b>：成功返回 {@code 0}。</p>
      * <p><b>异常</b>：路径非法/已存在/父目录不存在/权限不足，I/O 失败。</p>
      */
@@ -219,7 +217,7 @@ public final class SyscallOpCode {
      *
      * <p><b>Stack</b>：入参 {@code (path:String)} → 出参 {@code (entries:Array)}</p>
      * <p><b>语义</b>：返回 {@code path} 下的直接子项列表（非递归）。实现可返回字符串数组（文件/目录名），
-     *   或返回包含名称/类型等字段的条目对象数组。</p>
+     * 或返回包含名称/类型等字段的条目对象数组。</p>
      * <p><b>异常</b>：路径不存在/非目录/不可读，I/O 失败。</p>
      */
     public static final int READDIR = 0x1104;
@@ -250,7 +248,7 @@ public final class SyscallOpCode {
      * <p><b>Stack</b>：入参 {@code (path:String, mtime:long, atime:long)} → 出参 {@code (rc:int)}</p>
      * <p><b>单位</b>：毫秒时间戳（自 Epoch）。</p>
      * <p><b>语义</b>：将 {@code path} 的修改时间设为 {@code mtime}，访问时间设为 {@code atime}。
-     *   在部分平台/运行时可能仅支持修改时间（atime 可能被忽略）。</p>
+     * 在部分平台/运行时可能仅支持修改时间（atime 可能被忽略）。</p>
      * <p><b>返回</b>：成功返回 {@code 0}。</p>
      * <p><b>异常</b>：路径不存在/权限不足/时间值非法，I/O 失败。</p>
      */
@@ -537,15 +535,96 @@ public final class SyscallOpCode {
 
 
     // ================= 进程 & 线程 (0x1500 – 0x15FF) =================
+    /**
+     * 结束当前进程/线程。
+     *
+     * <p><b>Stack</b>：入参 {@code (code:int)} → 出参 —</p>
+     * <p><b>语义</b>：终止当前进程，退出码为 {@code code}。</p>
+     * <p><b>返回</b>：无（不会返回）。</p>
+     * <p><b>异常</b>：调用环境可能抛出 VM 终止异常。</p>
+     */
     public static final int EXIT = 0x1500;
+
+    /**
+     * 分叉当前进程。
+     *
+     * <p><b>Stack</b>：入参 — → 出参 {@code (pid:int)}</p>
+     * <p><b>语义</b>：复制当前进程上下文，生成子进程。</p>
+     * <p><b>返回</b>：在子进程中返回 {@code 0}，在父进程中返回子进程 pid。</p>
+     * <p><b>异常</b>：进程创建失败、资源不足。</p>
+     */
     public static final int FORK = 0x1501;
+
+    /**
+     * 执行映像替换。
+     *
+     * <p><b>Stack</b>：入参 {@code (path:String, argv:List, env:Map?)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：用指定的程序映像替换当前进程。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}，通常不会返回（进程映像被替换）。</p>
+     * <p><b>异常</b>：路径不存在、权限不足、执行失败。</p>
+     */
     public static final int EXEC = 0x1502;
+
+    /**
+     * 等待子进程结束。
+     *
+     * <p><b>Stack</b>：入参 {@code (pid:int?)} → 出参 {@code (status:int)}</p>
+     * <p><b>语义</b>：阻塞等待子进程退出。</p>
+     * <p><b>返回</b>：子进程的退出状态码。</p>
+     * <p><b>异常</b>：进程不存在、无子进程、等待失败。</p>
+     */
     public static final int WAIT = 0x1503;
+
+    /**
+     * 获取当前进程号。
+     *
+     * <p><b>Stack</b>：入参 — → 出参 {@code (pid:int)}</p>
+     * <p><b>语义</b>：返回当前进程的标识符。</p>
+     * <p><b>返回</b>：当前进程 pid。</p>
+     * <p><b>异常</b>：无。</p>
+     */
     public static final int GETPID = 0x1504;
+
+    /**
+     * 获取父进程号。
+     *
+     * <p><b>Stack</b>：入参 — → 出参 {@code (ppid:int)}</p>
+     * <p><b>语义</b>：返回当前进程的父进程标识符。</p>
+     * <p><b>返回</b>：父进程 pid。</p>
+     * <p><b>异常</b>：无。</p>
+     */
     public static final int GETPPID = 0x1505;
+
+    /**
+     * 创建线程。
+     *
+     * <p><b>Stack</b>：入参 {@code (entry:fn/ptr, arg:any)} → 出参 {@code (tid:int)}</p>
+     * <p><b>语义</b>：创建一个新线程，并在线程中执行 {@code entry}。</p>
+     * <p><b>返回</b>：新线程的线程 ID。</p>
+     * <p><b>异常</b>：线程创建失败、资源不足。</p>
+     */
     public static final int THREAD_CREATE = 0x1506;
+
+    /**
+     * 等待线程结束。
+     *
+     * <p><b>Stack</b>：入参 {@code (tid:int)} → 出参 {@code (retval:any?)}</p>
+     * <p><b>语义</b>：阻塞等待指定线程退出，并获取其返回值。</p>
+     * <p><b>返回</b>：线程的返回值，可能为 {@code null}。</p>
+     * <p><b>异常</b>：线程不存在、已结束或 join 失败。</p>
+     */
     public static final int THREAD_JOIN = 0x1507;
+
+    /**
+     * 休眠当前线程。
+     *
+     * <p><b>Stack</b>：入参 {@code (ms:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：让当前线程挂起指定毫秒数。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：被中断时可能抛出异常。</p>
+     */
     public static final int SLEEP = 0x1508;
+
 
     // ================= 并发原语 (0x1600 – 0x16FF) =================
     public static final int MUTEX_NEW = 0x1600;
@@ -577,12 +656,88 @@ public final class SyscallOpCode {
     public static final int ARR_SET = 0x1803;
 
     // ================= 系统信息 (0x1900 – 0x19FF) =================
+    /**
+     * 获取环境变量的值。
+     *
+     * <p><b>Stack</b>：入参 {@code (key:string)} → 出参 {@code (val:string?)}。</p>
+     * <p><b>语义</b>：根据指定的环境变量名 {@code key} 返回对应的值。</p>
+     * <p><b>返回</b>：若变量存在则返回其字符串值；若不存在则返回 {@code null}（调用方需能处理 {@code null}）。</p>
+     * <p><b>异常</b>：当栈为空或参数类型不符合预期时可能抛出 {@link IllegalStateException}/{@link IllegalArgumentException}。</p>
+     */
     public static final int GETENV = 0x1900;
+
+    /**
+     * 设置或删除环境变量（仅影响子进程环境）。
+     *
+     * <p><b>Stack</b>：入参 {@code (key:string, val:string?, overwrite:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：
+     * 将环境变量 {@code key} 设置为 {@code val}（当 {@code val} 为 {@code null} 时删除该变量）。
+     * 参数 {@code overwrite} 为 {@code 1} 表示强制覆盖已存在的变量；为 {@code 0} 表示若变量已存在则不修改。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。当 {@code overwrite==0} 且变量已存在时也返回 {@code 0}（未修改）。</p>
+     * <p><b>异常</b>：参数缺失、类型错误或 {@code overwrite} 非 {@code 0}/{@code 1} 时可能抛出 {@link IllegalStateException}/{@link IllegalArgumentException}。</p>
+     * <p><b>注意</b>：实现使用 {@link ProcessBuilder#environment()}，因此只影响由 JVM 启动的子进程，不保证修改全局或当前 JVM 的环境变量。</p>
+     */
     public static final int SETENV = 0x1901;
+
+    /**
+     * 返回逻辑处理器（CPU）数量。
+     *
+     * <p><b>Stack</b>：入参 {@code ()} → 出参 {@code (n:int)}</p>
+     * <p><b>语义</b>：返回运行时可用的逻辑处理器数（等同于 {@code Runtime.getRuntime().availableProcessors()}）。</p>
+     * <p><b>返回</b>：成功返回一个非负整数 {@code n}。</p>
+     * <p><b>异常</b>：正常情况下不抛出异常；底层平台极端故障时可能抛出运行时异常。</p>
+     */
     public static final int NCPU = 0x1902;
+
+    /**
+     * 生成指定长度的随机字节数组。
+     *
+     * <p><b>Stack</b>：入参 {@code (n:int)} → 出参 {@code (bytes:byte[])}</p>
+     * <p><b>语义</b>：生成长度为 {@code n} 的随机字节数组并返回，使用安全随机数生成器（{@link java.security.SecureRandom}）。</p>
+     * <p><b>返回</b>：成功返回长度为 {@code n} 的 {@code byte[]}；当 {@code n==0} 返回空数组。</p>
+     * <p><b>异常</b>：若参数缺失、为 {@code null}、无法解析为整数、为负数、或超过允许的最大值（实现中默认上限为 10_000_000）时，会抛出 {@link IllegalStateException} 或 {@link IllegalArgumentException}。</p>
+     * <p><b>注意</b>：为避免 OOM，调用方应避免请求过大的 {@code n}；实现可能对最大可请求字节数设定限制。</p>
+     */
     public static final int RANDOM_BYTES = 0x1903;
+
+    /**
+     * 获取最近一次系统调用的错误字符串（errstr）。
+     *
+     * <p><b>Stack</b>：入参 {@code ()} → 出参 {@code (errstr:string)}</p>
+     * <p><b>语义</b>：将最近一次系统调用产生的错误信息字符串压入栈顶。</p>
+     * <p><b>返回</b>：若最近一次系统调用没有错误，则返回空字符串 {@code ""}；否则返回错误信息文本。</p>
+     * <p><b>异常</b>：正常情况下不抛出异常；若底层错误信息读取失败可能抛出运行时异常。</p>
+     */
     public static final int ERRSTR = 0x1904;
+
+    /**
+     * 获取最近一次系统调用的 errno（错误码）。
+     *
+     * <p><b>Stack</b>：入参 {@code ()} → 出参 {@code (errno:int)}</p>
+     * <p><b>语义</b>：将最近一次系统调用对应的整数错误码压入栈顶。</p>
+     * <p><b>返回</b>：无错误时返回 {@code 0}；非零值表示具体错误码（语义由上层/平台定义）。</p>
+     * <p><b>异常</b>：正常情况下不抛出异常；若读取 errno 失败可能抛出运行时异常。</p>
+     */
     public static final int ERRNO = 0x1905;
+
+    /**
+     * 获取内存与系统资源信息。
+     *
+     * <p><b>Stack</b>：入参 {@code ()} → 出参 {@code (map:Map<String,Object>)}</p>
+     * <p><b>语义</b>：收集 JVM 堆内存信息以及在可用时的操作系统物理内存 / CPU 负载等指标，返回为键值映射。</p>
+     * <p><b>返回（典型键）</b>：
+     * <ul>
+     *   <li>{@code "heapTotal"}: JVM 堆已分配总字节数（long）</li>
+     *   <li>{@code "heapFree"}: JVM 堆空闲字节数（long）</li>
+     *   <li>{@code "heapUsed"}: JVM 堆已使用字节数（long）</li>
+     *   <li>{@code "heapMax"}: JVM 堆最大可用字节数（long）</li>
+     *   <li>{@code "physicalTotal"}: 物理内存总量（long，平台可用时提供）</li>
+     *   <li>{@code "physicalFree"}: 物理内存空闲量（long，平台可用时提供）</li>
+     *   <li>{@code "physicalUsed"}: 物理内存已用量（long，平台可用时提供）</li>
+     * </ul>
+     * </p>
+     * <p><b>异常</b>：收集平台级指标时若遇到权限或平台差异，处理器会忽略这些额外项并仍返回 JVM heap 信息；因此通常不会向上抛出异常。</p>
+     */
     public static final int MEMINFO = 0x1906;
 
     private SyscallOpCode() {
