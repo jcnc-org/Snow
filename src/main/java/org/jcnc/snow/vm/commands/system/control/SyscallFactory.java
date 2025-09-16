@@ -7,10 +7,7 @@ import org.jcnc.snow.vm.commands.system.control.array.ArrStoreHandler;
 import org.jcnc.snow.vm.commands.system.control.console.*;
 import org.jcnc.snow.vm.commands.system.control.fd.*;
 import org.jcnc.snow.vm.commands.system.control.fs.*;
-import org.jcnc.snow.vm.commands.system.control.multiplex.EpollCreateHandler;
-import org.jcnc.snow.vm.commands.system.control.multiplex.EpollCtlHandler;
-import org.jcnc.snow.vm.commands.system.control.multiplex.EpollWaitHandler;
-import org.jcnc.snow.vm.commands.system.control.multiplex.SelectHandler;
+import org.jcnc.snow.vm.commands.system.control.multiplex.*;
 import org.jcnc.snow.vm.commands.system.control.process.*;
 import org.jcnc.snow.vm.commands.system.control.socket.*;
 import org.jcnc.snow.vm.commands.system.control.sync.*;
@@ -75,6 +72,8 @@ public final class SyscallFactory {
         SYSCALLS[SyscallOpCode.EPOLL_CREATE] = new EpollCreateHandler();
         SYSCALLS[SyscallOpCode.EPOLL_CTL] = new EpollCtlHandler();
         SYSCALLS[SyscallOpCode.EPOLL_WAIT] = new EpollWaitHandler();
+        SYSCALLS[SyscallOpCode.IO_WAIT] = new IoWaitHandler();
+
 
         // ================= 套接字 & 网络 =================
         SYSCALLS[SyscallOpCode.SOCKET] = new SocketHandler();

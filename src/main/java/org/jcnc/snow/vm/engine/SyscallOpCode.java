@@ -263,7 +263,7 @@ public final class SyscallOpCode {
      * 将对象内容输出到标准输出（不自动换行）。
      *
      * <p><b>Stack</b>：入参 {@code (obj:Object)} → 出参 {@code (rc:int)}</p>
-     * <p><b>语义</b>：从操作数栈弹出一个对象，通过 {@link SyscallUtils#output(Object, boolean)}
+     * <p><b>语义</b>：从操作数栈弹出一个对象，通过 SyscallUtil
      * 方法将其打印到标准输出流（不附加换行）。</p>
      * <p><b>返回</b>：成功时返回 {@code 0}。</p>
      * <p><b>异常</b>：若对象输出过程发生错误（例如 I/O 异常），抛出对应异常。</p>
@@ -273,7 +273,7 @@ public final class SyscallOpCode {
      * 将对象内容输出到标准输出，并在末尾附加换行。
      *
      * <p><b>Stack</b>：入参 {@code (obj:Object)} → 出参 {@code (rc:int)}</p>
-     * <p><b>语义</b>：从操作数栈弹出一个对象，通过 {@link SyscallUtils#output(Object, boolean)}
+     * <p><b>语义</b>：从操作数栈弹出一个对象，通过 SyscallUtil
      * 方法将其打印到标准输出流，并在输出后自动追加换行。</p>
      * <p><b>返回</b>：成功时返回 {@code 0}。</p>
      * <p><b>异常</b>：若对象输出过程发生错误（例如 I/O 异常），抛出对应异常。</p>
@@ -309,11 +309,80 @@ public final class SyscallOpCode {
     public static final int STDERR_WRITE = 0x1204;
 
     // ================= 多路复用 (0x1300 – 0x13FF) =================
+    /**
+     * I/O 多路复用 select。
+     *
+     * <p><b>Stack</b>：入参 {@code (readSet:array, writeSet:array, exceptSet:array, timeout_ms:int)}
+     * → 出参 {@code (ready:map)}</p>
+     *
+     * <p><b>语义</b>：检查给定 fd 集合的可读、可写及异常状态，返回各类就绪 fd。
+     * 结果 map 至少包含键 {@code read}、{@code write}、{@code except}。</p>
+     *
+     * <p><b>返回</b>：成功返回 map，其中的值为就绪 fd 列表。</p>
+     *
+     * <p><b>异常</b>：参数类型错误，timeout 非法，或底层 I/O 失败。</p>
+     */
     public static final int SELECT = 0x1300;
+
+    /**
+     * 创建 epoll 实例。
+     *
+     * <p><b>Stack</b>：入参 {@code (flags:int?)} → 出参 {@code (epfd:int)}</p>
+     *
+     * <p><b>语义</b>：分配一个新的 epoll 文件描述符（epfd），并在内部注册 epoll 实例。</p>
+     *
+     * <p><b>返回</b>：成功返回新的 epfd。</p>
+     *
+     * <p><b>异常</b>：flags 非法，资源不足，或底层 I/O 错误。</p>
+     */
     public static final int EPOLL_CREATE = 0x1301;
+
+    /**
+     * 管理 epoll 监控项。
+     *
+     * <p><b>Stack</b>：入参 {@code (epfd:int, op:int, fd:int, events:int)} → 出参 {@code (rc:int)}</p>
+     *
+     * <p><b>语义</b>：
+     * <ul>
+     *   <li>op=1 (ADD)：将 fd 添加到 epoll 并关注指定事件</li>
+     *   <li>op=2 (MOD)：修改已存在 fd 的事件掩码</li>
+     *   <li>op=3 (DEL)：移除 fd 的监控</li>
+     * </ul></p>
+     *
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     *
+     * <p><b>异常</b>：epfd 无效，op 非法，fd 未注册 (MOD/DEL)，或底层 I/O 错误。</p>
+     */
     public static final int EPOLL_CTL = 0x1302;
+
+    /**
+     * 等待 epoll 事件。
+     *
+     * <p><b>Stack</b>：入参 {@code (epfd:int, max:int, timeout_ms:int)} → 出参 {@code (events:array)}</p>
+     *
+     * <p><b>语义</b>：从 epoll 实例中获取就绪事件，返回不超过 {@code max} 个。
+     * 数组元素为 {@code {fd:int, events:int}} 的 map。</p>
+     *
+     * <p><b>返回</b>：就绪事件数组。</p>
+     *
+     * <p><b>异常</b>：epfd 无效，max 非法，或底层 I/O 错误。</p>
+     */
     public static final int EPOLL_WAIT = 0x1303;
+
+    /**
+     * 跨平台 I/O 多路等待。
+     *
+     * <p><b>Stack</b>：入参 {@code (fds:array(fd,events), timeout_ms:int)} → 出参 {@code (events:array)}</p>
+     *
+     * <p><b>语义</b>：对指定的 fd 集合等待事件，可由底层封装到 select/epoll/poll。
+     * 返回数组元素为 {@code {fd:int, events:int}} 的 map。</p>
+     *
+     * <p><b>返回</b>：就绪事件数组。</p>
+     *
+     * <p><b>异常</b>：fds 参数非法，timeout 非法，或底层 I/O 错误。</p>
+     */
     public static final int IO_WAIT = 0x1304;
+
 
     // ================= 套接字 & 网络 (0x1400 – 0x14FF) =================
     public static final int SOCKET = 0x1400;
