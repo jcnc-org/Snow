@@ -10,7 +10,38 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.channels.SocketChannel;
 
+/**
+ * {@code GetPeerNameHandler} 实现 GETPEERNAME (0x1405) 系统调用，
+ * 用于获取 socket 对端（远端）的地址和端口。
+ *
+ * <p><b>Stack</b>：入参 {@code (fd:int)} → 出参 {@code (addr:String, port:int)}</p>
+ *
+ * <p><b>语义</b>：返回与 fd 对应的 SocketChannel 的远端 IP 和端口。</p>
+ *
+ * <p><b>返回</b>：
+ * <ul>
+ *   <li>addr：对端 IP 地址（String）</li>
+ *   <li>port：对端端口号（int）</li>
+ * </ul>
+ * </p>
+ *
+ * <p><b>异常</b>：
+ * <ul>
+ *   <li>fd 无效时抛出 {@link IllegalArgumentException}</li>
+ *   <li>socket 未连接或获取不到对端地址时抛出 {@link IllegalStateException}</li>
+ * </ul>
+ * </p>
+ */
 public class GetPeerNameHandler implements SyscallHandler {
+
+    /**
+     * 处理 GETPEERNAME 调用。
+     *
+     * @param stack     操作数栈，提供 socket fd，返回对端地址和端口
+     * @param locals    局部变量存储器（未使用）
+     * @param callStack 调用栈（未使用）
+     * @throws Exception fd 无效或 socket 未连接时抛出
+     */
     @Override
     public void handle(OperandStack stack,
                        LocalVariableStore locals,
@@ -27,11 +58,10 @@ public class GetPeerNameHandler implements SyscallHandler {
 
         // 3. 获取对端地址
         SocketAddress remote = channel.getRemoteAddress();
-        if (!(remote instanceof InetSocketAddress)) {
+        if (!(remote instanceof InetSocketAddress inet)) {
             throw new IllegalStateException("Socket is not connected or remote address unavailable");
         }
 
-        InetSocketAddress inet = (InetSocketAddress) remote;
         String addr = inet.getAddress().getHostAddress();
         int port = inet.getPort();
 

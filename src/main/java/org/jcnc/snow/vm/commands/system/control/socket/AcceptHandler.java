@@ -11,7 +11,39 @@ import java.net.SocketAddress;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
+/**
+ * {@code AcceptHandler} 实现 ACCEPT (0x1403) 系统调用，
+ * 用于接受一个传入的 socket 连接。
+ *
+ * <p><b>Stack</b>：入参 {@code (fd:int)} → 出参 {@code (cfd:int, addr:String, port:int)}</p>
+ *
+ * <p><b>语义</b>：阻塞等待并接受传入连接，返回新连接 fd、对端地址和端口。</p>
+ *
+ * <p><b>返回</b>：
+ * <ul>
+ *   <li>cfd：新连接的 socket fd</li>
+ *   <li>addr：对端 IP 地址（String）</li>
+ *   <li>port：对端端口号（int）</li>
+ * </ul>
+ * </p>
+ *
+ * <p><b>异常</b>：
+ * <ul>
+ *   <li>fd 无效时抛出 {@link IllegalArgumentException}</li>
+ *   <li>accept 失败或返回 null 时抛出 {@link RuntimeException}</li>
+ * </ul>
+ * </p>
+ */
 public class AcceptHandler implements SyscallHandler {
+
+    /**
+     * 处理 ACCEPT 调用。
+     *
+     * @param stack     操作数栈，提供 server fd，并返回新连接 fd、地址、端口
+     * @param locals    局部变量存储器（未使用）
+     * @param callStack 调用栈（未使用）
+     * @throws Exception fd 无效或 accept 失败时抛出
+     */
     @Override
     public void handle(OperandStack stack,
                        LocalVariableStore locals,

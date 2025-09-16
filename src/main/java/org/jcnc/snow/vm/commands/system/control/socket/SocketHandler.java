@@ -8,16 +8,35 @@ import org.jcnc.snow.vm.module.OperandStack;
 
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
 
+import static org.jcnc.snow.vm.io.SocketConstants.*;
+
+/**
+ * {@code SocketHandler} 实现 SOCKET (0x1400) 系统调用，
+ * 用于创建 TCP/UDP socket，并返回 socket 文件描述符。
+ *
+ * <p><b>Stack</b>：入参 {@code (family:int, type:int, proto:int)} → 出参 {@code (fd:int)}</p>
+ *
+ * <p><b>语义</b>：根据协议族 family、类型 type 创建新的 socket，并返回 fd。</p>
+ *
+ * <p><b>返回</b>：新分配的 socket fd（int）。</p>
+ *
+ * <p><b>异常</b>：
+ * <ul>
+ *   <li>family 或 type 不支持时抛出 {@link UnsupportedOperationException}</li>
+ *   <li>创建 socket 失败时抛出 {@link java.io.IOException}</li>
+ * </ul>
+ * </p>
+ */
 public class SocketHandler implements SyscallHandler {
-    // 常量定义 (可在全局常量表里维护)
-    private static final int AF_INET = 2;
-    private static final int AF_INET6 = 10;
-
-    private static final int SOCK_STREAM = 1;
-    private static final int SOCK_DGRAM  = 2;
-
+    /**
+     * 处理 SOCKET 调用。
+     *
+     * @param stack     操作数栈，依次提供 family、type、proto
+     * @param locals    局部变量存储器（未使用）
+     * @param callStack 调用栈（未使用）
+     * @throws Exception 参数非法或创建失败时抛出
+     */
     @Override
     public void handle(OperandStack stack,
                        LocalVariableStore locals,
@@ -37,8 +56,7 @@ public class SocketHandler implements SyscallHandler {
 
         // 3. 根据 type 创建不同的 Channel
         if (type == SOCK_STREAM) {
-            // TCP：既可能是客户端 socket，也可能是服务端 socket
-            // 这里默认创建 ServerSocketChannel 供 bind/listen/accept 使用
+            // TCP（默认创建 ServerSocketChannel，供 bind/listen/accept 使用）
             ServerSocketChannel server = ServerSocketChannel.open();
             server.configureBlocking(true);
             fd = SocketRegistry.register(server);

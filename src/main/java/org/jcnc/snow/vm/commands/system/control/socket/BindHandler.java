@@ -9,7 +9,33 @@ import org.jcnc.snow.vm.module.OperandStack;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
 
+/**
+ * {@code BindHandler} 实现 BIND (0x1401) 系统调用，
+ * 用于绑定 socket 到指定的地址和端口。
+ *
+ * <p><b>Stack</b>：入参 {@code (fd:int, addr:String, port:int)} → 出参 {@code (0:int)}</p>
+ *
+ * <p><b>语义</b>：将 fd 指定的 ServerSocketChannel 绑定到 addr:port。</p>
+ *
+ * <p><b>返回</b>：始终返回 0。</p>
+ *
+ * <p><b>异常</b>：
+ * <ul>
+ *   <li>fd 无效时抛出 {@link IllegalArgumentException}</li>
+ *   <li>绑定失败时抛出 {@link java.io.IOException}</li>
+ * </ul>
+ * </p>
+ */
 public class BindHandler implements SyscallHandler {
+
+    /**
+     * 处理 BIND 调用。
+     *
+     * @param stack     操作数栈，依次提供 fd、addr、port
+     * @param locals    局部变量存储器（未使用）
+     * @param callStack 调用栈（未使用）
+     * @throws Exception fd 无效或绑定失败时抛出
+     */
     @Override
     public void handle(OperandStack stack,
                        LocalVariableStore locals,

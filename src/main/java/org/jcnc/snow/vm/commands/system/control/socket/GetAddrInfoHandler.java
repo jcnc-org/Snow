@@ -8,7 +8,33 @@ import org.jcnc.snow.vm.module.OperandStack;
 import java.net.InetAddress;
 import java.util.*;
 
+/**
+ * {@code GetAddrInfoHandler} 实现 GETADDRINFO (0x1404) 系统调用，
+ * 用于解析主机名和服务端口，返回可用于 socket 连接的地址列表。
+ *
+ * <p><b>Stack</b>：入参 {@code (host:String, service:String, hints:any?)} → 出参 {@code (List<Map<String,Object>>)}</p>
+ *
+ * <p><b>语义</b>：将 host/service 解析为一组 {addr, port, family} 的地址对象列表。</p>
+ *
+ * <p><b>返回</b>：地址信息数组，每个元素为 Map，包含 "addr"、"port"、"family" 字段。</p>
+ *
+ * <p><b>异常</b>：
+ * <ul>
+ *   <li>service 端口无效时抛出 {@link IllegalArgumentException}</li>
+ *   <li>host 解析失败时抛出 {@link java.net.UnknownHostException}</li>
+ * </ul>
+ * </p>
+ */
 public class GetAddrInfoHandler implements SyscallHandler {
+
+    /**
+     * 处理 GETADDRINFO 调用。
+     *
+     * @param stack     操作数栈，依次提供 host、service、hints
+     * @param locals    局部变量存储器（未使用）
+     * @param callStack 调用栈（未使用）
+     * @throws Exception 参数无效或主机解析失败时抛出
+     */
     @Override
     public void handle(OperandStack stack,
                        LocalVariableStore locals,
