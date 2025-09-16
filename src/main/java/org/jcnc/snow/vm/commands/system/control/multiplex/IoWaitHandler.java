@@ -25,7 +25,6 @@ import java.util.Map;
 public class IoWaitHandler implements SyscallHandler {
 
     @Override
-    @SuppressWarnings("unchecked")
     public void handle(OperandStack stack,
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
