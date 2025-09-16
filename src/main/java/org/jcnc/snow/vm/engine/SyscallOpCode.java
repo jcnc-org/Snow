@@ -385,21 +385,156 @@ public final class SyscallOpCode {
 
 
     // ================= 套接字 & 网络 (0x1400 – 0x14FF) =================
+    /**
+     * 创建一个新的套接字。
+     *
+     * <p><b>Stack</b>：入参 {@code (family:int, type:int, proto:int)} → 出参 {@code (fd:int)}</p>
+     * <p><b>语义</b>：创建指定协议族、类型、协议的 socket，并返回文件描述符。</p>
+     * <p><b>返回</b>：成功返回 {@code fd}。</p>
+     * <p><b>异常</b>：协议族/类型不支持，资源不足。</p>
+     */
     public static final int SOCKET = 0x1400;
+
+    /**
+     * 绑定套接字到本地地址和端口。
+     *
+     * <p><b>Stack</b>：入参 {@code (fd:int, addr:String, port:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：将套接字与指定地址/端口绑定。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：地址被占用、权限不足、套接字无效。</p>
+     */
     public static final int BIND = 0x1401;
+
+    /**
+     * 监听套接字上的连接请求。
+     *
+     * <p><b>Stack</b>：入参 {@code (fd:int, backlog:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：将绑定的套接字置为监听状态，backlog 指定队列长度。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：套接字未绑定、类型错误。</p>
+     */
     public static final int LISTEN = 0x1402;
+
+    /**
+     * 接受客户端连接。
+     *
+     * <p><b>Stack</b>：入参 {@code (fd:int)} → 出参 {@code (cfd:int, addr:String, port:int)}</p>
+     * <p><b>语义</b>：在监听套接字上接受一个新的连接，返回新套接字和对端地址。</p>
+     * <p><b>返回</b>：新连接的文件描述符。</p>
+     * <p><b>异常</b>：无连接可接受、I/O 失败。</p>
+     */
     public static final int ACCEPT = 0x1403;
+
+    /**
+     * 主动连接远程套接字。
+     *
+     * <p><b>Stack</b>：入参 {@code (fd:int, addr:String, port:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：将套接字连接到指定的远端主机和端口。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：地址不可达、连接被拒绝、超时。</p>
+     */
     public static final int CONNECT = 0x1404;
+
+    /**
+     * 在流式套接字上发送数据。
+     *
+     * <p><b>Stack</b>：入参 {@code (fd:int, data:byte[]/String)} → 出参 {@code (n:int)}</p>
+     * <p><b>语义</b>：向已连接的套接字写入数据。</p>
+     * <p><b>返回</b>：实际写入的字节数。</p>
+     * <p><b>异常</b>：套接字未连接、对端关闭、I/O 失败。</p>
+     */
     public static final int SEND = 0x1405;
+
+    /**
+     * 从流式套接字接收数据。
+     *
+     * <p><b>Stack</b>：入参 {@code (fd:int, n:int)} → 出参 {@code (bytes:byte[])}</p>
+     * <p><b>语义</b>：从套接字读取至多 n 字节数据。</p>
+     * <p><b>返回</b>：接收的数据字节数组。</p>
+     * <p><b>异常</b>：套接字未连接、对端关闭、I/O 失败。</p>
+     */
     public static final int RECV = 0x1406;
+
+    /**
+     * 在无连接套接字上发送数据。
+     *
+     * <p><b>Stack</b>：入参 {@code (fd:int, data:any, addr:String, port:int)} → 出参 {@code (n:int)}</p>
+     * <p><b>语义</b>：向指定地址/端口发送一个 UDP 报文。</p>
+     * <p><b>返回</b>：实际发送的字节数。</p>
+     * <p><b>异常</b>：套接字未绑定、I/O 失败。</p>
+     */
     public static final int SENDTO = 0x1407;
+
+    /**
+     * 从无连接套接字接收数据。
+     *
+     * <p><b>Stack</b>：入参 {@code (fd:int, n:int)} → 出参 {@code (bytes:byte[], addr:String, port:int)}</p>
+     * <p><b>语义</b>：接收一个 UDP 报文，返回数据和来源地址。</p>
+     * <p><b>返回</b>：接收到的数据及对端信息。</p>
+     * <p><b>异常</b>：I/O 失败。</p>
+     */
     public static final int RECVFROM = 0x1408;
+
+    /**
+     * 关闭套接字的读/写方向。
+     *
+     * <p><b>Stack</b>：入参 {@code (fd:int, how:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：根据 how 值关闭输入、输出或双向。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：套接字无效、I/O 失败。</p>
+     */
     public static final int SHUTDOWN = 0x1409;
+
+    /**
+     * 设置套接字选项。
+     *
+     * <p><b>Stack</b>：入参 {@code (fd:int, level:int, opt:int, value:any)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：修改套接字的控制选项，如缓冲区大小、TCP_NODELAY 等。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：选项不支持、值非法。</p>
+     */
     public static final int SETSOCKOPT = 0x140A;
+
+    /**
+     * 获取套接字选项。
+     *
+     * <p><b>Stack</b>：入参 {@code (fd:int, level:int, opt:int)} → 出参 {@code (value:any)}</p>
+     * <p><b>语义</b>：读取套接字的控制选项值。</p>
+     * <p><b>返回</b>：选项的当前值。</p>
+     * <p><b>异常</b>：选项不支持、套接字无效。</p>
+     */
     public static final int GETSOCKOPT = 0x140B;
+
+    /**
+     * 获取套接字对端地址。
+     *
+     * <p><b>Stack</b>：入参 {@code (fd:int)} → 出参 {@code (addr:String, port:int)}</p>
+     * <p><b>语义</b>：返回连接的远程主机地址与端口。</p>
+     * <p><b>返回</b>：对端地址和端口。</p>
+     * <p><b>异常</b>：套接字未连接、I/O 失败。</p>
+     */
     public static final int GETPEERNAME = 0x140C;
+
+    /**
+     * 获取套接字本地地址。
+     *
+     * <p><b>Stack</b>：入参 {@code (fd:int)} → 出参 {@code (addr:String, port:int)}</p>
+     * <p><b>语义</b>：返回套接字绑定的本地地址与端口。</p>
+     * <p><b>返回</b>：本端地址和端口。</p>
+     * <p><b>异常</b>：套接字未绑定、I/O 失败。</p>
+     */
     public static final int GETSOCKNAME = 0x140D;
+
+    /**
+     * 解析主机名和服务名为地址信息。
+     *
+     * <p><b>Stack</b>：入参 {@code (host:String, service:String, hints:Map?)} → 出参 {@code (results:List)}</p>
+     * <p><b>语义</b>：执行 DNS 解析，返回可用的地址列表。</p>
+     * <p><b>返回</b>：地址数组，每项包含 addr、port、family 等。</p>
+     * <p><b>异常</b>：主机未知、服务非法、解析失败。</p>
+     */
     public static final int GETADDRINFO = 0x140E;
+
 
     // ================= 进程 & 线程 (0x1500 – 0x15FF) =================
     public static final int EXIT = 0x1500;
