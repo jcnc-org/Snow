@@ -5,15 +5,37 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * {@code EpollRegistry} 管理所有虚拟机中的 epoll 实例，
- * 为每个 epoll 分配唯一的 epfd。
+ * {@code EpollRegistry} 管理虚拟机中所有 epoll 实例，
+ * 负责分配唯一 epfd 并实现 epoll 实例的注册、查找与释放。
+ *
+ * <p><b>功能</b>：
+ * <ul>
+ *   <li>为每个新 epoll 分配唯一的 epfd（从 100 开始自增）</li>
+ *   <li>支持创建、获取和关闭 epoll 实例</li>
+ * </ul>
+ * </p>
+ *
+ * <p><b>实现细节</b>：
+ * <ul>
+ *   <li>内部使用线程安全的 {@link ConcurrentHashMap} 存储所有 epoll 实例</li>
+ *   <li>禁止实例化，仅提供静态方法</li>
+ * </ul>
+ * </p>
  */
 public final class EpollRegistry {
 
-    private static final AtomicInteger COUNTER = new AtomicInteger(100); // epfd 起始值
+    /**
+     * epfd 递增计数器（从 100 起始）
+     */
+    private static final AtomicInteger COUNTER = new AtomicInteger(100);
+
+    /**
+     * epfd -> EpollInstance 的全局注册表
+     */
     private static final Map<Integer, EpollInstance> REGISTRY = new ConcurrentHashMap<>();
 
     private EpollRegistry() {
+        // 禁止实例化
     }
 
     /**

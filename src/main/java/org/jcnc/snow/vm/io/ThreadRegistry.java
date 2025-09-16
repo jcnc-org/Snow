@@ -7,7 +7,7 @@ public class ThreadRegistry {
     private static final ConcurrentHashMap<Long, Object> results = new ConcurrentHashMap<>();
 
     public static void register(Thread t) {
-        threads.put(t.getId(), t);
+        threads.put(t.threadId(), t);
     }
 
     public static Thread get(long tid) {
