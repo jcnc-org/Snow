@@ -1,45 +1,311 @@
 package org.jcnc.snow.vm.engine;
 
+import java.util.Stack;
+
 /**
  * SyscallOpCode —— 系统调用操作码表
  */
 public final class SyscallOpCode {
 
     // ================= 文件 & FD (0x1000 – 0x10FF) =================
-    public static final int OPEN = 0x1000;
-    public static final int READ = 0x1001;
-    public static final int WRITE = 0x1002;
-    public static final int SEEK = 0x1003;
-    public static final int CLOSE = 0x1004;
-    public static final int STAT = 0x1005;
-    public static final int FSTAT = 0x1006;
-    public static final int UNLINK = 0x1007;
-    public static final int DUP = 0x1008;
-    public static final int DUP2 = 0x1009;
-    public static final int PIPE = 0x100A;
-    public static final int TRUNCATE = 0x100B;
-    public static final int FTRUNCATE = 0x100C;
-    public static final int RENAME = 0x100D;
-    public static final int LINK = 0x100E;
-    public static final int SYMLINK = 0x100F;
-    public static final int READLINK = 0x1010;
-    public static final int SET_NONBLOCK = 0x1011;
 
+    /**
+     * 打开文件并返回一个新的 fd。
+     *
+     * <p><b>Stack</b>：入参 {@code (path:String, flags:int)} → 出参 {@code (fd:int)}</p>
+     * <p><b>语义</b>：依据 {@code flags}（由 {@code OpenFlags} 解析为 {@code OpenOption} 集）打开
+     * {@code path} 对应的文件，底层通过 {@code Files.newByteChannel(...)} 创建通道并注册到 {@code FDTable}。</p>
+     * <p><b>异常</b>：路径/flags 类型错误，flags 非法，文件不存在且未指定创建，权限不足，或底层 I/O 失败。</p>
+     */
+    public static final int OPEN = 0x1000;
+
+    /**
+     * 从 fd 对应的可读通道读取最多 {@code length} 字节。
+     *
+     * <p><b>Stack</b>：入参 {@code (fd:int, length:int)} → 出参 {@code (data:byte[])}</p>
+     * <p><b>语义</b>：若读到 EOF 或 {@code length <= 0}，返回长度为 0 的字节数组；否则返回实际读取的字节数组。</p>
+     * <p><b>异常</b>：fd 非法/不可读，length 类型错误或为负，I/O 失败。</p>
+     */
+    public static final int READ = 0x1001;
+
+    /**
+     * 向 fd 对应的可写通道写入字节数组。
+     *
+     * <p><b>Stack</b>：入参 {@code (fd:int, data:byte[])} → 出参 {@code (written:int)}</p>
+     * <p><b>语义</b>：写入 {@code data}，返回实际写入的字节数。</p>
+     * <p><b>异常</b>：fd 非法/不可写，data 非字节数组，I/O 失败。</p>
+     */
+    public static final int WRITE = 0x1002;
+
+    /**
+     * 移动文件指针并返回新位置。
+     *
+     * <p><b>Stack</b>：入参 {@code (fd:int, offset:long, whence:int)} → 出参 {@code (newPos:long)}</p>
+     * <p><b>whence</b>：0 = 从文件开头（SEEK_SET），1 = 相对当前位置（SEEK_CUR），2 = 相对文件末尾（SEEK_END）。</p>
+     * <p><b>语义</b>：仅适用于 {@code SeekableByteChannel}。结果位置不得为负。</p>
+     * <p><b>异常</b>：fd 非法/不可定位，whence 非法，计算得到的新位置为负，I/O 失败。</p>
+     */
+    public static final int SEEK = 0x1003;
+
+    /**
+     * 关闭 fd。
+     *
+     * <p><b>Stack</b>：入参 {@code (fd:int)} → 出参：无</p>
+     * <p><b>语义</b>：关闭并从 {@code FDTable} 移除，释放底层通道。</p>
+     * <p><b>异常</b>：fd 非法。</p>
+     */
+    public static final int CLOSE = 0x1004;
+
+    /**
+     * 获取路径对应文件的基本属性。
+     *
+     * <p><b>Stack</b>：入参 {@code (path:String)} → 出参 {@code (attrs:Map)}</p>
+     * <p><b>实现</b>：通过 {@code Files.readAttributes(..., BasicFileAttributes.class)} 填充
+     * {@code size/isDirectory/isRegularFile/lastModified/created} 等键。</p>
+     * <p><b>异常</b>：路径类型错误，文件不存在，权限不足，I/O 失败。</p>
+     */
+    public static final int STAT = 0x1005;
+
+    /**
+     * 根据 fd 获取文件的基本属性。
+     *
+     * <p><b>Stack</b>：入参 {@code (fd:int)} → 出参 {@code (attrs:Map)}</p>
+     * <p><b>实现</b>：针对 {@code SeekableByteChannel}，至少提供
+     * {@code size} 与 {@code position}；如未跟踪 Path，则 {@code lastModified/created} 等可能返回占位值（-1）。</p>
+     * <p><b>异常</b>：fd 非法/不可定位，I/O 失败。</p>
+     */
+    public static final int FSTAT = 0x1006;
+
+    /**
+     * 删除路径（类似 POSIX {@code unlink}）。
+     *
+     * <p><b>Stack</b>：入参 {@code (path:String)} → 出参：无</p>
+     * <p><b>实现</b>：{@code Files.delete(path)}，若为非空目录会抛出相应异常。</p>
+     * <p><b>异常</b>：路径类型错误，目标不存在/是目录/权限不足，I/O 失败。</p>
+     */
+    public static final int UNLINK = 0x1007;
+
+    /**
+     * 复制一个已打开的 fd，返回新的 fd（指向同一底层通道）。
+     *
+     * <p><b>Stack</b>：入参 {@code (oldfd:int)} → 出参 {@code (newfd:int)}</p>
+     * <p><b>异常</b>：oldfd 非法或复制失败。</p>
+     */
+    public static final int DUP = 0x1008;
+
+    /**
+     * 将 {@code newfd} 变为 {@code oldfd} 的副本（若 {@code newfd} 已占用会先关闭），返回 {@code newfd}。
+     *
+     * <p><b>Stack</b>：入参 {@code (oldfd:int, newfd:int)} → 出参 {@code (resultFd:int)}</p>
+     * <p><b>异常</b>：oldfd 非法，newfd 非法或不可用，复制失败。</p>
+     */
+    public static final int DUP2 = 0x1009;
+
+    /**
+     * 创建匿名管道，返回一对 fd：读端与写端。
+     *
+     * <p><b>Stack</b>：入参：无 → 出参 {@code (readfd:int, writefd:int)}</p>
+     * <p><b>顺序</b>：先压入 {@code readfd}，再压入 {@code writefd}；因此调用后栈顶元素为 {@code writefd}。</p>
+     * <p><b>异常</b>：资源不足或底层 I/O 失败。</p>
+     */
+    public static final int PIPE = 0x100A;
+
+    /**
+     * 将路径对应文件截断到指定长度。
+     *
+     * <p><b>Stack</b>：入参 {@code (path:String, length:long)} → 出参：无</p>
+     * <p><b>实现</b>：以可写方式打开（必要时创建）并调用 {@code SeekableByteChannel.truncate(length)}。</p>
+     * <p><b>异常</b>：路径/长度类型错误，权限不足，I/O 失败。</p>
+     */
+    public static final int TRUNCATE = 0x100B;
+
+    /**
+     * 将 fd 对应文件截断到指定长度。
+     *
+     * <p><b>Stack</b>：入参 {@code (fd:int, length:long)} → 出参 {@code (rc:int)}</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：fd 非法/不可定位或不可写，长度非法，I/O 失败。</p>
+     */
+    public static final int FTRUNCATE = 0x100C;
+
+    /**
+     * 重命名（或移动）文件/目录；若目标存在则覆盖。
+     *
+     * <p><b>Stack</b>：入参 {@code (oldPath:String, newPath:String)} → 出参 {@code (rc:int)}</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：参数类型错误，源不存在/权限不足，I/O 失败。</p>
+     */
+    public static final int RENAME = 0x100D;
+
+    /**
+     * 创建硬链接：{@code newPath} 指向 {@code oldPath}。
+     *
+     * <p><b>Stack</b>：入参 {@code (oldPath:String, newPath:String)} → 出参 {@code (rc:int)}</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：参数类型错误，文件系统不支持硬链接，权限不足，I/O 失败。</p>
+     */
+    public static final int LINK = 0x100E;
+
+    /**
+     * 创建符号链接：在 {@code linkPath} 处创建指向 {@code target} 的 symlink。
+     *
+     * <p><b>Stack</b>：入参 {@code (target:String, linkPath:String)} → 出参 {@code (rc:int)}</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：参数类型错误，文件系统/平台限制，权限不足，I/O 失败。</p>
+     */
+    public static final int SYMLINK = 0x100F;
+
+    /**
+     * 读取符号链接的目标路径。
+     *
+     * <p><b>Stack</b>：入参 {@code (path:String)} → 出参 {@code (target:String)}</p>
+     * <p><b>异常</b>：参数类型错误，目标不是符号链接，权限不足，I/O 失败。</p>
+     */
+    public static final int READLINK = 0x1010;
+
+    /**
+     * 设置 fd 的非阻塞/阻塞模式（仅对 {@code SelectableChannel} 生效）。
+     *
+     * <p><b>Stack</b>：入参 {@code (fd:int, on:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：{@code on=1} → 设为非阻塞（{@code configureBlocking(false)}）；{@code on=0} → 阻塞。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：fd 非法或通道不支持选择器/模式配置。</p>
+     */
+    public static final int SET_NONBLOCK = 0x1011;
     // ================= 目录 & FS (0x1100 – 0x11FF) =================
+
+    /**
+     * 创建目录（可选权限位）。
+     *
+     * <p><b>Stack</b>：入参 {@code (path:String, mode:int?)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：在 {@code path} 处创建目录；{@code mode} 如未提供可由实现采用默认权限。
+     *   在不支持 POSIX 权限的平台上，{@code mode} 可能被忽略或部分生效。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：路径非法/已存在/父目录不存在/权限不足，I/O 失败。</p>
+     */
     public static final int MKDIR = 0x1100;
+
+    /**
+     * 删除空目录。
+     *
+     * <p><b>Stack</b>：入参 {@code (path:String)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：仅当目录为空时删除；非空目录应返回错误。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：路径不是目录/目录非空/不存在/权限不足，I/O 失败。</p>
+     */
     public static final int RMDIR = 0x1101;
+
+    /**
+     * 改变 VM 的当前工作目录（CWD）。
+     *
+     * <p><b>Stack</b>：入参 {@code (path:String)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：将调用上下文的 CWD 切换到 {@code path}；实现需要在 VM 运行时保存 CWD 状态。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：路径不存在/非目录/不可访问，或实现未提供 CWD 语义。</p>
+     */
     public static final int CHDIR = 0x1102;
+
+    /**
+     * 获取当前工作目录（CWD）。
+     *
+     * <p><b>Stack</b>：入参：无 → 出参 {@code (cwd:String)}</p>
+     * <p><b>语义</b>：返回 VM 保存的当前工作目录绝对路径。</p>
+     * <p><b>异常</b>：实现未提供 CWD 语义或内部状态无效。</p>
+     */
     public static final int GETCWD = 0x1103;
+
+    /**
+     * 读取目录内容。
+     *
+     * <p><b>Stack</b>：入参 {@code (path:String)} → 出参 {@code (entries:Array)}</p>
+     * <p><b>语义</b>：返回 {@code path} 下的直接子项列表（非递归）。实现可返回字符串数组（文件/目录名），
+     *   或返回包含名称/类型等字段的条目对象数组。</p>
+     * <p><b>异常</b>：路径不存在/非目录/不可读，I/O 失败。</p>
+     */
     public static final int READDIR = 0x1104;
+
+    /**
+     * 修改路径对应文件/目录的权限（平台支持受限时可部分生效或为 no-op）。
+     *
+     * <p><b>Stack</b>：入参 {@code (path:String, mode:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：将 {@code path} 的权限设置为 {@code mode}；在不支持 POSIX 权限的平台上可能退化。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：路径不存在/权限不足/模式非法，I/O 失败。</p>
+     */
     public static final int CHMOD = 0x1105;
+
+    /**
+     * 修改 fd 对应文件/目录的权限（平台支持受限时可部分生效或为 no-op）。
+     *
+     * <p><b>Stack</b>：入参 {@code (fd:int, mode:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：将 fd 指向对象的权限设置为 {@code mode}。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：fd 非法/权限不足/模式非法，I/O 失败。</p>
+     */
     public static final int FCHMOD = 0x1106;
+
+    /**
+     * 更新文件/目录的访问与修改时间。
+     *
+     * <p><b>Stack</b>：入参 {@code (path:String, mtime:long, atime:long)} → 出参 {@code (rc:int)}</p>
+     * <p><b>单位</b>：毫秒时间戳（自 Epoch）。</p>
+     * <p><b>语义</b>：将 {@code path} 的修改时间设为 {@code mtime}，访问时间设为 {@code atime}。
+     *   在部分平台/运行时可能仅支持修改时间（atime 可能被忽略）。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：路径不存在/权限不足/时间值非法，I/O 失败。</p>
+     */
     public static final int UTIME = 0x1107;
 
+
     // ================= 标准 IO / 控制台 (0x1200 – 0x12FF) =================
+
+    /**
+     * 将对象内容输出到标准输出（不自动换行）。
+     *
+     * <p><b>Stack</b>：入参 {@code (obj:Object)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：从操作数栈弹出一个对象，通过 {@link SyscallUtils#output(Object, boolean)}
+     * 方法将其打印到标准输出流（不附加换行）。</p>
+     * <p><b>返回</b>：成功时返回 {@code 0}。</p>
+     * <p><b>异常</b>：若对象输出过程发生错误（例如 I/O 异常），抛出对应异常。</p>
+     */
     public static final int PRINT = 0x1200;
+    /**
+     * 将对象内容输出到标准输出，并在末尾附加换行。
+     *
+     * <p><b>Stack</b>：入参 {@code (obj:Object)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：从操作数栈弹出一个对象，通过 {@link SyscallUtils#output(Object, boolean)}
+     * 方法将其打印到标准输出流，并在输出后自动追加换行。</p>
+     * <p><b>返回</b>：成功时返回 {@code 0}。</p>
+     * <p><b>异常</b>：若对象输出过程发生错误（例如 I/O 异常），抛出对应异常。</p>
+     */
     public static final int PRINTLN = 0x1201;
+    /**
+     * 从标准输入读取一行文本。
+     *
+     * <p><b>Stack</b>：入参：无 → 出参 {@code (line:String)}</p>
+     * <p><b>语义</b>：从 {@code System.in} 读取一行字符串并返回；若到达 EOF 或读取失败，则返回空字符串。</p>
+     * <p><b>异常</b>：I/O 错误。</p>
+     */
     public static final int STDIN_READ = 0x1202;
+
+    /**
+     * 向标准输出（stdout, fd=1）写入字节数组或字符串。
+     *
+     * <p><b>Stack</b>：入参 {@code (data:byte[]|String|Object)} → 出参 {@code (written:int)}</p>
+     * <p><b>语义</b>：将参数转换为字节数组（字符串按 UTF-8 编码，其它对象调用 {@code toString()}），
+     * 写入标准输出通道并返回实际写入的字节数。</p>
+     * <p><b>异常</b>：stdout 通道不可写，或写入过程中发生 I/O 错误。</p>
+     */
     public static final int STDOUT_WRITE = 0x1203;
+
+    /**
+     * 向标准错误输出（stderr）写入字符串。
+     *
+     * <p><b>Stack</b>：入参 {@code (data:Object)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：将对象转换为字符串（null 输出为 "null"），写入 {@code System.err}；
+     * 操作完成后返回 {@code 0}。</p>
+     * <p><b>异常</b>：写入过程中发生 I/O 错误。</p>
+     */
     public static final int STDERR_WRITE = 0x1204;
 
     // ================= 多路复用 (0x1300 – 0x13FF) =================
