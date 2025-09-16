@@ -1,0 +1,29 @@
+module: os
+    function: print
+        params:
+            declare i1: any
+        returns: void
+        body:
+            syscall("0x1200", i1)
+        end body
+    end function
+
+    function: println
+        params:
+            declare i1: any
+        returns: void
+        body:
+            syscall("0x1201", i1)
+        end body
+    end function
+
+    function: read
+        params:
+            declare fd: int
+            declare n: int
+        returns: any
+        body:
+            return syscall("0x1001", fd, n)
+        end body
+    end function
+end module
