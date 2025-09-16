@@ -63,26 +63,20 @@ public class SeekHandler implements SyscallHandler {
 
         // 从 FDTable 获取通道
         var ch = FDTable.get(fd);
-        if (!(ch instanceof SeekableByteChannel)) {
+        if (!(ch instanceof SeekableByteChannel sbc)) {
             throw new IllegalArgumentException("SEEK: fd " + fd + " is not seekable");
         }
-        SeekableByteChannel sbc = (SeekableByteChannel) ch;
 
         // 计算新位置
-        long newPos;
-        switch (whence) {
-            case 0: // SEEK_SET
-                newPos = offset;
-                break;
-            case 1: // SEEK_CUR
-                newPos = sbc.position() + offset;
-                break;
-            case 2: // SEEK_END
-                newPos = sbc.size() + offset;
-                break;
-            default:
-                throw new IllegalArgumentException("SEEK: invalid whence " + whence);
-        }
+        long newPos = switch (whence) {
+            case 0 -> // SEEK_SET
+                    offset;
+            case 1 -> // SEEK_CUR
+                    sbc.position() + offset;
+            case 2 -> // SEEK_END
+                    sbc.size() + offset;
+            default -> throw new IllegalArgumentException("SEEK: invalid whence " + whence);
+        };
 
         if (newPos < 0) {
             throw new IllegalArgumentException("SEEK: resulting position < 0");

@@ -59,10 +59,9 @@ public class ReadHandler implements SyscallHandler {
         }
 
         var ch = FDTable.get(fd);
-        if (!(ch instanceof ReadableByteChannel)) {
+        if (!(ch instanceof ReadableByteChannel rch)) {
             throw new IllegalArgumentException("READ: fd " + fd + " is not readable");
         }
-        ReadableByteChannel rch = (ReadableByteChannel) ch;
 
         ByteBuffer buffer = ByteBuffer.allocate(size);
         int bytesRead = rch.read(buffer);

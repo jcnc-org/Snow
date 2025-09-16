@@ -58,10 +58,9 @@ public class WriteHandler implements SyscallHandler {
 
         // 从 FDTable 获取通道
         var ch = FDTable.get(fd);
-        if (!(ch instanceof WritableByteChannel)) {
+        if (!(ch instanceof WritableByteChannel wch)) {
             throw new IllegalArgumentException("WRITE: fd " + fd + " is not writable");
         }
-        WritableByteChannel wch = (WritableByteChannel) ch;
 
         // 执行写入
         ByteBuffer buffer = ByteBuffer.wrap(data);

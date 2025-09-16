@@ -55,10 +55,9 @@ public class FstatHandler implements SyscallHandler {
 
         // 从 FDTable 获取通道
         var ch = FDTable.get(fd);
-        if (!(ch instanceof SeekableByteChannel)) {
+        if (!(ch instanceof SeekableByteChannel sbc)) {
             throw new IllegalArgumentException("FSTAT: fd " + fd + " is not seekable or invalid");
         }
-        SeekableByteChannel sbc = (SeekableByteChannel) ch;
 
         // 由于 Channel 本身无法直接拿 Path，需要 hack：尝试通过 size/position 验证文件存在
         // 这里假设 VM 使用 Files.newByteChannel(path, ...) 打开的文件，所以可用反射或者 FDTable 改进来存 Path。
