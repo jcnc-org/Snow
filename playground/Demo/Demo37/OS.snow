@@ -17,7 +17,7 @@ module: os
         end body
     end function
 
-    function: readstr
+    function: read
         params:
             declare fd: int
             declare n: int
