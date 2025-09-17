@@ -185,12 +185,12 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
      */
     private void generateSetIndexInstruction(CallInstruction ins, VMProgramBuilder out, Map<IRVirtualRegister, Integer> slotMap, char valType) {
         List<IRValue> args = ins.getArguments();
-        if (args.size() != 3) {
-            throw new IllegalStateException("[CallGenerator] __setindex_* 需要三个参数");
-        }
+        if (args.size() != 3) throw new IllegalStateException("[CallGenerator] __setindex_* 需要三个参数");
+
         loadArgument(out, slotMap, args.get(0), 'R', ins.getFunctionName());
         loadArgument(out, slotMap, args.get(1), 'I', ins.getFunctionName());
         loadArgument(out, slotMap, args.get(2), valType, ins.getFunctionName());
+        // __setindex_* 映射到 VM 的 ARR_SET 对应的 syscall
         out.emit(VMOpCode.SYSCALL + " 0x1803");
     }
 
@@ -206,28 +206,21 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
     private void generateIndexInstruction(CallInstruction ins, VMProgramBuilder out, Map<IRVirtualRegister, Integer> slotMap, char retType) {
         String fn = ins.getFunctionName();
         List<IRValue> args = ins.getArguments();
-        if (args.size() != 2) {
-            throw new IllegalStateException("[CallGenerator] " + fn + " 需要两个参数");
-        }
+        if (args.size() != 2) throw new IllegalStateException("[CallGenerator] " + fn + " 需要两个参数");
+
         loadArgument(out, slotMap, args.get(0), 'R', fn);
         loadArgument(out, slotMap, args.get(1), 'I', fn);
+
         out.emit(VMOpCode.SYSCALL + " 0x1802");
 
         IRVirtualRegister dest = ins.getDest();
         if (dest == null) throw new IllegalStateException("[CallGenerator] " + fn + " 必须有返回值寄存器");
-        Integer destSlot = slotMap.get(dest);
-        if (destSlot == null) throw new IllegalStateException("[CallGenerator] " + fn + " 未找到目标槽位");
 
-        switch (retType) {
-            case 'B' -> out.emit(OpHelper.opcode("B_STORE") + " " + destSlot);
-            case 'S' -> out.emit(OpHelper.opcode("S_STORE") + " " + destSlot);
-            case 'I' -> out.emit(OpHelper.opcode("I_STORE") + " " + destSlot);
-            case 'L' -> out.emit(OpHelper.opcode("L_STORE") + " " + destSlot);
-            case 'F' -> out.emit(OpHelper.opcode("F_STORE") + " " + destSlot);
-            case 'D' -> out.emit(OpHelper.opcode("D_STORE") + " " + destSlot);
-            default -> out.emit(OpHelper.opcode("R_STORE") + " " + destSlot);
-        }
-        out.setSlotType(destSlot, retType);
+        Integer slot = slotMap.get(dest);
+        if (slot == null) throw new IllegalStateException("[CallGenerator] " + fn + " 未找到目标槽位");
+
+        out.emit(OpHelper.opcode(retType + "_STORE") + " " + slot);
+        out.setSlotType(slot, retType);
     }
 
     /**
@@ -239,8 +232,11 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
     private char syscallReturnPrefix(String subcmd) {
         String s = subcmd.toUpperCase(Locale.ROOT);
         return switch (s) {
-            case "0X1001", "READ", "0X1904", "ERRSTR" -> 'R';
-            case "0X1202", "STDIN_READ" -> 'R'; // 标注 STDIN_READ 返回字符串
+            // 返回引用（字符串/字节数组）
+            case "0X1001", "READ", "0X1904", "ERRSTR", "0X1202", "STDIN_READ" -> 'R';
+            // 返回 long
+            case "0X1003", "SEEK", "0X1700", "CLOCK_GETTIME", "0X1703", "TICK_MS" -> 'L';
+            // 其余默认返回 int
             default -> 'I';
         };
     }
@@ -256,24 +252,28 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
      */
     private void generateSyscall(CallInstruction ins, VMProgramBuilder out, Map<IRVirtualRegister, Integer> slotMap, String fn) {
         List<IRValue> args = ins.getArguments();
-        if (args.isEmpty()) {
-            throw new IllegalStateException("[CallGenerator] syscall 至少需要一个子命令");
-        }
+        if (args.isEmpty()) throw new IllegalStateException("[CallGenerator] syscall 至少需要一个子命令");
+
         String subcmd = resolveSyscallSubcmd(args.getFirst(), fn);
+
+        // 压参数（全按引用）
         for (int i = 1; i < args.size(); i++) {
             loadArgument(out, slotMap, args.get(i), 'R', fn);
         }
+
+        // 发出 SYSCALL
         out.emit(VMOpCode.SYSCALL + " " + subcmd);
 
+        // 处理返回值
         IRVirtualRegister dest = ins.getDest();
         if (dest != null) {
             Integer slot = slotMap.get(dest);
             if (slot == null) throw new IllegalStateException("[CallGenerator] syscall 未找到目标槽位");
             char p = syscallReturnPrefix(subcmd);
-            if (p == 'R') {
-                out.emit(OpHelper.opcode("R_STORE") + " " + slot);
-            } else {
-                out.emit(OpHelper.opcode("I_STORE") + " " + slot);
+            switch (p) {
+                case 'R' -> out.emit(OpHelper.opcode("R_STORE") + " " + slot);
+                case 'L' -> out.emit(OpHelper.opcode("L_STORE") + " " + slot);
+                default -> out.emit(OpHelper.opcode("I_STORE") + " " + slot);
             }
             out.setSlotType(slot, p);
         }
@@ -290,9 +290,7 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
      */
     private String resolveSyscallSubcmd(IRValue arg, String fn) {
         if (arg instanceof IRConstant(Object value)) {
-            if (value instanceof String s) {
-                return s.toUpperCase(Locale.ROOT);
-            }
+            if (value instanceof String s) return s.toUpperCase(Locale.ROOT);
             throw new IllegalStateException("[CallGenerator] syscall 子命令必须是字符串");
         }
         if (arg instanceof IRVirtualRegister(int id)) {
@@ -312,10 +310,7 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
      * @param slotMap 虚拟寄存器到槽位映射
      * @param fn      被调用函数名称
      */
-    private void generateNormalCall(CallInstruction ins,
-                                    VMProgramBuilder out,
-                                    Map<IRVirtualRegister, Integer> slotMap,
-                                    String fn) {
+    private void generateNormalCall(CallInstruction ins, VMProgramBuilder out, Map<IRVirtualRegister, Integer> slotMap, String fn) {
         String retTypeName = GlobalFunctionTable.getReturnType(fn);
         char retType = normalizeTypePrefix(retTypeName);
 
@@ -348,13 +343,12 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
      */
     private void loadArgument(VMProgramBuilder out, Map<IRVirtualRegister, Integer> slotMap, IRValue arg, char defaultType, String fn) {
         this.fn = fn;
-        if (!(arg instanceof IRVirtualRegister vr)) {
+        if (!(arg instanceof IRVirtualRegister vr))
             throw new IllegalStateException("[CallGenerator] 参数必须是 IRVirtualRegister");
-        }
+
         Integer slot = slotMap.get(vr);
-        if (slot == null) {
-            throw new IllegalStateException("[CallGenerator] 未找到参数槽位");
-        }
+        if (slot == null) throw new IllegalStateException("[CallGenerator] 未找到参数槽位");
+
         char t = out.getSlotType(slot);
         if (t == '\0' || (t == 'I' && defaultType != 'I')) {
             t = defaultType;
