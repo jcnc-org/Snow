@@ -42,3 +42,4 @@ target/
 *.water
 /.lingma/
 /output.txt
+/seek_demo.txt
