@@ -12,67 +12,66 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * {@code SignatureRegistrar} 是语义分析前置阶段的注册器。
- * <p>
- * 它负责函数签名登记、结构体签名登记以及 import 模块引用校验，
- * 为后续的类型推断和语义分析建立完整的类型环境。
+ * {@code SignatureRegistrar} 是语义分析前置阶段的类型签名注册器。
  *
- * <p>本类通过多阶段处理逻辑，确保跨模块引用和继承在类型推断时可用：
- * <ol>
- *   <li>校验模块的 import 是否存在，并预注册结构体的名称占位符。</li>
- *   <li>解析结构体字段、构造函数和方法的签名信息。</li>
- *   <li>处理结构体继承关系，并继承字段与方法。</li>
- *   <li>注册模块级函数签名。</li>
- * </ol>
- * <p>错误处理策略：
+ * <p><b>职责</b>：
  * <ul>
- *   <li>若引用未知模块、类型或父类，均会记录为 {@link SemanticError} 错误。</li>
- *   <li>若字段、参数、返回类型无法解析，将默认降级为 {@code int} 或 {@code void} 类型以保证流程健壮性。</li>
+ *   <li>登记所有模块的 import、结构体与函数签名</li>
+ *   <li>校验跨模块引用与结构体继承</li>
+ *   <li>为后续类型推断与语义分析建立完整的类型环境</li>
  * </ul>
  *
- * @param ctx 语义分析上下文，记录所有模块、类型信息与错误列表
+ * <p><b>实现流程</b>：
+ * <ol>
+ *   <li>校验 import，预注册结构体名称（占位）</li>
+ *   <li>注册结构体字段、构造函数、方法签名</li>
+ *   <li>处理结构体继承，继承父类字段和方法</li>
+ *   <li>注册模块级顶层函数</li>
+ * </ol>
+ *
+ * <p><b>错误处理</b>：
+ * <ul>
+ *   <li>未知模块、类型、父类均记录为 {@link SemanticError}</li>
+ *   <li>类型不可解析则默认降级为 {@code int} 或 {@code void}，确保分析流程健壮</li>
+ * </ul>
  */
 public record SignatureRegistrar(Context ctx) {
 
     /**
-     * 注册传入的所有模块的类型签名信息，包括 import 检查、结构体与函数签名建立。
-     * <p>
-     * 采用三阶段设计确保跨模块结构体引用/继承不会出错。
+     * 注册传入所有模块的类型签名信息（多阶段），确保跨模块结构体与继承正确处理。
      *
      * @param modules 所有模块 AST 节点列表
      */
     public void register(Iterable<ModuleNode> modules) {
-        // 第一阶段：验证模块 imports 与预注册结构体名称
+        // 第一阶段：校验 import 与结构体名占位
         for (ModuleNode mod : modules) {
             ctx.setCurrentModule(mod.name());
             ModuleInfo mi = ctx.modules().get(mod.name());
 
-            // 检查 import 的模块是否存在
+            // 校验 import
             for (ImportNode imp : mod.imports()) {
-                if (!ctx.modules().containsKey(imp.moduleName())) {
-                    ctx.errors().add(new SemanticError(imp, "未知模块: " + imp.moduleName()));
+                String raw = imp.moduleName();
+                String resolved = resolveImportModuleName(raw);
+                if (ctx.modules().containsKey(resolved)) {
+                    mi.getImports().add(resolved);
                 } else {
-                    mi.getImports().add(imp.moduleName());
+                    ctx.errors().add(new SemanticError(imp, "未知模块: " + raw));
                 }
             }
-
-            // 为每个 struct 创建占位 StructType
+            // 占位注册所有结构体名
             for (StructNode stn : mod.structs()) {
-                if (!mi.getStructs().containsKey(stn.name())) {
-                    mi.getStructs().put(stn.name(), new StructType(mod.name(), stn.name()));
-                }
+                mi.getStructs().putIfAbsent(stn.name(), new StructType(mod.name(), stn.name()));
             }
         }
 
-        // 第二阶段：解析 struct 字段、构造函数与方法签名
+        // 第二阶段：结构体字段、构造函数、方法签名注册
         for (ModuleNode mod : modules) {
             ctx.setCurrentModule(mod.name());
             ModuleInfo mi = ctx.modules().get(mod.name());
 
             for (StructNode stn : mod.structs()) {
                 StructType st = mi.getStructs().get(stn.name());
-
-                // 2.0 解析字段类型
+                // 字段
                 if (stn.fields() != null) {
                     for (DeclarationNode field : stn.fields()) {
                         Type ft = ctx.parseType(field.getType());
@@ -83,8 +82,7 @@ public record SignatureRegistrar(Context ctx) {
                         st.getFields().put(field.getName(), ft);
                     }
                 }
-
-                // 2.1 构造函数（支持重载）
+                // 构造函数
                 if (stn.inits() != null) {
                     for (FunctionNode initFn : stn.inits()) {
                         List<Type> ptypes = new ArrayList<>();
@@ -99,8 +97,7 @@ public record SignatureRegistrar(Context ctx) {
                         st.addConstructor(new FunctionType(ptypes, BuiltinType.VOID));
                     }
                 }
-
-                // 2.2 方法（支持重载）
+                // 方法
                 if (stn.methods() != null) {
                     for (FunctionNode fn : stn.methods()) {
                         List<Type> ptypes = new ArrayList<>();
@@ -120,28 +117,23 @@ public record SignatureRegistrar(Context ctx) {
             }
         }
 
-        // 第三阶段：解析并建立 struct 的继承关系
+        // 第三阶段：结构体继承
         for (ModuleNode mod : modules) {
             ctx.setCurrentModule(mod.name());
             ModuleInfo mi = ctx.modules().get(mod.name());
-
             for (StructNode stn : mod.structs()) {
                 if (stn.parent() == null) continue;
                 StructType child = mi.getStructs().get(stn.name());
                 StructType parent = resolveParentStruct(mi, stn.parent());
-
                 if (parent == null) {
                     ctx.errors().add(new SemanticError(stn, "未知父类: " + stn.parent()));
                     continue;
                 }
-
-                // 建立继承
+                // 建立继承关系
                 child.setParent(parent);
-
-                // 继承字段
+                // 字段继承
                 parent.getFields().forEach((k, v) -> child.getFields().putIfAbsent(k, v));
-
-                // 继承方法（逐个重载）
+                // 方法继承
                 parent.getMethodOverloads().forEach((name, byArity) -> {
                     byArity.forEach((argc, ft) -> {
                         child.getMethodOverloads()
@@ -153,11 +145,10 @@ public record SignatureRegistrar(Context ctx) {
             }
         }
 
-        // 第四阶段：模块顶层函数
+        // 第四阶段：模块顶层函数注册
         for (ModuleNode mod : modules) {
             ctx.setCurrentModule(mod.name());
             ModuleInfo mi = ctx.modules().get(mod.name());
-
             for (FunctionNode fn : mod.functions()) {
                 List<Type> params = new ArrayList<>();
                 for (ParameterNode p : fn.parameters()) {
@@ -177,39 +168,44 @@ public record SignatureRegistrar(Context ctx) {
 
     /**
      * 解析父类结构体类型。
-     * <p>支持限定名形式（如 {@code Module.Struct}），
-     * 也支持在当前模块或导入模块中查找非限定名结构体。
+     * 支持限定名（如 {@code Module.Struct}）及当前/导入模块内查找。
      *
      * @param mi         当前模块信息
-     * @param parentName 父类名称（可以是限定名或非限定名）
-     * @return 对应的 StructType，找不到则返回 null
+     * @param parentName 父类名称（可为限定名或非限定名）
+     * @return StructType，找不到返回 null
      */
     private StructType resolveParentStruct(ModuleInfo mi, String parentName) {
-        // 限定名 Module.Struct
         int dot = parentName.indexOf('.');
         if (dot > 0 && dot < parentName.length() - 1) {
             String m = parentName.substring(0, dot);
             String s = parentName.substring(dot + 1);
             ModuleInfo pm = ctx.modules().get(m);
-            if (pm != null) {
-                return pm.getStructs().get(s);
-            }
+            if (pm != null) return pm.getStructs().get(s);
             return null;
         }
-
-        // 当前模块中查找
+        // 当前模块查找
         StructType local = mi.getStructs().get(parentName);
         if (local != null) return local;
-
-        // 导入模块中查找
+        // 导入模块查找
         for (String imported : mi.getImports()) {
             ModuleInfo pim = ctx.modules().get(imported);
             if (pim == null) continue;
             StructType st = pim.getStructs().get(parentName);
             if (st != null) return st;
         }
-
-        // 均找不到
         return null;
+    }
+
+    /**
+     * 将 import 路径式名称规范化为模块名。
+     * 例：import: os.file 实际映射到 os
+     *
+     * @param raw 原始 import 名称
+     * @return 规范化后的模块名
+     */
+    private String resolveImportModuleName(String raw) {
+        if (raw == null) return null;
+        int dot = raw.indexOf('.');
+        return dot > 0 ? raw.substring(0, dot) : raw;
     }
 }
