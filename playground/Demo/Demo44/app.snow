@@ -1,5 +1,5 @@
 module: app
-    import: os
+    import: os.file
 
     function: main
         params:
