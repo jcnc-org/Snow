@@ -8,65 +8,77 @@ import org.jcnc.snow.vm.module.OperandStack;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
+import java.nio.charset.StandardCharsets;
 
 /**
- * {@code WriteHandler} 用于实现系统调用 WRITE。
+ * {@code WriteHandler} 实现 WRITE (0x1002) 系统调用，
+ * 将数据写入指定虚拟文件描述符（fd）对应的通道。
  *
- * <p>
- * 功能：将字节数组写入指定的虚拟文件描述符（fd）对应的通道。
+ * <p><b>Stack</b>：入参 {@code (fd:int, data:any)} → 出参 {@code (written:int)}</p>
+ *
+ * <p><b>语义</b>：向 fd 指定的通道写入数据，支持 byte[]、String、null、其他类型会 toString()。</p>
+ *
+ * <p><b>返回</b>：实际写入的字节数（int）。</p>
+ *
+ * <p><b>支持的数据类型</b>：
+ * <ul>
+ *   <li>byte[]：按原样写入</li>
+ *   <li>String：UTF-8 编码写入</li>
+ *   <li>null：写入长度 0</li>
+ *   <li>其他类型：toString() 后 UTF-8 编码写入</li>
+ * </ul>
  * </p>
  *
- * <p>调用约定：</p>
+ * <p><b>异常</b>：
  * <ul>
- *   <li>入参：{@code fd:int}, {@code data:byte[]}</li>
- *   <li>出参：{@code count:int} （实际写入的字节数）</li>
+ *   <li>fd 不是 int 时抛出 {@link IllegalArgumentException}</li>
+ *   <li>fd 不可写时抛出 {@link IllegalArgumentException}</li>
+ *   <li>写入失败时抛出 {@link java.io.IOException}</li>
  * </ul>
- *
- * <p>说明：</p>
- * <ul>
- *   <li>如果 fd 无效或不可写，会抛出异常。</li>
- *   <li>写入完成后返回实际写入的字节数。</li>
- * </ul>
- *
- * <p>异常：</p>
- * <ul>
- *   <li>如果 fd 不是整数，抛出 {@link IllegalArgumentException}</li>
- *   <li>如果 data 不是字节数组，抛出 {@link IllegalArgumentException}</li>
- *   <li>如果通道不可写，抛出 {@link IllegalArgumentException}</li>
- *   <li>I/O 操作失败时，抛出 {@link java.io.IOException}</li>
- * </ul>
+ * </p>
  */
 public class WriteHandler implements SyscallHandler {
 
+    /**
+     * 处理 WRITE 调用。
+     *
+     * @param stack     操作数栈，依次提供 fd、data
+     * @param locals    局部变量存储器（未使用）
+     * @param callStack 调用栈（未使用）
+     * @throws Exception 参数错误或写入失败时抛出
+     */
     @Override
     public void handle(OperandStack stack,
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
-        // 从操作数栈中弹出参数：先 data:byte[]（栈顶），再 fd:int（栈底）
-        Object dataObj = stack.pop();
-        Object fdObj = stack.pop();
+        // 1. 取出参数（先弹 data，再弹 fd）
+        Object dataObj = stack.pop();   // data:any
+        Object fdObj = stack.pop();   // fd:int
 
-        // 校验参数类型
-        if (!(fdObj instanceof Number)) {
-            throw new IllegalArgumentException("WRITE: fd must be an int, got: " + fdObj);
+        if (!(fdObj instanceof Integer)) {
+            throw new IllegalArgumentException("WRITE: fd must be an int");
         }
-        if (!(dataObj instanceof byte[] data)) {
-            throw new IllegalArgumentException("WRITE: data must be a byte[], got: " + dataObj);
-        }
+        int fd = (Integer) fdObj;
 
-        int fd = ((Number) fdObj).intValue();
+        // 2. 统一将数据转换为 byte[]
+        byte[] data = switch (dataObj) {
+            case byte[] b -> b;
+            case String s -> s.getBytes(StandardCharsets.UTF_8);
+            case null -> new byte[0];
+            default -> dataObj.toString().getBytes(StandardCharsets.UTF_8);
+        };
 
-        // 从 FDTable 获取通道
+        // 3. 获取并检查可写通道
         var ch = FDTable.get(fd);
         if (!(ch instanceof WritableByteChannel wch)) {
             throw new IllegalArgumentException("WRITE: fd " + fd + " is not writable");
         }
 
-        // 执行写入
+        // 4. 执行写入
         ByteBuffer buffer = ByteBuffer.wrap(data);
         int written = wch.write(buffer);
 
-        // 将写入的字节数压回操作数栈
+        // 5. 将写入字节数压回栈
         stack.push(written);
     }
 }
