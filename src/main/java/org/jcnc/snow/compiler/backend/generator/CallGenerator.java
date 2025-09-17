@@ -238,9 +238,11 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
      */
     private char syscallReturnPrefix(String subcmd) {
         String s = subcmd.toUpperCase(Locale.ROOT);
-        if (s.equals("0X1001") || s.equals("READ")) return 'R';
-        if (s.equals("0X1904") || s.equals("ERRSTR")) return 'R';
-        return 'I';
+        return switch (s) {
+            case "0X1001", "READ", "0X1904", "ERRSTR" -> 'R';
+            case "0X1202", "STDIN_READ" -> 'R'; // 标注 STDIN_READ 返回字符串
+            default -> 'I';
+        };
     }
 
     /**
