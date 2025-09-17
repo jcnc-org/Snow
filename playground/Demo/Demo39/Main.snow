@@ -18,8 +18,8 @@ module: app
             // 关闭文件
             os.close(fd)
 
-            // 打印写入的字节数（应为 16）
-            os.println(n)
+            // 打印写入的字节数
+            os.println("打印字节数:" + n)
         end body
     end function
 end module
