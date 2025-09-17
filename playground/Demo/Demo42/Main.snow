@@ -7,13 +7,17 @@ module: app
         body:
             declare fd: int
             declare n: int
+            declare line: any
+
+            // 从标准输入读取一行文本
+            line = os.stdinRead()
 
             // 以只写 + 创建 + 截断模式打开/创建文件
-            // flags = O_WRONLY | O_CREAT | O_TRUNC = 1 | 64 | 512 = 577
+			// flags = O_WRONLY | O_CREAT | O_TRUNC = 1 | 64 | 512 = 577
             fd = os.open("output.txt", 577)
 
-            // 写入一行文本（UTF-8）
-            n = os.write(fd, "Hello, Snow VM!")
+            // 将输入的文本写入文件并追加换行
+            n = os.write(fd, line + "\n")
 
             // 关闭文件
             os.close(fd)
