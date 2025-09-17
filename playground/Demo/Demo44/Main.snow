@@ -1,0 +1,36 @@
+module: app
+    import: os
+
+    function: main
+        params:
+            declare args: any
+        body:
+            declare fd: int
+            declare n:  int
+
+            // 打开文件，写模式 + 创建 + 截断
+            // flags = O_WRONLY | O_CREAT | O_TRUNC = 1 | 64 | 512 = 577
+            fd = os.open("seek_demo.txt", 577)
+
+            // 写入一行文本
+            n = os.write(fd, "Hello, Snow!\n")
+
+            // 移动到文件开头 (SEEK_SET)
+            os.seek(fd, 0, 0)
+            os.println("指针已移动到文件开头")
+
+            // 覆盖前 5 个字符
+            n = os.write(fd, "World")
+
+            // 移动到文件末尾 (SEEK_END, 偏移 0)
+            os.seek(fd, 0, 2)
+            os.println("指针已移动到文件末尾")
+
+            // 在文件末尾追加写
+            n = os.write(fd, "\nAppend line")
+
+            // 关闭文件
+            os.close(fd)
+        end body
+    end function
+end module

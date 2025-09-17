@@ -78,14 +78,13 @@ module: os
             declare fd:     int
             declare offset: long
             declare whence: int
-        returns: long
+        returns: void
         body:
             return syscall("0x1003", fd, offset, whence)
         end body
     end function
 
     // close(fd): 关闭指定文件描述符 fd。
-    // 对应系统调用：CLOSE (0x1004)。
     function: close
         params:
             declare fd: int
