@@ -1,0 +1,23 @@
+module: app
+    import: os
+
+    function: main
+        params:
+            declare args: any
+        body:
+            declare fd: int
+            // 打开文件（这里只是示例，通常非阻塞用于 socket/pipe）
+            fd = os.open("demo.txt",66)   // O_RDWR | O_CREAT
+
+            // 设置非阻塞模式
+            os.setNonblock(fd, 1)
+            os.println("fd 已设置为非阻塞模式")
+
+            // 再切回阻塞模式
+            os.setNonblock(fd, 0)
+            os.println("fd 已切回阻塞模式")
+
+            os.close(fd)
+        end body
+    end function
+end module
