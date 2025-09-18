@@ -1,0 +1,25 @@
+module: app
+    import: os
+
+    function: main
+        params:
+            declare args: any
+        body:
+            // 创建一个源文件 real.txt
+            os.truncate("real.txt", 0L)
+            os.println("已创建源文件 real.txt")
+
+            // 创建符号链接 alias.txt 指向 real.txt
+            os.symlink("real.txt", "alias.txt")
+            os.println("已创建符号链接 alias.txt -> real.txt")
+
+            // 打开符号链接并写入数据（底层写入 real.txt）
+            declare fd: int
+            fd = os.open("alias.txt", 2)   // O_RDWR
+            os.write(fd, "Hello via symlink!")
+            os.close(fd)
+
+            os.println("写入完成，现在 alias.txt 和 real.txt 内容一致")
+        end body
+    end function
+end module
