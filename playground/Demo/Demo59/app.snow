@@ -1,0 +1,17 @@
+module: app
+    import: os
+
+    function: main
+        params:
+            declare args: any
+        body:
+            // 创建目录 tempDir
+            os.mkdir("tempDir", 0)
+            os.println("已创建目录 tempDir")
+
+            // 删除目录 tempDir
+            os.rmdir("tempDir")
+            os.println("已删除目录 tempDir")
+        end body
+    end function
+end module
