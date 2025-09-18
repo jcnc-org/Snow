@@ -1,0 +1,17 @@
+module: app
+    import: os
+
+    function: main
+        params:
+            declare args: any
+        body:
+            // 在当前目录下创建一个新目录 demoDir
+            os.mkdir("demoDir", 0)
+            os.println("已创建目录 demoDir")
+
+            // 在 demoDir 下再创建子目录 subDir
+            os.mkdir("demoDir/subDir", 0)
+            os.println("已创建目录 demoDir/subDir")
+        end body
+    end function
+end module

@@ -1,0 +1,21 @@
+// os module: 目录 & File System(FS) 系统调用
+// ──────────────────────────────────────────────
+//  • 0x1100  MKDIR     →  创建目录（可选权限位）
+
+// ──────────────────────────────────────────────
+
+module: os
+    // mkdir(path, mode?): 在指定路径创建目录，可选权限位 mode。
+    // 成功返回 0。
+    // 在不支持 POSIX 权限的平台上，mode 可能被忽略或部分生效。
+    // 出错时抛出异常（路径非法/已存在/父目录不存在/权限不足/I/O 错误）。
+    function: mkdir
+        params:
+            declare path: any
+            declare mode: int   // 可选参数，调用时可传 null
+        returns: int
+        body:
+            return syscall("0x1100", path, mode)
+        end body
+    end function
+end module
