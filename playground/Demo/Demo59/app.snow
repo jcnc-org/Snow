@@ -5,13 +5,31 @@ module: app
         params:
             declare args: any
         body:
-            // 创建目录 tempDir
-            os.mkdir("tempDir", 0)
-            os.println("已创建目录 tempDir")
+            // 1. 在当前目录下创建 demoDir
+            os.mkdir("demoDir", 0)
+            os.println("已创建目录 demoDir")
 
-            // 删除目录 tempDir
-            os.rmdir("tempDir")
-            os.println("已删除目录 tempDir")
+            declare cwd: string
+            cwd = os.getcwd()
+            os.println("当前工作目录: " + cwd)
+
+            // 2. 切换到 demoDir
+            os.chdir("demoDir")
+            os.println("已切换到 demoDir")
+
+           // 3. 获取并打印当前工作目录
+            cwd = os.getcwd()
+            os.println("当前工作目录: " + cwd)
+
+            // 4. 切回上级目录
+            os.chdir("..")
+            os.println("已切换回上级目录")
+            cwd = os.getcwd()
+            os.println("当前工作目录: " + cwd)
+
+            // 5. 删除 demoDir
+            os.rmdir("demoDir")
+            os.println("已删除目录 demoDir")
         end body
     end function
 end module

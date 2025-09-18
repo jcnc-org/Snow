@@ -2,7 +2,8 @@
 // ──────────────────────────────────────────────
 //  • 0x1100  MKDIR     →  创建目录（可选权限位）
 //  • 0x1101  RMDIR     →  删除空目录
-
+//  • 0x1102  CHDIR     →  改变 VM 的当前工作目录
+//  • 0x1103  GETCWD    →  获取 VM 的当前工作目录
 // ──────────────────────────────────────────────
 
 module: os
@@ -32,6 +33,26 @@ module: os
         end body
     end function
 
+    // chdir(path): 改变当前工作目录。
+    // 成功返回 0。
+    // 出错时抛出异常（路径不存在/非目录/不可访问/I/O 错误）。
+    function: chdir
+        params:
+            declare path: any
+        returns: int
+        body:
+            return syscall("0x1102", path)
+        end body
+    end function
 
+    // getcwd(): 获取当前工作目录的绝对路径。
+    // 成功返回字符串。
+    // 出错时抛出异常（未初始化 CWD/内部状态无效）。
+    function: getcwd
+        returns: string
+        body:
+            return syscall("0x1103")
+        end body
+    end function
 
 end module
