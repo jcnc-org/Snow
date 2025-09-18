@@ -1,23 +1,23 @@
 // os module: 文件 & File Descriptor(FD) 系统调用
 // ──────────────────────────────────────────────
-//  • 0x1200  PRINT     →  将对象输出到标准输出（不自动换行）
-//  • 0x1201  PRINTLN   →  将对象输出到标准输出并追加换行
-//  • 0x1001  READ      →  从文件描述符读取最多 n 字节并返回 byte[]
-//  • 0x1000  OPEN      →  打开文件，返回 fd
-//  • 0x1002  WRITE     →  向 fd 写入字节数据（支持 byte[] / String / 其他 toString()）
-//  • 0x1003  SEEK      →  移动文件指针，返回新位置 (long)
-//  • 0x1004  CLOSE     →  关闭文件描述符
-//  • 0x1005  STAT      →  获取文件的基本属性
-//  • 0x1007  UNLINK    →  删除路径
-//  • 0x1008  DUP       →  复制 oldfd，返回由系统分配的新 fd（指向同一底层文件）
-//  • 0x1009  DUP2      →  使 newfd 指向与 oldfd 相同的文件（若 newfd 已被占用会先关闭）
-//  • 0x100A  PIPE      →  创建匿名管道，VM 返回 int[]: [readfd, writefd]
-//  • 0x100B  TRUNCATE  →  将文件截断到指定长度
-//  • 0x100C  FTRUNCATE →  将 fd 对应文件截断到指定长度
-//  • 0x100D  RENAME    →  重命名（或移动）文件/目录；若目标存在则覆盖
-//  • 0x100E  LINK      →  创建硬链接，让 newPath 指向 oldPath
-//  • 0x100F  SYMLINK   →  创建符号链接，让 linkPath 指向 target
-//  • 0x1010  READLINK  →  读取符号链接的目标路径
+//  • 0x1200  PRINT        →  将对象输出到标准输出（不自动换行）
+//  • 0x1201  PRINTLN      →  将对象输出到标准输出并追加换行
+//  • 0x1001  READ         →  从文件描述符读取最多 n 字节并返回 byte[]
+//  • 0x1000  OPEN         →  打开文件，返回 fd
+//  • 0x1002  WRITE        →  向 fd 写入字节数据（支持 byte[] / String / 其他 toString()）
+//  • 0x1003  SEEK         →  移动文件指针，返回新位置 (long)
+//  • 0x1004  CLOSE        →  关闭文件描述符
+//  • 0x1005  STAT         →  获取文件的基本属性
+//  • 0x1007  UNLINK       →  删除路径
+//  • 0x1008  DUP          →  复制 oldfd，返回由系统分配的新 fd（指向同一底层文件）
+//  • 0x1009  DUP2         →  使 newfd 指向与 oldfd 相同的文件（若 newfd 已被占用会先关闭）
+//  • 0x100A  PIPE         →  创建匿名管道，VM 返回 int[]: [readfd, writefd]
+//  • 0x100B  TRUNCATE     →  将文件截断到指定长度
+//  • 0x100C  FTRUNCATE    →  将 fd 对应文件截断到指定长度
+//  • 0x100D  RENAME       →  重命名（或移动）文件/目录；若目标存在则覆盖
+//  • 0x100E  LINK         →  创建硬链接，让 newPath 指向 oldPath
+//  • 0x100F  SYMLINK      →  创建符号链接，让 linkPath 指向 target
+//  • 0x1010  READLINK     →  读取符号链接的目标路径
 //  • 0x1011  SET_NONBLOCK → 设置 fd 的非阻塞/阻塞模式
 
 // ──────────────────────────────────────────────
