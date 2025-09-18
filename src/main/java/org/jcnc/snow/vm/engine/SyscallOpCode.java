@@ -5,7 +5,7 @@ package org.jcnc.snow.vm.engine;
  */
 public final class SyscallOpCode {
 
-    // region 文件 & FD (0x1000 – 0x10FF)
+    // region 文件 & File Descriptor(FD) (0x1000 – 0x10FF)
     /**
      * 打开文件并返回一个新的 fd。
      *
@@ -172,7 +172,7 @@ public final class SyscallOpCode {
 
     // endregion
 
-    // region 目录 & FS (0x1100 – 0x11FF)
+    // region 目录 & File System(FS) (0x1100 – 0x11FF)
     /**
      * 创建目录（可选权限位）。
      *
