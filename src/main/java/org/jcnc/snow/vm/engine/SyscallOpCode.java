@@ -5,8 +5,7 @@ package org.jcnc.snow.vm.engine;
  */
 public final class SyscallOpCode {
 
-    // ================= 文件 & FD (0x1000 – 0x10FF) =================
-
+    // region 文件 & FD (0x1000 – 0x10FF)
     /**
      * 打开文件并返回一个新的 fd。
      *
@@ -170,8 +169,10 @@ public final class SyscallOpCode {
      * <p><b>异常</b>：fd 非法或通道不支持选择器/模式配置。</p>
      */
     public static final int SET_NONBLOCK = 0x1011;
-    // ================= 目录 & FS (0x1100 – 0x11FF) =================
 
+    // endregion
+
+    // region 目录 & FS (0x1100 – 0x11FF)
     /**
      * 创建目录（可选权限位）。
      *
@@ -254,9 +255,9 @@ public final class SyscallOpCode {
      */
     public static final int UTIME = 0x1107;
 
+    // endregion
 
-    // ================= 标准 IO / 控制台 (0x1200 – 0x12FF) =================
-
+    // region 标准 IO / 控制台 (0x1200 – 0x12FF)
     /**
      * 将对象内容输出到标准输出（不自动换行）。
      *
@@ -305,8 +306,9 @@ public final class SyscallOpCode {
      * <p><b>异常</b>：写入过程中发生 I/O 错误。</p>
      */
     public static final int STDERR_WRITE = 0x1204;
+    // endregion
 
-    // ================= 多路复用 (0x1300 – 0x13FF) =================
+    // region 多路复用 (0x1300 – 0x13FF)
     /**
      * I/O 多路复用 select。
      *
@@ -380,9 +382,10 @@ public final class SyscallOpCode {
      * <p><b>异常</b>：fds 参数非法，timeout 非法，或底层 I/O 错误。</p>
      */
     public static final int IO_WAIT = 0x1304;
+    // endregion
 
 
-    // ================= 套接字 & 网络 (0x1400 – 0x14FF) =================
+    // region 套接字 & 网络 (0x1400 – 0x14FF)
     /**
      * 创建一个新的套接字。
      *
@@ -532,9 +535,10 @@ public final class SyscallOpCode {
      * <p><b>异常</b>：主机未知、服务非法、解析失败。</p>
      */
     public static final int GETADDRINFO = 0x140E;
+    // endregion
 
 
-    // ================= 进程 & 线程 (0x1500 – 0x15FF) =================
+    //  region 进程 & 线程 (0x1500 – 0x15FF)
     /**
      * 结束当前进程/线程。
      *
@@ -624,9 +628,10 @@ public final class SyscallOpCode {
      * <p><b>异常</b>：被中断时可能抛出异常。</p>
      */
     public static final int SLEEP = 0x1508;
+    // endregion
 
 
-    // ================= 并发原语 (0x1600 – 0x16FF) =================
+    // region 并发原语 (0x1600 – 0x16FF)
     public static final int MUTEX_NEW = 0x1600;
     public static final int MUTEX_LOCK = 0x1601;
     public static final int MUTEX_TRYLOCK = 0x1602;
@@ -642,8 +647,9 @@ public final class SyscallOpCode {
     public static final int RWLOCK_RLOCK = 0x160C;
     public static final int RWLOCK_WLOCK = 0x160D;
     public static final int RWLOCK_UNLOCK = 0x160E;
+    // endregion
 
-    // ================= 时间 & 计时 (0x1700 – 0x17FF) =================
+    // region 时间 & 计时 (0x1700 – 0x17FF)
     /**
      * 获取时钟的纳秒时间戳。
      *
@@ -685,15 +691,17 @@ public final class SyscallOpCode {
      * <p><b>异常</b>：通常不抛出异常。</p>
      */
     public static final int TICK_MS = 0x1703;
+    // endregion
 
 
-    // ================= 数组操作 (0x1800 – 0x18FF) =================
+    // region 数组操作 (0x1800 – 0x18FF)
     public static final int ARR_LOAD = 0x1800;
     public static final int ARR_STORE = 0x1801;
     public static final int ARR_GET = 0x1802;
     public static final int ARR_SET = 0x1803;
+    // endregion
 
-    // ================= 系统信息 (0x1900 – 0x19FF) =================
+    // region 系统信息 (0x1900 – 0x19FF)
     /**
      * 获取环境变量的值。
      *
@@ -777,7 +785,5 @@ public final class SyscallOpCode {
      * <p><b>异常</b>：收集平台级指标时若遇到权限或平台差异，处理器会忽略这些额外项并仍返回 JVM heap 信息；因此通常不会向上抛出异常。</p>
      */
     public static final int MEMINFO = 0x1906;
-
-    private SyscallOpCode() {
-    }
+    // endregion
 }
