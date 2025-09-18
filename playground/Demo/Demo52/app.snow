@@ -1,0 +1,24 @@
+module: app
+    import: os
+
+    function: main
+        params:
+            declare args: any
+        body:
+            // 以读写方式打开，不存在则创建：O_RDWR(2) | O_CREAT(64) = 66
+            declare flags: int
+            declare fd: int
+            flags = 66
+            fd = os.open("output.txt", flags)
+
+            // 通过 fd 截断到 50 字节
+            os.ftruncate(fd, 50L)
+
+            // 输出提示
+            os.println("文件已通过 fd 截断到 50 字节")
+
+            // 关闭文件
+            os.close(fd)
+        end body
+    end function
+end module
