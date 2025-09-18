@@ -227,16 +227,24 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
      * 判断 syscall 子命令返回值类型的前缀。
      *
      * @param subcmd syscall 子命令字符串
-     * @return 类型前缀，'R'（引用型）或 'I'（整数型）
+     * @return 类型前缀，'R'（引用型）、'L'（长整型）或 'I'（整型）
      */
     private char syscallReturnPrefix(String subcmd) {
         String s = subcmd.toUpperCase(Locale.ROOT);
         return switch (s) {
-            // 返回引用（字符串/字节数组）
-            case "0X1001", "READ", "0X1904", "ERRSTR", "0X1202", "STDIN_READ",
-                 "0X1005", "STAT", "0X1006", "FSTAT" -> 'R';
+            // 返回引用（字符串/字节数组/Map/数组等）
+            case "0X1001", "READ",
+                 "0X1005", "STAT",
+                 "0X1006", "FSTAT",
+                 "0X1904", "ERRSTR",
+                 "0X1202", "STDIN_READ",
+                 "0X100A", "PIPE" -> 'R';
+
             // 返回 long
-            case "0X1003", "SEEK", "0X1700", "CLOCK_GETTIME", "0X1703", "TICK_MS" -> 'L';
+            case "0X1003", "SEEK",
+                 "0X1700", "CLOCK_GETTIME",
+                 "0X1703", "TICK_MS" -> 'L';
+
             // 默认返回 int
             default -> 'I';
         };
