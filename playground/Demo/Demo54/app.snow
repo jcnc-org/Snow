@@ -1,0 +1,25 @@
+module: app
+    import: os
+
+    function: main
+        params:
+            declare args: any
+        body:
+            // 创建源文件 source.txt
+            os.truncate("source.txt", 0L)
+            os.println("已创建源文件 source.txt")
+
+            // 创建硬链接 link.txt 指向 source.txt
+            os.link("source.txt", "link.txt")
+            os.println("已创建硬链接 link.txt -> source.txt")
+
+            // 修改源文件写入一些内容
+            declare fd: int
+            fd = os.open("source.txt", 2)   // O_RDWR
+            os.write(fd, "Hello via hard link!")
+            os.close(fd)
+
+            os.println("写入完成，现在 source.txt 和 link.txt 内容相同")
+        end body
+    end function
+end module
