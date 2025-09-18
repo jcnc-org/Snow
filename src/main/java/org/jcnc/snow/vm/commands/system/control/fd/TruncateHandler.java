@@ -14,28 +14,18 @@ import java.nio.file.StandardOpenOption;
  * {@code TruncateHandler} 用于实现系统调用 TRUNCATE。
  *
  * <p>
- * 功能：将指定文件截断到给定大小。如果文件比指定大小大，多余部分会被丢弃；
- * 如果文件比指定大小小，会在末尾补零字节。
+ * 功能：将路径对应文件截断到指定长度；若文件不存在则创建后再截断。
  * </p>
  *
- * <p>调用约定：</p>
- * <ul>
- *   <li>入参：{@code path:string}, {@code length:long}</li>
- *   <li>出参：无</li>
- * </ul>
+ * <p><b>Stack</b>：
+ * 入参 (path:String, length:long) ——> 出参 (rc:int，成功时为 0)
+ * </p>
  *
- * <p>说明：</p>
- * <ul>
- *   <li>会直接修改底层文件。</li>
- *   <li>如果文件不存在，抛出异常。</li>
- *   <li>只能作用于普通文件，不能用于目录或特殊文件。</li>
- * </ul>
- *
- * <p>异常：</p>
- * <ul>
- *   <li>如果 {@code path} 不是字符串或 {@code length} 不是整数，抛出 {@link IllegalArgumentException}</li>
- *   <li>如果文件不存在或不可写，抛出 {@link java.io.IOException}</li>
- * </ul>
+ * <p><b>语义</b>：
+ * 以可写方式（必要时创建）打开文件并调用 {@link SeekableByteChannel#truncate(long)}。
+ * 成功时压入 0，以保持与 VM 对 syscall 语句的通用“弹栈存本地”代码生成的栈约定一致。
+ * 失败时抛出异常，由上层统一转为 errno/errstr。
+ * </p>
  */
 public class TruncateHandler implements SyscallHandler {
 
@@ -43,29 +33,32 @@ public class TruncateHandler implements SyscallHandler {
     public void handle(OperandStack stack,
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
-        // 从操作数栈中依次弹出参数：length:long（栈顶），path:string（栈底）
+
+        // 先弹出 length 再弹出 path
         Object lengthObj = stack.pop();
         Object pathObj = stack.pop();
 
-        // 校验参数类型
-        if (!(pathObj instanceof String pathStr)) {
-            throw new IllegalArgumentException("TRUNCATE: path must be a String, got: " + pathObj);
+        if (!(pathObj instanceof CharSequence)) {
+            throw new IllegalArgumentException("TRUNCATE: path must be a string");
         }
         if (!(lengthObj instanceof Number)) {
-            throw new IllegalArgumentException("TRUNCATE: length must be a long, got: " + lengthObj);
+            throw new IllegalArgumentException("TRUNCATE: length must be a number");
         }
 
+        String pathStr = pathObj.toString();
         long length = ((Number) lengthObj).longValue();
         Path path = Paths.get(pathStr);
 
-        // 打开文件通道（必须可写）
+        // 打开文件通道（必须可写，若不存在则创建）
         try (SeekableByteChannel ch = java.nio.file.Files.newByteChannel(
                 path,
                 java.util.Set.of(StandardOpenOption.WRITE, StandardOpenOption.CREATE))) {
-            // 截断文件到指定长度
+
+            // 截断到指定长度
             ch.truncate(length);
         }
 
-        // TRUNCATE 无返回值
+        // 成功：压入返回码 0（保持栈平衡，匹配编译器对 syscall 语句的 I_STORE 弹栈行为）
+        stack.push(0);
     }
 }
