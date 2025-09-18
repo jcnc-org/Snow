@@ -13,7 +13,7 @@ module: app
             fd = os.open("seek_demo.txt", 577)
 
             // 写入一行文本
-            n = os.write(fd, "Hello, Snow!\n")
+            n = os.write(fd, "Hello, Snow!")
 
             // 移动到文件开头 (SEEK_SET)
             os.seek(fd, 0, 0)
@@ -27,7 +27,7 @@ module: app
             os.println("指针已移动到文件末尾")
 
             // 在文件末尾追加写
-            n = os.write(fd, "\nAppend line")
+            n = os.write(fd, "\n\tAppend line")
 
             // 关闭文件
             os.close(fd)
