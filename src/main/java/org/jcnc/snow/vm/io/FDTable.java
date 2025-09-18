@@ -5,21 +5,25 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.nio.channels.Channel;
 import java.nio.channels.Channels;
+import java.nio.file.Path;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * {@code FDTable} 维护 Snow VM 全局文件描述符（fd）与通道（Channel）的映射关系。
+ * {@code FDTable} 维护 Snow VM 全局文件描述符（fd）与通道（Channel）的映射。
+ *
  * <p>
- * 此表为进程级（process-wide），支持所有标准 I/O 及动态分配的 fd。
+ * 本表为进程全局，支持标准输入输出（0/1/2）及所有动态分配 fd。
+ * 所有非标准 fd 的分配、查找、关闭、复制等操作均为线程安全。
+ * </p>
+ *
  * <ul>
- *   <li>fd 0: 标准输入（stdin），类型为 {@code ReadableByteChannel}</li>
- *   <li>fd 1: 标准输出（stdout），类型为 {@code WritableByteChannel}</li>
- *   <li>fd 2: 标准错误（stderr），类型为 {@code WritableByteChannel}</li>
- *   <li>fd ≥ 3: 动态分配，映射各种 I/O 资源</li>
+ *   <li>fd 0: 标准输入（{@code ReadableByteChannel}）</li>
+ *   <li>fd 1: 标准输出（{@code WritableByteChannel}）</li>
+ *   <li>fd 2: 标准错误（{@code WritableByteChannel}）</li>
+ *   <li>fd ≥ 3: 动态分配，各种 I/O 资源</li>
  * </ul>
- * <p>
- * 所有非标准 fd 的分配、查找、关闭、复制均通过本类静态方法实现，线程安全。
  */
 public final class FDTable {
 
@@ -28,106 +32,154 @@ public final class FDTable {
      */
     private static final ConcurrentHashMap<Integer, Channel> MAP = new ConcurrentHashMap<>();
     /**
-     * fd 分配自增计数器，初始为 3（避开标准流）
+     * fd → 源路径元信息
+     */
+    private static final ConcurrentHashMap<Integer, Path> PATHS = new ConcurrentHashMap<>();
+    /**
+     * fd 分配器，从 3 开始递增
      */
     private static final AtomicInteger NEXT_FD = new AtomicInteger(3);
 
-    private FDTable() {
-        // 禁止实例化
-    }
-
     static {
-        // 绑定标准流
         MAP.put(0, Channels.newChannel(new BufferedInputStream(System.in)));
         MAP.put(1, Channels.newChannel(new BufferedOutputStream(System.out)));
         MAP.put(2, Channels.newChannel(new BufferedOutputStream(System.err)));
     }
 
+    private FDTable() {
+    }
+
     /**
-     * 注册一个通道，分配并返回新的 fd（≥3）。
+     * 注册一个通道，返回分配的 fd（不记录路径）。
      *
-     * @param ch 要注册的通道
-     * @return 分配的 fd
+     * @param ch 要注册的 Channel
+     * @return 分配的新 fd
+     * @throws NullPointerException ch 为 null
      */
     public static int register(Channel ch) {
+        Objects.requireNonNull(ch, "channel");
         int fd = NEXT_FD.getAndIncrement();
         MAP.put(fd, ch);
+        PATHS.remove(fd);
         return fd;
     }
 
     /**
-     * 通过 fd 获取对应的通道。
+     * 注册一个通道及其来源路径，返回分配的 fd。
+     *
+     * @param ch   通道
+     * @param path 来源路径，可为 null
+     * @return 新 fd
+     */
+    public static int register(Channel ch, Path path) {
+        int fd = register(ch);
+        if (path != null) {
+            PATHS.put(fd, path.toAbsolutePath().normalize());
+        }
+        return fd;
+    }
+
+    /**
+     * 通过 fd 获取通道。
      *
      * @param fd 文件描述符
-     * @return 映射的通道对象，若不存在则为 {@code null}
+     * @return Channel 对象，若不存在则为 null
      */
     public static Channel get(int fd) {
         return MAP.get(fd);
     }
 
     /**
-     * 关闭并移除指定 fd（0, 1, 2 不会被关闭）。
-     * <p>
-     * 若 fd 存在，执行 {@code Channel.close()} 并移除。
+     * 通过 fd 获取其来源路径。
      *
-     * @param fd 需关闭的文件描述符
-     * @throws IOException 关闭通道时发生的 I/O 异常
+     * @param fd 文件描述符
+     * @return Path，可能为 null
+     */
+    public static Path getPath(int fd) {
+        return PATHS.get(fd);
+    }
+
+    /**
+     * 关闭并移除 fd。对 0/1/2 只执行 flush，不关闭。
+     *
+     * @param fd 文件描述符
+     * @throws IOException 关闭失败
      */
     public static void close(int fd) throws IOException {
-        if (fd <= 2) return; // 标准流不允许关闭
+        if (fd < 0) {
+            throw new IllegalArgumentException("invalid fd: " + fd);
+        }
+        if (fd <= 2) {
+            // 刷新标准输出/错误
+            if (fd == 1) {
+                System.out.flush();
+            } else if (fd == 2) {
+                System.err.flush();
+            }
+            return;
+        }
         Channel ch = MAP.remove(fd);
+        PATHS.remove(fd);
         if (ch != null) {
             ch.close();
         }
     }
 
     /**
-     * 复制一个 fd，分配新的 fd 并映射到同一个通道。
-     * <p>
-     * 注意：不做引用计数，关闭任意 fd 会立即关闭底层通道。
+     * 复制 fd，分配新 fd 指向同一通道。
      *
-     * @param oldfd 被复制的 fd
-     * @return 新分配的 fd
-     * @throws IllegalArgumentException 若 oldfd 不存在
+     * @param oldfd 原始 fd
+     * @return 新 fd
+     * @throws IllegalArgumentException oldfd 不存在
      */
     public static int dup(int oldfd) {
-        Channel ch = get(oldfd);
+        Channel ch = MAP.get(oldfd);
         if (ch == null) {
             throw new IllegalArgumentException("dup: invalid fd " + oldfd);
         }
-        return register(ch);
+        int newfd = NEXT_FD.getAndIncrement();
+        MAP.put(newfd, ch);
+        Path p = PATHS.get(oldfd);
+        if (p != null) {
+            PATHS.put(newfd, p);
+        }
+        return newfd;
     }
 
     /**
-     * 复制 fd 至指定 newfd。如果 newfd 已存在，则先关闭原通道（0–2 不会被关闭）。
-     * <p>
-     * 调用后，newfd 映射到 oldfd 的通道；保证分配器不会分配低于 newfd+1 的 fd。
+     * 复制 fd 到指定 fd（如 newfd 已存在则先关闭）。
      *
-     * @param oldfd 源 fd
-     * @param newfd 目标 fd
-     * @return 复制结果 fd（等于 newfd）
-     * @throws IOException              关闭原 newfd 时抛出的 I/O 异常
-     * @throws IllegalArgumentException 参数非法或 oldfd 不存在
+     * @param oldfd 原始 fd
+     * @param newfd 指定的新 fd
+     * @return newfd
+     * @throws IllegalArgumentException oldfd/newfd 非法
+     * @throws IOException              关闭旧 fd 失败
      */
     public static int dup2(int oldfd, int newfd) throws IOException {
-        if (newfd < 0) throw new IllegalArgumentException("dup2: newfd must be non-negative");
-        Channel ch = get(oldfd);
+        if (newfd < 0) {
+            throw new IllegalArgumentException("dup2: invalid newfd " + newfd);
+        }
+        Channel ch = MAP.get(oldfd);
         if (ch == null) {
             throw new IllegalArgumentException("dup2: invalid oldfd " + oldfd);
         }
         if (oldfd == newfd) {
             return newfd;
         }
-        // 若 newfd 存在且不为标准流，则先关闭
         if (newfd > 2) {
             Channel removed = MAP.remove(newfd);
+            PATHS.remove(newfd);
             if (removed != null) {
                 removed.close();
             }
         }
-        // 绑定 oldfd 的通道到 newfd
         MAP.put(newfd, ch);
-        // 更新分配器，避免新分配低于 newfd+1 的 fd
+        Path p = PATHS.get(oldfd);
+        if (p != null) {
+            PATHS.put(newfd, p);
+        } else {
+            PATHS.remove(newfd);
+        }
         NEXT_FD.updateAndGet(n -> Math.max(n, newfd + 1));
         return newfd;
     }
