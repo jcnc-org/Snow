@@ -1,0 +1,18 @@
+module: app
+    import: os
+
+    function: main
+        params:
+            declare args: any
+        body:
+            declare info: any
+
+            // 获取文件属性
+            info = os.stat("seek_demo.txt")
+
+            // 直接打印整个对象
+            os.println("stat结果: " + info)
+
+        end body
+    end function
+end module
