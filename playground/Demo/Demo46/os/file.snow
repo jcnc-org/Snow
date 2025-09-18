@@ -7,6 +7,8 @@
 //  • 0x1002  WRITE   →  向 fd 写入字节数据
 //  • 0x1003  SEEK    →  移动文件指针，返回新位置 (long)
 //  • 0x1004  CLOSE   →  关闭文件描述符
+//  • 0x1005  STAT    →  获取文件的基本属性
+//  • 0x1007  UNLINK  →  删除路径
 // ──────────────────────────────────────────────
 
 module: os
@@ -89,27 +91,6 @@ module: os
         end body
     end function
 
-    // sleep(ms): 让当前线程休眠 ms 毫秒。
-    // 对应系统调用：SLEEP (0x1508)。
-    function: sleep
-        params:
-            declare ms: int
-        returns: void
-        body:
-            syscall("0x1508", ms)
-        end body
-    end function
-
-    // exit(code): 立即终止当前进程。
-    function: exit
-        params:
-            declare code: int
-        returns: void
-        body:
-            syscall("0x1500", code)
-        end body
-    end function
-
     // stat(path): 获取文件的基本属性。
     // 返回 Map，包含 size / isDirectory / isRegularFile / isSymbolicLink / lastModified / created 等键。
     function: stat
@@ -118,6 +99,17 @@ module: os
         returns: map
         body:
             return syscall("0x1005", path)
+        end body
+    end function
+
+    // unlink(path): 删除指定路径。
+    // 若目标不存在、是非空目录或权限不足，将抛出异常。
+    function: unlink
+        params:
+            declare path: any
+        returns: void
+        body:
+            syscall("0x1007", path)
         end body
     end function
 end module

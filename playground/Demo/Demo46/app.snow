@@ -5,14 +5,26 @@ module: app
         params:
             declare args: any
         body:
+            declare fd: int
             declare info: any
 
-            // 获取文件属性
-            info = os.stat("seek_demo.txt")
+            // 打开文件（写模式 + 创建 + 截断）
+            // flags = O_WRONLY | O_CREAT | O_TRUNC = 1 | 64 | 512 = 577
+            fd = os.open("demo_stat.txt", 577)
 
-            // 直接打印整个对象
-            os.println("stat结果: " + info)
+            // 写入内容
+            os.write(fd, "Hello, Snow syscall!")
 
+            // 关闭文件
+            os.close(fd)
+
+            // 查看文件属性
+            info = os.stat("demo_stat.txt")
+            os.println("文件属性: " + info)
+
+            // 删除文件
+            os.unlink("demo_stat.txt")
+            os.println("文件已删除。")
         end body
     end function
 end module
