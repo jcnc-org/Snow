@@ -239,7 +239,8 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
                  "0X1904", "ERRSTR",
                  "0X1202", "STDIN_READ",
                  "0X100A", "PIPE",
-                 "0X1010", "READLINK" -> 'R';
+                 "0X1010", "READLINK",
+                 "0X1103", "GETCWD" -> 'R';
 
 
             // 返回 long
