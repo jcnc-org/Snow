@@ -8,17 +8,8 @@ module: app
             os.mkdir("demoDir", 0)
             os.println("已创建 demoDir")
 
-			declare list1: any
-			declare list2: any
-
-            list1 = os.readdir(".")
-            os.println(list1)   // 列出当前目录内容
-
-            list2 = os.readdir("demoDir")
-            os.println(list2)   // 列出 demoDir 内容
-
-            os.rmdir("demoDir")
-            os.println("已删除 demoDir")
+            os.chmod("demoDir", 493)
+            os.println("已修改 demoDir 权限为 755")
         end body
     end function
 end module

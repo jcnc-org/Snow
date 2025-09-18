@@ -5,6 +5,7 @@
 //  • 0x1102  CHDIR     →  改变 VM 的当前工作目录
 //  • 0x1103  GETCWD    →  获取 VM 的当前工作目录
 //  • 0x1104  READDIR   →  读取目录内容
+//  • 0x1105  CHMOD     →  修改文件/目录权限
 
 // ──────────────────────────────────────────────
 
@@ -69,4 +70,16 @@ module: os
 	    end body
 	end function
 
+    // chmod(path, mode): 修改文件/目录的权限。
+    // mode: 整数，八进制权限位（如 0o755）
+    // 成功返回 0，失败抛出异常。
+    function: chmod
+        params:
+            declare path: any
+            declare mode: int
+        returns: int
+        body:
+            return syscall("0x1105", path, mode)
+        end body
+    end function
 end module
