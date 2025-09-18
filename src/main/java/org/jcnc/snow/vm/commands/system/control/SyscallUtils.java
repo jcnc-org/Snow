@@ -115,7 +115,7 @@ public class SyscallUtils {
         if (array instanceof float[] a) return Arrays.toString(a);
         if (array instanceof short[] a) return Arrays.toString(a);
         if (array instanceof char[] a) return Arrays.toString(a);
-        if (array instanceof byte[] a) return Arrays.toString(a);
+        if (array instanceof byte[] a) return new String(a, StandardCharsets.UTF_8);
         if (array instanceof boolean[] a) return Arrays.toString(a);
         if (array instanceof Object[] a) return Arrays.deepToString(a);
         return "Unsupported array";
