@@ -177,12 +177,13 @@ public final class SyscallOpCode {
      * 创建目录（可选权限位）。
      *
      * <p><b>Stack</b>：入参 {@code (path:String, mode:int?)} → 出参 {@code (rc:int)}</p>
-     * <p><b>语义</b>：在 {@code path} 处创建目录；{@code mode} 如未提供可由实现采用默认权限。
-     * 在不支持 POSIX 权限的平台上，{@code mode} 可能被忽略或部分生效。</p>
+     * <p><b>语义</b>：在 {@code path} 处新建目录。若 {@code mode} 未提供，则由实现采用默认权限；
      * <p><b>返回</b>：成功返回 {@code 0}。</p>
-     * <p><b>异常</b>：路径非法/已存在/父目录不存在/权限不足，I/O 失败。</p>
+     * <p><b>异常</b>：
+     * 路径非法、目录已存在、父目录不存在、权限不足或发生 I/O 错误时抛出异常。</p>
      */
     public static final int MKDIR = 0x1100;
+
 
     /**
      * 删除空目录。
