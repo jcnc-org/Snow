@@ -41,5 +41,4 @@ target/
 ### Snow 虚拟机指令 ###
 *.water
 /.lingma/
-/output.txt
-/seek_demo.txt
+*.txt
