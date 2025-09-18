@@ -1,0 +1,36 @@
+module: app
+    import: os
+
+    function: main
+        params:
+            declare args: any
+        body:
+            declare fd1: int
+            declare fd2: int
+            declare fd3: int
+
+            // 打开文件
+            fd1 = os.open("dup2_demo.txt", 577)
+            os.println("fd1 = " + fd1)
+
+            // 普通 dup，得到一个新的 fd2
+            fd2 = os.dup(fd1)
+            os.println("fd2 = " + fd2)
+
+            // 用 dup2 强制把 fd1 复制到指定 fd3=10
+            fd3 = os.dup2(fd1, 10)
+            os.println("fd3 (dup2目标) = " + fd3)
+
+            // 三个 fd 都指向同一个文件
+            os.write(fd1, "A")
+            os.write(fd2, "B")
+            os.write(fd3, "C")
+
+            os.close(fd1)
+            os.close(fd2)
+            os.close(fd3)
+
+            os.println("完成 dup2 测试")
+        end body
+    end function
+end module
