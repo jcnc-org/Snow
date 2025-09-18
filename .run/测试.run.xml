@@ -65,6 +65,12 @@
     <toRun name="Demo42" type="Application" />
     <toRun name="Demo43" type="Application" />
     <toRun name="Demo44" type="Application" />
+    <toRun name="Demo45" type="Application" />
+    <toRun name="Demo46" type="Application" />
+    <toRun name="Demo47" type="Application" />
+    <toRun name="Demo48" type="Application" />
+    <toRun name="Demo49" type="Application" />
+    <toRun name="Demo50" type="Application" />
     <toRun name="Demo6" type="Application" />
     <toRun name="Demo7" type="Application" />
     <toRun name="Demo8" type="Application" />
