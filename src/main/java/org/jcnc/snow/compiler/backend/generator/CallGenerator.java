@@ -233,10 +233,11 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
         String s = subcmd.toUpperCase(Locale.ROOT);
         return switch (s) {
             // 返回引用（字符串/字节数组）
-            case "0X1001", "READ", "0X1904", "ERRSTR", "0X1202", "STDIN_READ" -> 'R';
+            case "0X1001", "READ", "0X1904", "ERRSTR", "0X1202", "STDIN_READ",
+                 "0X1005", "STAT", "0X1006", "FSTAT" -> 'R';
             // 返回 long
             case "0X1003", "SEEK", "0X1700", "CLOCK_GETTIME", "0X1703", "TICK_MS" -> 'L';
-            // 其余默认返回 int
+            // 默认返回 int
             default -> 'I';
         };
     }
