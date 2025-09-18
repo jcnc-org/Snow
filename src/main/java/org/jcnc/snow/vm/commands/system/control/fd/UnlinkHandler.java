@@ -12,18 +12,18 @@ import java.nio.file.Path;
  * {@code UnlinkHandler} 用于实现系统调用 UNLINK。
  *
  * <p>
- * 功能：删除指定路径的文件（类似于 POSIX 的 unlink）。
+ * 功能：删除指定路径的文件。
  * </p>
  *
  * <p>调用约定：</p>
  * <ul>
  *   <li>入参：{@code path:string}</li>
- *   <li>出参：无</li>
+ *   <li>出参：int（0 表示成功）</li>
  * </ul>
  *
  * <p>说明：</p>
  * <ul>
- *   <li>如果目标是目录，会抛出异常（与 POSIX unlink 一致）。</li>
+ *   <li>如果目标是目录，会抛出异常。</li>
  *   <li>如果文件不存在，会抛出 {@link java.nio.file.NoSuchFileException}。</li>
  * </ul>
  *
@@ -42,7 +42,6 @@ public class UnlinkHandler implements SyscallHandler {
         // 从操作数栈中弹出参数：path:string
         Object pathObj = stack.pop();
 
-        // 校验参数类型
         if (!(pathObj instanceof String pathStr)) {
             throw new IllegalArgumentException("UNLINK: path must be a String, got: " + pathObj);
         }
@@ -52,6 +51,7 @@ public class UnlinkHandler implements SyscallHandler {
         // 删除文件（如果是目录会抛出 DirectoryNotEmptyException）
         Files.delete(path);
 
-        // UNLINK 无返回值
+        // push 返回值：0 表示成功
+        stack.push(0);
     }
 }

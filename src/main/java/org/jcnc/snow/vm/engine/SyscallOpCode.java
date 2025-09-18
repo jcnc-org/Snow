@@ -74,9 +74,9 @@ public final class SyscallOpCode {
     public static final int FSTAT = 0x1006;
 
     /**
-     * 删除路径（类似 POSIX {@code unlink}）。
+     * 删除路径。
      *
-     * <p><b>Stack</b>：入参 {@code (path:String)} → 出参：无</p>
+     * <p><b>Stack</b>：入参 {@code (path:String)} → 出参：int（0 表示成功）</p>
      * <p><b>实现</b>：{@code Files.delete(path)}，若为非空目录会抛出相应异常。</p>
      * <p><b>异常</b>：路径类型错误，目标不存在/是目录/权限不足，I/O 失败。</p>
      */
