@@ -1,0 +1,23 @@
+module: app
+    import: os
+
+    function: main
+        params:
+            declare args: any
+        body:
+            // 打开或创建文件 demo.txt，flags 这里直接传整数（假设 1=只写，64=O_CREAT）
+            declare fileFd: int
+            fileFd = os.open("demo.txt", 65)   // O_WRONLY(1) + O_CREAT(64)
+
+            os.println("已打开 demo.txt, fd=" + fileFd)
+
+            // 使用 fchmod 修改权限为 0644 (十进制 420)
+            os.fchmod(fileFd, 420)
+            os.println("已修改 demo.txt 权限为 644")
+
+            // 关闭文件
+            os.close(fileFd)
+            os.println("已关闭 fd")
+        end body
+    end function
+end module
