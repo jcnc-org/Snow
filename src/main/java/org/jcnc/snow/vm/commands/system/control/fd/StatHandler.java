@@ -8,6 +8,7 @@ import org.jcnc.snow.vm.module.OperandStack;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashMap;
 
 /**
  * {@code StatHandler} 用于实现系统调用 STAT。
@@ -56,8 +57,8 @@ public class StatHandler implements SyscallHandler {
         // 获取文件基本属性
         BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class);
 
-        // 构造结果（这里用一个简单的 Map 表示）
-        var result = new java.util.HashMap<String, Object>();
+        // 构造结果
+        var result = new HashMap<String, Object>();
         result.put("size", attrs.size());
         result.put("isDirectory", attrs.isDirectory());
         result.put("isRegularFile", attrs.isRegularFile());
