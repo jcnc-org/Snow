@@ -238,7 +238,9 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
                  "0X1006", "FSTAT",
                  "0X1904", "ERRSTR",
                  "0X1202", "STDIN_READ",
-                 "0X100A", "PIPE" -> 'R';
+                 "0X100A", "PIPE",
+                 "0X1010", "READLINK" -> 'R';
+
 
             // 返回 long
             case "0X1003", "SEEK",
