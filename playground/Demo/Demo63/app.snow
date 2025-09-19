@@ -1,11 +1,11 @@
 module: app
-    import: os.fd
+    import: os.io
 
     function: main
         params:
             declare args: any
         body:
-            fd.print(1)
+            io.print(1)
         end body
     end function
 end module

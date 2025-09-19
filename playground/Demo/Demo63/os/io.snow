@@ -1,0 +1,30 @@
+// io module: 标准 IO / 控制台 系统调用
+// ──────────────────────────────────────────────
+//  • 0x1200  PRINT        →  将对象输出到标准输出（不自动换行）
+//  • 0x1201  PRINTLN      →  将对象输出到标准输出并追加换行
+
+// ──────────────────────────────────────────────
+
+module: io
+    // print(obj): 输出对象到 stdout，不附加换行。
+    // 成功返回 0。
+    function: print
+        params:
+            declare i1: any
+        returns: void
+        body:
+            syscall("0x1200", i1)
+        end body
+    end function
+
+    // println(obj): 输出对象到 stdout，并自动换行。
+    // 成功返回 0。
+    function: println
+        params:
+            declare i1: any
+        returns: void
+        body:
+            syscall("0x1201", i1)
+        end body
+    end function
+end module

@@ -1,7 +1,5 @@
 // fd module: File Descriptor(FD) 系统调用
 // ──────────────────────────────────────────────
-//  • 0x1200  PRINT        →  将对象输出到标准输出（不自动换行）
-//  • 0x1201  PRINTLN      →  将对象输出到标准输出并追加换行
 //  • 0x1001  READ         →  从文件描述符读取最多 n 字节并返回 byte[]
 //  • 0x1000  OPEN         →  打开文件，返回 fd
 //  • 0x1002  WRITE        →  向 fd 写入字节数据（支持 byte[] / String / 其他 toString()）
@@ -22,28 +20,6 @@
 // ──────────────────────────────────────────────
 
 module: fd
-    // print(obj): 输出对象到 stdout，不附加换行。
-    // 成功返回 0。
-    function: print
-        params:
-            declare i1: any
-        returns: void
-        body:
-            syscall("0x1200", i1)
-        end body
-    end function
-
-    // println(obj): 输出对象到 stdout，并自动换行。
-    // 成功返回 0。
-    function: println
-        params:
-            declare i1: any
-        returns: void
-        body:
-            syscall("0x1201", i1)
-        end body
-    end function
-
     // read(fd, n): 从文件描述符 fd 读取最多 n 字节。
     function: read
         params:
