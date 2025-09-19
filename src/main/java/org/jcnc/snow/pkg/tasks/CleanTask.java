@@ -6,15 +6,14 @@ import java.nio.file.Path;
 import java.util.Comparator;
 
 /**
- * 用于清理构建输出目录（如 {@code build} 和 {@code dist}）的任务实现类。
+ * CleanTask 负责自动化构建流程中的清理任务，实现对构建输出目录（如 {@code build} 和 {@code dist}）的递归删除。
  * <p>
- * 实现 {@link Task} 接口，常用于自动化构建流程的清理阶段，负责递归删除指定的构建产物目录。
- * </p>
- * <p>
- * 本类为无状态实现，线程安全。
- * </p>
- *
- * <p><b>示例用法: </b></p>
+ * 常用于项目自动化构建、发布前清理环境等场景。
+ * <ul>
+ *   <li>线程安全，无状态实现</li>
+ *   <li>实现 {@link Task} 接口，可直接在任务队列或 CLI 中调用</li>
+ * </ul>
+ * <b>示例用法：</b>
  * <pre>{@code
  * Task clean = new CleanTask();
  * clean.run();
@@ -23,42 +22,32 @@ import java.util.Comparator;
 public final class CleanTask implements Task {
 
     /**
-     * 执行清理任务，递归删除当前目录下的 {@code build} 和 {@code dist} 目录及其所有内容。
-     * 如果目标目录不存在，则跳过不处理。
+     * 执行清理任务，递归删除当前目录下 {@code build} 和 {@code dist} 目录及所有内容。
+     * 目录不存在时自动跳过。
      *
-     * @throws IOException 删除目录或文件过程中发生 IO 错误时抛出
+     * @throws IOException 删除目录或文件过程中发生 IO 错误
      */
     @Override
     public void run() throws IOException {
-        deleteDir(Path.of("build"), false);
-        deleteDir(Path.of("dist"), false);
-
+        deleteDir(Path.of("build"));
+        deleteDir(Path.of("dist"));
         System.out.println("[clean] done.");
     }
 
     /**
-     * 递归删除指定目录下的所有子文件和子目录。
-     * 如需删除指定目录本身可将第二个参数 {@code containSelf} 设置为 true
-     * <p>
-     * 若目录不存在，则直接返回。
-     * </p>
-     * <p>
-     * 内部使用 try-with-resources 保证文件流自动关闭，避免资源泄漏。
-     * </p>
+     * 递归删除指定目录及其所有子文件和子目录。
+     * 若目标目录不存在，则直接返回。
      *
-     * @param dir         需要删除的目录路径
-     * @param containSelf 是否删除指定目录本身
-     * @throws IOException 删除目录或文件过程中发生 IO 错误时抛出
+     * @param dir 需删除的目录路径
+     * @throws IOException 删除目录或文件过程中发生 IO 错误
      */
-    private void deleteDir(Path dir, boolean containSelf) throws IOException {
+    private void deleteDir(Path dir) throws IOException {
         if (Files.notExists(dir)) return;
         try (var stream = Files.walk(dir)) {
-            stream.sorted(Comparator.reverseOrder()) // 先删子文件，后删父目录
+            stream.sorted(Comparator.reverseOrder()) // 先删子文件后删父目录
                     .forEach(p -> {
                         try {
-                            if (!containSelf && p == dir) {
-                                return;
-                            }
+                            if (p.equals(dir)) return;
                             Files.delete(p);
                         } catch (IOException e) {
                             throw new RuntimeException(e);

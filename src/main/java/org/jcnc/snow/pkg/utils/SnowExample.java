@@ -7,14 +7,6 @@ package org.jcnc.snow.pkg.utils;
  * </p>
  */
 public final class SnowExample {
-
-    /**
-     * 工具类构造方法，禁止实例化。
-     */
-    private SnowExample() {
-        // 工具类不允许实例化
-    }
-
     /**
      * 获取 main.snow 示例模块的内容字符串。
      *

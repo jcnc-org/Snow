@@ -11,56 +11,45 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 项目脚手架生成任务。<br>
- * 根据 {@link Project} 元数据自动创建标准项目目录结构，并生成示例入口文件
- * <code>main.snow</code>。
- *
+ * GenerateTask 负责项目标准目录结构及示例文件的自动生成，是项目脚手架功能的实现类。
  * <p>
- * 生成内容包括:
+ * 根据 {@link Project} 元数据，自动创建如下内容：
  * <ul>
- *   <li><code>src/</code>                       —— 源码根目录</li>
- *   <li><code>src/{group package}/</code> —— 按 <code>project.group</code> 创建的包路径
- *       （如 <code>com.example</code> → <code>src/com/example/</code>）</li>
- *   <li><code>test/</code>                     —— 测试源码目录</li>
- *   <li><code>build/</code>                     —— 编译输出目录</li>
- *   <li><code>dist/</code>                      —— 打包输出目录</li>
- *   <li><code>src/{group package}/main.snow</code> —— 示例入口文件</li>
+ *   <li>src/                —— 源码根目录</li>
+ *   <li>src/{group package} —— 按 group 创建的包路径（如 com.example → src/com/example/）</li>
+ *   <li>test/               —— 测试源码目录</li>
+ *   <li>build/              —— 编译输出目录</li>
+ *   <li>dist/               —— 打包输出目录</li>
+ *   <li>src/{group}/main.snow —— 示例入口模块</li>
+ *   <li>src/{group}/OS.snow   —— 系统库模块</li>
  * </ul>
- * 如目录或入口文件已存在，则自动跳过，不会覆盖。
- * </p>
+ * 已存在的目录或文件不会覆盖。
  */
-public final class GenerateTask implements Task {
+public record GenerateTask(Project project) implements Task {
 
     /**
-     * 项目信息元数据
-     */
-    private final Project project;
-
-    /**
-     * 创建项目生成任务。
+     * 构造 GenerateTask 实例。
      *
      * @param project 项目信息元数据对象
      */
-    public GenerateTask(Project project) {
-        this.project = project;
+    public GenerateTask {
     }
 
     /**
-     * 执行脚手架生成流程，创建标准目录和入口示例文件。
+     * 执行脚手架生成流程，创建标准目录和示例文件。
      * <ul>
-     *   <li>若相关目录不存在则创建</li>
-     *   <li>若设置了 <code>project.group</code>，则在 <code>src/</code> 下新建对应包路径</li>
-     *   <li>示例入口文件 <code>main.snow</code> 写入包路径目录</li>
-     *   <li>生成过程输出进度信息</li>
+     *   <li>如相关目录不存在则自动创建</li>
+     *   <li>如设置 group，则在 src 下建立包路径</li>
+     *   <li>生成 main.snow、OS.snow 示例文件</li>
+     *   <li>过程输出进度提示</li>
      * </ul>
      *
-     * @throws IOException 创建目录或写入文件时发生 IO 错误时抛出
+     * @throws IOException 创建目录或写文件发生 IO 错误
      */
     @Override
     public void run() throws IOException {
         Path root = Paths.get(".").toAbsolutePath();
 
-        /* ---------- 1. 构造待创建目录列表 ---------- */
         List<Path> dirs = new ArrayList<>(List.of(
                 root.resolve("src"),
                 root.resolve("test"),
@@ -68,16 +57,14 @@ public final class GenerateTask implements Task {
                 root.resolve("dist")
         ));
 
-        /* ---------- 2. 处理 group: 追加包目录 ---------- */
         String group = project != null ? project.getGroup() : null;
         Path srcDir = root.resolve("src");
-        Path packageDir = srcDir;  // 默认直接在 src 下
+        Path packageDir = srcDir;
         if (group != null && !group.isBlank()) {
             packageDir = srcDir.resolve(group.replace('.', '/'));
             dirs.add(packageDir);
         }
 
-        /* ---------- 3. 创建目录 ---------- */
         for (Path dir : dirs) {
             if (Files.notExists(dir)) {
                 Files.createDirectories(dir);
@@ -85,14 +72,12 @@ public final class GenerateTask implements Task {
             }
         }
 
-        /* ---------- 4. 写入示例入口文件 main.snow ---------- */
         Path mainSnow = packageDir.resolve("main.snow");
         if (Files.notExists(mainSnow)) {
             Files.writeString(mainSnow, SnowExample.getMainModule());
             System.out.println("[generate] created " + root.relativize(mainSnow));
         }
 
-        /* ---------- 5. 写入系统库文件 os.snow ---------- */
         Path osSnow = packageDir.resolve("OS.snow");
         if (Files.notExists(osSnow)) {
             Files.writeString(osSnow, SnowExample.getOsModule());
