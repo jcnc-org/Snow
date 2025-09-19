@@ -30,22 +30,24 @@ import java.util.*;
 import static org.jcnc.snow.common.SnowConfig.print;
 
 /**
- * CompileTask: 将 .snow 源文件编译为 VM 字节码文件 (.water) 的 CLI 任务实现。
+ * CompileTask 负责将 .snow 源文件编译为 VM 字节码（.water 文件），是命令行编译任务的具体实现。
  * <p>
- * 用法示例：
+ * 主要功能：
+ * <ul>
+ *     <li>递归收集目录下所有 .snow 文件</li>
+ *     <li>支持命令行参数自定义输出文件名、目录、是否自动运行 VM</li>
+ *     <li>输出编译各阶段的关键信息（源码、IR、VM code）</li>
+ *     <li>可选自动运行生成的字节码</li>
+ * </ul>
+ * <b>用法示例：</b>
  * <pre>
  *   snow compile [run] [-o &lt;name&gt;] [-d &lt;srcDir&gt;] [file1.snow file2.snow ...]
  * </pre>
- * 支持编译完成后立即运行生成的 VM。
  */
 public record CompileTask(Project project, String[] args) implements Task {
 
-    /* ------------------------------------------------------------------ */
-    /* 1. 构造方法和成员变量                                            */
-    /* ------------------------------------------------------------------ */
-
     /**
-     * 使用默认空参数数组的构造方法。
+     * 构造方法，使用空参数数组。
      *
      * @param project 当前项目对象
      */
@@ -53,25 +55,19 @@ public record CompileTask(Project project, String[] args) implements Task {
         this(project, new String[0]);
     }
 
-    /* ------------------------------------------------------------------ */
-    /* 2. 工具方法                                                       */
-    /* ------------------------------------------------------------------ */
-
     /**
      * 推断输出 .water 文件的路径。
-     * <p>
-     * 规则：
      * <ul>
-     *   <li>若指定了 outName，则以 outName 为基名</li>
-     *   <li>否则若指定了目录，则以目录名为基名</li>
-     *   <li>否则若只有一个源文件，则以该文件名（去 .snow 后缀）为基名</li>
-     *   <li>否则默认为 "program"</li>
+     *   <li>如指定 outName，则用该值作为基名</li>
+     *   <li>否则如指定目录，则用目录名作为基名</li>
+     *   <li>否则如仅有一个源文件，则用文件名（去掉 .snow）</li>
+     *   <li>否则用默认 "program"</li>
      * </ul>
      *
      * @param sources 源文件列表
-     * @param outName 用户指定的输出文件基名
-     * @param dir     用户指定的源目录
-     * @return 推断得到的 .water 文件路径
+     * @param outName 用户指定的输出文件名（可为 null）
+     * @param dir     用户指定的目录（可为 null）
+     * @return 推断后的 .water 文件路径
      */
     private static Path deriveOutputPath(List<Path> sources,
                                          String outName,
@@ -93,10 +89,10 @@ public record CompileTask(Project project, String[] args) implements Task {
     }
 
     /**
-     * 将 main 或 *.main 函数调整到列表首位，确保程序入口的 PC = 0。
+     * 将 main 或 *.main 函数调整到列表首位，确保入口 PC=0。
      *
      * @param in 原始 IRProgram
-     * @return 调整入口顺序后的 IRProgram
+     * @return 入口在首位的 IRProgram
      */
     private static IRProgram reorderForEntry(IRProgram in) {
         List<IRFunction> ordered = new ArrayList<>(in.functions());
@@ -112,14 +108,10 @@ public record CompileTask(Project project, String[] args) implements Task {
         return out;
     }
 
-    /* ------------------------------------------------------------------ */
-    /* 3. 任务执行入口                                                   */
-    /* ------------------------------------------------------------------ */
-
     /**
-     * 执行任务入口，调用 execute 并处理异常。
+     * 执行任务主入口，捕获异常向上抛出。
      *
-     * @throws Exception 若执行过程出现异常
+     * @throws Exception 执行出错
      */
     @Override
     public void run() throws Exception {
@@ -127,19 +119,31 @@ public record CompileTask(Project project, String[] args) implements Task {
     }
 
     /**
-     * 编译 .snow 源文件为 VM 字节码，并可选择立即运行。
+     * 编译 .snow 文件为 .water 字节码文件，可选自动运行。
+     * 支持参数：
      * <ul>
-     *   <li>支持参数 run（编译后运行）、-o（输出文件名）、-d（递归目录）、直接指定多个源文件。</li>
-     *   <li>输出源代码、AST、IR、最终 VM code，并写出 .water 文件。</li>
+     *     <li>run：编译后自动运行</li>
+     *     <li>-o name：指定输出文件名</li>
+     *     <li>-d srcDir：指定目录递归收集</li>
+     *     <li>支持多个源文件</li>
      * </ul>
+     * 编译流程：
+     * <ol>
+     *     <li>解析参数，收集源文件</li>
+     *     <li>词法/语法分析，输出 AST</li>
+     *     <li>语义分析</li>
+     *     <li>AST 转 IR，入口排序</li>
+     *     <li>IR 转 VM 指令</li>
+     *     <li>写出 .water 文件</li>
+     *     <li>（可选）自动运行</li>
+     * </ol>
      *
-     * @param args 命令行参数数组
-     * @return 0 表示成功，非 0 表示失败
-     * @throws Exception 编译或写入过程中出现异常时抛出
+     * @param args 命令行参数
+     * @return 0 成功，非0失败
+     * @throws Exception 任何编译或IO异常
      */
     public int execute(String[] args) throws Exception {
 
-        /* ---------------- 3.1 解析命令行参数 ---------------- */
         boolean runAfterCompile = false;
         String outputName = null;
         Path dir = null;
@@ -177,7 +181,6 @@ public record CompileTask(Project project, String[] args) implements Task {
             }
         }
 
-        /* ---------------- 3.2 递归收集目录中的 .snow 文件 ---------------- */
         if (dir != null) {
             if (!Files.isDirectory(dir)) {
                 System.err.println("Not a directory: " + dir);
@@ -199,7 +202,6 @@ public record CompileTask(Project project, String[] args) implements Task {
             return 1;
         }
 
-        /* ---------------- 4. 词法和语法分析 ---------------- */
         List<Node> allAst = new ArrayList<>();
 
         print("## 编译器输出");
@@ -217,20 +219,14 @@ public record CompileTask(Project project, String[] args) implements Task {
             allAst.addAll(new ParserEngine(ctx).parse());
         }
 
-        /* ---------------- 5. 语义分析 ---------------- */
         SemanticAnalyzerRunner.runSemanticAnalysis(allAst, false);
 
-        /* ---------------- 6. AST 转 IR，并调整入口 ---------------- */
         IRProgram program = new IRProgramBuilder().buildProgram(allAst);
-        program = reorderForEntry(program);  // 确保 main 在首位
-
-//        print("### AST");
-//        if (SnowConfig.isDebug()) ASTPrinter.printJson(allAst);
+        program = reorderForEntry(program);
 
         print("### IR");
         print(program.toString());
 
-        /* ---------------- 7. IR 转 VM 指令 ---------------- */
         VMProgramBuilder builder = new VMProgramBuilder();
         List<InstructionGenerator<? extends IRInstruction>> gens =
                 InstructionGeneratorProvider.defaultGenerators();
@@ -252,12 +248,10 @@ public record CompileTask(Project project, String[] args) implements Task {
             }
         }
 
-        /* ---------------- 8. 写出 .water 文件 ---------------- */
         Path outFile = deriveOutputPath(sources, outputName, dir);
         Files.write(outFile, vmCode, StandardCharsets.UTF_8);
         print("Written to " + outFile.toAbsolutePath());
 
-        /* ---------------- 9. 可选运行 VM ---------------- */
         if (runAfterCompile) {
             print("\n=== Launching VM ===");
             VMLauncher.main(new String[]{outFile.toString()});
