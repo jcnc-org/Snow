@@ -1,45 +1,25 @@
-// os module: 封装常用系统调用的便捷方法
+// fd module: File Descriptor(FD) 系统调用
 // ──────────────────────────────────────────────
-//  • 0x1200  PRINT     →  将对象输出到标准输出（不自动换行）
-//  • 0x1201  PRINTLN   →  将对象输出到标准输出并追加换行
-//  • 0x1001  READ      →  从文件描述符读取最多 n 字节并返回 byte[]
-//  • 0x1000  OPEN      →  打开文件，返回 fd
-//  • 0x1002  WRITE     →  向 fd 写入字节数据（支持 byte[] / String / 其他 toString()）
-//  • 0x1003  SEEK      →  移动文件指针，返回新位置 (long)
-//  • 0x1004  CLOSE     →  关闭文件描述符
-//  • 0x1005  STAT      →  获取文件的基本属性
-//  • 0x1007  UNLINK    →  删除路径
-//  • 0x1008  DUP       →  复制 oldfd，返回由系统分配的新 fd（指向同一底层文件）
-//  • 0x1009  DUP2      →  使 newfd 指向与 oldfd 相同的文件（若 newfd 已被占用会先关闭）
-//  • 0x100A  PIPE      →  创建匿名管道，VM 返回 int[]: [readfd, writefd]
-//  • 0x100B  TRUNCATE  →  将文件截断到指定长度
-//  • 0x100C  FTRUNCATE →  将 fd 对应文件截断到指定长度
-
+//  • 0x1001  READ         →  从文件描述符读取最多 n 字节并返回 byte[]
+//  • 0x1000  OPEN         →  打开文件，返回 fd
+//  • 0x1002  WRITE        →  向 fd 写入字节数据（支持 byte[] / String / 其他 toString()）
+//  • 0x1003  SEEK         →  移动文件指针，返回新位置 (long)
+//  • 0x1004  CLOSE        →  关闭文件描述符
+//  • 0x1005  STAT         →  获取文件的基本属性
+//  • 0x1007  UNLINK       →  删除路径
+//  • 0x1008  DUP          →  复制 oldfd，返回由系统分配的新 fd（指向同一底层文件）
+//  • 0x1009  DUP2         →  使 newfd 指向与 oldfd 相同的文件（若 newfd 已被占用会先关闭）
+//  • 0x100A  PIPE         →  创建匿名管道，VM 返回 int[]: [readfd, writefd]
+//  • 0x100B  TRUNCATE     →  将文件截断到指定长度
+//  • 0x100C  FTRUNCATE    →  将 fd 对应文件截断到指定长度
+//  • 0x100D  RENAME       →  重命名（或移动）文件/目录；若目标存在则覆盖
+//  • 0x100E  LINK         →  创建硬链接，让 newPath 指向 oldPath
+//  • 0x100F  SYMLINK      →  创建符号链接，让 linkPath 指向 target
+//  • 0x1010  READLINK     →  读取符号链接的目标路径
+//  • 0x1011  SET_NONBLOCK → 设置 fd 的非阻塞/阻塞模式
 // ──────────────────────────────────────────────
 
-module: os
-    // print(obj): 输出对象到 stdout，不附加换行。
-    // 成功返回 0。
-    function: print
-        params:
-            declare i1: any
-        returns: void
-        body:
-            syscall("0x1200", i1)
-        end body
-    end function
-
-    // println(obj): 输出对象到 stdout，并自动换行。
-    // 成功返回 0。
-    function: println
-        params:
-            declare i1: any
-        returns: void
-        body:
-            syscall("0x1201", i1)
-        end body
-    end function
-
+module: fd
     // read(fd, n): 从文件描述符 fd 读取最多 n 字节。
     function: read
         params:
@@ -187,6 +167,70 @@ module: os
         returns: int
         body:
             return syscall("0x100C", fd, length)
+        end body
+    end function
+
+    // rename(oldPath, newPath): 重命名（或移动）文件/目录；若目标存在则覆盖。
+    // 成功返回 0。
+    // 失败时抛出异常（参数类型错误，源不存在/权限不足，I/O 错误等）。
+    function: rename
+        params:
+            declare oldPath: any
+            declare newPath: any
+        returns: int
+        body:
+            return syscall("0x100D", oldPath, newPath)
+        end body
+    end function
+
+    // link(oldPath, newPath): 创建硬链接，让 newPath 指向 oldPath。
+    // 成功返回 0。
+    // 失败时抛出异常（参数错误、文件系统不支持、权限不足、I/O 错误等）。
+    function: link
+        params:
+            declare oldPath: any
+            declare newPath: any
+        returns: int
+        body:
+            return syscall("0x100E", oldPath, newPath)
+        end body
+    end function
+
+    // symlink(target, linkPath): 在 linkPath 处创建指向 target 的符号链接。
+    // 成功返回 0。
+    // 失败时抛出异常（参数类型错误，文件系统/平台限制，权限不足，I/O 错误等）。
+    function: symlink
+        params:
+            declare target: any
+            declare linkPath: any
+        returns: int
+        body:
+            return syscall("0x100F", target, linkPath)
+        end body
+    end function
+
+    // readlink(path): 读取符号链接的目标路径。
+    // 返回值为 target:String。
+    // 出错时抛出异常（参数类型错误，目标不是符号链接，权限不足，I/O 错误等）。
+    function: readlink
+        params:
+            declare path: any
+        returns: string
+        body:
+            return syscall("0x1010", path)
+        end body
+    end function
+
+    // setNonblock(fd, on): 设置 fd 的非阻塞/阻塞模式（仅对 SelectableChannel 生效）。
+    // on=1 → 非阻塞，on=0 → 阻塞。
+    // 成功返回 0；失败时抛出异常（fd 非法或通道不支持）。
+    function: setNonblock
+        params:
+            declare fd: int
+            declare on: int
+        returns: int
+        body:
+            return syscall("0x1011", fd, on)
         end body
     end function
 
