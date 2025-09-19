@@ -69,7 +69,10 @@ public class ArrayLiteralHandler implements ExpressionHandler<ArrayLiteralNode> 
                         list.add(buildArrayConstant(b, inner).value());
                 default ->
                     // 不支持的元素类型
-                        throw new IllegalStateException("暂不支持含非常量元素的数组字面量: " + e.getClass().getSimpleName());
+                        throw new IllegalStateException(
+                                "file:///" + e.context().file() + ":" + e.context().line() + ":" + e.context().column() +
+                                        ": 暂不支持含非常量元素的数组字面量: " + e.getClass().getSimpleName()
+                        );
             }
         }
         // 返回不可变 List 封装的 IRConstant

@@ -1,448 +1,78 @@
 package org.jcnc.snow.vm.commands.system.control;
 
+import org.jcnc.snow.vm.commands.system.control.syscalls.SyscallHandler;
 import org.jcnc.snow.vm.interfaces.Command;
-import org.jcnc.snow.vm.io.FDTable;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.*;
-import java.nio.file.OpenOption;
-import java.nio.file.Paths;
-import java.util.*;
-
-import static java.nio.file.StandardOpenOption.*;
-
 /**
- * SyscallCommand —— 虚拟机系统调用（SYSCALL）指令实现。
- *
+ * {@code SyscallCommand} 实现虚拟机系统调用分发器，负责根据系统调用 opcode 路由到对应的 {@link SyscallHandler} 实现。
  * <p>
- * 本类负责将虚拟机指令集中的 SYSCALL 进行分派，模拟现实系统常见的文件、网络、管道、标准输出等操作，
- * 通过操作数栈完成参数、返回值传递，并借助文件描述符表（FDTable）进行底层资源管理。
- * 所有 I/O 相关功能均基于 Java NIO 实现，兼容多种 I/O 场景。
- * </p>
+ * 用于在虚拟机指令流中处理所有系统调用相关的操作，并统一管理异常处理和错误状态记录。
  *
- * <p>参数与栈约定:</p>
+ * <p><b>工作流程：</b></p>
+ * <ol>
+ *   <li>从指令参数解析出 syscall opcode（支持 16 进制或 10 进制字符串）</li>
+ *   <li>根据 opcode 查找 {@link SyscallHandler}</li>
+ *   <li>调用 handler 处理，成功时清除全局 errno/errstr，失败时压入错误并记录异常信息</li>
+ * </ol>
+ *
+ * <p><b>异常管理：</b></p>
  * <ul>
- *   <li>所有调用参数，均按“右值先入、左值后入”顺序压入 {@link OperandStack}。</li>
- *   <li>SYSCALL 指令自动弹出参数并处理结果；返回值（如描述符、读取长度、是否成功等）压回栈顶。</li>
+ *   <li>如果指令参数不足，直接压入参数错误并返回</li>
+ *   <li>如果 opcode 解析失败，抛出 {@link IllegalArgumentException}</li>
+ *   <li>系统调用 handler 抛出异常时，自动通过 {@link SyscallUtils#pushErr} 压入 -1 并记录错误串</li>
  * </ul>
  *
- * <p>异常与失败处理:</p>
- * <ul>
- *   <li>系统调用失败或遇到异常时，均向操作数栈压入 {@code -1}，以便调用者统一检测。</li>
- * </ul>
- *
- * <p>支持的子命令示例:</p>
- * <ul>
- *   <li>PRINT / PRINTLN —— 控制台输出</li>
- *   <li>OPEN / CLOSE / READ / WRITE / SEEK —— 文件相关操作</li>
- *   <li>PIPE / DUP —— 管道与文件描述符复制</li>
- *   <li>SOCKET / CONNECT / BIND / LISTEN / ACCEPT —— 网络通信</li>
- *   <li>SELECT —— 多通道 I/O 就绪检测</li>
- * </ul>
+ * <p><b>返回：</b>始终返回下一个指令位置 {@code pc + 1}</p>
  */
 public class SyscallCommand implements Command {
 
     /**
-     * 根据传入的文件打开标志，构造 NIO {@link OpenOption} 集合。
-     * <p>
-     * 本方法负责将底层虚拟机传递的 flags 整数型位域，转换为 Java NIO 标准的文件打开选项集合，
-     * 以支持文件读、写、创建、截断、追加等多种访问场景。
-     * 常用于 SYSCALL 的 OPEN 子命令。
-     * </p>
+     * 执行系统调用分发。
      *
-     * @param flags 文件打开模式标志。各标志可组合使用，具体含义请参见虚拟机文档。
-     * @return 转换后的 OpenOption 集合，可直接用于 FileChannel.open 等 NIO 方法
-     */
-    private static Set<OpenOption> flagsToOptions(int flags) {
-        Set<OpenOption> opts = new HashSet<>();
-        // 如果有写入标志，则添加WRITE，否则默认为READ。
-        if ((flags & 0x1) != 0) opts.add(WRITE);
-        else opts.add(READ);
-        // 如果包含创建标志，允许创建文件。
-        if ((flags & 0x40) != 0) opts.add(CREATE);
-        // 包含截断标志，打开时清空内容。
-        if ((flags & 0x200) != 0) opts.add(TRUNCATE_EXISTING);
-        // 包含追加标志，文件写入时追加到末尾。
-        if ((flags & 0x400) != 0) opts.add(APPEND);
-        return opts;
-    }
-
-    /**
-     * 捕获所有异常并统一处理，操作数栈压入 -1 代表本次系统调用失败。
-     * <p>
-     * 本方法是全局错误屏障，任何命令异常都会转换为虚拟机通用的失败信号，
-     * 保证上层调用逻辑不会被异常打断。实际应用中可拓展错误码机制。
-     * </p>
-     *
-     * @param stack 操作数栈，将失败信号写入此栈
-     * @param e     抛出的异常对象，可在调试时输出日志
-     */
-    private static void pushErr(OperandStack stack, Exception e) {
-        stack.push(-1);
-        System.err.println("Syscall exception: " + e);
-    }
-
-    /**
-     * 控制台输出通用方法，支持基本类型、字节数组、任意数组、对象等。
-     * <p>
-     * 该方法用于 SYSCALL PRINT/PRINTLN，将任意类型对象转为易读字符串输出到标准输出流。
-     * 字节数组自动按 UTF-8 解码，其它原生数组按格式化字符串输出。
-     * </p>
-     *
-     * @param obj     待输出的内容，可以为任何类型（如基本类型、byte[]、数组、对象等）
-     * @param newline 是否自动换行。如果为 true，则在输出后换行；否则直接输出。
-     */
-    private static void output(Object obj, boolean newline) {
-        String str;
-        if (obj == null) {
-            str = "null";
-        } else if (obj instanceof byte[] bytes) {
-            // 字节数组作为文本输出
-            str = new String(bytes);
-        } else if (obj.getClass().isArray()) {
-            // 其它数组格式化输出
-            str = arrayToString(obj);
-        } else {
-            str = obj.toString();
-        }
-        if (newline) System.out.println(str);
-        else System.out.print(str);
-    }
-
-    /**
-     * 将各种原生数组和对象数组转换为可读字符串，便于控制台输出和调试。
-     * <p>
-     * 本方法针对 int、long、double、float、short、char、byte、boolean 等所有原生数组类型
-     * 以及对象数组都能正确格式化，统一输出格式风格，避免显示为类型 hashCode。
-     * 若为不支持的类型，返回通用提示字符串。
-     * </p>
-     *
-     * @param array 任意原生数组或对象数组
-     * @return 该数组的可读字符串表示
-     */
-    private static String arrayToString(Object array) {
-        if (array instanceof int[] a) return Arrays.toString(a);
-        if (array instanceof long[] a) return Arrays.toString(a);
-        if (array instanceof double[] a) return Arrays.toString(a);
-        if (array instanceof float[] a) return Arrays.toString(a);
-        if (array instanceof short[] a) return Arrays.toString(a);
-        if (array instanceof char[] a) return Arrays.toString(a);
-        if (array instanceof byte[] a) return Arrays.toString(a);
-        if (array instanceof boolean[] a) return Arrays.toString(a);
-        if (array instanceof Object[] a) return Arrays.deepToString(a);
-        return "Unsupported array";
-    }
-
-    /**
-     * 分发并执行 SYSCALL 子命令，根据子命令类型从操作数栈取出参数、操作底层资源，并将结果压回栈顶。
-     *
-     * @param parts     指令及子命令参数分割数组，parts[1]为子命令名
-     * @param pc        当前指令计数器
-     * @param stack     操作数栈
-     * @param locals    局部变量表
-     * @param callStack 调用栈
-     * @return 下一条指令的 pc 值（通常为 pc+1）
-     * @throws IllegalArgumentException      缺少子命令参数时抛出
-     * @throws UnsupportedOperationException 不支持的 SYSCALL 子命令时抛出
+     * @param parts     指令参数（parts[1] 必须为 syscall opcode，支持 "0x..." 格式）
+     * @param pc        当前程序计数器
+     * @param stack     虚拟机操作数栈
+     * @param locals    当前方法的本地变量表
+     * @param callStack 当前调用栈
+     * @return 下一个指令位置（pc + 1）
+     * @throws IllegalArgumentException opcode 格式非法时抛出
      */
     @Override
-    public int execute(String[] parts, int pc,
+    public int execute(String[] parts,
+                       int pc,
                        OperandStack stack,
                        LocalVariableStore locals,
                        CallStack callStack) {
 
         if (parts.length < 2) {
-            throw new IllegalArgumentException("SYSCALL missing subcommand");
+            SyscallUtils.pushErr(stack, new IllegalArgumentException("Missing syscall opcode"));
+            return pc + 1;
         }
 
-        String cmd = parts[1].toUpperCase(Locale.ROOT);
+        int opcode;
+        try {
+            String token = parts[1].trim();
+            if (token.startsWith("0x") || token.startsWith("0X")) {
+                opcode = Integer.parseInt(token.substring(2), 16);
+            } else {
+                opcode = Integer.parseInt(token);
+            }
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid syscall opcode format: " + parts[1], e);
+        }
+
+        SyscallHandler handler = SyscallFactory.getHandler(opcode);
 
         try {
-            switch (cmd) {
-                // 文件相关操作
-                case "OPEN" -> {
-                    int mode = (Integer) stack.pop();
-                    int flags = (Integer) stack.pop();
-                    String path = String.valueOf(stack.pop());
-                    FileChannel fc = FileChannel.open(Paths.get(path), flagsToOptions(flags));
-                    stack.push(FDTable.register(fc));
-                }
-                case "CLOSE" -> {
-                    int fd = (Integer) stack.pop();
-                    FDTable.close(fd);
-                    stack.push(0);
-                }
-                case "READ" -> {
-                    int count = (Integer) stack.pop();
-                    int fd = (Integer) stack.pop();
-                    Channel ch = FDTable.get(fd);
-                    if (!(ch instanceof ReadableByteChannel rch)) {
-                        stack.push(new byte[0]);
-                        break;
-                    }
-                    ByteBuffer buf = ByteBuffer.allocate(count);
-                    int n = rch.read(buf);
-                    if (n < 0) n = 0;
-                    buf.flip();
-                    byte[] out = new byte[n];
-                    buf.get(out);
-                    stack.push(out);
-                }
-                case "WRITE" -> {
-                    Object dataObj = stack.pop();
-                    int fd = (Integer) stack.pop();
-                    byte[] data = (dataObj instanceof byte[] b)
-                            ? b
-                            : String.valueOf(dataObj).getBytes();
-                    Channel ch = FDTable.get(fd);
-                    if (!(ch instanceof WritableByteChannel wch)) {
-                        stack.push(-1);
-                        break;
-                    }
-                    int written = wch.write(ByteBuffer.wrap(data));
-                    stack.push(written);
-                }
-                case "SEEK" -> {
-                    int whence = (Integer) stack.pop();
-                    long off = ((Number) stack.pop()).longValue();
-                    int fd = (Integer) stack.pop();
-                    Channel ch = FDTable.get(fd);
-                    if (!(ch instanceof SeekableByteChannel sbc)) {
-                        stack.push(-1);
-                        break;
-                    }
-                    SeekableByteChannel newPos = switch (whence) {
-                        case 0 -> sbc.position(off);
-                        case 1 -> sbc.position(sbc.position() + off);
-                        case 2 -> sbc.position(sbc.size() + off);
-                        default -> throw new IllegalArgumentException("Invalid offset type");
-                    };
-                    stack.push(newPos);
-                }
-
-                // 管道与描述符操作
-                case "PIPE" -> {
-                    Pipe p = Pipe.open();
-                    stack.push(FDTable.register(p.sink()));
-                    stack.push(FDTable.register(p.source()));
-                }
-                case "DUP" -> {
-                    int oldfd = (Integer) stack.pop();
-                    stack.push(FDTable.dup(oldfd));
-                }
-
-                // 网络相关
-                case "SOCKET" -> {
-                    int proto = (Integer) stack.pop();
-                    int type = (Integer) stack.pop();
-                    int domain = (Integer) stack.pop();
-                    Channel ch = (type == 1)
-                            ? SocketChannel.open()
-                            : DatagramChannel.open();
-                    stack.push(FDTable.register(ch));
-                }
-                case "CONNECT" -> {
-                    int port = (Integer) stack.pop();
-                    String host = String.valueOf(stack.pop());
-                    int fd = (Integer) stack.pop();
-                    Channel ch = FDTable.get(fd);
-                    if (ch instanceof SocketChannel sc) {
-                        sc.connect(new InetSocketAddress(host, port));
-                        stack.push(0);
-                    } else {
-                        stack.push(-1);
-                    }
-                }
-                case "BIND" -> {
-                    int port = (Integer) stack.pop();
-                    String host = String.valueOf(stack.pop());
-                    int fd = (Integer) stack.pop();
-                    Channel ch = FDTable.get(fd);
-                    if (ch instanceof ServerSocketChannel ssc) {
-                        ssc.bind(new InetSocketAddress(host, port));
-                        stack.push(0);
-                    } else {
-                        stack.push(-1);
-                    }
-                }
-                case "LISTEN" -> {
-                    int backlog = (Integer) stack.pop();
-                    int fd = (Integer) stack.pop();
-                    Channel ch = FDTable.get(fd);
-                    if (ch instanceof ServerSocketChannel) {
-                        stack.push(0);
-                    } else {
-                        stack.push(-1);
-                    }
-                }
-                case "ACCEPT" -> {
-                    int fd = (Integer) stack.pop();
-                    Channel ch = FDTable.get(fd);
-                    if (ch instanceof ServerSocketChannel ssc) {
-                        SocketChannel cli = ssc.accept();
-                        stack.push(FDTable.register(cli));
-                    } else {
-                        stack.push(-1);
-                    }
-                }
-
-                // 多路复用
-                case "SELECT" -> {
-                    long timeout = ((Number) stack.pop()).longValue();
-                    @SuppressWarnings("unchecked")
-                    List<Integer> fds = (List<Integer>) stack.pop();
-
-                    Selector sel = Selector.open();
-                    for (int fd : fds) {
-                        Channel c = FDTable.get(fd);
-                        if (c instanceof SelectableChannel sc) {
-                            sc.configureBlocking(false);
-                            int ops = (c instanceof ReadableByteChannel ? SelectionKey.OP_READ : 0)
-                                    | (c instanceof WritableByteChannel ? SelectionKey.OP_WRITE : 0);
-                            sc.register(sel, ops, fd);
-                        }
-                    }
-                    int ready = sel.select(timeout);
-                    List<Integer> readyFds = new ArrayList<>();
-                    if (ready > 0) {
-                        for (SelectionKey k : sel.selectedKeys()) {
-                            readyFds.add((Integer) k.attachment());
-                        }
-                    }
-                    stack.push(readyFds);
-                    sel.close();
-                }
-
-                // 数组元素访问：arr[idx] —— 保留所有类型精度（byte/short/int/long/float/double/boolean/string/ref）
-                case "ARR_GET" -> {
-                    /*
-                      执行数组下标访问操作 arr[idx]，并将对应元素以真实类型压入操作数栈。
-                      <ul>
-                        <li>支持 List 与任意原生数组类型（int[]、double[] 等）；</li>
-                        <li>idx 参数支持 Number/String 类型，自动转 int；</li>
-                        <li>下标越界将抛出异常，非数组类型将报错；</li>
-                        <li>返回结果保持类型精度：byte/short/int/long/float/double/boolean/string/object;</li>
-                        <li>boolean 元素以 1/0 压栈，string/引用直接压栈；</li>
-                      </ul>
-
-                      异常与出错行为：
-                      <ul>
-                        <li>索引类型非法、目标非数组/列表，将抛 IllegalArgumentException；</li>
-                        <li>索引越界，将抛 IndexOutOfBoundsException；</li>
-                      </ul>
-                     */
-                    Object idxObj = stack.pop();
-                    Object arrObj = stack.pop();
-                    int idx;
-                    if (idxObj instanceof Number n) idx = n.intValue();
-                    else if (idxObj instanceof String s) idx = Integer.parseInt(s.trim());
-                    else throw new IllegalArgumentException("ARR_GET: invalid index type " + idxObj);
-
-                    Object elem;
-                    if (arrObj instanceof java.util.List<?> list) {
-                        if (idx < 0 || idx >= list.size())
-                            throw new IndexOutOfBoundsException("数组下标越界: " + idx + " (长度 " + list.size() + ")");
-                        elem = list.get(idx);
-                    } else if (arrObj != null && arrObj.getClass().isArray()) {
-                        int len = java.lang.reflect.Array.getLength(arrObj);
-                        if (idx < 0 || idx >= len)
-                            throw new IndexOutOfBoundsException("数组下标越界: " + idx + " (长度 " + len + ")");
-                        elem = java.lang.reflect.Array.get(arrObj, idx);
-                    } else {
-                        throw new IllegalArgumentException("ARR_GET: not an array/list: " + arrObj);
-                    }
-
-                    // === 按真实类型压栈（byte/short/int/long/float/double/boolean/string/ref）===
-                    if (elem instanceof Number n) {
-                        if (elem instanceof Double) {
-                            stack.push(n.doubleValue());
-                        } else if (elem instanceof Float) {
-                            stack.push(n.floatValue());
-                        } else if (elem instanceof Long) {
-                            stack.push(n.longValue());
-                        } else if (elem instanceof Integer) {
-                            stack.push(n.intValue());
-                        } else if (elem instanceof Short) {
-                            stack.push(n.shortValue());
-                        } else if (elem instanceof Byte) {
-                            stack.push(n.byteValue());
-                        } else {
-                            stack.push(n.intValue()); // 兜底
-                        }
-                    } else if (elem instanceof Boolean b) {
-                        stack.push(b ? 1 : 0);
-                    } else {
-                        // string 或其它引用类型，直接返回
-                        stack.push(elem);
-                    }
-                }
-
-                case "ARR_SET" -> {
-                    /*
-                      arr[idx] = value
-                      支持 List 和所有原生数组类型（int[], double[], ...）
-                      参数顺序：栈顶 value、idx、arr
-                      不返回值（成功/失败由异常控制）
-                    */
-                    Object value = stack.pop();
-                    Object idxObj = stack.pop();
-                    Object arrObj = stack.pop();
-                    int idx;
-                    if (idxObj instanceof Number n) idx = n.intValue();
-                    else if (idxObj instanceof String s) idx = Integer.parseInt(s.trim());
-                    else throw new IllegalArgumentException("ARR_SET: invalid index type " + idxObj);
-
-                    if (arrObj instanceof java.util.List<?> list) {
-                        // 必须是可变 List
-                        @SuppressWarnings("unchecked")
-                        java.util.List<Object> mlist = (java.util.List<Object>) list;
-                        if (idx < 0) {
-                            throw new IndexOutOfBoundsException("数组下标越界: " + idx + " (长度 " + mlist.size() + ")");
-                        }
-                        // 允许自动扩容：当 idx == size 时等价于 append；当 idx > size 时以 null 填充到 idx-1，再 set(idx, value)
-                        if (idx >= mlist.size()) {
-                            // 以 null 填充直到 size == idx
-                            while (mlist.size() < idx) {
-                                mlist.add(null);
-                            }
-                            // 此时 size == idx，直接追加
-                            mlist.add(value);
-                        } else {
-                            mlist.set(idx, value);
-                        }
-                    } else if (arrObj != null && arrObj.getClass().isArray()) {
-                        int len = java.lang.reflect.Array.getLength(arrObj);
-                        if (idx < 0 || idx >= len)
-                            throw new IndexOutOfBoundsException("数组下标越界: " + idx + " (长度 " + len + ")");
-                        java.lang.reflect.Array.set(arrObj, idx, value);
-                    } else {
-                        throw new IllegalArgumentException("ARR_SET: not an array/list: " + arrObj);
-                    }
-                    // 操作成功，push 0 作为 ok 信号；不需要返回时可省略
-                    stack.push(0);
-                }
-
-
-                // 控制台输出
-                case "PRINT" -> {
-                    Object dataObj = stack.pop();
-                    output(dataObj, false);
-                    stack.push(0);
-                }
-                case "PRINTLN" -> {
-                    Object dataObj = stack.pop();
-                    output(dataObj, true);
-                    stack.push(0);
-                }
-
-                default -> throw new UnsupportedOperationException("Unsupported SYSCALL subcommand: " + cmd);
-            }
+            handler.handle(stack, locals, callStack);
+            // 成功时重置 errno/errstr
+            SyscallUtils.clearErr();
         } catch (Exception e) {
-            pushErr(stack, e);
+            // 失败时压入 -1（int）并记录错误串
+            SyscallUtils.pushErr(stack, e);
         }
 
         return pc + 1;

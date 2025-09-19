@@ -7,6 +7,7 @@ import org.jcnc.snow.compiler.parser.base.TopLevelParser;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
 import org.jcnc.snow.compiler.parser.context.TokenStream;
 import org.jcnc.snow.compiler.parser.context.UnexpectedToken;
+import org.jcnc.snow.compiler.parser.context.UnsupportedFeature;
 import org.jcnc.snow.compiler.parser.function.FunctionParser;
 import org.jcnc.snow.compiler.parser.statement.DeclarationStatementParser;
 import org.jcnc.snow.compiler.parser.struct.StructParser;
@@ -16,27 +17,16 @@ import java.util.List;
 
 /**
  * {@code ModuleParser}
- * <p>
+ *
  * 顶层结构解析器：负责解析整个源码模块（module ... end module）。
  * <ul>
  *   <li>支持模块声明、导入(import)、全局变量(globals)、结构体(struct)、函数(function)等顶层语法。</li>
  *   <li>允许模块体中出现任意数量的空行（自动跳过），顺序自由。</li>
  *   <li>遇到非法顶层语句或区块会抛出 {@link UnexpectedToken}，提示具体位置和原因。</li>
  * </ul>
- * </p>
  */
 public class ModuleParser implements TopLevelParser {
 
-    /**
-     * 解析一个完整的模块定义块，返回 AST {@link ModuleNode}。
-     * <p>
-     * 支持空行，允许导入、全局、结构体、函数等多种区块混排。
-     * </p>
-     *
-     * @param ctx 解析上下文（包含 TokenStream、文件名等信息）
-     * @return 解析生成的 ModuleNode
-     * @throws UnexpectedToken 当模块体中遇到不支持的顶层语句时抛出
-     */
     @Override
     public ModuleNode parse(ParserContext ctx) {
         TokenStream ts = ctx.getTokens();
@@ -65,33 +55,23 @@ public class ModuleParser implements TopLevelParser {
 
         // 4) 进入主循环，直到 end module
         while (true) {
-            // 跳过空行
             if (ts.peek().getType() == TokenType.NEWLINE) {
                 ts.next();
                 continue;
             }
-            // 到达模块结尾
             if ("end".equals(ts.peek().getLexeme())) {
                 break;
             }
             String lex = ts.peek().getLexeme();
             switch (lex) {
-                // 解析 import 语句（可多次出现，支持 import 多个模块）
                 case "import" -> imports.addAll(importParser.parse(ctx));
-
-                // 解析 struct 结构体定义块
                 case "struct" -> structs.add(structParser.parse(ctx));
-
-                // 解析 function 顶层函数定义
                 case "function" -> functions.add(funcParser.parse(ctx));
-
-                // 解析全局变量声明区块
                 case "globals" -> {
                     ts.expect("globals");
                     ts.expect(":");
                     ts.expectType(TokenType.NEWLINE);
                     while (true) {
-                        // 跳过空行
                         if (ts.peek().getType() == TokenType.NEWLINE) {
                             ts.next();
                             continue;
@@ -99,13 +79,11 @@ public class ModuleParser implements TopLevelParser {
                         String innerLex = ts.peek().getLexeme();
                         if ("declare".equals(innerLex)) {
                             globals.add(globalsParser.parse(ctx));
-                        }
-                        // 下一个 function/import/end 开头则结束 globals 区块
-                        else if ("function".equals(innerLex) || "import".equals(innerLex) || "end".equals(innerLex)) {
+                        } else if ("function".equals(innerLex)
+                                || "import".equals(innerLex)
+                                || "end".equals(innerLex)) {
                             break;
-                        }
-                        // 其余标记为非法内容，抛出异常
-                        else {
+                        } else {
                             throw new UnexpectedToken(
                                     "globals 区块中不支持的内容: " + innerLex,
                                     ts.peek().getLine(),
@@ -114,8 +92,7 @@ public class ModuleParser implements TopLevelParser {
                         }
                     }
                 }
-                // 未知或非法顶层内容
-                case null, default -> throw new UnexpectedToken(
+                default -> throw new UnexpectedToken(
                         "Unexpected token in module: " + lex,
                         ts.peek().getLine(),
                         ts.peek().getCol()
@@ -127,7 +104,30 @@ public class ModuleParser implements TopLevelParser {
         ts.expect("end");
         ts.expect("module");
 
-        // 6) 构造并返回 ModuleNode
-        return new ModuleNode(name, imports, globals, structs, functions, new NodeContext(line, column, file));
+        // 6) 校验 module 名与文件名一致性 (fd ↔ fd.snow)
+        String baseName;
+        try {
+            java.nio.file.Path p = java.nio.file.Paths.get(file);
+            baseName = (p.getFileName() == null) ? file : p.getFileName().toString();
+        } catch (Exception e) {
+            baseName = file;
+        }
+
+        if ("fd".equals(name) && !"fd.snow".equals(baseName)) {
+            throw new UnsupportedFeature(
+                    "模块名为 \"fd\" 时，文件名必须为 \"fd.snow\"，实际文件: " + baseName,
+                    line, column
+            );
+        }
+        if ("fd.snow".equals(baseName) && !"fd".equals(name)) {
+            throw new UnsupportedFeature(
+                    "当文件名为 \"fd.snow\" 时，模块名必须为 \"fd\"，实际模块名: " + name,
+                    line, column
+            );
+        }
+
+        // 7) 返回构建的 ModuleNode
+        return new ModuleNode(name, imports, globals, structs, functions,
+                new NodeContext(line, column, file));
     }
 }

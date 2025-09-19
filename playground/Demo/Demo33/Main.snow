@@ -1,12 +1,14 @@
 module: main
-    import: os,Student, Person
+    import: os.fs
+    import: os.fd
+    import: std.stdio,Student, Person
 
 	function: main
 	    returns: void
 	    body:
 	        declare a: Person = new Student(1)
 
-	        os.println(a.getName())
+	        stdio.println(a.getName())
 
 
 	    end body

@@ -1,5 +1,6 @@
 package org.jcnc.snow.compiler.semantic.core;
 
+import org.jcnc.snow.compiler.semantic.type.ArrayType;
 import org.jcnc.snow.compiler.semantic.type.BuiltinType;
 import org.jcnc.snow.compiler.semantic.type.FunctionType;
 import org.jcnc.snow.compiler.semantic.type.Type;
@@ -85,7 +86,7 @@ public final class BuiltinTypeRegistry {
      * <ul>
      *   <li><b>os 模块</b>
      *     <ul>
-     *       <li><b>syscall(string, any): void</b> —— 用于标准库内部与底层系统通信的内核函数。</li>
+     *       <li><b>syscall(string, any[]): void</b> —— 用于标准库内部与底层系统通信的内核函数。</li>
      *     </ul>
      *   </li>
      * </ul>
@@ -97,12 +98,12 @@ public final class BuiltinTypeRegistry {
         // 注册标准库模块 os
         ModuleInfo utils = new ModuleInfo("os");
 
-        // 注册 syscall(string, any): void 内核函数
-        // 参数类型：string, any
+        // 注册 syscall(string, any[]): void 内核函数
+        // 参数类型：string, any[]
         // 返回类型：void
         FunctionType syscallFn = new FunctionType(
-                Arrays.asList(BuiltinType.STRING, BuiltinType.ANY),
-                BuiltinType.VOID
+                Arrays.asList(BuiltinType.STRING, new ArrayType(BuiltinType.ANY)),
+                BuiltinType.ANY
         );
         // 添加到 os 模块函数表
         utils.getFunctions().put("syscall", syscallFn);

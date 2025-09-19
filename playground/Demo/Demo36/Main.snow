@@ -1,6 +1,8 @@
 // overload 示例
 module: Main
-    import: os
+    import: os.fs
+    import: os.fd
+    import: std.stdio
 
     // Animal结构体
     struct: Animal
@@ -81,27 +83,27 @@ module: Main
         body:
             // 使用 2参构造
             declare a: Animal = new Animal("GenericAnimal", 1)
-            os.println("a.age init -> " + a.getAge())     // 1
+            stdio.println("a.age init -> " + a.getAge())     // 1
 
             // 使用单参构造（age 默认 0）
             declare b: Animal = new Animal("OnlyName")
-            os.println("b.age init -> " + b.getAge())     // 0
+            stdio.println("b.age init -> " + b.getAge())     // 0
 
             // 使用无参构造（默认 Unknown, 0）
             declare c: Animal = new Animal()
-            os.println("c.age init -> " + c.getAge())     // 0
+            stdio.println("c.age init -> " + c.getAge())     // 0
 
             // 方法重载调用：绝对设置年龄
             a.setAge(5)
-            os.println("a.setAge(5) -> " + a.getAge())    // 5
+            stdio.println("a.setAge(5) -> " + a.getAge())    // 5
 
             // 方法重载调用：按增量增加年龄（+2）
             a.setAge(2, true)
-            os.println("a.setAge(2, true) -> " + a.getAge()) // 7
+            stdio.println("a.setAge(2, true) -> " + a.getAge()) // 7
 
             // 如果第二个参数为 false，则等同于绝对设置
             a.setAge(10, false)
-            os.println("a.setAge(10, false) -> " + a.getAge()) // 10
+            stdio.println("a.setAge(10, false) -> " + a.getAge()) // 10
         end body
     end function
 end module

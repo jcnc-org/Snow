@@ -3,36 +3,33 @@ package org.jcnc.snow.pkg.tasks;
 import org.jcnc.snow.vm.VMLauncher;
 
 /**
- * 任务: 执行已编译的 VM 字节码文件（.water）。
+ * RunTask 负责执行已编译的 VM 字节码程序（.water 文件），
+ * 通常用于 CLI、IDE 插件或自动化流程中统一启动虚拟机。
  * <p>
- * 作为 CLI、IDE 插件或其他宿主环境启动虚拟机的统一入口，<br>
- * 通过调用 {@link VMLauncher#main(String[])} 启动 VM 并执行指定程序。
+ * 通过调用 {@link VMLauncher#main(String[])} 启动虚拟机并运行指定程序。
  * </p>
+ * <ul>
+ *   <li>args：传递给 VM 的参数数组，第一个应为 .water 程序路径</li>
+ * </ul>
  */
-public final class RunTask implements Task {
+public record RunTask(String... args) implements Task {
 
     /**
-     * 传递给虚拟机的完整参数列表（第一个应为 .water 文件路径）
-     */
-    private final String[] args;
-
-    /**
-     * 创建运行任务。
+     * 构造 RunTask 实例。
      *
-     * @param args VM 参数数组（第一个为 .water 程序路径，其后为可选参数）
+     * @param args VM 启动参数数组（第一个为 .water 程序路径，其后为可选参数）
      */
-    public RunTask(String... args) {
-        this.args = args;
+    public RunTask {
     }
 
     /**
-     * 执行运行任务。内部委托 {@link VMLauncher#main(String[])} 启动 VM。
+     * 执行 VM 启动任务，委托 {@link VMLauncher#main(String[])} 启动虚拟机。
      * <ul>
-     *   <li>如果参数为空则抛出 {@link IllegalArgumentException}</li>
-     *   <li>异常由虚拟机本身抛出，直接透出</li>
+     *   <li>如未传递参数，将抛出 {@link IllegalArgumentException}</li>
+     *   <li>虚拟机运行期间的异常直接透出</li>
      * </ul>
      *
-     * @throws Exception 虚拟机启动或运行期间抛出的异常
+     * @throws Exception 虚拟机启动或运行期间的异常
      */
     @Override
     public void run() throws Exception {

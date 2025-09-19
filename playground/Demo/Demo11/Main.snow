@@ -1,24 +1,8 @@
-function: main
-    returns: void
-    body:
-        print(1)
-    end body
-end function
-
-function: print
-    params:
-        declare i1: int
-    returns: void
-    body:
-        syscall("PRINT", i1)
-    end body
-end function
-
-function: println
-    params:
-        declare i1: int
-    returns: void
-    body:
-        syscall("PRINTLN", i1)
-    end body
-end function
+module: Main
+	import: std.stdio
+	function: main
+		body:
+		stdio.print(1)
+		end body
+	end function
+end  module

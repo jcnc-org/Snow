@@ -3,8 +3,14 @@
 <h1 align="center" style="margin: 30px 0 30px; font-weight: bold;">Snow编程语言</h1>
 
 <p align="center">
-<a href='https://gitee.com/jcnc-org/snow/stargazers'><img src='https://gitee.com/jcnc-org/snow/badge/star.svg?theme=dark' alt='star'></a>
-<a href='https://gitcode.com/jcnc-org/snow'><img src='https://gitcode.com/jcnc-org/snow/star/badge.svg' alt='fork'></a> 
+  <a href="https://gitee.com/jcnc-org/snow/stargazers">
+    <img src="https://gitee.com/jcnc-org/snow/badge/star.svg?theme=dark"
+         alt="Gitee Star" height="20">
+  </a>
+  <a href="https://gitcode.com/jcnc-org/snow">
+    <img src="https://gitcode.com/jcnc-org/snow/star/badge.svg"
+         alt="GitCode Star" height="20">
+  </a>
 </p>
 
 

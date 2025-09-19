@@ -1,12 +1,14 @@
 module: Main
-    import: ModuleA,os
+    import: ModuleA
+    import: std.stdio
+
     globals:
         declare const c: int = 10
     function: main
         returns: void
         body:
             declare a: int = ModuleA.sum(c,2)
-            os.print(a)
+            stdio.print(a)
         end body
     end function
 end module

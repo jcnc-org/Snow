@@ -1,10 +1,13 @@
 package org.jcnc.snow.vm.commands.ref.control;
 
+import org.jcnc.snow.vm.commands.system.control.SyscallUtils;
 import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Objects;
 
 /**
@@ -46,6 +49,32 @@ import java.util.Objects;
  */
 public final class RAddCommand implements Command {
     /**
+     * Converts an arbitrary object into a display string that mimics console output behavior.
+     * <p>
+     * Rules:
+     * <ul>
+     *   <li><code>null</code> → <code>"null"</code></li>
+     *   <li><code>byte[]</code> → Decoded as UTF-8 text</li>
+     *   <li>Other arrays → Formatted using {@link SyscallUtils#arrayToString(Object)}</li>
+     *   <li>All other objects → Result of {@link Object#toString()}</li>
+     * </ul>
+     *
+     * @param obj the object to convert
+     * @return a string representation suitable for display
+     */
+
+    private static String toDisplayString(Object obj) {
+        if (obj == null) {
+            return "null";
+        }
+        if (obj.getClass().isArray()) {
+            // SyscallUtils handles byte[] specially as UTF-8 and others via Arrays.toString/deepToString
+            return SyscallUtils.arrayToString(obj);
+        }
+        return Objects.toString(obj, "null");
+    }
+
+    /**
      * Executes the {@code R_ADD} instruction, performing numeric addition or string concatenation.
      *
      * <p>
@@ -72,19 +101,28 @@ public final class RAddCommand implements Command {
 
         // Fast path: If both operands are numbers, perform numeric addition with widest type
         if (left instanceof Number l && right instanceof Number r) {
-            if (left instanceof Double || right instanceof Double) {
+            // Numeric addition path
+            if (l instanceof Double || r instanceof Double) {
                 operandStack.push(l.doubleValue() + r.doubleValue());
-            } else if (left instanceof Float || right instanceof Float) {
+            } else if (l instanceof Float || r instanceof Float) {
                 operandStack.push(l.floatValue() + r.floatValue());
-            } else if (left instanceof Long || right instanceof Long) {
+            } else if (l instanceof Long || r instanceof Long) {
                 operandStack.push(l.longValue() + r.longValue());
+            } else if (l instanceof BigDecimal || r instanceof BigDecimal) {
+                BigDecimal ld = (l instanceof BigDecimal bd) ? bd : BigDecimal.valueOf(l.doubleValue());
+                BigDecimal rd = (r instanceof BigDecimal bd) ? bd : BigDecimal.valueOf(r.doubleValue());
+                operandStack.push(ld.add(rd));
+            } else if (l instanceof BigInteger || r instanceof BigInteger) {
+                BigInteger li = (l instanceof BigInteger bi) ? bi : BigInteger.valueOf(l.longValue());
+                BigInteger ri = (r instanceof BigInteger bi) ? bi : BigInteger.valueOf(r.longValue());
+                operandStack.push(li.add(ri));
             } else {
                 // Fallback for byte/short/int
                 operandStack.push(l.intValue() + r.intValue());
             }
         } else {
-            // Default path: concatenate string representations (null-safe)
-            String result = Objects.toString(left, "null") + Objects.toString(right, "null");
+            // String concatenation path with smart array support to avoid "[B@xxxx"
+            String result = toDisplayString(left) + toDisplayString(right);
             operandStack.push(result);
         }
 

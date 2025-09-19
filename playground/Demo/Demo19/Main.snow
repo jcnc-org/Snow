@@ -1,5 +1,8 @@
 module: Main
-    import: os
+    import: os.fs
+    import: os.fd
+    import: std.stdio
+
     function: main
         returns: void
         body:
@@ -20,7 +23,7 @@ module: Main
             declare l: int = 0
 
             declare x: int = n[i][j][k][l]
-            os.print(x)
+            stdio.print(x)
         end body
     end function
 end module

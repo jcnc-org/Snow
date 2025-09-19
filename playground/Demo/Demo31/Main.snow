@@ -1,5 +1,7 @@
 module: Main
-    import: os
+    import: os.fs
+    import: os.fd
+    import: std.stdio
 
     // 父类 Person
     struct: Person
@@ -49,8 +51,8 @@ module: Main
             declare s: Student = new Student(123, 1001)
 
             // Student 拥有父类方法
-            os.println(s.getName())      // 来自 Person → 123
-            os.println(s.getStudentId()) // 来自 Student → 1001
+            stdio.println(s.getName())      // 来自 Person → 123
+            stdio.println(s.getStudentId()) // 来自 Student → 1001
         end body
     end function
 end module

@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Demo63" type="Application" factoryName="Application" folderName="Demo">
+    <option name="MAIN_CLASS_NAME" value="org.jcnc.snow.cli.SnowCLI" />
+    <module name="Snow" />
+    <option name="PROGRAM_PARAMETERS" value="compile run -d playground/Demo/Demo63 -o target/Demo63" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

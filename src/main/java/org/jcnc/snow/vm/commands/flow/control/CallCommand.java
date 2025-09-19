@@ -3,8 +3,6 @@ package org.jcnc.snow.vm.commands.flow.control;
 import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.*;
 
-import static org.jcnc.snow.common.SnowConfig.print;
-
 /**
  * Implements the CALL instruction for the virtual machine.
  *

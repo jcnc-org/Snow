@@ -1,5 +1,7 @@
 module: os
-    import: os
+    import: os.fs
+    import: os.fd
+    import: std.stdio
     function: print
         params:
             declare i1: int

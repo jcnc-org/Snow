@@ -7,8 +7,6 @@ import org.jcnc.snow.vm.module.OperandStack;
 import org.jcnc.snow.vm.module.StackFrame;
 import org.jcnc.snow.vm.utils.LoggingUtils;
 
-import static org.jcnc.snow.common.SnowConfig.print;
-
 /**
  * Implements the {@code RET} instruction (method return).
  *

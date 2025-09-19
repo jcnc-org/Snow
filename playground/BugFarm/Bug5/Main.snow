@@ -1,5 +1,7 @@
 module: Main
-    import: os
+    import: os.fs
+    import: os.fd
+    import: std.stdio
     globals:
         declare sum: int = 0
     function: main
@@ -8,7 +10,7 @@ module: Main
         body:
             sum = 20
 
-            os.print(sum)
+            stdio.print(sum)
 
             return 0
         end body

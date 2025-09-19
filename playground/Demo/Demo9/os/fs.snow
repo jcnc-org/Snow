@@ -1,0 +1,113 @@
+// fs module: File System(FS) 系统调用
+// ──────────────────────────────────────────────
+//  • 0x1100  MKDIR     →  创建目录（可选权限位）
+//  • 0x1101  RMDIR     →  删除空目录
+//  • 0x1102  CHDIR     →  改变 VM 的当前工作目录
+//  • 0x1103  GETCWD    →  获取 VM 的当前工作目录
+//  • 0x1104  READDIR   →  读取目录内容
+//  • 0x1105  CHMOD     →  修改文件/目录权限
+//  • 0x1106  FCHMOD    →  修改 fd 对应文件/目录权限
+//  • 0x1107  UTIME     →  更新文件/目录的访问与修改时间
+// ──────────────────────────────────────────────
+
+module: fs
+    // mkdir(path, mode?): 在指定路径创建目录，可选权限位 mode。
+    // 成功返回 0。
+    // 在不支持 POSIX 权限的平台上，mode 可能被忽略或部分生效。
+    // 出错时抛出异常（路径非法/已存在/父目录不存在/权限不足/I/O 错误）。
+    function: mkdir
+        params:
+            declare path: any
+            declare mode: int   // 可选参数，调用时可传 null
+        returns: int
+        body:
+            return syscall("0x1100", path, mode)
+        end body
+    end function
+
+    // rmdir(path): 删除空目录。
+    // 成功返回 0。
+    // 出错时抛出异常（路径不是目录/目录非空/不存在/权限不足/I/O 错误）。
+    function: rmdir
+        params:
+            declare path: any
+        returns: int
+        body:
+            return syscall("0x1101", path)
+        end body
+    end function
+
+    // chdir(path): 改变当前工作目录。
+    // 成功返回 0。
+    // 出错时抛出异常（路径不存在/非目录/不可访问/I/O 错误）。
+    function: chdir
+        params:
+            declare path: any
+        returns: int
+        body:
+            return syscall("0x1102", path)
+        end body
+    end function
+
+    // getcwd(): 获取当前工作目录的绝对路径。
+    // 成功返回字符串。
+    // 出错时抛出异常（未初始化 CWD/内部状态无效）。
+    function: getcwd
+        returns: string
+        body:
+            return syscall("0x1103")
+        end body
+    end function
+
+    // readdir(path): 读取目录内容。
+    // 返回字符串数组或条目对象数组（实现决定返回格式）。
+    // 出错时抛出异常（路径不存在/非目录/不可读/I/O 错误）。
+	function: readdir
+	    params:
+	        declare path: any
+	    returns: any
+	    body:
+	        return syscall("0x1104", path)
+	    end body
+	end function
+
+    // chmod(path, mode): 修改文件/目录的权限。
+    // mode: 整数，八进制权限位（如 0o755）
+    // 成功返回 0，失败抛出异常。
+    function: chmod
+        params:
+            declare path: any
+            declare mode: int
+        returns: int
+        body:
+            return syscall("0x1105", path, mode)
+        end body
+    end function
+
+    // fchmod(fd, mode): 修改 fd 对应文件/目录的权限。
+    // mode: 整数，八进制权限位（如 0o644, 0o755）
+    // 成功返回 0；失败时抛出异常（fd 非法/权限不足/模式非法/I/O 错误）。
+    function: fchmod
+        params:
+            declare fd: int
+            declare mode: int
+        returns: int
+        body:
+            return syscall("0x1106", fd, mode)
+        end body
+    end function
+
+    // utime(path, mtime, atime): 更新文件/目录的访问与修改时间
+    // mtime/atime 单位: 毫秒 (epoch)
+    // 成功返回 0；失败抛出异常
+    function: utime
+        params:
+            declare path: any
+            declare mtime: long
+            declare atime: long
+        returns: int
+        body:
+            return syscall("0x1107", path, mtime, atime)
+        end body
+    end function
+end module

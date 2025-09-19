@@ -1,0 +1,237 @@
+// fd module: File Descriptor(FD) 系统调用
+// ──────────────────────────────────────────────
+//  • 0x1001  READ         →  从文件描述符读取最多 n 字节并返回 byte[]
+//  • 0x1000  OPEN         →  打开文件，返回 fd
+//  • 0x1002  WRITE        →  向 fd 写入字节数据（支持 byte[] / String / 其他 toString()）
+//  • 0x1003  SEEK         →  移动文件指针，返回新位置 (long)
+//  • 0x1004  CLOSE        →  关闭文件描述符
+//  • 0x1005  STAT         →  获取文件的基本属性
+//  • 0x1007  UNLINK       →  删除路径
+//  • 0x1008  DUP          →  复制 oldfd，返回由系统分配的新 fd（指向同一底层文件）
+//  • 0x1009  DUP2         →  使 newfd 指向与 oldfd 相同的文件（若 newfd 已被占用会先关闭）
+//  • 0x100A  PIPE         →  创建匿名管道，VM 返回 int[]: [readfd, writefd]
+//  • 0x100B  TRUNCATE     →  将文件截断到指定长度
+//  • 0x100C  FTRUNCATE    →  将 fd 对应文件截断到指定长度
+//  • 0x100D  RENAME       →  重命名（或移动）文件/目录；若目标存在则覆盖
+//  • 0x100E  LINK         →  创建硬链接，让 newPath 指向 oldPath
+//  • 0x100F  SYMLINK      →  创建符号链接，让 linkPath 指向 target
+//  • 0x1010  READLINK     →  读取符号链接的目标路径
+//  • 0x1011  SET_NONBLOCK → 设置 fd 的非阻塞/阻塞模式
+// ──────────────────────────────────────────────
+
+module: fd
+    // read(fd, n): 从文件描述符 fd 读取最多 n 字节。
+    function: read
+        params:
+            declare fd: int
+            declare n:  int
+        returns: any
+        body:
+            return syscall("0x1001", fd, n)
+        end body
+    end function
+
+    // open(path, flags): 以 flags 打开文件，返回文件描述符（fd）。
+    function: open
+        params:
+            declare path: any
+            declare flags: int
+        returns: int
+        body:
+            return syscall("0x1000", path, flags)
+        end body
+    end function
+
+    // write(fd, data): 向文件描述符 fd 写入数据。
+    // data 可为 byte[] / String / null / 其他（toString() 后按 UTF-8）。
+    function: write
+        params:
+            declare fd:   int
+            declare data: any
+        returns: int
+        body:
+            return syscall("0x1002", fd, data)
+        end body
+    end function
+
+    // seek(fd, offset, whence): 移动文件指针并返回新位置。
+    // whence: 0=SEEK_SET, 1=SEEK_CUR, 2=SEEK_END
+    function: seek
+        params:
+            declare fd:     int
+            declare offset: long
+            declare whence: int
+        returns: void
+        body:
+            return syscall("0x1003", fd, offset, whence)
+        end body
+    end function
+
+    // close(fd): 关闭指定文件描述符 fd。
+    function: close
+        params:
+            declare fd: int
+        returns: void
+        body:
+            syscall("0x1004", fd)
+        end body
+    end function
+
+    // stat(path): 获取文件的基本属性。
+    // 返回 Map，包含 size / isDirectory / isRegularFile / isSymbolicLink / lastModified / created 等键。
+    function: stat
+        params:
+            declare path: any
+        returns: map
+        body:
+            return syscall("0x1005", path)
+        end body
+    end function
+
+    // unlink(path): 删除指定路径。
+    function: unlink
+        params:
+            declare path: any
+        returns: void
+        body:
+            syscall("0x1007", path)
+        end body
+    end function
+
+    // dup(oldfd): 复制一个已打开的 fd，返回新的 fd。
+    function: dup
+        params:
+            declare oldfd: int
+        returns: int
+        body:
+            return syscall("0x1008", oldfd)
+        end body
+    end function
+
+    // dup2(oldfd, newfd): 将 newfd 变为 oldfd 的副本；若 newfd 已经打开，会先关闭它。
+    // 返回值为 newfd。
+    function: dup2
+        params:
+            declare oldfd: int
+            declare newfd: int
+        returns: int
+        body:
+            return syscall("0x1009", oldfd, newfd)
+        end body
+    end function
+
+    // pipe(): 创建一个匿名管道，返回一对 fd (readfd, writefd)。
+    // 先通过 ARR_GET 取出两个元素，再写入一个预先创建（常量元素构造）的数组中返回，
+    // 以避免“数组字面量仅允许常量元素”的限制。
+    function: pipe
+        returns: int[]
+        body:
+            declare pair: any     // 实际为 int[]
+            declare rfd: int
+            declare wfd: int
+            declare out: int[]
+
+            pair = syscall("0x100A")           // PIPE → int[]: [readfd, writefd]
+            rfd  = syscall("0x1802", pair, 0)  // ARR_GET(pair, 0)
+            wfd  = syscall("0x1802", pair, 1)  // ARR_GET(pair, 1)
+
+            // 用常量元素创建数组，再逐个赋值（允许非常量写入）
+            out = [0, 0]
+            out[0] = rfd
+            out[1] = wfd
+
+            return out
+        end body
+    end function
+
+    // truncate(path, length): 将文件截断到指定长度。
+    // 若文件不存在，会尝试创建并截断。
+    // 失败时抛出异常（权限不足、路径错误、I/O 错误等）。
+    function: truncate
+        params:
+            declare path: any
+            declare length: long
+        returns: void
+        body:
+            syscall("0x100B", path, length)
+        end body
+    end function
+
+    // ftruncate(fd, length): 将 fd 对应的文件截断到指定长度。
+    // 成功返回 0。
+    // 失败时抛出异常（fd 非法/不可写，长度非法，I/O 错误等）。
+    function: ftruncate
+        params:
+            declare fd: int
+            declare length: long
+        returns: int
+        body:
+            return syscall("0x100C", fd, length)
+        end body
+    end function
+
+    // rename(oldPath, newPath): 重命名（或移动）文件/目录；若目标存在则覆盖。
+    // 成功返回 0。
+    // 失败时抛出异常（参数类型错误，源不存在/权限不足，I/O 错误等）。
+    function: rename
+        params:
+            declare oldPath: any
+            declare newPath: any
+        returns: int
+        body:
+            return syscall("0x100D", oldPath, newPath)
+        end body
+    end function
+
+    // link(oldPath, newPath): 创建硬链接，让 newPath 指向 oldPath。
+    // 成功返回 0。
+    // 失败时抛出异常（参数错误、文件系统不支持、权限不足、I/O 错误等）。
+    function: link
+        params:
+            declare oldPath: any
+            declare newPath: any
+        returns: int
+        body:
+            return syscall("0x100E", oldPath, newPath)
+        end body
+    end function
+
+    // symlink(target, linkPath): 在 linkPath 处创建指向 target 的符号链接。
+    // 成功返回 0。
+    // 失败时抛出异常（参数类型错误，文件系统/平台限制，权限不足，I/O 错误等）。
+    function: symlink
+        params:
+            declare target: any
+            declare linkPath: any
+        returns: int
+        body:
+            return syscall("0x100F", target, linkPath)
+        end body
+    end function
+
+    // readlink(path): 读取符号链接的目标路径。
+    // 返回值为 target:String。
+    // 出错时抛出异常（参数类型错误，目标不是符号链接，权限不足，I/O 错误等）。
+    function: readlink
+        params:
+            declare path: any
+        returns: string
+        body:
+            return syscall("0x1010", path)
+        end body
+    end function
+
+    // setNonblock(fd, on): 设置 fd 的非阻塞/阻塞模式（仅对 SelectableChannel 生效）。
+    // on=1 → 非阻塞，on=0 → 阻塞。
+    // 成功返回 0；失败时抛出异常（fd 非法或通道不支持）。
+    function: setNonblock
+        params:
+            declare fd: int
+            declare on: int
+        returns: int
+        body:
+            return syscall("0x1011", fd, on)
+        end body
+    end function
+
+end module

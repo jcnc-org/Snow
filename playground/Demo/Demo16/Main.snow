@@ -1,5 +1,7 @@
 module: Main
-    import: os
+    import: os.fs
+    import: os.fd
+    import: std.stdio
     function: main
         returns: int
         body:
@@ -12,7 +14,7 @@ module: Main
                     i = i + 1
                 body:
                     if i % 2 == 0 then
-                        os.print(i)
+                        stdio.print(i)
                     end if
                 end body
             end loop
