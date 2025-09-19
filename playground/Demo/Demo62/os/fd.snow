@@ -1,4 +1,4 @@
-// os module: 文件 & File Descriptor(FD) 系统调用
+// fd module: File Descriptor(FD) 系统调用
 // ──────────────────────────────────────────────
 //  • 0x1200  PRINT        →  将对象输出到标准输出（不自动换行）
 //  • 0x1201  PRINTLN      →  将对象输出到标准输出并追加换行
@@ -21,7 +21,7 @@
 //  • 0x1011  SET_NONBLOCK → 设置 fd 的非阻塞/阻塞模式
 // ──────────────────────────────────────────────
 
-module: os
+module: fd
     // print(obj): 输出对象到 stdout，不附加换行。
     // 成功返回 0。
     function: print
