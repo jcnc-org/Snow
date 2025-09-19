@@ -1,15 +1,21 @@
 module: app
-    import: os
+    import: os.fs
+    import: os.fd
+    import: std.stdio.fs
+    import: os.fs
+    import: os.fd
+    import: std.stdio.fd
+	import: std.stdio
 
     function: main
         params:
             declare args: any
         body:
-            os.mkdir("demoDir", 0)
-            os.println("已创建 demoDir")
+            fs.mkdir("demoDir", 0)
+            stdio.println("已创建 demoDir")
 
-            os.chmod("demoDir", 493)
-            os.println("已修改 demoDir 权限为 755")
+            fs.chmod("demoDir", 493)
+            stdio.println("已修改 demoDir 权限为 755")
         end body
     end function
 end module

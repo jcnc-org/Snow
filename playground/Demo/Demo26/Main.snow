@@ -1,4 +1,8 @@
 module: Main
+    import: os.fs
+    import: os.fd
+    import: std.stdio
+
     function: main
         returns: void
         body:
@@ -14,6 +18,17 @@ module: Main
 
             // 2. Unicode 转义
             declare sUnicode  : string = "𪚥𠮷: \u4F60\u597D, Snow!"
+
+            // 打印所有示例
+            stdio.println(sNewline)
+            stdio.println(sTab)
+            stdio.println(sBackslash)
+            stdio.println(sDQuote)
+            stdio.println(sSQuote)
+            stdio.println(sCarriage)
+            stdio.println(sBackspace)
+            stdio.println(sFormFeed)
+            stdio.println(sUnicode)
 
         end body
     end function

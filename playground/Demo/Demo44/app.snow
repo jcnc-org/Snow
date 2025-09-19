@@ -1,36 +1,38 @@
 module: app
-    import: os.file
+    import: os.fs
+    import: os.fd
+    import: std.stdio
 
     function: main
         params:
             declare args: any
         body:
-            declare fd: int
+            declare fd1: int
             declare n:  int
 
             // 打开文件，写模式 + 创建 + 截断
             // flags = O_WRONLY | O_CREAT | O_TRUNC = 1 | 64 | 512 = 577
-            fd = os.open("seek_demo.txt", 577)
+            fd1 = fd.open("seek_demo.txt", 577)
 
             // 写入一行文本
-            n = os.write(fd, "Hello, Snow!")
+            n = fd.write(fd1, "Hello, Snow!")
 
             // 移动到文件开头 (SEEK_SET)
-            os.seek(fd, 0, 0)
-            os.println("指针已移动到文件开头")
+            fd.seek(fd1, 0, 0)
+            stdio.println("指针已移动到文件开头")
 
             // 覆盖前 5 个字符
-            n = os.write(fd, "World")
+            n = fd.write(fd1, "World")
 
             // 移动到文件末尾 (SEEK_END, 偏移 0)
-            os.seek(fd, 0, 2)
-            os.println("指针已移动到文件末尾")
+            fd.seek(fd1, 0, 2)
+            stdio.println("指针已移动到文件末尾")
 
             // 在文件末尾追加写
-            n = os.write(fd, "\n\tAppend line")
+            n = fd.write(fd1, "\n\tAppend line")
 
             // 关闭文件
-            os.close(fd)
+            fd.close(fd1)
         end body
     end function
 end module

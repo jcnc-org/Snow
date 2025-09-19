@@ -1,5 +1,8 @@
 module: app
-    import: os
+    import: os.fs
+    import: os.fd
+    import: os.io
+    import: std.stdio
 
     function: main
         params:
@@ -8,11 +11,11 @@ module: app
             declare ret: int
 
             // 向标准错误输出写一条消息
-            ret = os.stderrWrite("这是错误信息！")
-            ret = os.stderrWrite("\n")
+            ret = io.stderr_write("这是错误信息！")
+            ret = io.stderr_write("\n")
 
             // 打印返回值，正常情况下是 0
-            os.println("stderrWrite 返回值: " + ret)
+            stdio.println("stderrWrite 返回值: " + ret)
         end body
     end function
 end module

@@ -1,4 +1,4 @@
-// os module: 目录 & File System(FS) 系统调用
+// fs module: File System(FS) 系统调用
 // ──────────────────────────────────────────────
 //  • 0x1100  MKDIR     →  创建目录（可选权限位）
 //  • 0x1101  RMDIR     →  删除空目录
@@ -6,10 +6,11 @@
 //  • 0x1103  GETCWD    →  获取 VM 的当前工作目录
 //  • 0x1104  READDIR   →  读取目录内容
 //  • 0x1105  CHMOD     →  修改文件/目录权限
-
+//  • 0x1106  FCHMOD    →  修改 fd 对应文件/目录权限
+//  • 0x1107  UTIME     →  更新文件/目录的访问与修改时间
 // ──────────────────────────────────────────────
 
-module: os
+module: fs
     // mkdir(path, mode?): 在指定路径创建目录，可选权限位 mode。
     // 成功返回 0。
     // 在不支持 POSIX 权限的平台上，mode 可能被忽略或部分生效。
@@ -80,6 +81,33 @@ module: os
         returns: int
         body:
             return syscall("0x1105", path, mode)
+        end body
+    end function
+
+    // fchmod(fd, mode): 修改 fd 对应文件/目录的权限。
+    // mode: 整数，八进制权限位（如 0o644, 0o755）
+    // 成功返回 0；失败时抛出异常（fd 非法/权限不足/模式非法/I/O 错误）。
+    function: fchmod
+        params:
+            declare fd: int
+            declare mode: int
+        returns: int
+        body:
+            return syscall("0x1106", fd, mode)
+        end body
+    end function
+
+    // utime(path, mtime, atime): 更新文件/目录的访问与修改时间
+    // mtime/atime 单位: 毫秒 (epoch)
+    // 成功返回 0；失败抛出异常
+    function: utime
+        params:
+            declare path: any
+            declare mtime: long
+            declare atime: long
+        returns: int
+        body:
+            return syscall("0x1107", path, mtime, atime)
         end body
     end function
 end module

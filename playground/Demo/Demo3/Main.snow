@@ -1,5 +1,8 @@
 module: Main
-	import: os
+	import: os.fs
+    import: os.fd
+    import: std.stdio
+
     function: main
         params:
         returns: int
@@ -12,7 +15,7 @@ module: Main
               n3 =3
               end if
            end if
-           os.print(n3)
+           stdio.print(n3)
         return n3
         end body
     end function

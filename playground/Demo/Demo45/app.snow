@@ -1,5 +1,14 @@
 module: app
-    import: os
+    import: os.fs
+    import: os.fd
+    import: std.stdio.fs
+    import: os.fs
+    import: os.fd
+    import: std.stdio.fd
+    import: os.fs
+    import: os.fd
+    import: std.stdio.io
+    import: std.stdio
 
     function: main
         params:
@@ -8,10 +17,10 @@ module: app
             declare info: any
 
             // 获取文件属性
-            info = os.stat("seek_demo.txt")
+            info = fd.stat("seek_demo.txt")
 
             // 直接打印整个对象
-            os.println("stat结果: " + info)
+            stdio.println("stat结果: " + info)
 
         end body
     end function

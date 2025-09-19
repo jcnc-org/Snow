@@ -1,12 +1,18 @@
 module: app
-    import: os
+    import: os.fs
+    import: os.fd
+    import: std.stdio.fs
+    import: os.fs
+    import: os.fd
+    import: std.stdio.fd
+    import: std.stdio
 
     function: writer
         params:
             declare wfd: int
         body:
-            os.write(wfd, "模拟进程A发来的数据")
-            os.close(wfd)
+            fd.write(wfd, "模拟进程A发来的数据")
+            fd.close(wfd)
         end body
     end function
 
@@ -15,9 +21,9 @@ module: app
             declare rfd: int
         body:
             declare msg: any
-            msg = os.read(rfd, 128)
-            os.println("模拟进程B收到: " + msg)
-            os.close(rfd)
+            msg = fd.read(rfd, 128)
+            stdio.println("模拟进程B收到: " + msg)
+            fd.close(rfd)
         end body
     end function
 
@@ -29,14 +35,14 @@ module: app
             declare rfd: int
             declare wfd: int
             // 创建管道
-            fds = os.pipe()
+            fds = fd.pipe()
             rfd = fds[0]
             wfd = fds[1]
             // 模拟进程 A（写端）
             writer(wfd)
             // 模拟进程 B（读端）
             reader(rfd)
-            os.println("模拟双进程通信完成")
+            stdio.println("模拟双进程通信完成")
         end body
     end function
 end module

@@ -1,25 +1,31 @@
 module: app
-    import: os
+    import: os.fs
+    import: os.fd
+    import: std.stdio.fd
+    import: os.fs
+    import: os.fd
+    import: std.stdio.fs
+    import: std.stdio
 
     function: main
         params:
             declare args: any
         body:
             // 创建源文件 source.txt
-            os.truncate("source.txt", 0L)
-            os.println("已创建源文件 source.txt")
+            fd.truncate("source.txt", 0L)
+            stdio.println("已创建源文件 source.txt")
 
             // 创建硬链接 link.txt 指向 source.txt
-            os.link("source.txt", "link.txt")
-            os.println("已创建硬链接 link.txt -> source.txt")
+            fd.link("source.txt", "link.txt")
+            stdio.println("已创建硬链接 link.txt -> source.txt")
 
             // 修改源文件写入一些内容
-            declare fd: int
-            fd = os.open("source.txt", 2)   // O_RDWR
-            os.write(fd, "Hello via hard link!")
-            os.close(fd)
+            declare fd1: int
+            fd1 = fd.open("source.txt", 2)   // O_RDWR
+            fd.write(fd1, "Hello via hard link!")
+            fd.close(fd1)
 
-            os.println("写入完成，现在 source.txt 和 link.txt 内容相同")
+            stdio.println("写入完成，现在 source.txt 和 link.txt 内容相同")
         end body
     end function
 end module

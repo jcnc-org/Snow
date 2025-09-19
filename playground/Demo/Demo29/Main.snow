@@ -1,5 +1,7 @@
 module: Main
-	import: os
+	import: os.fs
+    import: os.fd
+    import: std.stdio
     struct: Address
         fields:
             declare country: int
@@ -56,8 +58,8 @@ module: Main
         body:
             // 初始化 Person 和 Address 的实例
             declare p: Person = new Person(123, new Address(1, 2))
-            os.println(p.getName())             // 打印 name
-            os.println(p.getAddr().getCity())   // 打印 city
+            stdio.println(p.getName())             // 打印 name
+            stdio.println(p.getAddr().getCity())   // 打印 city
 
         end body
     end function

@@ -1,12 +1,14 @@
 module: Main
-    import: os,ModuleA
+    import: os.fs
+    import: os.fd
+    import: std.stdio,ModuleA
     globals:
         declare c: int = 10
     function: main
         returns: void
         body:
              c = ModuleA.getA()
-             os.print(c)
+             stdio.print(c)
         end body
     end function
 end module

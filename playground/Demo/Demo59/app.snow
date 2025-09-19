@@ -1,7 +1,13 @@
 module: app
     import: os.fs
     import: os.fd
-    import: os.io
+    import: std.stdio.fs
+    import: os.fs
+    import: os.fd
+    import: std.stdio.fd
+    import: os.fs
+    import: os.fd
+    import: std.stdio.io
     import: std.stdio
 
 

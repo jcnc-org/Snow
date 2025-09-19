@@ -1,5 +1,12 @@
 module: app
-    import: os
+    import: os.fs
+    import: os.fd
+    import: std.stdio.fs
+    import: os.fs
+    import: os.fd
+    import: std.stdio.fd
+    import: std.stdio
+
 
     function: main
         params:
@@ -11,23 +18,23 @@ module: app
             declare data: any
 
             // 创建管道
-            fds = os.pipe()
+            fds = fd.pipe()
             rfd = fds[0]   // 读端
             wfd = fds[1]   // 写端
-            os.println("管道创建成功: rfd=" + rfd + ", wfd=" + wfd)
+            stdio.println("管道创建成功: rfd=" + rfd + ", wfd=" + wfd)
 
             // 向管道写入数据
-            os.write(wfd, "Hello via pipe!")
+            fd.write(wfd, "Hello via pipe!")
 
             // 从管道读出数据
-            data = os.read(rfd, 64)
-            os.println("从管道读取: " + data)
+            data = fd.read(rfd, 64)
+            stdio.println("从管道读取: " + data)
 
             // 关闭管道两端
-            os.close(rfd)
-            os.close(wfd)
+            fd.close(rfd)
+            fd.close(wfd)
 
-            os.println("完成管道测试")
+            stdio.println("完成管道测试")
         end body
     end function
 end module

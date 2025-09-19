@@ -25,7 +25,7 @@ module: Main
         function: speak
             returns: void
             body:
-                os.print(this.name + " makes a sound.")
+                stdio.print(this.name + " makes a sound.")
             end body
         end function
 
@@ -35,7 +35,7 @@ module: Main
                declare food: string
             returns: void
             body:
-                os.print(this.name + " eats " + food)
+                stdio.print(this.name + " eats " + food)
             end body
         end function
 
@@ -44,7 +44,7 @@ module: Main
                 declare times: int
             returns: void
             body:
-                os.print(this.name + " eats " + times + " times.")
+                stdio.print(this.name + " eats " + times + " times.")
             end body
         end function
     end struct
@@ -64,7 +64,7 @@ module: Main
         function: speak
             returns: void
             body:
-                os.print(this.name + " says: Woof!")
+                stdio.print(this.name + " says: Woof!")
             end body
         end function
     end struct
@@ -84,7 +84,7 @@ module: Main
         function: speak
             returns: void
             body:
-                os.print(this.name + " says: Meow!")
+                stdio.print(this.name + " says: Meow!")
             end body
         end function
     end struct
