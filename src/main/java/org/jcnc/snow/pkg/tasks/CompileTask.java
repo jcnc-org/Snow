@@ -30,111 +30,200 @@ import java.util.*;
 import static org.jcnc.snow.common.SnowConfig.print;
 
 /**
- * CompileTask 负责将 .snow 源文件编译为 VM 字节码（.water 文件），是命令行编译任务的具体实现。
- * <p>
- * 主要功能：
+ * {@code CompileTask} 是 CLI 编译任务的实现类，
+ * 负责将 Snow 源码文件（.snow）编译为 VM 字节码文件（.water）。
+ *
+ * <p>功能包括：</p>
  * <ul>
- *     <li>递归收集目录下所有 .snow 文件</li>
- *     <li>支持命令行参数自定义输出文件名、目录、是否自动运行 VM</li>
- *     <li>输出编译各阶段的关键信息（源码、IR、VM code）</li>
- *     <li>可选自动运行生成的字节码</li>
+ *   <li>解析命令行参数，收集源码文件</li>
+ *   <li>执行词法、语法、语义分析</li>
+ *   <li>生成 IR 并进行入口重排与剪枝</li>
+ *   <li>转换为 VM code 并输出 .water 文件</li>
+ *   <li>可选立即运行生成的程序</li>
  * </ul>
  */
 public record CompileTask(Project project, String[] args) implements Task {
 
     /**
-     * 构造方法，使用空参数数组。
+     * 使用默认空参数数组的构造方法。
      *
-     * @param project 当前项目对象
+     * @param project 当前项目
      */
     public CompileTask(Project project) {
-        this(project, new String[0]); // 调用主构造方法，传入空参数数组
+        this(project, new String[0]);
     }
 
     /**
-     * 推断输出 .water 文件的路径。
-     * <ul>
-     *   <li>如指定 outName，则用该值作为基名</li>
-     *   <li>否则如指定目录，则用目录名作为基名</li>
-     *   <li>否则如仅有一个源文件，则用文件名（去掉 .snow）</li>
-     *   <li>否则用默认 "program"</li>
-     * </ul>
+     * 根据参数推断输出文件路径。
+     *
+     * <p>优先级：</p>
+     * <ol>
+     *   <li>用户指定的输出名</li>
+     *   <li>指定的目录名</li>
+     *   <li>单文件场景：源文件名去掉扩展名</li>
+     *   <li>默认 "program"</li>
+     * </ol>
+     *
+     * @param sources 源文件列表
+     * @param outName 输出文件名（可选）
+     * @param dir     源码目录（可选）
+     * @return 输出文件路径
      */
-    private static Path deriveOutputPath(List<Path> sources,
-                                         String outName,
-                                         Path dir) {
+    private static Path deriveOutputPath(List<Path> sources, String outName, Path dir) {
         String base;
-        if (outName != null) { // 优先使用用户指定的输出名
+        if (outName != null) {
             base = outName;
-        } else if (dir != null) { // 如果指定了目录，则使用目录名作为基名
+        } else if (dir != null) {
             base = dir.getFileName().toString();
-        } else if (sources.size() == 1) { // 单个源文件时，使用源文件名（去掉扩展名）
-            base = sources.getFirst()
-                    .getFileName()
-                    .toString()
-                    .replaceFirst("\\.snow$", "");
-        } else { // 默认情况
+        } else if (sources.size() == 1) {
+            base = sources.getFirst().getFileName().toString().replaceFirst("\\.snow$", "");
+        } else {
             base = "program";
         }
-        return Path.of(base + ".water"); // 拼接生成 .water 文件路径
+        return Path.of(base + ".water");
     }
 
     /**
-     * 将 main 或 *.main 函数调整到列表首位，确保入口 PC=0。
+     * 调整入口函数位置，将 {@code main} 或 {@code *.main} 移至首位。
+     *
+     * @param in 原始 IRProgram
+     * @return 调整后的 IRProgram
      */
     private static IRProgram reorderForEntry(IRProgram in) {
-        List<IRFunction> ordered = new ArrayList<>(in.functions()); // 拷贝函数列表
+        List<IRFunction> ordered = new ArrayList<>(in.functions());
         for (int i = 0; i < ordered.size(); i++) {
             String fn = ordered.get(i).name();
-            // 找到 main 或 <模块名>.main 函数，交换到首位
             if ("main".equals(fn) || fn.endsWith(".main")) {
                 Collections.swap(ordered, 0, i);
                 break;
             }
         }
         IRProgram out = new IRProgram();
-        ordered.forEach(out::add); // 按新顺序重新加入 IRProgram
+        ordered.forEach(out::add);
         return out;
     }
 
+    /**
+     * 调用图可达性分析，移除未使用函数。
+     *
+     * @param in 原始 IRProgram
+     * @return 剪枝后的 IRProgram
+     */
+    private static IRProgram pruneUnreachable(IRProgram in) {
+        if (in.functions().isEmpty()) return in;
+
+        Map<String, IRFunction> byName = new LinkedHashMap<>();
+        for (IRFunction f : in.functions()) byName.put(f.name(), f);
+
+        // 找入口函数
+        String entry = null;
+        for (String n : byName.keySet()) {
+            if ("main".equals(n) || n.endsWith(".main")) {
+                entry = n;
+                break;
+            }
+        }
+        if (entry == null) entry = byName.keySet().iterator().next();
+
+        Set<String> visited = new LinkedHashSet<>();
+        Deque<String> work = new ArrayDeque<>();
+        visited.add(entry);
+        work.add(entry);
+
+        while (!work.isEmpty()) {
+            String cur = work.removeFirst();
+            IRFunction fn = byName.get(cur);
+            if (fn == null) continue;
+
+            for (IRInstruction inst : fn.body()) {
+                if (inst instanceof org.jcnc.snow.compiler.ir.instruction.CallInstruction call) {
+                    String callee = call.getFunctionName();
+                    if (byName.containsKey(callee)) {
+                        if (visited.add(callee)) work.addLast(callee);
+                        continue;
+                    }
+                    String suffix = "." + callee;
+                    for (String cand : byName.keySet()) {
+                        if (cand.endsWith(suffix)) {
+                            if (visited.add(cand)) work.addLast(cand);
+                        }
+                    }
+                }
+            }
+        }
+
+        IRProgram out = new IRProgram();
+        for (IRFunction f : in.functions()) {
+            if (visited.contains(f.name())) out.add(f);
+        }
+        return out;
+    }
+
+    /**
+     * 收集保留的模块名（根据函数所属模块）。
+     *
+     * @param program 剪枝后的 IRProgram
+     * @return 模块名集合
+     */
+    private static Set<String> collectKeptModules(IRProgram program) {
+        Set<String> modules = new LinkedHashSet<>();
+        for (IRFunction f : program.functions()) {
+            String name = f.name();
+            int dot = name.indexOf('.');
+            if (dot > 0) {
+                modules.add(name.substring(0, dot));
+            } else if ("main".equals(name)) {
+                modules.add("main");
+            }
+        }
+        return modules;
+    }
+
+    /**
+     * 从路径中提取 "DemoXX" 形式的子路径，若无则返回文件名。
+     *
+     * @param src 源文件路径
+     * @return 子路径或文件名
+     */
     private static String fromDemoXX(Path src) {
         for (int i = 0; i < src.getNameCount(); i++) {
             String part = src.getName(i).toString();
-            if (part.matches("Demo\\d+")) { // 精确匹配 DemoXX 形式
+            if (part.matches("Demo\\d+")) {
                 return src.subpath(i, src.getNameCount()).toString();
             }
         }
-        // fallback，只返回文件名
         return src.getFileName().toString();
     }
 
     /**
-     * 执行任务主入口，捕获异常向上抛出
+     * 执行任务入口，调用 {@link #execute(String[])}。
+     *
+     * @throws Exception 执行过程中出错
      */
     @Override
     public void run() throws Exception {
-        execute(this.args); // 调用 execute 方法
+        execute(this.args);
     }
 
     /**
-     * 编译 .snow 文件为 .water 字节码文件，可选自动运行。
+     * 编译并生成 .water 文件，可选立即运行 VM。
      *
      * @param args 命令行参数
-     * @return 0 成功，非0失败
+     * @return 0 成功，非 0 表示失败
+     * @throws Exception 编译或 I/O 过程中出错
      */
     public int execute(String[] args) throws Exception {
+        boolean runAfterCompile = false;
+        String outputName = null;
+        Path dir = null;
+        List<Path> sources = new ArrayList<>();
 
-        boolean runAfterCompile = false; // 是否编译后自动运行
-        String outputName = null;        // 用户指定的输出文件名
-        Path dir = null;                 // 源文件目录
-        List<Path> sources = new ArrayList<>(); // 源文件列表
-
-        // 解析命令行参数
+        // 解析参数
         for (int i = 0; i < args.length; i++) {
             switch (args[i]) {
-                case "run" -> runAfterCompile = true; // run 表示编译后运行 VM
-                case "--debug" -> SnowConfig.MODE = Mode.DEBUG; // 开启 debug 模式
-                case "-o" -> { // 指定输出文件名
+                case "run" -> runAfterCompile = true;
+                case "--debug" -> SnowConfig.MODE = Mode.DEBUG;
+                case "-o" -> {
                     if (i + 1 < args.length) outputName = args[++i];
                     else {
                         System.err.println("Missing argument for -o");
@@ -142,7 +231,7 @@ public record CompileTask(Project project, String[] args) implements Task {
                         return 1;
                     }
                 }
-                case "-d" -> { // 指定目录
+                case "-d" -> {
                     if (i + 1 < args.length) dir = Path.of(args[++i]);
                     else {
                         System.err.println("Missing argument for -d");
@@ -151,7 +240,6 @@ public record CompileTask(Project project, String[] args) implements Task {
                     }
                 }
                 default -> {
-                    // 识别 .snow 源文件，否则报错
                     if (args[i].endsWith(".snow")) {
                         sources.add(Path.of(args[i]));
                     } else {
@@ -163,7 +251,7 @@ public record CompileTask(Project project, String[] args) implements Task {
             }
         }
 
-        // 如果指定了目录，则递归收集 .snow 文件
+        // 收集源码文件
         if (dir != null) {
             if (!Files.isDirectory(dir)) {
                 System.err.println("Not a directory: " + dir);
@@ -176,7 +264,6 @@ public record CompileTask(Project project, String[] args) implements Task {
             }
         }
 
-        // 校验输入文件
         if (sources.isEmpty()) {
             System.err.println("No .snow source files found.");
             return 1;
@@ -186,67 +273,67 @@ public record CompileTask(Project project, String[] args) implements Task {
             return 1;
         }
 
-        List<Node> allAst = new ArrayList<>(); // 存放解析后的 AST
-
-        print("## 编译器输出");
-        print("### Snow 源代码");
-
-        // === 阶段1：词法 + 语法分析 ===
+        // 词法 / 语法分析
+        List<Node> allAst = new ArrayList<>();
+        Map<Path, String> codeByPath = new LinkedHashMap<>();
         for (Path src : sources) {
-            String code = Files.readString(src, StandardCharsets.UTF_8); // 读取源码
-            print("#### " + fromDemoXX(src));
-            print(code);
-
-            // 构造词法分析器
+            String code = Files.readString(src, StandardCharsets.UTF_8);
+            codeByPath.put(src, code);
             LexerEngine lex = new LexerEngine(code, src.toString());
-            if (!lex.getErrors().isEmpty()) return 1; // 有错误则退出
-
-            // 构造语法分析上下文并生成 AST
+            if (!lex.getErrors().isEmpty()) return 1;
             ParserContext ctx = new ParserContext(lex.getAllTokens(), src.toString());
             allAst.addAll(new ParserEngine(ctx).parse());
         }
 
-        // === 阶段2：语义分析 ===
+        // 语义分析
         SemanticAnalyzerRunner.runSemanticAnalysis(allAst, false);
 
-        // === 阶段3：AST 转 IR 并调整入口函数位置 ===
+        // AST -> IR，入口重排 + 剪枝
         IRProgram program = new IRProgramBuilder().buildProgram(allAst);
         program = reorderForEntry(program);
+        program = pruneUnreachable(program);
 
+        // 打印保留的源码
+        print("### Snow 源代码");
+        Set<String> keptModules = collectKeptModules(program);
+        for (Path src : sources) {
+            String stem = src.getFileName().toString().replaceFirst("\\.snow$", "");
+            if (keptModules.contains(stem)) {
+                print("#### " + fromDemoXX(src));
+                print(codeByPath.get(src));
+            }
+        }
+
+        // IR 输出
         print("### IR");
-        print(program.toString()); // 输出 IR
+        print(program.toString());
 
-        // === 阶段4：IR 转 VM 指令 ===
+        // IR -> VM code
         VMProgramBuilder builder = new VMProgramBuilder();
         List<InstructionGenerator<? extends IRInstruction>> gens =
                 InstructionGeneratorProvider.defaultGenerators();
-
         for (IRFunction fn : program.functions()) {
-            // 分配寄存器槽位
-            Map<IRVirtualRegister, Integer> slotMap =
-                    new RegisterAllocator().allocate(fn);
-            // 生成 VM 代码
+            Map<IRVirtualRegister, Integer> slotMap = new RegisterAllocator().allocate(fn);
             new VMCodeGenerator(slotMap, builder, gens).generate(fn);
         }
         List<String> vmCode = builder.build();
 
-        // 输出 VM 代码
         print("### VM code");
         if (SnowConfig.isDebug()) {
             for (int i = 0; i < vmCode.size(); i++) {
                 String[] parts = vmCode.get(i).split(" ");
-                String name = OpHelper.opcodeName(parts[0]); // 转换 opcode 为可读名
+                String name = OpHelper.opcodeName(parts[0]);
                 parts = Arrays.copyOfRange(parts, 1, parts.length);
                 print("%04d: %-10s %s%n", i, name, String.join(" ", parts));
             }
         }
 
-        // === 阶段5：写出 .water 文件 ===
+        // 写出 .water 文件
         Path outFile = deriveOutputPath(sources, outputName, dir);
         Files.write(outFile, vmCode, StandardCharsets.UTF_8);
         print("Written to " + outFile.toAbsolutePath());
 
-        // === 阶段6：可选运行 VM ===
+        // 可选运行
         if (runAfterCompile) {
             print("\n=== Launching VM ===");
             VMLauncher.main(new String[]{outFile.toString()});
@@ -254,7 +341,5 @@ public record CompileTask(Project project, String[] args) implements Task {
         }
 
         return 0;
-
-
     }
 }

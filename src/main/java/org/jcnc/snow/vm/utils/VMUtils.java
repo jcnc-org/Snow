@@ -36,7 +36,7 @@ public class VMUtils {
         if (vm == null) {
             throw new IllegalArgumentException("VirtualMachineEngine instance cannot be null.");
         }
-        vm.printStack();
+//        vm.printStack();
         vm.printLocalVariables();
     }
 

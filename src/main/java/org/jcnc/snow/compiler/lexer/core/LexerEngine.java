@@ -65,7 +65,6 @@ public class LexerEngine {
 
     public static void report(List<LexicalError> errors) {
         if (errors == null || errors.isEmpty()) {
-            print("\n## 词法分析通过，没有发现错误\n");
             return;
         }
         System.err.println("\n词法分析发现 " + errors.size() + " 个错误: ");

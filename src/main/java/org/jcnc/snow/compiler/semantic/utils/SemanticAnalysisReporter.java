@@ -30,8 +30,6 @@ public final class SemanticAnalysisReporter {
         if (hasErrors(errors)) {
             System.err.println("语义分析发现 " + errors.size() + " 个错误: ");
             errors.forEach(err -> System.err.println("  " + err));
-        } else {
-            print("\n## 语义分析通过，没有发现错误\n");
         }
     }
 
