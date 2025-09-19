@@ -54,6 +54,8 @@ public class StderrWriteHandler implements SyscallHandler {
         } else {
             System.err.print("null");
         }
+        // 确保立即刷新
+        System.err.flush();
 
         // 向栈压入 0，保持栈平衡
         stack.push(0);

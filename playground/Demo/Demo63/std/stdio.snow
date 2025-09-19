@@ -1,0 +1,21 @@
+module: stdio
+    import: os.io
+
+    function: print
+        params:
+            declare x: any
+        returns: int
+        body:
+            return io.stdout_write("" + x)
+        end body
+    end function
+
+    function: println
+        params:
+            declare x: any
+        returns: int
+        body:
+            return io.stdout_write("" + x + "\n")
+        end body
+    end function
+end module

@@ -1,11 +1,11 @@
 module: app
-    import: os.io
+    import: stdio
 
     function: main
         params:
             declare args: any
         body:
-            io.print(1)
+            stdio.print("stdout_write 实际写入字节数:")
         end body
     end function
 end module
