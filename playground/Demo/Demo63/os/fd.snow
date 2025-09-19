@@ -1,0 +1,13 @@
+module: fd
+    // print(obj): 输出对象到 stdout，不附加换行。
+    // 成功返回 0。
+    function: print
+        params:
+            declare i1: any
+        returns: void
+        body:
+            syscall("0x1200", i1)
+        end body
+    end function
+
+end module

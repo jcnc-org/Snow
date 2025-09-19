@@ -169,10 +169,6 @@ public record SignatureRegistrar(Context ctx) {
     /**
      * 解析父类结构体类型。
      * 支持限定名（如 {@code Module.Struct}）及当前/导入模块内查找。
-     *
-     * @param mi         当前模块信息
-     * @param parentName 父类名称（可为限定名或非限定名）
-     * @return StructType，找不到返回 null
      */
     private StructType resolveParentStruct(ModuleInfo mi, String parentName) {
         int dot = parentName.indexOf('.');
@@ -198,14 +194,11 @@ public record SignatureRegistrar(Context ctx) {
 
     /**
      * 将 import 路径式名称规范化为模块名。
-     * 例：import: os.file 实际映射到 os
-     *
-     * @param raw 原始 import 名称
-     * @return 规范化后的模块名
+     * 例：import: os.file 实际映射到 file（末段名作为本地别名）
      */
     private String resolveImportModuleName(String raw) {
         if (raw == null) return null;
-        int dot = raw.indexOf('.');
-        return dot > 0 ? raw.substring(0, dot) : raw;
+        int dot = raw.lastIndexOf('.');
+        return dot > 0 ? raw.substring(dot + 1) : raw;
     }
 }

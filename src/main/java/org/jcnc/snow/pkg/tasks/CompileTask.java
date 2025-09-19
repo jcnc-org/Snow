@@ -97,6 +97,17 @@ public record CompileTask(Project project, String[] args) implements Task {
         return out;
     }
 
+    private static String fromDemoXX(Path src) {
+        for (int i = 0; i < src.getNameCount(); i++) {
+            String part = src.getName(i).toString();
+            if (part.matches("Demo\\d+")) { // 精确匹配 DemoXX 形式
+                return src.subpath(i, src.getNameCount()).toString();
+            }
+        }
+        // fallback，只返回文件名
+        return src.getFileName().toString();
+    }
+
     /**
      * 执行任务主入口，捕获异常向上抛出
      */
@@ -183,7 +194,7 @@ public record CompileTask(Project project, String[] args) implements Task {
         // === 阶段1：词法 + 语法分析 ===
         for (Path src : sources) {
             String code = Files.readString(src, StandardCharsets.UTF_8); // 读取源码
-            print("#### " + src.getFileName());
+            print("#### " + fromDemoXX(src));
             print(code);
 
             // 构造词法分析器
@@ -243,5 +254,7 @@ public record CompileTask(Project project, String[] args) implements Task {
         }
 
         return 0;
+
+
     }
 }
