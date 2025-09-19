@@ -1,8 +1,7 @@
 module : Main
 	import: stdio
 
-	import: stdio
-.stdio
+	import: std.stdio
 	function: main
 	    returns: void
 	    body:
