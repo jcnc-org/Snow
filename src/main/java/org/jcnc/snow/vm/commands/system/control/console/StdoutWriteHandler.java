@@ -8,7 +8,7 @@ import org.jcnc.snow.vm.module.OperandStack;
 import java.nio.charset.StandardCharsets;
 
 /**
- * {@code StdoutWriteHandler} 用于实现系统调用 STDOUT_WRITE（0x1203）。
+ * {@code StdoutWriteHandler} 用于实现系统调用 STDOUT_WRITE（0x1201）。
  *
  * <p>
  * 由于某些环境下 fd=1 （stdout）经由 FDTable 获取的通道存在缓冲/刷新不同步的问题，

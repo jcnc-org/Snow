@@ -7,7 +7,7 @@ import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
 /**
- * {@code ThreadJoinHandler} 实现 THREAD_JOIN (0x1202) 系统调用，
+ * {@code ThreadJoinHandler} 实现 THREAD_JOIN (0x1200) 系统调用，
  * 用于等待指定线程结束并获取其返回值。
  *
  * <p><b>Stack</b>：入参 {@code (tid:int)} → 出参 {@code (retval:any?)}</p>

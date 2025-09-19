@@ -260,33 +260,13 @@ public final class SyscallOpCode {
 
     // region 标准 IO / 控制台 (0x1200 – 0x12FF)
     /**
-     * 将对象内容输出到标准输出（不自动换行）。
-     *
-     * <p><b>Stack</b>：入参 {@code (obj:Object)} → 出参 {@code (rc:int)}</p>
-     * <p><b>语义</b>：从操作数栈弹出一个对象，通过 SyscallUtil
-     * 方法将其打印到标准输出流（不附加换行）。</p>
-     * <p><b>返回</b>：成功时返回 {@code 0}。</p>
-     * <p><b>异常</b>：若对象输出过程发生错误（例如 I/O 异常），抛出对应异常。</p>
-     */
-    public static final int PRINT = 0x1200;
-    /**
-     * 将对象内容输出到标准输出，并在末尾附加换行。
-     *
-     * <p><b>Stack</b>：入参 {@code (obj:Object)} → 出参 {@code (rc:int)}</p>
-     * <p><b>语义</b>：从操作数栈弹出一个对象，通过 SyscallUtil
-     * 方法将其打印到标准输出流，并在输出后自动追加换行。</p>
-     * <p><b>返回</b>：成功时返回 {@code 0}。</p>
-     * <p><b>异常</b>：若对象输出过程发生错误（例如 I/O 异常），抛出对应异常。</p>
-     */
-    public static final int PRINTLN = 0x1201;
-    /**
      * 从标准输入读取一行文本。
      *
      * <p><b>Stack</b>：入参：无 → 出参 {@code (line:String)}</p>
      * <p><b>语义</b>：从 {@code System.in} 读取一行字符串并返回；若到达 EOF 或读取失败，则返回空字符串。</p>
      * <p><b>异常</b>：I/O 错误。</p>
      */
-    public static final int STDIN_READ = 0x1202;
+    public static final int STDIN_READ = 0x1200;
 
     /**
      * 向标准输出（stdout, fd=1）写入字节数组或字符串。
@@ -296,7 +276,7 @@ public final class SyscallOpCode {
      * 写入标准输出通道并返回实际写入的字节数。</p>
      * <p><b>异常</b>：stdout 通道不可写，或写入过程中发生 I/O 错误。</p>
      */
-    public static final int STDOUT_WRITE = 0x1203;
+    public static final int STDOUT_WRITE = 0x1201;
 
     /**
      * 向标准错误输出（stderr）写入字符串。
@@ -306,7 +286,7 @@ public final class SyscallOpCode {
      * 操作完成后返回 {@code 0}。</p>
      * <p><b>异常</b>：写入过程中发生 I/O 错误。</p>
      */
-    public static final int STDERR_WRITE = 0x1204;
+    public static final int STDERR_WRITE = 0x1202;
     // endregion
 
     // region 多路复用 (0x1300 – 0x13FF)

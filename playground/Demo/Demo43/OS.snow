@@ -2,9 +2,9 @@
 // ──────────────────────────────────────────────
 //  • 0x1200  PRINT        →  将对象输出到标准输出（不自动换行）
 //  • 0x1201  PRINTLN      →  将对象输出到标准输出并追加换行
-//  • 0x1202  STDIN_READ   →  从标准输入读取一行字符串（到达 EOF 返回空字符串）
-//  • 0x1203  STDOUT_WRITE →  向标准输出写入字节数组或字符串，返回写入字节数
-//  • 0x1204  STDERR_WRITE →  向标准错误输出写入字符串，返回 0
+//  • 0x1200  STDIN_READ   →  从标准输入读取一行字符串（到达 EOF 返回空字符串）
+//  • 0x1201  STDOUT_WRITE →  向标准输出写入字节数组或字符串，返回写入字节数
+//  • 0x1202  STDERR_WRITE →  向标准错误输出写入字符串，返回 0
 //  • 0x1000  OPEN         →  打开文件，返回 fd
 //  • 0x1001  READ         →  从文件描述符读取最多 n 字节并返回 byte[]
 //  • 0x1002  WRITE        →  向 fd 写入字节数据
@@ -37,34 +37,34 @@ module: os
     end function
 
     // stdinRead(): 从标准输入读取一行文本。
-    // 对应系统调用：STDIN_READ (0x1202)。
+    // 对应系统调用：STDIN_READ (0x1200)。
     function: stdinRead
         params:
         returns: any
         body:
-            return syscall("0x1202")
+            return syscall("0x1200")
         end body
     end function
 
     // stdoutWrite(data): 向标准输出写入字节数组或字符串。
-    // 对应系统调用：STDOUT_WRITE (0x1203)。
+    // 对应系统调用：STDOUT_WRITE (0x1201)。
     function: stdoutWrite
         params:
             declare data: any
         returns: int
         body:
-            return syscall("0x1203", data)
+            return syscall("0x1201", data)
         end body
     end function
 
     // stderrWrite(data): 向标准错误输出写入字符串。
-    // 对应系统调用：STDERR_WRITE (0x1204)。
+    // 对应系统调用：STDERR_WRITE (0x1202)。
     function: stderrWrite
         params:
             declare data: any
         returns: int
         body:
-            return syscall("0x1204", data)
+            return syscall("0x1202", data)
         end body
     end function
 

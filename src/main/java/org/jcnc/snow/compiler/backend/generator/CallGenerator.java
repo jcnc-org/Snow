@@ -237,7 +237,7 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
                  "0X1005", "STAT",
                  "0X1006", "FSTAT",
                  "0X1904", "ERRSTR",
-                 "0X1202", "STDIN_READ",
+                 "0X1200", "STDIN_READ",
                  "0X100A", "PIPE",
                  "0X1010", "READLINK",
                  "0X1103", "GETCWD",

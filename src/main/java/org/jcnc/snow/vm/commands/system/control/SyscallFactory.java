@@ -61,8 +61,6 @@ public final class SyscallFactory {
         SYSCALLS[SyscallOpCode.UTIME] = new UtimeHandler();
 
         // ================= 标准 IO =================
-        SYSCALLS[SyscallOpCode.PRINT] = new PrintHandler();
-        SYSCALLS[SyscallOpCode.PRINTLN] = new PrintlnHandler();
         SYSCALLS[SyscallOpCode.STDIN_READ] = new StdinReadHandler();
         SYSCALLS[SyscallOpCode.STDOUT_WRITE] = new StdoutWriteHandler();
         SYSCALLS[SyscallOpCode.STDERR_WRITE] = new StderrWriteHandler();

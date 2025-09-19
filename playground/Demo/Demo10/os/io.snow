@@ -1,8 +1,8 @@
 // io module: 标准 IO / 控制台 系统调用
 // ──────────────────────────────────────────────
-//  • 0x1202  STDIN_READ     →  从标准输入读取一行文本
-//  • 0x1203  STDOUT_WRITE   →  向标准输出写入字节数组/字符串
-//  • 0x1204  STDERR_WRITE   →  向标准错误输出写入字符串
+//  • 0x1200  STDIN_READ     →  从标准输入读取一行文本
+//  • 0x1201  STDOUT_WRITE   →  向标准输出写入字节数组/字符串
+//  • 0x1200  STDERR_WRITE   →  向标准错误输出写入字符串
 // ──────────────────────────────────────────────
 
 module: io
@@ -13,7 +13,7 @@ module: io
         params:     // 无参数
         returns: string
         body:
-            declare result :string = syscall("0x1202")
+            declare result :string = syscall("0x1200")
             return result
         end body
     end function
@@ -26,7 +26,7 @@ module: io
             declare data: any
         returns: int
         body:
-            declare written:int = syscall("0x1203", data)
+            declare written:int = syscall("0x1201", data)
             return written
         end body
     end function
@@ -39,7 +39,7 @@ module: io
             declare data: any
         returns: int
         body:
-            declare rc :int = syscall("0x1204", data)
+            declare rc :int = syscall("0x1202", data)
             return rc
         end body
     end function
