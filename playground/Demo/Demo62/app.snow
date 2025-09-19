@@ -13,7 +13,7 @@ module: app
             path = "utime_demo.txt"
 
             // 确保文件存在（O_CREAT | O_WRONLY）
-            os.f(os.open(path, 65))
+            os.close(os.open(path, 65))
 
             // 使用固定时间戳 (2023-11-14 22:13:20 UTC)
             rc = os.utime(path, 1700000000000l, 1700000000000l)
