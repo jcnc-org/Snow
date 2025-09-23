@@ -1,3 +1,11 @@
+// multiplex module: 多路复用/事件系统调用
+// ──────────────────────────────────────────────
+//  • 0x1300  SELECT       →  I/O 多路复用 select
+//  • 0x1301  EPOLL_CREATE →  创建 epoll 实例
+//  • 0x1302  EPOLL_CTL    →  管理 epoll 监控项
+//  • 0x1303  EPOLL_WAIT   →  等待 epoll 事件
+//  • 0x1304  IO_WAIT      →  跨平台 I/O 多路等待
+// ──────────────────────────────────────────────
 module: multiplex
 
     /**
