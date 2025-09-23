@@ -72,6 +72,7 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
             case "double" -> 'D';
             case "string" -> 'R';
             case "void" -> 'V';
+
             default -> 'R';
         };
     }
@@ -241,7 +242,11 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
                  "0X100A", "PIPE",
                  "0X1010", "READLINK",
                  "0X1103", "GETCWD",
-                 "0X1104", "READDIR" -> 'R';
+                 "0X1104", "READDIR",
+                 "0X1300", "SELECT",
+                 "0X1303", "EPOLL_WAIT",
+                 "0X1304", "IO_WAIT"
+                 -> 'R';
 
 
             // 返回 long
