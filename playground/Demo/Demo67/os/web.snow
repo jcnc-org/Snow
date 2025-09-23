@@ -1,0 +1,183 @@
+// web module: 套接字 & 网络 系统调用
+// ──────────────────────────────────────────────
+//  • 0x1400  SOCKET       → 创建新的套接字
+//  • 0x1401  BIND         → 绑定套接字到本地地址
+//  • 0x1402  LISTEN       → 监听连接请求
+//  • 0x1403  ACCEPT       → 接受客户端连接
+//  • 0x1404  CONNECT      → 主动连接远程主机
+//  • 0x1405  SEND         → 在流式套接字上发送数据
+//  • 0x1406  RECV         → 在流式套接字上接收数据
+//  • 0x1407  SENDTO       → 在无连接套接字上发送数据
+//  • 0x1408  RECVFROM     → 在无连接套接字上接收数据
+//  • 0x1409  SHUTDOWN     → 关闭套接字方向
+//  • 0x140A  SETSOCKOPT   → 设置套接字选项
+//  • 0x140B  GETSOCKOPT   → 获取套接字选项
+//  • 0x140C  GETPEERNAME  → 获取套接字对端地址
+//  • 0x140D  GETSOCKNAME  → 获取套接字本地地址
+//  • 0x140E  GETADDRINFO  → 解析主机名和服务名
+// ──────────────────────────────────────────────
+
+module: web
+
+    function: socket
+        params:
+            declare family:int
+            declare type:int
+            declare proto:int
+        returns: int
+        body:
+            return syscall("0x1400", family, type, proto)
+        end body
+    end function
+
+    function: bind
+        params:
+            declare fd:int
+            declare addr:string
+            declare port:int
+        returns: int
+        body:
+            return syscall("0x1401", fd, addr, port)
+        end body
+    end function
+
+    function: listen
+        params:
+            declare fd:int
+            declare backlog:int
+        returns: int
+        body:
+            return syscall("0x1402", fd, backlog)
+        end body
+    end function
+
+    /**
+     * accept(fd)
+     * 接受新连接，返回已接受的套接字 fd。
+     * 对端地址请使用 getpeername(cfd) 获取。
+     */
+    function: accept
+        params:
+            declare fd:int
+        returns: any   // 或 returns:int，按你的运行时实现也可
+        body:
+            return syscall("0x1403", fd)
+        end body
+    end function
+
+    function: connect
+        params:
+            declare fd:int
+            declare addr:string
+            declare port:int
+        returns: int
+        body:
+            return syscall("0x1404", fd, addr, port)
+        end body
+    end function
+
+    function: send
+        params:
+            declare fd:int
+            declare data:any
+        returns: int
+        body:
+            return syscall("0x1405", fd, data)
+        end body
+    end function
+
+    function: recv
+        params:
+            declare fd:int
+            declare n:int
+        returns: any
+        body:
+            return syscall("0x1406", fd, n)
+        end body
+    end function
+
+    function: sendto
+        params:
+            declare fd:int
+            declare data:any
+            declare addr:string
+            declare port:int
+        returns: int
+        body:
+            return syscall("0x1407", fd, data, addr, port)
+        end body
+    end function
+
+    function: recvfrom
+        params:
+            declare fd:int
+            declare n:int
+        returns: any
+        body:
+            return syscall("0x1408", fd, n)
+        end body
+    end function
+
+    function: shutdown
+        params:
+            declare fd:int
+            declare how:int
+        returns: int
+        body:
+            return syscall("0x1409", fd, how)
+        end body
+    end function
+
+    function: setsockopt
+        params:
+            declare fd:int
+            declare level:int
+            declare opt:int
+            declare value:any
+        returns: int
+        body:
+            return syscall("0x140A", fd, level, opt, value)
+        end body
+    end function
+
+    function: getsockopt
+        params:
+            declare fd:int
+            declare level:int
+            declare opt:int
+        returns: any
+        body:
+            return syscall("0x140B", fd, level, opt)
+        end body
+    end function
+
+    function: getpeername
+        params:
+            declare fd:int
+        returns: any
+        body:
+            return syscall("0x140C", fd)
+        end body
+    end function
+
+    function: getsockname
+        params:
+            declare fd:int
+        returns: any
+        body:
+            return syscall("0x140D", fd)
+        end body
+    end function
+
+    function: getaddrinfo
+        params:
+            declare host:string
+            declare service:string
+            declare hints:any
+        returns: any
+        body:
+            return syscall("0x140E", host, service, hints)
+        end body
+    end function
+
+end module

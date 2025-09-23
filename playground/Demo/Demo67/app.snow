@@ -1,0 +1,35 @@
+module: app
+    import: io
+    import: web
+
+    function: main
+        params:
+            declare args:any
+        body:
+            // 1) 创建 TCP 套接字: AF_INET=2, SOCK_STREAM=1, proto=0
+            declare fd:int = web.socket(2, 1, 0)
+            io.stdout_write("服务器 socket 创建完成: fd=" + fd + "\n")
+
+            // 2) 绑定到 0.0.0.0:8080
+            declare rc:int = web.bind(fd, "0.0.0.0", 8080)
+            io.stdout_write("绑定结果: " + rc + "\n")
+
+            // 3) 开始监听
+            rc = web.listen(fd, 10)
+            io.stdout_write("监听结果: " + rc + "\n")
+            io.stdout_write("等待客户端连接...\n")
+
+            // 4) 接受一个客户端连接
+            declare cfd:any = web.accept(fd)
+            io.stdout_write("客户端已连接, cfd=" + cfd + "\n")
+
+            // 5) 向客户端发送一条欢迎消息
+            rc = web.send(cfd, "Hello from Snow minimal server!\n")
+            io.stdout_write("发送结果: " + rc + "\n")
+
+            // 6) 关闭连接
+            rc = web.shutdown(cfd, 2)   // 2 = SHUT_RDWR
+            io.stdout_write("关闭客户端连接: " + rc + "\n")
+        end body
+    end function
+end module
