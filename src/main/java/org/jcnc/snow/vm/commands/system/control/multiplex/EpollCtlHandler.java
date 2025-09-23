@@ -9,26 +9,22 @@ import org.jcnc.snow.vm.module.OperandStack;
 
 /**
  * {@code EpollCtlHandler} 实现 EPOLL_CTL (0x1302) 系统调用，
- * 用于管理 epoll 实例中的监控项。
+ * 支持 epoll 实例内的 fd 监控项增删改操作。
  *
- * <p><b>Stack</b>：入参 {@code (epfd:int, op:int, fd:int, events:int)} → 出参 {@code (rc:int)}</p>
+ * <p>
+ * <b>参数栈：</b> 入参 (epfd:int, op:int, fd:int, events:int)，出参 (rc:int)
+ * </p>
  *
- * <p><b>语义</b>：</p>
+ * <p>
+ * <b>op：</b>
  * <ul>
- *   <li>op=1 (ADD)：将 fd 添加到 epoll，关注指定事件</li>
- *   <li>op=2 (MOD)：修改已存在 fd 的事件掩码</li>
- *   <li>op=3 (DEL)：移除 fd 的监控</li>
- * </ul>
- *
- * <p><b>返回</b>：成功返回 {@code 0}。</p>
- *
- * <p><b>异常</b>：
- * <ul>
- *   <li>epfd 无效 → {@link IllegalArgumentException}</li>
- *   <li>op 非法 → {@link IllegalArgumentException}</li>
- *   <li>其它底层错误 → {@link Exception}</li>
+ *   <li>(ADD)：添加 fd 到 epoll，关注指定事件</li>
+ *   <li>(MOD)：修改已存在 fd 的事件掩码</li>
+ *   <li>(DEL)：移除 fd 的监控</li>
  * </ul>
  * </p>
+ *
+ * <p>成功返回 0，失败抛出 IllegalArgumentException。</p>
  */
 public class EpollCtlHandler implements SyscallHandler {
 
@@ -41,23 +37,32 @@ public class EpollCtlHandler implements SyscallHandler {
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
 
-        // 参数出栈顺序：events, fd, op, epfd
+        // 出栈顺序：events, fd, op, epfd（逆序参数）
         int events = (int) stack.pop();
         int fd     = (int) stack.pop();
         int op     = (int) stack.pop();
         int epfd   = (int) stack.pop();
 
+        // 获取 epoll 实例
         EpollInstance instance = EpollRegistry.get(epfd);
 
+        // 根据操作类型处理
         switch (op) {
-            case EPOLL_CTL_ADD -> instance.addOrUpdate(fd, events);
+            case EPOLL_CTL_ADD -> instance.addOrUpdate(fd, events); // 新增监控
             case EPOLL_CTL_MOD -> {
-                if (!instance.getWatchMap().containsKey(fd)) {
+                // 修改前确保 fd 已注册
+                if (!instance.containsFd(fd)) {
                     throw new IllegalArgumentException("EPOLL_CTL_MOD: fd not registered " + fd);
                 }
                 instance.addOrUpdate(fd, events);
             }
-            case EPOLL_CTL_DEL -> instance.remove(fd);
+            case EPOLL_CTL_DEL -> {
+                // 删除前确保 fd 已注册
+                if (!instance.containsFd(fd)) {
+                    throw new IllegalArgumentException("EPOLL_CTL_DEL: fd not registered " + fd);
+                }
+                instance.remove(fd);
+            }
             default -> throw new IllegalArgumentException("Invalid epoll_ctl op: " + op);
         }
 
