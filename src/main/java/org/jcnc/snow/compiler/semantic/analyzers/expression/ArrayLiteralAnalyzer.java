@@ -21,7 +21,7 @@ import java.util.List;
  * <ul>
  *     <li>推断数组字面量的元素类型，生成对应的 {@link ArrayType}。</li>
  *     <li>检查所有元素类型是否一致，不一致时报错并降级为 {@code int[]}。</li>
- *     <li>若数组为空，默认类型为 {@code int[]}，并产生相应语义错误。</li>
+ *     <li>若数组为空，默认类型为 {@code any[]}。</li>
  * </ul>
  * </p>
  */
@@ -34,14 +34,14 @@ public class ArrayLiteralAnalyzer implements ExpressionAnalyzer<ArrayLiteralNode
      * @param fn     当前分析的函数节点
      * @param locals 当前作用域符号表
      * @param expr   当前数组字面量节点
-     * @return 推断出的数组类型，若类型冲突或无法推断，则为 {@code int[]}
+     * @return 推断出的数组类型，若类型冲突或无法推断，则为 {@code int[]}，空数组为 {@code any[]}
      */
     @Override
     public Type analyze(Context ctx, ModuleInfo mi, FunctionNode fn, SymbolTable locals, ArrayLiteralNode expr) {
         List<ExpressionNode> elems = expr.elements();
         if (elems.isEmpty()) {
-            ctx.getErrors().add(new SemanticError(expr, "空数组字面量的类型无法推断，已默认为 int[]"));
-            return new ArrayType(BuiltinType.INT);
+            // 空数组：推断为 any[]
+            return new ArrayType(BuiltinType.ANY);
         }
         // 以第一个元素为基准
         Type first = ctx.getRegistry()
