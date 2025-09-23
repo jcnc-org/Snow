@@ -52,14 +52,21 @@ public class SelectHandler implements SyscallHandler {
 
     private static List<Integer> toIntList(Object obj) {
         if (obj == null) return Collections.emptyList();
+
         if (obj instanceof List<?> list) {
             List<Integer> out = new ArrayList<>(list.size());
             for (Object o : list) {
-                if (o == null) continue;
-                if (!(o instanceof Number n)) {
-                    throw new IllegalArgumentException("SELECT: fd list must contain integers");
+                switch (o) {
+                    case null -> {
+                    }
+                    case Number n ->             // 正常的 Integer、Long…
+                            out.add(n.intValue());
+                    case Boolean b ->     // 兼容 0/1
+                            out.add(b ? 1 : 0);
+                    default -> throw new IllegalArgumentException(
+                            "SELECT: fd list must contain integers, got " + o.getClass());
                 }
-                out.add(n.intValue());
+
             }
             return out;
         }
