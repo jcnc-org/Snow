@@ -7,6 +7,7 @@ import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
+import java.io.IOException;
 import java.nio.channels.Channel;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
@@ -14,8 +15,7 @@ import java.nio.channels.Selector;
 import java.util.*;
 
 /**
- * {@code IoWaitHandler} 实现 IO_WAIT (0x1304) 系统调用，
- * 用于等待一组文件描述符 (fd) 的 I/O 事件（多路复用，基于 Java NIO Selector）。
+ * {@code IoWaitHandler} 实现 IO_WAIT (0x1304) 系统调用。
  *
  * <p><b>Stack：</b>
  * 入参 {@code (fds: List<Map{fd:int, events:int}}, timeout_ms:int)} →
@@ -23,32 +23,42 @@ import java.util.*;
  * </p>
  *
  * <p><b>语义：</b>
- * 调用方提供若干 fd 及其关注的事件掩码，系统阻塞等待直至有事件就绪或超时。
- * 最多返回与入参中 fd 数量相同的事件列表，每项包含 {@code {"fd":int, "events":int}}。
- * </p>
- *
- * <p><b>事件掩码：</b>
+ * 对指定的 fd 集合等待 I/O 事件直到超时，返回就绪的 (fd, events) 列表。
+ * 事件位定义：READ=1、WRITE=2、CONNECT=4。
  * <ul>
- *   <li>{@code 1} = READ（可读或可接受连接）</li>
- *   <li>{@code 2} = WRITE（可写）</li>
- *   <li>{@code 4} = CONNECT（连接就绪）</li>
+ *   <li>对 {@link SelectableChannel}，通过 Java NIO {@link Selector} 监听对应事件。</li>
+ *   <li>标准输入/输出/错误（fd=0/1/2）兼容处理：
+ *     <ul>
+ *       <li>fd=0 (stdin) 监听 READ，通过 {@link System#in#available()} 检查可读</li>
+ *       <li>fd=1/2 (stdout/stderr) 监听 WRITE，视为始终可写</li>
+ *     </ul>
+ *   </li>
  * </ul>
  * </p>
  *
  * <p><b>返回：</b>
- * 成功时返回一个事件列表；若超时或无事件触发，则返回空列表。
+ * 返回所有就绪的事件数组，元素为 {@code {"fd":int, "events":int}}。
+ * 若无事件就绪，返回空数组。
  * </p>
  *
  * <p><b>异常：</b>
  * <ul>
- *   <li>{@code fds} 参数不是数组类型时抛出 {@link IllegalArgumentException}</li>
- *   <li>{@code fds} 元素不是 {@code {fd:int, events:int}} map 时抛出 {@link IllegalArgumentException}</li>
- *   <li>{@code fd} 或 {@code events} 不是 int 时抛出 {@link IllegalArgumentException}</li>
- *   <li>I/O 相关错误可能抛出 {@link java.io.IOException}</li>
+ *   <li>fds 参数类型非法时抛出 {@link IllegalArgumentException}</li>
+ *   <li>fd 或事件参数非法、底层 I/O 错误时抛出异常</li>
  * </ul>
  * </p>
  */
 public class IoWaitHandler implements SyscallHandler {
+
+    private static boolean waitStdinReadable(int timeoutMs) throws IOException, InterruptedException {
+        if (timeoutMs == 0) return System.in.available() > 0;
+        long deadline = (timeoutMs < 0) ? Long.MAX_VALUE : System.currentTimeMillis() + timeoutMs;
+        while (System.currentTimeMillis() < deadline) {
+            if (System.in.available() > 0) return true;
+            Thread.sleep(10); // 10ms 轮询
+        }
+        return false;
+    }
 
     @Override
     public void handle(OperandStack stack,
@@ -59,53 +69,81 @@ public class IoWaitHandler implements SyscallHandler {
         int timeoutMs = (int) stack.pop();
         Object fdsObj = stack.pop();
 
-        // 校验 fds 类型
         if (!(fdsObj instanceof List<?> fdsList)) {
             throw new IllegalArgumentException("IO_WAIT: fds 必须是数组类型");
         }
 
-        try (Selector selector = Selector.open()) {
-            // keyToFd 映射 selection key -> fd
-            Map<SelectionKey, Integer> keyToFd = new HashMap<>();
+        // 1. 处理不可选择通道（fd 0/1/2），收集需要注册到 Selector 的条目
+        List<Map<String, Object>> result = new ArrayList<>();
+        List<Map.Entry<Integer, Integer>> toRegister = new ArrayList<>(); // (fd, interestOps)
 
-            // 遍历每个 fd+events 配置
-            for (Object obj : fdsList) {
-                if (!(obj instanceof Map<?, ?> fdMap)) {
-                    throw new IllegalArgumentException("IO_WAIT: fds 元素必须是 {fd:int, events:int} map");
-                }
+        for (Object obj : fdsList) {
+            int fd;
+            int events;
 
+            if (obj instanceof Integer intFd) {
+                fd = intFd;
+                events = 1; // 默认监听 READ
+            } else if (obj instanceof Map<?, ?> fdMap) {
                 Object fdVal = fdMap.get("fd");
                 Object evVal = fdMap.get("events");
-
-                if (!(fdVal instanceof Integer fd) || !(evVal instanceof Integer events)) {
+                if (!(fdVal instanceof Integer) || !(evVal instanceof Integer)) {
                     throw new IllegalArgumentException("IO_WAIT: fd 和 events 必须是 int");
                 }
+                fd = (int) fdVal;
+                events = (int) evVal;
+            } else {
+                throw new IllegalArgumentException("IO_WAIT: fds 元素必须是 int 或 {fd:int, events:int} map");
+            }
 
-                Channel ch = FDTable.get(fd);
-                if (!(ch instanceof SelectableChannel sc)) {
-                    continue; // 跳过不可选择通道
+            Channel ch = FDTable.get(fd);
+            if (!(ch instanceof SelectableChannel)) {
+                int readyEv = 0;
+                if (fd == 0 && (events & 1) != 0) {
+                    if (waitStdinReadable(timeoutMs)) readyEv |= 1;
                 }
+                if ((fd == 1 || fd == 2) && (events & 2) != 0) {
+                    readyEv |= 2;
+                }
+                if (readyEv != 0) {
+                    result.add(Map.of("fd", fd, "events", readyEv));
+                }
+                continue;
+            }
+
+            // 可选择通道：转换 Snow 事件位到 Java interestOps
+            int ops = 0;
+            if ((events & 1) != 0) ops |= SelectionKey.OP_READ | SelectionKey.OP_ACCEPT;
+            if ((events & 2) != 0) ops |= SelectionKey.OP_WRITE;
+            if ((events & 4) != 0) ops |= SelectionKey.OP_CONNECT;
+            toRegister.add(new AbstractMap.SimpleEntry<>(fd, ops));
+        }
+
+        // 没有需要注册的通道，直接返回
+        if (toRegister.isEmpty()) {
+            stack.push(result);
+            return;
+        }
+
+        // 2. 使用 Selector 监听剩余通道
+        try (Selector selector = Selector.open()) {
+            Map<SelectionKey, Integer> keyToFd = new HashMap<>();
+
+            for (Map.Entry<Integer, Integer> e : toRegister) {
+                int fd = e.getKey();
+                int ops = e.getValue();
+                Channel ch = FDTable.get(fd);
+
+                SelectableChannel sc = (SelectableChannel) ch;
                 sc.configureBlocking(false);
-
-                // 计算 SelectionKey interestOps
-                int ops = 0;
-                if ((events & 1) != 0) ops |= SelectionKey.OP_READ;    // READ
-                if ((events & 2) != 0) ops |= SelectionKey.OP_WRITE;   // WRITE
-                if ((events & 4) != 0) ops |= SelectionKey.OP_CONNECT; // CONNECT
-
                 SelectionKey key = sc.register(selector, ops);
                 keyToFd.put(key, fd);
             }
 
-            // 等待事件，返回活跃 key 数
             int n = SelectorUtils.selectWithTimeout(selector, timeoutMs);
 
-            // 收集活跃事件
-            List<Map<String, Object>> result = new ArrayList<>();
             if (n > 0) {
-                Set<SelectionKey> selectedKeys = selector.selectedKeys();
-                for (SelectionKey key : selectedKeys) {
-                    if (!key.isValid()) continue;
+                for (SelectionKey key : selector.selectedKeys()) {
                     Integer fd = keyToFd.get(key);
                     if (fd == null) continue;
 
@@ -114,13 +152,14 @@ public class IoWaitHandler implements SyscallHandler {
                     if (key.isWritable()) ev |= 2;
                     if (key.isConnectable()) ev |= 4;
 
-                    result.add(Map.of("fd", fd, "events", ev));
+                    if (ev != 0) {
+                        result.add(Map.of("fd", fd, "events", ev));
+                    }
                 }
-                selectedKeys.clear();
+                selector.selectedKeys().clear();
             }
-
-            // 压回事件数组
-            stack.push(result);
         }
+
+        stack.push(result);
     }
 }
