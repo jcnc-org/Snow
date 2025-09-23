@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li>4 = CONNECT（OP_CONNECT）</li>
  * </ul>
  * </p>
+ * <p>支持标准流 fd（0/1/2）。</p>
  */
 public class EpollInstance {
 
@@ -28,6 +29,10 @@ public class EpollInstance {
     private final Map<Integer, SelectableChannel> fdToChannel = new ConcurrentHashMap<>();
     // channel -> fd
     private final Map<SelectableChannel, Integer> channelToFd = new ConcurrentHashMap<>();
+
+    // 兼容标准流 fd 0/1/2
+    // key: fd (0/1/2), value: events
+    private final Map<Integer, Integer> pseudoFds = new ConcurrentHashMap<>();
 
     public EpollInstance(int flags) throws IOException {
         this.flags = flags;
@@ -96,6 +101,8 @@ public class EpollInstance {
                 key.cancel();
             }
         }
+        // 移除 pseudo fd
+        pseudoFds.remove(fd);
     }
 
     /**
@@ -107,5 +114,35 @@ public class EpollInstance {
         if ((events & 2) != 0) ops |= SelectionKey.OP_WRITE;
         if ((events & 4) != 0) ops |= SelectionKey.OP_CONNECT;
         return ops;
+    }
+
+    // 标准流 fd 0/1/2（pseudo fd）辅助方法
+
+    /**
+     * 添加或更新 pseudo fd（0/1/2）事件掩码。
+     */
+    public void addOrUpdatePseudo(int fd, int events) {
+        pseudoFds.put(fd, events);
+    }
+
+    /**
+     * 移除 pseudo fd（0/1/2）。
+     */
+    public void removePseudo(int fd) {
+        pseudoFds.remove(fd);
+    }
+
+    /**
+     * 检查伪 fd 是否已注册。
+     */
+    public boolean containsPseudoFd(int fd) {
+        return pseudoFds.containsKey(fd);
+    }
+
+    /**
+     * 返回所有已注册的伪 fd 及其事件掩码。
+     */
+    public Map<Integer, Integer> getPseudoFds() {
+        return pseudoFds;
     }
 }
