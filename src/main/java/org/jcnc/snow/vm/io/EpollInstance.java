@@ -1,61 +1,85 @@
 package org.jcnc.snow.vm.io;
 
+import java.io.IOException;
+import java.nio.channels.Channel;
+import java.nio.channels.SelectableChannel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * {@code EpollInstance} 表示一个 epoll 实例，用于保存被监控的 fd 及其对应的事件掩码。
+ * {@code EpollInstance} 表示一个 epoll 实例，基于 Java NIO Selector 实现。
  *
- * <p><b>功能</b>：提供 fd 到事件掩码的线程安全映射，支持注册、更新和移除 fd 监控事件。
- *
- * <p><b>当前实现</b>：仅存储 fd → events 的映射，未实现真正的事件分发与通知，作为 epoll 机制的
- * 简化数据结构。</p>
- *
- * <p><b>字段说明</b>：
+ * <p><b>事件位掩码约定</b>：
  * <ul>
- *   <li>{@link #flags}        epoll 创建时的 flags 参数（当前未用，仅保留）</li>
- *   <li>{@link #watchMap}     fd 到事件掩码的映射表（线程安全）</li>
+ *   <li>1 = READ（OP_READ / OP_ACCEPT）</li>
+ *   <li>2 = WRITE（OP_WRITE）</li>
+ *   <li>4 = CONNECT（OP_CONNECT）</li>
  * </ul>
  * </p>
  */
 public class EpollInstance {
 
-    /**
-     * epoll 创建时的 flags（当前实现未使用，仅保留）
-     */
     private final int flags;
+    private final Selector selector;
 
-    /**
-     * fd -> 事件掩码（线程安全）
-     */
-    private final Map<Integer, Integer> watchMap = new ConcurrentHashMap<>();
+    // fd -> channel
+    private final Map<Integer, SelectableChannel> fdToChannel = new ConcurrentHashMap<>();
+    // channel -> fd
+    private final Map<SelectableChannel, Integer> channelToFd = new ConcurrentHashMap<>();
 
-    /**
-     * 创建 epoll 实例。
-     *
-     * @param flags 创建 epoll 时传入的 flags（暂未使用）
-     */
-    public EpollInstance(int flags) {
+    public EpollInstance(int flags) throws IOException {
         this.flags = flags;
+        this.selector = Selector.open();
+    }
+
+    public int getFlags() {
+        return flags;
+    }
+
+    public Selector getSelector() {
+        return selector;
     }
 
     /**
-     * 获取 epoll 创建时的 flags。
-     *
-     * @return flags
+     * 根据 channel 反查 fd；找不到则返回 null。
      */
-    public int getFlags() {
-        return flags;
+    public Integer fdOf(SelectableChannel ch) {
+        return channelToFd.get(ch);
+    }
+
+    /**
+     * 判断某个 fd 是否已被注册到该 epoll 实例。
+     */
+    public boolean containsFd(int fd) {
+        return fdToChannel.containsKey(fd);
     }
 
     /**
      * 注册或更新一个 fd 的事件掩码。
      *
      * @param fd     文件描述符
-     * @param events 事件掩码
+     * @param events 事件掩码（见上方约定）
      */
-    public void addOrUpdate(int fd, int events) {
-        watchMap.put(fd, events);
+    public void addOrUpdate(int fd, int events) throws IOException {
+        Channel ch = FDTable.get(fd);
+        if (!(ch instanceof SelectableChannel sc)) {
+            throw new IllegalArgumentException("fd " + fd + " 不是可选择通道（SelectableChannel）");
+        }
+        sc.configureBlocking(false);
+
+        int ops = toSelectionOps(events);
+
+        SelectionKey key = sc.keyFor(selector);
+        if (key == null) {
+            sc.register(selector, ops);
+        } else {
+            key.interestOps(ops);
+        }
+
+        fdToChannel.put(fd, sc);
+        channelToFd.put(sc, fd);
     }
 
     /**
@@ -64,15 +88,24 @@ public class EpollInstance {
      * @param fd 文件描述符
      */
     public void remove(int fd) {
-        watchMap.remove(fd);
+        SelectableChannel sc = fdToChannel.remove(fd);
+        if (sc != null) {
+            channelToFd.remove(sc);
+            SelectionKey key = sc.keyFor(selector);
+            if (key != null) {
+                key.cancel();
+            }
+        }
     }
 
     /**
-     * 获取当前所有监控的 fd → 事件掩码的映射。
-     *
-     * @return 线程安全 map
+     * 将自定义事件位映射为 NIO SelectionKey 的兴趣集。
      */
-    public Map<Integer, Integer> getWatchMap() {
-        return watchMap;
+    private int toSelectionOps(int events) {
+        int ops = 0;
+        if ((events & 1) != 0) ops |= SelectionKey.OP_READ | SelectionKey.OP_ACCEPT;
+        if ((events & 2) != 0) ops |= SelectionKey.OP_WRITE;
+        if ((events & 4) != 0) ops |= SelectionKey.OP_CONNECT;
+        return ops;
     }
 }
