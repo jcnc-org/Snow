@@ -86,7 +86,6 @@ public class RPushCommand implements Command {
                             int code = Integer.parseInt(uni.toString(), 16);
                             sb.append((char) code);
                         } catch (Exception e) {
-                            // Invalid unicode, append as is
                             sb.append("\\u").append(uni);
                         }
                     }
@@ -116,7 +115,11 @@ public class RPushCommand implements Command {
             c.skip();
         }
         String token = sb.toString();
+
         // Try number parsing with various notations and types
+        if ("true".equalsIgnoreCase(token))  return true;
+        if ("false".equalsIgnoreCase(token)) return false;
+
         try {
             if (token.startsWith("0x") || token.startsWith("0X")) {
                 return Integer.parseInt(token.substring(2), 16);
@@ -136,8 +139,6 @@ public class RPushCommand implements Command {
             if (token.endsWith("b")) {
                 return Byte.parseByte(token.substring(0, token.length() - 1));
             }
-            if (token.equals("1")) return true;
-            if (token.equals("0")) return false;
             if (token.contains(".")) {
                 return Double.parseDouble(token);
             }
