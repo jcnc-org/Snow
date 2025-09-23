@@ -20,14 +20,14 @@ module: app
             io.stdout_write("等待客户端连接...\n")
 
             // 4) 接受一个客户端连接
-            declare cfd:any = web.accept(fd)
+            declare cfd:int = web.accept(fd)
             io.stdout_write("客户端已连接, cfd=" + cfd + "\n")
 
-            // 5) 向客户端发送一条欢迎消息
-            rc = web.send(cfd, "Hello from Snow minimal server!\n")
+            // 5) 发送欢迎消息
+            rc = web.send(cfd, "Hello from Snow server!\n")
             io.stdout_write("发送结果: " + rc + "\n")
 
-            // 6) 关闭连接
+            // 6) 关闭连接（半关闭或全关闭均可；若需要真正释放fd，后续可考虑提供 close(fd) 封装）
             rc = web.shutdown(cfd, 2)   // 2 = SHUT_RDWR
             io.stdout_write("关闭客户端连接: " + rc + "\n")
         end body
