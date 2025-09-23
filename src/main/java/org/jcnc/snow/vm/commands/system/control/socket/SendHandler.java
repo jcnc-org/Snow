@@ -11,7 +11,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 
 /**
- * {@code SendHandler} 实现 SEND (0x140B) 系统调用，
+ * {@code SendHandler} 实现 SEND系统调用，
  * 用于向 TCP socket 发送数据。
  *
  * <p><b>Stack</b>：入参 {@code (fd:int, data:byte[]/String)} → 出参 {@code (written:int)}</p>
