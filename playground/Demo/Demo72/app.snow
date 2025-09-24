@@ -6,29 +6,10 @@ module: app
         params:
             declare args:any
         body:
-            // 1) 创建 TCP 套接字
-            declare fd:int = web.socket(2, 1, 0) // AF_INET=2, SOCK_STREAM=1
-            io.stdout_write("创建套接字 fd=" + fd + "\n")
+            // 0) 测试 getaddrinfo：解析本机 "localhost" 的 80 端口
+            declare infos:any[] = web.getaddrinfo("localhost", "80", [])
+            io.stdout_write("getaddrinfo(localhost, 80) 返回=" + infos + "\n")
 
-            // 2) 绑定本地端口 0（让系统自动分配）
-            declare rc:int = web.bind(fd, "0.0.0.0", 0)
-            io.stdout_write("bind 返回=" + rc + "\n")
-
-            // 3) 连接到服务器 (假设本地已有 127.0.0.1:8080 服务)
-            rc = web.connect(fd, "127.0.0.1", 8080)
-            io.stdout_write("connect 返回=" + rc + "\n")
-
-            // 4) 获取本地地址 getsockname
-            declare local:any[] = web.getsockname(fd)
-            io.stdout_write("本地地址=" + local[0] + ", 本地端口=" + local[1] + "\n")
-
-            // 5) 获取对端地址 getpeername
-            declare peer:any[] = web.getpeername(fd)
-            io.stdout_write("对端地址=" + peer[0] + ", 对端端口=" + peer[1] + "\n")
-
-            // 6) 关闭
-            rc = web.shutdown(fd, 2)
-            io.stdout_write("关闭套接字 rc=" + rc + "\n")
         end body
     end function
 end module

@@ -1,31 +1,4 @@
-// io module: 标准 IO / 控制台 系统调用
-// ──────────────────────────────────────────────
-//  • 0x1200  STDIN_READ     →  从标准输入读取一行文本
-//  • 0x1201  STDOUT_WRITE   →  向标准输出写入字节数组/字符串
-//  • 0x1202  STDERR_WRITE   →  向标准错误输出写入字符串
-// ──────────────────────────────────────────────
-
 module: io
-
-    /**
-     * stdin_read()
-     *
-     * <b>Stack：</b> 入参 (无) → 出参 (string)
-     *
-     * <b>语义：</b> 从标准输入 (fd=0) 读取一行文本。
-     * 遇 EOF 或错误时返回空字符串 ""。
-     *
-     * <b>返回：</b> 读取到的文本字符串。
-     */
-    function: stdin_read
-        params:     // 无参数
-        returns: string
-        body:
-            declare result:string = syscall("0x1200")
-            return result
-        end body
-    end function
-
     /**
      * stdout_write(data)
      *
@@ -45,25 +18,4 @@ module: io
             return written
         end body
     end function
-
-    /**
-     * stderr_write(data)
-     *
-     * <b>Stack：</b> 入参 (data:any) → 出参 (int)
-     *
-     * <b>语义：</b> 向标准错误输出 (fd=2) 写入字符串。
-     * 任意对象将转为字符串输出，null 将输出 "null"。
-     *
-     * <b>返回：</b> 成功返回 0。
-     */
-    function: stderr_write
-        params:
-            declare data:any
-        returns: int
-        body:
-            declare rc:int = syscall("0x1202", data)
-            return rc
-        end body
-    end function
-
 end module

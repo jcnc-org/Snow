@@ -253,7 +253,6 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
                  "0X140D", "GETSOCKNAME",
                  "0X140E", "GETADDRINFO",
                  "0X140B","GETSOCKOPT"
-
                     -> 'R';
 
 

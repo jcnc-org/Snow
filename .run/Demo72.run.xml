@@ -2,7 +2,7 @@
   <configuration default="false" name="Demo72" type="Application" factoryName="Application" folderName="Demo">
     <option name="MAIN_CLASS_NAME" value="org.jcnc.snow.cli.SnowCLI" />
     <module name="Snow" />
-    <option name="PROGRAM_PARAMETERS" value="compile run -d playground/Demo/Demo72 -o target/Demo72" />
+    <option name="PROGRAM_PARAMETERS" value="compile run -d playground/Demo/Demo72 -o target/Demo72 --debug" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>
