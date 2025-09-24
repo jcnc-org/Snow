@@ -1,0 +1,34 @@
+module: getsockopt_demo
+    import: io
+    import: web
+
+    function: main
+        params:
+            declare args:any
+        body:
+            // 1) 创建 UDP 套接字
+            declare fd:int = web.socket(2, 2, 0)
+            io.stdout_write("创建套接字 fd=" + fd + "\n")
+
+            // 2) level/opt 常量（和 setsockopt 一致）
+            declare SOL_SOCKET:int   = 1
+            declare SO_REUSEADDR:int = 2
+
+            // 3) 默认情况下读取 SO_REUSEADDR
+            declare reuse:any = web.getsockopt(fd, SOL_SOCKET, SO_REUSEADDR)
+            io.stdout_write("初始 SO_REUSEADDR=" + reuse + "\n")
+
+            // 4) 设置 SO_REUSEADDR = 1
+            declare rc:int = web.setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, 1)
+            io.stdout_write("设置 SO_REUSEADDR rc=" + rc + "\n")
+
+            // 5) 再次读取确认
+            reuse = web.getsockopt(fd, SOL_SOCKET, SO_REUSEADDR)
+            io.stdout_write("修改后 SO_REUSEADDR=" + reuse + "\n")
+
+            // 6) 关闭
+            rc = web.shutdown(fd, 2)
+            io.stdout_write("关闭套接字 rc=" + rc + "\n")
+        end body
+    end function
+end module

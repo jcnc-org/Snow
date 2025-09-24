@@ -251,7 +251,10 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
                  "0X1408", "RECVFROM",
                  "0X140C", "GETPEERNAME",
                  "0X140D", "GETSOCKNAME",
-                 "0X140E", "GETADDRINFO" -> 'R';
+                 "0X140E", "GETADDRINFO",
+                 "0X140B","GETSOCKOPT"
+
+                    -> 'R';
 
 
             // 返回 long

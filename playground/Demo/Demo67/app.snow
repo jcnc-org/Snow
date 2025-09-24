@@ -1,4 +1,4 @@
-module: app
+module: peername_demo
     import: io
     import: web
 
@@ -6,30 +6,39 @@ module: app
         params:
             declare args:any
         body:
-            // 1. 创建 TCP 套接字: AF_INET=2, SOCK_STREAM=1, proto=0
-            declare fd:int = web.socket(2, 1, 0)
-            io.stdout_write("服务器 socket 创建完成: fd=" + fd + "\n")
+            // 1) 服务器：创建/绑定/监听
+            declare sfd:int = web.socket(2, 1, 0)   // AF_INET=2, SOCK_STREAM=1
+            declare rc:int  = web.bind(sfd, "127.0.0.1", 8081)
+            rc = web.listen(sfd, 5)
+            io.stdout_write("server listening on 127.0.0.1:8081\n")
 
-            // 2. 绑定到 0.0.0.0:8080
-            declare rc:int = web.bind(fd, "0.0.0.0", 8080)
-            io.stdout_write("绑定结果: " + rc + "\n")
+            // 2) 客户端：创建并连接
+            declare cfd_cli:int = web.socket(2, 1, 0)
+            rc = web.connect(cfd_cli, "127.0.0.1", 8081)
+            io.stdout_write("client connect rc=" + rc + "\n")
 
-            // 3. 开始监听
-            rc = web.listen(fd, 10)
-            io.stdout_write("监听结果: " + rc + "\n")
-            io.stdout_write("等待客户端连接...\n")
+            // 3) 服务器 accept（注意：返回的是 int，不是数组）
+            declare cfd_srv:int = web.accept(sfd)
+            io.stdout_write("server accepted cfd=" + cfd_srv + "\n")
 
-            // 4. 接受一个客户端连接
-            declare cfd:int = web.accept(fd)
-            io.stdout_write("客户端已连接, cfd=" + cfd + "\n")
+            // 4) 客户端视角：getpeername(客户端fd) → 对端 = 服务器地址:端口
+            declare p1:any = web.getpeername(cfd_cli) // 返回 any
+            declare peer1:any[] = p1                   // 转成 any[] 才能下标
+            declare srv_addr:string = peer1[0]
+            declare srv_port:int    = peer1[1]
+            io.stdout_write("client getpeername -> " + srv_addr + ":" + srv_port + "\n")
 
-            // 5. 发送欢迎消息
-            rc = web.send(cfd, "Hello from Snow server!\n")
-            io.stdout_write("发送结果: " + rc + "\n")
+            // 5) 服务器视角：getpeername(已接受fd) → 对端 = 客户端地址:端口
+            declare p2:any = web.getpeername(cfd_srv)
+            declare peer2:any[] = p2
+            declare cli_addr:string = peer2[0]
+            declare cli_port:int    = peer2[1]
+            io.stdout_write("server getpeername -> " + cli_addr + ":" + cli_port + "\n")
 
-            // 6. 关闭连接
-            rc = web.shutdown(cfd, 2)   // 2 = SHUT_RDWR
-            io.stdout_write("关闭客户端连接: " + rc + "\n")
+            // 6) 清理
+            rc = web.shutdown(cfd_cli, 2)
+            rc = web.shutdown(cfd_srv, 2)
+            rc = web.shutdown(sfd, 2)
         end body
     end function
 end module
