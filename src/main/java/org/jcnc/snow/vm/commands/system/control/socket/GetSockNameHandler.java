@@ -16,18 +16,24 @@ import java.nio.channels.SocketChannel;
  * {@code GetSockNameHandler} 实现 GETSOCKNAME (0x140D) 系统调用，
  * 用于获取 socket 的本地地址和端口。
  *
- * <p><b>Stack</b>：入参 {@code (fd:int)} → 出参 {@code (addr:String, port:int)}</p>
+ * <p><b>Stack：</b>
+ * 入参 {@code (fd:int)} →
+ * 出参 {@code (tuple:any[])}
+ * </p>
  *
- * <p><b>语义</b>：返回 fd 对应 socket 的本地（绑定）IP 和端口。</p>
+ * <p><b>语义：</b>
+ * 返回 fd 对应 socket 的本地（绑定）IP 和端口。
+ * </p>
  *
- * <p><b>返回</b>：
+ * <p><b>返回：</b>
+ * 返回 {addr, port} 数组：
  * <ul>
- *   <li>addr：本地 IP 地址（String）</li>
- *   <li>port：本地端口号（int）</li>
+ *   <li>[0] = addr:String</li>
+ *   <li>[1] = port:int</li>
  * </ul>
  * </p>
  *
- * <p><b>异常</b>：
+ * <p><b>异常：</b>
  * <ul>
  *   <li>fd 无效时抛出 {@link IllegalArgumentException}</li>
  *   <li>channel 类型不支持或本地地址不可用时抛出 {@link IllegalStateException}</li>
@@ -75,8 +81,8 @@ public class GetSockNameHandler implements SyscallHandler {
         String addr = inet.getAddress().getHostAddress();
         int port = inet.getPort();
 
-        // 4. 压回 addr, port
-        stack.push(addr);
-        stack.push(port);
+        // 4. 返回数组 {addr, port}
+        Object[] result = new Object[]{addr, port};
+        stack.push(result);
     }
 }

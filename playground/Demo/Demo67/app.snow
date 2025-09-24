@@ -1,4 +1,4 @@
-module: peername_demo
+module: app
     import: io
     import: web
 

@@ -260,39 +260,66 @@ module: web
         end body
     end function
 
-    /**
-     * 获取套接字对端地址。
-     *
-     * <b>Stack</b>：入参 (fd:int) → 出参 (addr:String, port:int)
-     * <b>语义</b>：返回连接的远程主机地址与端口。
-     * <b>返回</b>：对端地址和端口。
-     * <b>异常</b>：套接字未连接、I/O 失败。
-     */
-    function: getpeername
-        params:
-            declare fd:int
-        returns: any
-        body:
-            return syscall("0x140C", fd)
-        end body
-    end function
+	/**
+	 * 获取套接字对端地址。
+	 *
+	 * <b>Stack</b>：入参 (fd:int) → 出参 (tuple:any[])
+	 * <b>语义</b>：返回连接的远程主机地址与端口。
+	 * <b>返回</b>：数组 {addr:String, port:int}
+	 * <b>异常</b>：套接字未连接、I/O 失败。
+	 */
+	function: getpeername
+	    params:
+	        declare fd:int
+	    returns: any[]
+	    body:
+	        declare tup:int
+	        declare addr:int
+	        declare port:int
+	        declare out:int[]
 
-    /**
-     * 获取套接字本地地址。
-     *
-     * <b>Stack</b>：入参 (fd:int) → 出参 (addr:String, port:int)
-     * <b>语义</b>：返回套接字绑定的本地地址与端口。
-     * <b>返回</b>：本端地址和端口。
-     * <b>异常</b>：套接字未绑定、I/O 失败。
-     */
-    function: getsockname
-        params:
-            declare fd:int
-        returns: any
-        body:
-            return syscall("0x140D", fd)
-        end body
-    end function
+	        tup  = syscall("0x140C", fd)      // VM 返回 Object[] {addr, port}
+	        addr = syscall("0x1802", tup, 0)  // ARR_GET(tup, 0)
+	        port = syscall("0x1802", tup, 1)  // ARR_GET(tup, 1)
+
+	        out = [0, 0]     // 占位
+	        out[0] = addr
+	        out[1] = port
+
+	        return out
+	    end body
+	end function
+
+	/**
+	 * 获取套接字本地地址。
+	 *
+	 * <b>Stack</b>：入参 (fd:int) → 出参 (tuple:any[])
+	 * <b>语义</b>：返回套接字绑定的本地地址与端口。
+	 * <b>返回</b>：数组 {addr:String, port:int}
+	 * <b>异常</b>：套接字未绑定、I/O 失败。
+	 */
+	function: getsockname
+	    params:
+	        declare fd:int
+	    returns: any[]
+	    body:
+	        declare tup:int
+	        declare addr:int
+	        declare port:int
+	        declare out:int[]
+
+	        tup  = syscall("0x140D", fd)      // VM 返回 Object[] {addr, port}
+	        addr = syscall("0x1802", tup, 0)
+	        port = syscall("0x1802", tup, 1)
+
+	        out = [0, 0]
+	        out[0] = addr
+	        out[1] = port
+
+	        return out
+	    end body
+	end function
+
 
     /**
      * 解析主机名和服务名为地址信息。

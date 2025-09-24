@@ -1,4 +1,4 @@
-module: client
+module: app
     import: io
     import: web
 

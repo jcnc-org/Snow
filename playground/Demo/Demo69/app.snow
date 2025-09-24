@@ -1,4 +1,4 @@
-module: udp_server
+module: app
     import: io
     import: web
 
