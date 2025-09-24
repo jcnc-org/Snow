@@ -1,0 +1,42 @@
+module: udp_server
+    import: io
+    import: web
+
+    // 常量（按常见值设置；若你的实现不同，可在这里改）
+    // AF_INET = 2, SOCK_DGRAM = 2
+    function: main
+        params:
+            declare args:any
+        body:
+            declare fd:int = web.socket(2, 2, 0)
+            io.stdout_write("UDP 服务器套接字 fd=" + fd + "\n")
+
+            // 可选：重用地址
+            declare SOL_SOCKET:int   = 1
+            declare SO_REUSEADDR:int = 2
+            declare rc:int = web.setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, 1)
+            io.stdout_write("设置套接字选项 SO_REUSEADDR 返回值 rc=" + rc + "\n")
+
+            rc = web.bind(fd, "127.0.0.1", 9090)
+            io.stdout_write("绑定返回值 rc=" + rc + " @127.0.0.1:9090\n")
+            io.stdout_write("等待接收数据报...\n")
+
+            // RECVFROM 返回数组 [bytes:any, addr:string, port:int]
+            declare pkt:any[] = web.recvfrom(fd, 2048)
+            io.stdout_write("接收到的数据报 -> ")
+            io.stdout_write(pkt)
+            io.stdout_write("\n")
+
+            // 解构：pkt[0]=data, pkt[1]=addr, pkt[2]=port
+            declare data:any     = pkt[0]
+            declare raddr:string = pkt[1]
+            declare rport:int    = pkt[2]
+
+            rc = web.sendto(fd, data, raddr, rport)
+            io.stdout_write("回显发送返回值 rc=" + rc + "，目标 " + raddr + ":" + rport + "\n")
+
+            rc = web.shutdown(fd, 2)
+            io.stdout_write("关闭套接字返回值 rc=" + rc + "\n")
+        end body
+    end function
+end module
