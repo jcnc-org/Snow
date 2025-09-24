@@ -7,55 +7,68 @@ import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
 import java.net.InetSocketAddress;
+import java.nio.channels.Channel;
+import java.nio.channels.DatagramChannel;
 import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 
 /**
  * {@code BindHandler} 实现 BIND (0x1401) 系统调用，
- * 用于绑定 socket 到指定的地址和端口。
+ * 负责将 socket fd 绑定到本地地址（支持 TCP/UDP/Server）。
  *
- * <p><b>Stack</b>：入参 {@code (fd:int, addr:String, port:int)} → 出参 {@code (0:int)}</p>
+ * <p><b>Stack：</b>
+ * 入参 {@code (fd:int, addr:String, port:int)} →
+ * 出参 {@code (rc:int)}
+ * </p>
  *
- * <p><b>语义</b>：将 fd 指定的 ServerSocketChannel 绑定到 addr:port。</p>
+ * <p><b>语义：</b>
+ * 绑定指定 fd 对应的 socket 到本地地址 {@code addr:port}。
+ * 支持 TCP 客户端/服务端与 UDP socket。
+ * </p>
  *
- * <p><b>返回</b>：始终返回 0。</p>
+ * <p><b>返回：</b>
+ * 成功返回 {@code 0}，失败返回 {@code -1}。
+ * </p>
  *
- * <p><b>异常</b>：
+ * <p><b>异常：</b>
  * <ul>
- *   <li>fd 无效时抛出 {@link IllegalArgumentException}</li>
- *   <li>绑定失败时抛出 {@link java.io.IOException}</li>
+ *   <li>fd 非法或未注册时，返回 -1</li>
+ *   <li>底层 bind 失败或参数错误时，返回 -1</li>
  * </ul>
  * </p>
  */
 public class BindHandler implements SyscallHandler {
 
-    /**
-     * 处理 BIND 调用。
-     *
-     * @param stack     操作数栈，依次提供 fd、addr、port
-     * @param locals    局部变量存储器（未使用）
-     * @param callStack 调用栈（未使用）
-     * @throws Exception fd 无效或绑定失败时抛出
-     */
     @Override
-    public void handle(OperandStack stack,
-                       LocalVariableStore locals,
-                       CallStack callStack) throws Exception {
+    public void handle(OperandStack stack, LocalVariableStore locals, CallStack callStack) throws Exception {
+        Object portObj = stack.pop();
+        Object addrObj = stack.pop();
+        Object fdObj = stack.pop();
 
-        // 1. 从操作数栈取出参数 (注意顺序：先 pop port，再 pop addr，再 pop fd)
-        int port = (int) stack.pop();
-        String addr = (String) stack.pop();
-        int fd = (int) stack.pop();
+        int fd = ((Number) fdObj).intValue();
+        String addr = String.valueOf(addrObj);
+        int port = ((Number) portObj).intValue();
 
-        // 2. 获取 ServerSocketChannel
-        ServerSocketChannel server = (ServerSocketChannel) SocketRegistry.get(fd);
-        if (server == null) {
-            throw new IllegalArgumentException("Invalid socket fd: " + fd);
+        Channel ch = SocketRegistry.get(fd);
+        if (ch == null) {
+            stack.push(-1);
+            return;
         }
 
-        // 3. 绑定地址和端口
-        server.bind(new InetSocketAddress(addr, port));
-
-        // 4. 返回 0
-        stack.push(0);
+        try {
+            InetSocketAddress isa = new InetSocketAddress(addr, port);
+            switch (ch) {
+                case ServerSocketChannel ssc -> ssc.bind(isa);
+                case DatagramChannel dgc -> dgc.bind(isa);
+                case SocketChannel sc -> sc.bind(isa); // 客户端 socket 允许绑定本地端口
+                default -> {
+                    stack.push(-1);
+                    return;
+                }
+            }
+            stack.push(0);
+        } catch (Throwable t) {
+            stack.push(-1);
+        }
     }
 }
