@@ -52,6 +52,6 @@ public class PipeHandler implements SyscallHandler {
         int writefd = FDTable.register(pipe.sink());   // 写端
 
         // 封装为 int[]，顺序：[readfd, writefd]
-        stack.push(new int[] { readfd, writefd });
+        stack.push(new int[]{readfd, writefd});
     }
 }
