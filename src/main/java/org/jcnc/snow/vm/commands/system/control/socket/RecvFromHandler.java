@@ -12,7 +12,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 
 /**
- * {@code RecvFromHandler} 实现 RECVFROM (0x1409) 系统调用，
+ * {@code RecvFromHandler} 实现 RECVFROM (0x1408) 系统调用，
  * 用于从 UDP socket 接收数据包及对端地址。
  *
  * <p><b>Stack</b>：入参 {@code (fd:int, n:int)} → 出参 {@code (data:byte[], addr:String, port:int)}</p>

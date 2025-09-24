@@ -9,7 +9,7 @@ import org.jcnc.snow.vm.module.OperandStack;
 import java.nio.channels.SocketChannel;
 
 /**
- * {@code ShutdownHandler} 实现 SHUTDOWN 系统调用，
+ * {@code ShutdownHandler} 实现 SHUTDOWN (0x1409) 系统调用，
  * 用于关闭 TCP socket 的输入、输出或两端流。
  *
  * <p><b>Stack</b>：入参 {@code (fd:int, how:int)} → 出参 {@code (0:int)}</p>

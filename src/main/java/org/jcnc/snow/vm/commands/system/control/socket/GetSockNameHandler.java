@@ -13,7 +13,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
 /**
- * {@code GetSockNameHandler} 实现 GETSOCKNAME (0x1406) 系统调用，
+ * {@code GetSockNameHandler} 实现 GETSOCKNAME (0x140D) 系统调用，
  * 用于获取 socket 的本地地址和端口。
  *
  * <p><b>Stack</b>：入参 {@code (fd:int)} → 出参 {@code (addr:String, port:int)}</p>

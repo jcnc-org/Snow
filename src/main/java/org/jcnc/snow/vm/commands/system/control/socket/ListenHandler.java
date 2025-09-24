@@ -9,7 +9,7 @@ import org.jcnc.snow.vm.module.OperandStack;
 import java.nio.channels.ServerSocketChannel;
 
 /**
- * {@code ListenHandler} 实现 LISTEN (0x1408) 系统调用，
+ * {@code ListenHandler} 实现 LISTEN (0x1402) 系统调用，
  * 用于将 ServerSocketChannel 设置为监听状态（实际 Java bind 时已监听）。
  *
  * <p><b>Stack</b>：入参 {@code (fd:int, backlog:int)} → 出参 {@code (0:int)}</p>

@@ -9,7 +9,7 @@ import java.net.InetAddress;
 import java.util.*;
 
 /**
- * {@code GetAddrInfoHandler} 实现 GETADDRINFO (0x1404) 系统调用，
+ * {@code GetAddrInfoHandler} 实现 GETADDRINFO (0x140E) 系统调用，
  * 用于解析主机名和服务端口，返回可用于 socket 连接的地址列表。
  *
  * <p><b>Stack</b>：入参 {@code (host:String, service:String, hints:any?)} → 出参 {@code (List<Map<String,Object>>)}</p>

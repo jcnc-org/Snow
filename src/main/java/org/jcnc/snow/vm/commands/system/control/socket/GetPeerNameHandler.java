@@ -11,7 +11,7 @@ import java.net.SocketAddress;
 import java.nio.channels.SocketChannel;
 
 /**
- * {@code GetPeerNameHandler} 实现 GETPEERNAME (0x1405) 系统调用，
+ * {@code GetPeerNameHandler} 实现 GETPEERNAME (0x140C) 系统调用，
  * 用于获取 socket 对端（远端）的地址和端口。
  *
  * <p><b>Stack</b>：入参 {@code (fd:int)} → 出参 {@code (addr:String, port:int)}</p>

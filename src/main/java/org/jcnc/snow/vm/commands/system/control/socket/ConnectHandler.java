@@ -10,7 +10,7 @@ import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
 
 /**
- * {@code ConnectHandler} 实现 CONNECT (0x1402) 系统调用，
+ * {@code ConnectHandler} 实现 CONNECT (0x1404) 系统调用，
  * 用于将 socket 连接到指定的远程地址和端口。
  *
  * <p><b>Stack</b>：入参 {@code (fd:int, addr:String, port:int)} → 出参 {@code (0:int)}</p>

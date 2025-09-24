@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 /**
- * {@code RecvHandler} 实现 RECV (0x140A) 系统调用，
+ * {@code RecvHandler} 实现 RECV (0x1406) 系统调用，
  * 用于从 TCP socket 读取数据。
  *
  * <p><b>Stack</b>：入参 {@code (fd:int, n:int)} → 出参 {@code (data:byte[])}</p>

@@ -13,7 +13,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
 /**
- * {@code GetSockOptHandler} 实现 GETSOCKOPT (0x1407) 系统调用，
+ * {@code GetSockOptHandler} 实现 GETSOCKOPT (0x140B) 系统调用，
  * 用于获取 socket 的特定选项值。
  *
  * <p><b>Stack</b>：入参 {@code (fd:int, level:int, opt:int)} → 出参 {@code (value:any)}</p>

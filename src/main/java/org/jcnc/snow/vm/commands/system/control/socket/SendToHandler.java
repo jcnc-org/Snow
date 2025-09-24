@@ -12,7 +12,7 @@ import java.nio.channels.DatagramChannel;
 import java.nio.charset.StandardCharsets;
 
 /**
- * {@code SendToHandler} 实现 SENDTO (0x140C) 系统调用，
+ * {@code SendToHandler} 实现 SENDTO (0x1407) 系统调用，
  * 用于通过 UDP socket 发送数据到指定目标地址和端口。
  *
  * <p><b>Stack</b>：入参 {@code (fd:int, data:byte[]/String, addr:String, port:int)} → 出参 {@code (sent:int)}</p>
