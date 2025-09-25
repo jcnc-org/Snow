@@ -717,11 +717,54 @@ public final class SyscallOpCode {
 
 
     // region 数组操作 (0x1800 – 0x18FF)
-    public static final int ARR_LOAD = 0x1800;
-    public static final int ARR_STORE = 0x1801;
+
+    /**
+     * ARR_LEN (0x1801)
+     *
+     * <p><b>Stack</b>：入参 {@code (arr:any)} → 出参 {@code (len:int)}</p>
+     *
+     * <p><b>语义</b>：返回数组/列表/字符串的长度。</p>
+     *
+     * <p><b>支持</b>：{@link java.util.List}、原生 Java 数组、{@link CharSequence}；若为 {@code null} 则视为长度 0。</p>
+     *
+     * <p><b>返回</b>：长度 {@code (int)}。</p>
+     *
+     * <p><b>异常</b>：若类型不支持，则抛出 {@link IllegalArgumentException}。</p>
+     */
+    public static final int ARR_LEN = 0x1801;
+
+    /**
+     * ARR_GET (0x1802)
+     *
+     * <p><b>Stack</b>：入参 {@code (arr:any, index:int)} → 出参 {@code (elem:any)}</p>
+     *
+     * <p><b>语义</b>：获取数组/列表在指定索引位置的元素。</p>
+     *
+     * <p><b>支持</b>：{@link java.util.List}、原生 Java 数组、{@link CharSequence}。</p>
+     *
+     * <p><b>返回</b>：对应索引位置的元素；若是 {@link CharSequence}，返回 {@code char} 或其包装形式。</p>
+     *
+     * <p><b>异常</b>：若 {@code arr} 为 {@code null} 或索引越界，应抛出 {@link IndexOutOfBoundsException} 或 {@link IllegalArgumentException}。</p>
+     */
     public static final int ARR_GET = 0x1802;
+
+    /**
+     * ARR_SET (0x1803)
+     *
+     * <p><b>Stack</b>：入参 {@code (arr:any, index:int, value:any)} → 出参 {@code ()}</p>
+     *
+     * <p><b>语义</b>：设置数组/列表在指定索引位置的元素为给定值。</p>
+     *
+     * <p><b>支持</b>：{@link java.util.List}、原生 Java 数组。</p>
+     *
+     * <p><b>限制</b>：不可变类型（如 {@link CharSequence}）不支持写操作。</p>
+     *
+     * <p><b>异常</b>：若 {@code arr} 为 {@code null}、索引越界或类型不支持写入，应抛出 {@link IndexOutOfBoundsException} 或 {@link IllegalArgumentException}。</p>
+     */
     public static final int ARR_SET = 0x1803;
+
     // endregion
+
 
     // region 系统信息 (0x1900 – 0x19FF)
     /**

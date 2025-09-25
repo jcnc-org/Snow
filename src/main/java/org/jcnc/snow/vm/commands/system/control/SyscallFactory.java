@@ -1,9 +1,8 @@
 package org.jcnc.snow.vm.commands.system.control;
 
 import org.jcnc.snow.vm.commands.system.control.array.ArrGetHandler;
-import org.jcnc.snow.vm.commands.system.control.array.ArrLoadHandler;
+import org.jcnc.snow.vm.commands.system.control.array.ArrLenHandler;
 import org.jcnc.snow.vm.commands.system.control.array.ArrSetHandler;
-import org.jcnc.snow.vm.commands.system.control.array.ArrStoreHandler;
 import org.jcnc.snow.vm.commands.system.control.console.*;
 import org.jcnc.snow.vm.commands.system.control.fd.*;
 import org.jcnc.snow.vm.commands.system.control.fs.*;
@@ -102,8 +101,7 @@ public final class SyscallFactory {
         SYSCALLS[SyscallOpCode.SLEEP] = new SleepHandler();
 
         // ================= 数组 =================
-        SYSCALLS[SyscallOpCode.ARR_LOAD] = new ArrLoadHandler();
-        SYSCALLS[SyscallOpCode.ARR_STORE] = new ArrStoreHandler();
+        SYSCALLS[SyscallOpCode.ARR_LEN] = new ArrLenHandler();
         SYSCALLS[SyscallOpCode.ARR_GET] = new ArrGetHandler();
         SYSCALLS[SyscallOpCode.ARR_SET] = new ArrSetHandler();
 
