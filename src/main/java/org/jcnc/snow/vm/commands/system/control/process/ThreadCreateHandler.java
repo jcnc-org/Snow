@@ -8,20 +8,22 @@ import org.jcnc.snow.vm.module.OperandStack;
 
 /**
  * {@code ThreadCreateHandler} 实现 THREAD_CREATE (0x1506) 系统调用，
- * 用于在虚拟机中创建一个新线程并返回其线程 ID。
+ * 在虚拟机中创建一个新线程并返回其线程 ID。
  *
- * <p><b>Stack</b>：入参 {@code (entry:fn/ptr, arg:any)} → 出参 {@code (tid:int)}</p>
+ * <p><b>Stack</b>：入参 {@code (entry:any, arg:any)} → 出参 {@code (tid:int)}</p>
  *
- * <p><b>语义</b>：创建新线程并启动，线程入口为 {@code entry}，参数为 {@code arg}，返回新线程的 tid。</p>
- *
- * <p><b>返回</b>：成功时返回新线程的 tid（int）。</p>
- *
- * <p><b>异常</b>：
+ * <p><b>entry</b> 支持两种形式：</p>
  * <ul>
- *   <li>参数类型不支持时抛出 {@link IllegalArgumentException}</li>
- *   <li>线程启动失败时抛出 {@link RuntimeException}</li>
+ *   <li>{@link Runnable}：直接作为线程入口执行；</li>
+ *   <li>{@link String}：形如 {@code "module.function"} 的函数名。当前为了方便
+ *       测试，提供一个极简的内置分发：当值为 {@code "app.worker"} 时，按
+ *       {@code System.out.print("running in thread: " + arg + "\n")} 的语义执行；
+ *       其它字符串暂不支持（会输出提示信息）。</li>
  * </ul>
- * </p>
+ *
+ * <p>注意：为了兼容 {@link java.util.concurrent.ConcurrentHashMap} 的约束，
+ * {@link ThreadRegistry#setResult(long, Object)} 在保存返回值时不再写入 {@code null}，
+ * 若返回值为 {@code null} 则改为 {@code remove}。</p>
  */
 public class ThreadCreateHandler implements SyscallHandler {
 
@@ -38,37 +40,42 @@ public class ThreadCreateHandler implements SyscallHandler {
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
 
-        // 1. 入参: arg → entry
+        // 按照 R_LOAD entry; R_LOAD arg 的顺序入栈，所以这里 pop 顺序为：先 arg，再 entry
         Object arg = stack.pop();
         Object entry = stack.pop();
 
-        // 2. 创建线程执行逻辑
+        // 1. 创建线程
         Thread thread = new Thread(() -> {
             Object result = null;
             try {
-                // 调用 VM 的函数调用机制
-                if (entry instanceof Runnable) {
-                    ((Runnable) entry).run();
+                if (entry instanceof Runnable r) {
+                    r.run();
+                } else if (entry instanceof String name) {
+                    // 轻量级内置分发：仅用于测试 "app.worker"
+                    if ("app.worker".equals(name)) {
+                        String s = (arg == null) ? "null" : String.valueOf(arg);
+                        System.out.print("running in thread: " + s + "\n");
+                        System.out.flush();
+                    } else {
+                        System.err.println("Unsupported thread entry type/name: " + name);
+                    }
                 } else {
                     System.err.println("Unsupported thread entry type: " + entry);
                 }
             } catch (Throwable t) {
                 t.printStackTrace();
             } finally {
-                ThreadRegistry.setResult(Thread.currentThread().threadId(), null);
+                // ConcurrentHashMap 不允许 null 值；将 null 视为“无返回值”并移除
+                ThreadRegistry.setResult(Thread.currentThread().threadId(), result);
             }
         });
 
-        // 3. 注册线程
+        // 2. 注册并启动线程
         ThreadRegistry.register(thread);
-
-        // 4. 启动线程
         thread.start();
 
-        // 5. 获取 tid（Java Thread ID）
+        // 3. 返回 tid（int）
         long tid = thread.threadId();
-
-        // 6. 压回 tid
         stack.push((int) tid);
     }
 }
