@@ -46,7 +46,7 @@ public class ThreadCreateHandler implements SyscallHandler {
         Thread thread = new Thread(() -> {
             Object result = null;
             try {
-                // ⚠️ 调用 VM 的函数调用机制
+                // 调用 VM 的函数调用机制
                 if (entry instanceof Runnable) {
                     ((Runnable) entry).run();
                 } else {
