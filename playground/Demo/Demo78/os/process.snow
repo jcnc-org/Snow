@@ -85,4 +85,23 @@ module: process
     end function
 
 
+    /**
+     * getppid()
+     *
+     * <b>Stack：</b> 无入参 → 出参 (ppid:int)
+     *
+     * <b>语义：</b> 返回当前进程的父进程 PID。
+     * 如果不存在父进程，则返回 0。
+     *
+     * <b>返回：</b> 父进程 PID（int），若不存在返回 0。
+     */
+    function: getppid
+        returns: int
+        body:
+            declare ppid:int = syscall("0x1505")
+            return ppid
+        end body
+    end function
+
+
 end module
