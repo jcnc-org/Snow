@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * {@code ExecHandler} 实现 EXEC (0x1103) 系统调用，
+ * {@code ExecHandler} 实现 EXEC (0x1502) 系统调用，
  * 用于在虚拟机中以指定环境和参数执行新进程，并模拟 exec 行为。
  *
  * <p><b>Stack</b>：入参 {@code (env:Map<String,String>, argv:List<String>, path:String)} → 无返回</p>

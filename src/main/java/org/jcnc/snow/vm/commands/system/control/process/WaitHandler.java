@@ -7,7 +7,7 @@ import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
 /**
- * {@code WaitHandler} 实现 WAIT (0x1107) 系统调用，
+ * {@code WaitHandler} 实现 WAIT (0x1503) 系统调用，
  * 用于等待子进程结束并返回其退出状态码。
  *
  * <p><b>Stack</b>：入参 {@code (pid:int?)} → 出参 {@code (status:int)}</p>

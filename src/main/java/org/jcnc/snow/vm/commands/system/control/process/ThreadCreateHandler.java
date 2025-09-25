@@ -7,7 +7,7 @@ import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
 /**
- * {@code ThreadCreateHandler} 实现 THREAD_CREATE (0x1201) 系统调用，
+ * {@code ThreadCreateHandler} 实现 THREAD_CREATE (0x1506) 系统调用，
  * 用于在虚拟机中创建一个新线程并返回其线程 ID。
  *
  * <p><b>Stack</b>：入参 {@code (entry:fn/ptr, arg:any)} → 出参 {@code (tid:int)}</p>

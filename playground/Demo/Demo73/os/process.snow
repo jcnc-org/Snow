@@ -1,0 +1,16 @@
+module: process
+    /**
+     * exit(code:int)
+     *
+     * <b>Stack：</b> 入参 (code:int) → 无返回
+     *
+     * <b>语义：</b> 以指定退出码直接终止虚拟机进程。
+     */
+    function: exit
+        params:
+            declare code:int
+        body:
+            syscall("0x1500", code)
+        end body
+    end function
+end module

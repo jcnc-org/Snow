@@ -6,7 +6,7 @@ import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
 /**
- * {@code GetPidHandler} 实现 GETPID (0x1104) 系统调用，
+ * {@code GetPidHandler} 实现 GETPID (0x1504) 系统调用，
  * 用于获取当前虚拟机进程的进程 ID（pid）。
  *
  * <p><b>Stack</b>：无入参 → 出参 {@code (pid:int)}</p>

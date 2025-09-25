@@ -6,7 +6,7 @@ import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
 /**
- * {@code ForkHandler} 实现 FORK (0x1102) 系统调用，
+ * {@code ForkHandler} 实现 FORK (0x1501) 系统调用，
  * 用于在虚拟机中模拟创建一个子进程。
  *
  * <p><b>Stack</b>：无入参 → 出参 {@code (pid:int)}</p>
