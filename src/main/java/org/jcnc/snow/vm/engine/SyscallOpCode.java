@@ -574,7 +574,7 @@ public final class SyscallOpCode {
     /**
      * 分叉当前进程。
      *
-     * <p><b>Stack</b>：入参 — → 出参 {@code (pid:int)}</p>
+     * <p><b>Stack</b>：入参 {@code (cmds:any[])} → 出参 {@code (pid:int)}</p>
      * <p><b>语义</b>：复制当前进程上下文，生成子进程。</p>
      * <p><b>返回</b>：在子进程中返回 {@code 0}，在父进程中返回子进程 pid。</p>
      * <p><b>异常</b>：进程创建失败、资源不足。</p>

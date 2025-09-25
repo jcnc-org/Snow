@@ -20,7 +20,7 @@ module: process
      * <b>Stack：</b> 入参 (cmds:any[]) → 出参 (pid:int)
      *
      * <b>语义：</b> 启动子进程执行指定命令数组，父进程返回子进程 pid。
-     * 例如：fork(["ping", "localhost", "-n", "2"])
+     * 例如：fork(["java", "-version"])
      */
     function: fork
         params:
