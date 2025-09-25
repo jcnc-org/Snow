@@ -36,7 +36,7 @@ public class GetPidHandler implements SyscallHandler {
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
 
-        // 获取当前 JVM 进程 ID（JDK 9+）
+        // 获取当前 JVM 进程 ID
         long pid = ProcessHandle.current().pid();
 
         // 压回结果（int 类型，如果需要兼容更大 PID 可保留 long 类型）
