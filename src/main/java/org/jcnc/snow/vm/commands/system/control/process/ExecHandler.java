@@ -10,22 +10,26 @@ import java.util.Map;
 
 /**
  * {@code ExecHandler} 实现 EXEC (0x1502) 系统调用，
- * 用于在虚拟机中以指定环境和参数执行新进程，并模拟 exec 行为。
+ * 用于在虚拟机中启动新进程，并模拟 exec 行为。
  *
  * <p><b>Stack</b>：入参 {@code (env:Map<String,String>, argv:List<String>, path:String)} → 无返回</p>
  *
- * <p><b>语义</b>：以指定的路径 {@code path} 和参数 {@code argv} 及环境变量 {@code env} 启动新进程，
- * 并模拟 exec：当前 JVM 在启动新进程后立即退出。</p>
+ * <p><b>语义</b>：
+ * 按指定路径 {@code path}、命令行参数 {@code argv} 和环境变量 {@code env} 启动一个新的操作系统进程。
+ * 与类 Unix 的 {@code exec()} 类似，本调用在新进程启动后会立即终止当前 JVM 进程，
+ * 因此调用点之后的 Snow 代码不会再执行。</p>
  *
- * <p><b>返回</b>：无（JVM 退出）</p>
+ * <p><b>返回</b>：
+ * 无。若新进程成功启动，Snow VM 会通过 {@link System#exit(int)} 直接退出。</p>
  *
  * <p><b>异常</b>：
  * <ul>
- *   <li>参数类型错误时抛出 {@link IllegalArgumentException}</li>
- *   <li>进程启动失败时抛出 {@link java.io.IOException}</li>
+ *   <li>若 {@code path} 不是字符串，或 {@code argv}/{@code env} 类型不合法，抛出 {@link IllegalArgumentException}</li>
+ *   <li>若底层进程启动失败，则抛出 {@link java.io.IOException}</li>
  * </ul>
  * </p>
  */
+
 public class ExecHandler implements SyscallHandler {
 
     /**
@@ -67,7 +71,7 @@ public class ExecHandler implements SyscallHandler {
         pb.inheritIO();
 
         // 启动新进程
-        Process process = pb.start();
+        pb.start();
 
         // 模拟 exec：等待新进程启动成功后，立即退出当前 JVM
         System.exit(0);
