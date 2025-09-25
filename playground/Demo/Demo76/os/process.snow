@@ -10,7 +10,7 @@ module: process
         params:
             declare code:int
         body:
-            syscall("0x1101", code)
+            syscall("0x1500", code)
         end body
     end function
 
