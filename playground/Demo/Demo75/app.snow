@@ -8,9 +8,6 @@ module: app
         body:
             io.stdout_write("准备 exec 子进程...\n")
 
-            // 环境变量（这里给 PATH 传空 map，使用默认环境）
-            declare env:any = {}
-
             // 命令参数
             declare argv:any[] = ["-version"]
 
@@ -18,10 +15,7 @@ module: app
             declare path:string = "java"
 
             // 调用 exec (不会返回，VM 会直接退出)
-            process.exec(env, argv, path)
-
-            // 这一行永远不会被执行
-            io.stdout_write("这句话不会出现\n")
+            process.exec("", argv, path)
         end body
     end function
 end module

@@ -72,7 +72,7 @@ public final class SyscallFactory {
         SYSCALLS[SyscallOpCode.IO_WAIT] = new IoWaitHandler();
 
 
-        // ================= 套接字 & 网络 =================
+        // ================= 网络 =================
         SYSCALLS[SyscallOpCode.SOCKET] = new SocketHandler();
         SYSCALLS[SyscallOpCode.BIND] = new BindHandler();
         SYSCALLS[SyscallOpCode.LISTEN] = new ListenHandler();

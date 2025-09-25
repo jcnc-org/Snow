@@ -1,6 +1,7 @@
 package org.jcnc.snow.vm.commands.system.control.process;
 
 import org.jcnc.snow.vm.commands.system.control.syscalls.SyscallHandler;
+import org.jcnc.snow.vm.io.ProcessRegistry;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
@@ -44,6 +45,9 @@ public class ForkHandler implements SyscallHandler {
             ProcessBuilder pb = new ProcessBuilder(cmd);
             pb.inheritIO(); // 继承父进程 IO
             Process child = pb.start();
+
+            // 注册到 ProcessRegistry，供 WAIT 查找
+            ProcessRegistry.register(child);
 
             long pid;
             try {

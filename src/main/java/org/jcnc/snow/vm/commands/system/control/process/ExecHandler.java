@@ -73,7 +73,8 @@ public class ExecHandler implements SyscallHandler {
         // 启动新进程
         pb.start();
 
-        // 模拟 exec：等待新进程启动成功后，立即退出当前 JVM
-        System.exit(0);
+        // 立刻强行终止当前线程/进程
+        Runtime.getRuntime().halt(0);
+
     }
 }
