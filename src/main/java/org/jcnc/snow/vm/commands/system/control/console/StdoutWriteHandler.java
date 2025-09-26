@@ -8,19 +8,32 @@ import org.jcnc.snow.vm.module.OperandStack;
 import java.nio.charset.StandardCharsets;
 
 /**
- * {@code StdoutWriteHandler} 用于实现系统调用 STDOUT_WRITE（0x1201）。
+ * {@code StdoutWriteHandler} 实现 STDOUT_WRITE (0x1201) 系统调用，
+ * 将数据写入标准输出（System.out）。
  *
- * <p>
- * 由于某些环境下 fd=1 （stdout）经由 FDTable 获取的通道存在缓冲/刷新不同步的问题，
- * 这里直接写入 {@link System#out} 并显式 {@link System#out#flush()}，确保用户能立即看到输出。
+ * <p><b>Stack：</b> 入参 {@code (data:byte[] | String | Object)} → 出参 {@code (written:int)}</p>
+ *
+ * <p><b>语义：</b>
+ * <ul>
+ *   <li>参数为 byte[] 时，按原始字节输出</li>
+ *   <li>参数为 null 时，输出字符串 "null"</li>
+ *   <li>其它类型，调用 {@code toString()} 后以 UTF-8 编码输出</li>
+ * </ul>
+ * 输出内容直接写到 System.out，不带自动换行。
  * </p>
  *
- * <p>调用约定（栈）：入参 (data: byte[] | String | Object) → 出参 (written:int)</p>
+ * <p><b>返回：</b>
  * <ul>
- *   <li>String：按 UTF-8 编码为字节写出</li>
- *   <li>byte[]：原样写出</li>
- *   <li>其它对象：调用 toString() 后按 UTF-8 写出；null 视为字符串 "null"</li>
+ *   <li>实际写入的字节数（int）</li>
  * </ul>
+ * </p>
+ *
+ * <p><b>异常：</b>
+ * <ul>
+ *   <li>操作数栈为空时抛出 {@link IllegalStateException}</li>
+ *   <li>I/O 错误时抛出 {@link java.io.IOException}</li>
+ * </ul>
+ * </p>
  */
 public class StdoutWriteHandler implements SyscallHandler {
 
@@ -29,24 +42,26 @@ public class StdoutWriteHandler implements SyscallHandler {
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
 
-        // 取出待输出数据
+        // 1. 取参数，操作数栈不能为空
+        if (stack.isEmpty()) {
+            throw new IllegalStateException("STDOUT_WRITE: 缺少参数 data");
+        }
         Object dataObj = stack.pop();
 
-        // 规范化为字节数组
-        byte[] data;
-        if (dataObj == null) {
-            data = "null".getBytes(StandardCharsets.UTF_8);
-        } else if (dataObj instanceof byte[] bytes) {
+        // 2. 类型处理
+        final byte[] data;
+        if (dataObj instanceof byte[] bytes) {
             data = bytes;
         } else {
-            data = dataObj.toString().getBytes(StandardCharsets.UTF_8);
+            // null → "null"；其它 → .toString()
+            data = String.valueOf(dataObj).getBytes(StandardCharsets.UTF_8);
         }
 
-        // 直接写 System.out，避免 FDTable 映射中的缓冲未刷新的问题
+        // 3. 写入 System.out
         System.out.write(data);
         System.out.flush();
 
-        // 返回实际写入的字节数，保持与以往语义一致
+        // 4. 返回实际写入字节数
         stack.push(data.length);
     }
 }
