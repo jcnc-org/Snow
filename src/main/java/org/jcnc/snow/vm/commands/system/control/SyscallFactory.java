@@ -73,7 +73,6 @@ public final class SyscallFactory {
         SYSCALLS[SyscallOpCode.EPOLL_WAIT] = new EpollWaitHandler();
         SYSCALLS[SyscallOpCode.IO_WAIT] = new IoWaitHandler();
 
-
         // ================= 网络 =================
         SYSCALLS[SyscallOpCode.SOCKET] = new SocketHandler();
         SYSCALLS[SyscallOpCode.BIND] = new BindHandler();
@@ -102,20 +101,6 @@ public final class SyscallFactory {
         SYSCALLS[SyscallOpCode.THREAD_JOIN] = new ThreadJoinHandler();
         SYSCALLS[SyscallOpCode.SLEEP] = new SleepHandler();
 
-        // ================= 数组 =================
-        SYSCALLS[SyscallOpCode.ARR_LEN] = new ArrLenHandler();
-        SYSCALLS[SyscallOpCode.ARR_GET] = new ArrGetHandler();
-        SYSCALLS[SyscallOpCode.ARR_SET] = new ArrSetHandler();
-
-        // ================= 系统信息 =================
-        SYSCALLS[SyscallOpCode.GETENV] = new GetEnvHandler();
-        SYSCALLS[SyscallOpCode.SETENV] = new SetEnvHandler();
-        SYSCALLS[SyscallOpCode.NCPU] = new NcpuHandler();
-        SYSCALLS[SyscallOpCode.RANDOM_BYTES] = new RandomBytesHandler();
-        SYSCALLS[SyscallOpCode.ERRSTR] = new ErrStrHandler();
-        SYSCALLS[SyscallOpCode.ERRNO] = new ErrnoHandler();
-        SYSCALLS[SyscallOpCode.MEMINFO] = new MemInfoHandler();
-
         // ================= 并发原语 =================
         SYSCALLS[SyscallOpCode.MUTEX_NEW] = new MutexNewHandler();
         SYSCALLS[SyscallOpCode.MUTEX_LOCK] = new MutexLockHandler();
@@ -138,6 +123,20 @@ public final class SyscallFactory {
         SYSCALLS[SyscallOpCode.NANOSLEEP] = new NanosleepHandler();
         SYSCALLS[SyscallOpCode.TIMEOFDAY] = new TimeOfDayHandler();
         SYSCALLS[SyscallOpCode.TICK_MS] = new TickMsHandler();
+
+        // ================= 数组 =================
+        SYSCALLS[SyscallOpCode.ARR_LEN] = new ArrLenHandler();
+        SYSCALLS[SyscallOpCode.ARR_GET] = new ArrGetHandler();
+        SYSCALLS[SyscallOpCode.ARR_SET] = new ArrSetHandler();
+
+        // ================= 系统信息 =================
+        SYSCALLS[SyscallOpCode.GETENV] = new GetEnvHandler();
+        SYSCALLS[SyscallOpCode.SETENV] = new SetEnvHandler();
+        SYSCALLS[SyscallOpCode.NCPU] = new NcpuHandler();
+        SYSCALLS[SyscallOpCode.RANDOM_BYTES] = new RandomBytesHandler();
+        SYSCALLS[SyscallOpCode.ERRSTR] = new ErrStrHandler();
+        SYSCALLS[SyscallOpCode.ERRNO] = new ErrnoHandler();
+        SYSCALLS[SyscallOpCode.MEMINFO] = new MemInfoHandler();
     }
 
     private SyscallFactory() {
