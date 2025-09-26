@@ -1,0 +1,26 @@
+module: app
+	import: io
+	import: thread
+
+	function: worker
+	    params:
+	        declare msg:string
+	    returns: string
+	    body:
+	        io.stdout_write("子线程运行中: " + msg + "\n")
+	        return "done:" + msg
+	    end body
+	end function
+
+	function: main
+	    params:
+	        declare args:any
+	    body:
+	        declare tid:int = thread.create("app.worker", "hello")
+	        io.stdout_write("新线程 tid=" + tid + "\n")
+
+	        declare result:any = thread.join(tid)
+	        io.stdout_write("子线程返回值=" + result + "\n")
+	    end body
+	end function
+end module
