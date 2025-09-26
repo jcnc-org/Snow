@@ -252,9 +252,9 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
                  "0X140C", "GETPEERNAME",
                  "0X140D", "GETSOCKNAME",
                  "0X140E", "GETADDRINFO",
-                 "0X140B","GETSOCKOPT"
+                 "0X140B","GETSOCKOPT",
+                 "0X1507","THREAD_JOIN"
                     -> 'R';
-
 
             // 返回 long
             case "0X1003", "SEEK",
