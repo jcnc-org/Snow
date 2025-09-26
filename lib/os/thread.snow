@@ -26,4 +26,22 @@ module: thread
         end body
     end function
 
+   /**
+     * join(tid)
+     *
+     * <b>Stack</b>：入参 (tid:int) → 出参 (retval:any)
+     *
+     * <b>语义</b>：阻塞等待指定线程结束，并获取其返回值。
+     *
+     * <b>返回</b>：线程返回值，可能为 null。
+     */
+    function: join
+        params:
+            declare tid:int
+        returns: any
+        body:
+            return syscall("0x1507", tid)
+        end body
+    end function
+
 end module
