@@ -1,0 +1,66 @@
+// thread module: 线程相关系统调用封装
+// ──────────────────────────────────────────────
+//  • 0x1506  THREAD_CREATE  → 创建并启动新线程
+//  • 0x1507  THREAD_JOIN    → 等待线程结束并获取返回值
+//  • 0x1508  THREAD_SLEEP   → 让当前线程休眠指定毫秒数
+// ──────────────────────────────────────────────
+
+module: thread
+
+    /**
+     * create(entry, arg)
+     *
+     * <b>Stack</b>：入参 (entry:any, arg:any) → 出参 (tid:int)
+     *
+     * <b>语义</b>：在 VM 中创建并启动一个新线程，线程入口为 entry，
+     *               其参数为 arg，返回新线程的 tid。
+     *
+     * <b>返回</b>：新线程 tid（int）
+     */
+    function: create
+        params:
+            declare entry:any
+            declare arg:any
+        returns: int
+        body:
+            return syscall("0x1506", entry, arg)
+        end body
+    end function
+
+    /**
+     * join(tid)
+     *
+     * <b>Stack</b>：入参 (tid:int) → 出参 (retval:any)
+     *
+     * <b>语义</b>：阻塞等待指定线程结束，并获取其返回值。
+     *
+     * <b>返回</b>：线程返回值，可能为 null。
+     */
+    function: join
+        params:
+            declare tid:int
+        returns: any
+        body:
+            return syscall("0x1507", tid)
+        end body
+    end function
+
+    /**
+     * sleep(ms)
+     *
+     * <b>Stack</b>：入参 (ms:int) → 出参 (0:int)
+     *
+     * <b>语义</b>：让当前线程休眠指定毫秒数。
+     *
+     * <b>返回</b>：始终返回 0。
+     */
+    function: sleep
+        params:
+            declare ms:int
+        returns: int
+        body:
+            return syscall("0x1508", ms)
+        end body
+    end function
+
+end module
