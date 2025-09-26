@@ -8,73 +8,69 @@ import org.jcnc.snow.vm.module.OperandStack;
 
 /**
  * {@code ThreadCreateHandler} 实现 THREAD_CREATE (0x1506) 系统调用，
- * 在虚拟机中创建一个新线程并返回其线程 ID。
+ * 用于在 VM 内部创建新线程并返回其线程 ID。
  *
- * <p><b>Stack</b>：入参 {@code (entry:any, arg:any)} → 出参 {@code (tid:int)}</p>
+ * <p><b>Stack：</b>
+ * 入参 {@code (entry:any, arg:any)} →
+ * 出参 {@code (tid:int)}
+ * </p>
  *
- * <p><b>entry</b> 支持两种形式：</p>
+ * <p><b>语义：</b>
+ * 在虚拟机环境下创建一个新线程。支持两种 entry 形式：
  * <ul>
- *   <li>{@link Runnable}：直接作为线程入口执行；</li>
- *   <li>{@link String}：形如 {@code "module.function"} 的函数名。当前为了方便
- *       测试，提供一个极简的内置分发：当值为 {@code "app.worker"} 时，按
- *       {@code System.out.print("running in thread: " + arg + "\n")} 的语义执行；
- *       其它字符串暂不支持（会输出提示信息）。</li>
+ *   <li>{@code Runnable}：直接作为线程体执行</li>
+ *   <li>{@code String}：通用入口名（如 "app.worker"），模拟为打印 arg 并返回 {@code "done:" + arg}</li>
  * </ul>
+ * 子线程的返回值存储于 {@link ThreadRegistry}。
+ * </p>
  *
- * <p>注意：为了兼容 {@link java.util.concurrent.ConcurrentHashMap} 的约束，
- * {@link ThreadRegistry#setResult(long, Object)} 在保存返回值时不再写入 {@code null}，
- * 若返回值为 {@code null} 则改为 {@code remove}。</p>
+ * <p><b>返回：</b>
+ * 成功返回新线程的 tid（int），失败返回 -1。
+ * </p>
+ *
+ * <p><b>异常：</b>
+ * <ul>
+ *   <li>entry 类型不支持时返回 -1，不抛出异常</li>
+ *   <li>其它异常理论上被 Runnable 体捕获，返回值通过 ThreadRegistry 提交</li>
+ * </ul>
+ * </p>
  */
 public class ThreadCreateHandler implements SyscallHandler {
 
-    /**
-     * 处理 THREAD_CREATE 调用。
-     *
-     * @param stack     操作数栈，依次提供线程入口 entry 和参数 arg
-     * @param locals    局部变量存储器（未使用）
-     * @param callStack 调用栈（未使用）
-     * @throws Exception 参数错误或线程创建失败时抛出
-     */
     @Override
-    public void handle(OperandStack stack,
-                       LocalVariableStore locals,
-                       CallStack callStack) throws Exception {
-
-        // 按照 R_LOAD entry; R_LOAD arg 的顺序入栈，所以这里 pop 顺序为：先 arg，再 entry
+    public void handle(OperandStack stack, LocalVariableStore locals, CallStack callStack) {
+        // 出栈顺序：先 arg，再 entry
         Object arg = stack.pop();
         Object entry = stack.pop();
 
-        // 1. 创建线程
-        Thread thread = new Thread(() -> {
-            Object result = null;
-            try {
-                if (entry instanceof Runnable r) {
-                    r.run();
-                } else if (entry instanceof String name) {
-                    // 轻量级内置分发：仅用于测试 "app.worker"
-                    if ("app.worker".equals(name)) {
-                        String s = (arg == null) ? "null" : String.valueOf(arg);
-                        System.out.print("running in thread: " + s + "\n");
-                        System.out.flush();
-                    } else {
-                        System.err.println("Unsupported thread entry type/name: " + name);
-                    }
-                } else {
-                    System.err.println("Unsupported thread entry type: " + entry);
-                }
-            } catch (Throwable t) {
-                t.printStackTrace();
-            } finally {
-                // ConcurrentHashMap 不允许 null 值；将 null 视为“无返回值”并移除
-                ThreadRegistry.setResult(Thread.currentThread().threadId(), result);
-            }
-        });
+        // 组装要执行的 Runnable
+        final Runnable task;
 
-        // 2. 注册并启动线程
+        if (entry instanceof Runnable runnable) {
+            task = runnable;
+        } else if (entry instanceof String name) {
+            task = () -> {
+                Object result = null;
+                try {
+                    System.out.println("子线程运行中: " + arg);
+                    result = "done:" + arg;
+                } finally {
+                    ThreadRegistry.setResult(Thread.currentThread().threadId(), result);
+                }
+            };
+        } else {
+            System.err.println("THREAD_CREATE: unsupported entry type: "
+                    + (entry == null ? "null" : entry.getClass().getName()));
+            stack.push(-1);
+            return;
+        }
+
+        // 启动线程并登记
+        Thread thread = new Thread(task, "snow-thread-" + System.nanoTime());
         ThreadRegistry.register(thread);
         thread.start();
 
-        // 3. 返回 tid（int）
+        // 返回线程 tid（int）
         long tid = thread.threadId();
         stack.push((int) tid);
     }
