@@ -117,7 +117,7 @@ public class RPushCommand implements Command {
         String token = sb.toString();
 
         // Try number parsing with various notations and types
-        if ("true".equalsIgnoreCase(token))  return true;
+        if ("true".equalsIgnoreCase(token)) return true;
         if ("false".equalsIgnoreCase(token)) return false;
 
         try {

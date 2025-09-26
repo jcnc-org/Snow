@@ -26,14 +26,21 @@ import java.util.concurrent.locks.ReentrantLock;
  * <p>该类为工具类，构造方法私有化，不可实例化。</p>
  */
 public final class MutexRegistry {
-    /** 存储互斥量 ID 到 {@link ReentrantLock} 的映射表 */
+    /**
+     * 存储互斥量 ID 到 {@link ReentrantLock} 的映射表
+     */
     private static final ConcurrentHashMap<Integer, ReentrantLock> REG = new ConcurrentHashMap<>();
 
-    /** 自增生成互斥量 ID，初始值为 1 */
+    /**
+     * 自增生成互斥量 ID，初始值为 1
+     */
     private static final AtomicInteger NEXT_ID = new AtomicInteger(1);
 
-    /** 私有构造方法，禁止外部实例化 */
-    private MutexRegistry() { }
+    /**
+     * 私有构造方法，禁止外部实例化
+     */
+    private MutexRegistry() {
+    }
 
     /**
      * 创建并注册一个新的互斥量，并返回其唯一 ID。
@@ -66,11 +73,11 @@ public final class MutexRegistry {
      *
      * @param id 互斥量 ID（int）
      *
-     * <p><b>说明：</b></p>
-     * <ul>
-     *   <li>通常用于 VM 回收或测试场景</li>
-     *   <li>若 ID 不存在，调用该方法不会抛出异常</li>
-     * </ul>
+     *           <p><b>说明：</b></p>
+     *           <ul>
+     *             <li>通常用于 VM 回收或测试场景</li>
+     *             <li>若 ID 不存在，调用该方法不会抛出异常</li>
+     *           </ul>
      */
     public static void remove(int id) {
         REG.remove(id);

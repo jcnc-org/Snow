@@ -17,7 +17,7 @@ import java.util.List;
 
 /**
  * {@code ModuleParser}
- *
+ * <p>
  * 顶层结构解析器：负责解析整个源码模块（module ... end module）。
  * <ul>
  *   <li>支持模块声明、导入(import)、全局变量(globals)、结构体(struct)、函数(function)等顶层语法。</li>

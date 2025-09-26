@@ -51,5 +51,6 @@ public class CloseHandler implements SyscallHandler {
         FDTable.close(fd);
 
         // 向栈压入 0，保持栈平衡
-        stack.push(0);    }
+        stack.push(0);
+    }
 }

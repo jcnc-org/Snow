@@ -11,14 +11,10 @@ import org.jcnc.snow.compiler.semantic.core.ModuleInfo;
 import org.jcnc.snow.compiler.semantic.error.SemanticError;
 import org.jcnc.snow.compiler.semantic.symbol.Symbol;
 import org.jcnc.snow.compiler.semantic.symbol.SymbolTable;
-import org.jcnc.snow.compiler.semantic.type.BuiltinType;
-import org.jcnc.snow.compiler.semantic.type.FunctionType;
-import org.jcnc.snow.compiler.semantic.type.StructType;
-import org.jcnc.snow.compiler.semantic.type.ArrayType;
-import org.jcnc.snow.compiler.semantic.type.Type;
+import org.jcnc.snow.compiler.semantic.type.*;
 
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -153,8 +149,7 @@ public class CallExpressionAnalyzer implements ExpressionAnalyzer {
                     return BuiltinType.INT;
                 }
             }
-        }
-        else if (callee instanceof IdentifierNode idNode) {
+        } else if (callee instanceof IdentifierNode idNode) {
             // 2. 普通函数调用 
             functionName = idNode.name();
             funcType = mi.getFunctions().get(functionName);
@@ -183,8 +178,7 @@ public class CallExpressionAnalyzer implements ExpressionAnalyzer {
                     return BuiltinType.INT;
                 }
             }
-        }
-        else {
+        } else {
             // 3. 其它调用方式不支持 
             ctx.getErrors().add(new SemanticError(callee,
                     "不支持的调用方式: " + callee));

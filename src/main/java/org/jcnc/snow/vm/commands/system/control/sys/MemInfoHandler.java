@@ -49,13 +49,15 @@ public class MemInfoHandler implements SyscallHandler {
                 // Additional useful metrics (may return -1 or NaN on some platforms)
                 try {
                     info.put("committedVirtual", sunOs.getCommittedVirtualMemorySize());
-                } catch (Throwable ignored) { }
+                } catch (Throwable ignored) {
+                }
 
                 try {
                     // getProcessCpuLoad / getSystemCpuLoad return double in [0.0,1.0] or NaN
                     info.put("processCpuLoad", sunOs.getProcessCpuLoad());
                     info.put("systemCpuLoad", sunOs.getCpuLoad());
-                } catch (Throwable ignored) { }
+                } catch (Throwable ignored) {
+                }
             }
         } catch (Throwable t) {
             // 如果无法获取平台级信息，则忽略（仍返回 heap 信息）

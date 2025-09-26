@@ -40,9 +40,6 @@ import static java.nio.file.StandardOpenOption.*;
  */
 public final class OpenFlags {
 
-    private OpenFlags() {
-    }
-
     /**
      * 只读访问
      */
@@ -55,7 +52,6 @@ public final class OpenFlags {
      * 读写访问
      */
     public static final int O_RDWR = 0x2;
-
     /**
      * 文件不存在时创建
      */
@@ -72,6 +68,8 @@ public final class OpenFlags {
      * 追加写
      */
     public static final int O_APPEND = 0x400;
+    private OpenFlags() {
+    }
 
     /**
      * 判断 flags 是否包含指定标志位。
