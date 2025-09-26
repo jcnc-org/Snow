@@ -654,22 +654,150 @@ public final class SyscallOpCode {
 
 
     // region 并发原语 (0x1600 – 0x16FF)
+
+    /**
+     * 创建一个新的互斥量。
+     *
+     * <p><b>Stack</b>：入参 {@code ()} → 出参 {@code (mid:int)}</p>
+     * <p><b>语义</b>：分配并返回一个互斥量 ID。</p>
+     * <p><b>返回</b>：成功返回新互斥量的 ID。</p>
+     * <p><b>异常</b>：资源不足或内部错误时抛出异常。</p>
+     */
     public static final int MUTEX_NEW = 0x1600;
+
+    /**
+     * 加锁互斥量。
+     *
+     * <p><b>Stack</b>：入参 {@code (mid:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：阻塞直到获得互斥量锁。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：无效 ID 或线程被中断时抛出异常。</p>
+     */
     public static final int MUTEX_LOCK = 0x1601;
+
+    /**
+     * 尝试加锁互斥量（非阻塞）。
+     *
+     * <p><b>Stack</b>：入参 {@code (mid:int)} → 出参 {@code (ok:int)}</p>
+     * <p><b>语义</b>：立即尝试获取互斥量。</p>
+     * <p><b>返回</b>：成功返回 {@code 1}，失败返回 {@code 0}。</p>
+     * <p><b>异常</b>：无效 ID 时抛出异常。</p>
+     */
     public static final int MUTEX_TRYLOCK = 0x1602;
+
+    /**
+     * 解锁互斥量。
+     *
+     * <p><b>Stack</b>：入参 {@code (mid:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：释放当前线程持有的互斥量。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：若线程未持有锁则抛出异常。</p>
+     */
     public static final int MUTEX_UNLOCK = 0x1603;
+
+    /**
+     * 创建一个新的条件变量。
+     *
+     * <p><b>Stack</b>：入参 {@code ()} → 出参 {@code (cid:int)}</p>
+     * <p><b>语义</b>：分配并返回一个条件变量 ID。</p>
+     * <p><b>返回</b>：成功返回新条件变量的 ID。</p>
+     */
     public static final int COND_NEW = 0x1604;
+
+    /**
+     * 等待条件变量。
+     *
+     * <p><b>Stack</b>：入参 {@code (cid:int, mid:int, timeout_ms:int?)} → 出参 {@code (reason:int)}</p>
+     * <p><b>语义</b>：在释放互斥量后等待条件满足，返回前会重新加锁。</p>
+     * <p><b>返回</b>：{@code 0}=信号唤醒，{@code 1}=超时，{@code -1}=被中断。</p>
+     * <p><b>异常</b>：无效 ID 时抛出异常。</p>
+     */
     public static final int COND_WAIT = 0x1605;
+
+    /**
+     * 唤醒一个等待在条件变量上的线程。
+     *
+     * <p><b>Stack</b>：入参 {@code (cid:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：对条件变量执行一次 {@code signal}。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     */
     public static final int COND_SIGNAL = 0x1606;
+
+    /**
+     * 唤醒所有等待在条件变量上的线程。
+     *
+     * <p><b>Stack</b>：入参 {@code (cid:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：对条件变量执行一次 {@code broadcast}。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     */
     public static final int COND_BROADCAST = 0x1607;
+
+    /**
+     * 创建一个新的信号量。
+     *
+     * <p><b>Stack</b>：入参 {@code (init:int)} → 出参 {@code (sid:int)}</p>
+     * <p><b>语义</b>：分配并返回一个初始值为 {@code init} 的信号量。</p>
+     * <p><b>返回</b>：成功返回新信号量的 ID。</p>
+     */
     public static final int SEM_NEW = 0x1608;
+
+    /**
+     * 等待信号量。
+     *
+     * <p><b>Stack</b>：入参 {@code (sid:int, timeout_ms:int?)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：尝试获取信号量。</p>
+     * <p><b>返回</b>：成功 {@code 1}，超时 {@code 0}，中断 {@code -1}。</p>
+     */
     public static final int SEM_WAIT = 0x1609;
+
+    /**
+     * 释放信号量。
+     *
+     * <p><b>Stack</b>：入参 {@code (sid:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：对信号量执行一次 {@code post}。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     */
     public static final int SEM_POST = 0x160A;
+
+    /**
+     * 创建一个新的读写锁。
+     *
+     * <p><b>Stack</b>：入参 {@code ()} → 出参 {@code (rwl:int)}</p>
+     * <p><b>语义</b>：分配并返回一个读写锁 ID。</p>
+     * <p><b>返回</b>：成功返回新读写锁的 ID。</p>
+     */
     public static final int RWLOCK_NEW = 0x160B;
+
+    /**
+     * 获取读写锁的读锁。
+     *
+     * <p><b>Stack</b>：入参 {@code (rwl:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：阻塞直到获取读锁。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     */
     public static final int RWLOCK_RLOCK = 0x160C;
+
+    /**
+     * 获取读写锁的写锁。
+     *
+     * <p><b>Stack</b>：入参 {@code (rwl:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：阻塞直到获取写锁。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     */
     public static final int RWLOCK_WLOCK = 0x160D;
+
+    /**
+     * 解锁读写锁。
+     *
+     * <p><b>Stack</b>：入参 {@code (rwl:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：释放当前线程持有的读锁或写锁。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：若线程未持有任何锁则抛出异常。</p>
+     */
     public static final int RWLOCK_UNLOCK = 0x160E;
+
     // endregion
+
 
     // region 时间 & 计时 (0x1700 – 0x17FF)
     /**
