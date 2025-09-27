@@ -69,6 +69,8 @@ yay -Syu jdk25-graalvm-bin
 ```bash
 git clone https://gitee.com/jcnc-org/snow.git
 cd snow
+export PATH="/usr/lib/jvm/java-25-graalvm/bin/:$PATH"
+export JAVA_HOME="/usr/lib/jvm/java-25-graalvm"
 mvn -P native-linux -DskipTests clean package
 ```
 

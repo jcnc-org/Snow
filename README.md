@@ -432,7 +432,7 @@ sudo pacman -Syu snow-lang-git
 
 ### 1. 独立编译 (Standalone Compilation)
 
-独立编译不依赖 `.cloud` 文件，而是直接使用 `Snow` 编译器进行 `.snow` 文件的编译和执行。
+独立编译不依赖 `.cloud` 文件，而是直接使用 `snow` 编译器进行 `.snow` 文件的编译和执行。
 
 #### 独立编译步骤: 
 
@@ -442,19 +442,19 @@ sudo pacman -Syu snow-lang-git
     * **单个文件编译:**
 
       ```bash
-      Snow complete [SnowCode].snow
+      snow complete [SnowCode].snow
       ```
 
     * **多个文件编译:**
 
       ```bash
-      Snow complete [SnowCode1].snow [SnowCode2].snow [SnowCode3].snow -o [Name]
+      snow complete [SnowCode1].snow [SnowCode2].snow [SnowCode3].snow -o [Name]
       ```
 
     * **目录递归编译:**
 
       ```bash
-      Snow -d path/to/source_dir
+      snow -d path/to/source_dir
       ```
 
 2. **查看编译输出:**
