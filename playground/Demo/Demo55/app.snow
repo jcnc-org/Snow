@@ -1,0 +1,31 @@
+module: app
+    import: os.fs
+    import: os.fd
+    import: std.stdio.fd
+    import: os.fs
+    import: os.fd
+    import: std.stdio.fs
+    import: std.stdio
+
+    function: main
+        params:
+            declare args: any
+        body:
+            // 创建一个源文件 real.txt
+            fd.truncate("real.txt", 0L)
+            stdio.println("已创建源文件 real.txt")
+
+            // 创建符号链接 alias.txt 指向 real.txt
+            fd.symlink("real.txt", "alias.txt")
+            stdio.println("已创建符号链接 alias.txt -> real.txt")
+
+            // 打开符号链接并写入数据（底层写入 real.txt）
+            declare fd1: int
+            fd1 = fd.open("alias.txt", 2)   // O_RDWR
+            fd.write(fd1, "Hello via symlink!")
+            fd.close(fd1)
+
+            stdio.println("写入完成，现在 alias.txt 和 real.txt 内容一致")
+        end body
+    end function
+end module

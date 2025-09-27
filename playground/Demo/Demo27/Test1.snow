@@ -18,7 +18,7 @@ module: Main
         function: printValue
             returns: void
             body:
-                os.print(this.value)
+                stdio.print(this.value)
             end body
         end function
 
@@ -26,7 +26,7 @@ module: Main
         function: printSum
             returns: void
             body:
-                os.print(this.value + 100)
+                stdio.print(this.value + 100)
             end body
         end function
     end struct
@@ -52,7 +52,7 @@ module: Main
         function: printSum
             returns: void
             body:
-                os.print(this.value + this.offset)
+                stdio.print(this.value + this.offset)
             end body
         end function
     end struct

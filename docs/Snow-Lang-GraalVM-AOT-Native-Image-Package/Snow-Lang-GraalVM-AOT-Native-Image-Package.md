@@ -42,6 +42,52 @@ Java HotSpot(TM) 64-Bit Server VM Oracle GraalVM 24.0.1+9.1 (build 24.0.1+9-jvmc
 
 您现在能够使用 GraalVM Native Image 进行构建。
 
+### 3.3 Arch Linux 上 Native Image 的先决条件
+
+在 Arch Linux 上，Native Image 需要先安装 [jdk25-graalvm-bin](https://aur.archlinux.org/packages/jdk25-graalvm-bin) 包
+
+1. 安装运行环境依赖
+
+```bash
+sudo pacman -Syu glibc zlib
+```
+
+2. 安装编译依赖
+
+```bash
+sudo pacman -Syu git maven musl
+```
+
+```bash
+yay -Syu jdk25-graalvm-bin
+```
+
+注意： 使用的 AUR 的  `jdk25-graalvm-bin` 包
+
+3. 编译使用
+
+```bash
+git clone https://gitee.com/jcnc-org/snow.git
+cd snow
+export PATH="/usr/lib/jvm/java-25-graalvm/bin/:$PATH"
+export JAVA_HOME="/usr/lib/jvm/java-25-graalvm"
+mvn -P native-linux -DskipTests clean package
+```
+
+4. 安装到系统目录
+
+```bash
+install -Dm0755 target/snow  -t /usr/bin/
+install -dm0775 /usr/lib/snow \
+        /usr/share/doc/snow
+
+cp -R lib/* /usr/lib/snow
+cp -R docs/* /usr/share/doc/snow
+cp -R *.md /usr/share/doc/snow
+```
+
+注意：安装过程中会使用到 `root` 权限，如果提示权限不足，可以在命令行前增加 `sudo` 进行安装
+
 ## 4. Maven 项目配置文件
 
 通过将以下配置文件添加到 `pom.xml` 中，为 Native Image 启用 Maven 插件: 

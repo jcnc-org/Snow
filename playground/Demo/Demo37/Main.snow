@@ -1,0 +1,15 @@
+module: app
+    import: os.fs
+    import: os.fd
+    import: std.stdio
+
+    function: main
+        params:
+            declare args: any
+        body:
+            declare fd: int
+            fd = syscall("0x1000", "README.md", 0)   // 打开文件
+            stdio.println(fd.read(fd, 100000))   // 一次性读并打印
+        end body
+    end function
+end module

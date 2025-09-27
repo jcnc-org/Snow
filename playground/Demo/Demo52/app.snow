@@ -1,0 +1,29 @@
+module: app
+    import: os.fs
+    import: os.fd
+    import: std.stdio.fs
+    import: os.fs
+    import: os.fd
+    import: std.stdio.fd
+    import: std.stdio
+
+    function: main
+        params:
+            declare args: any
+        body:
+            // 以读写方式打开，不存在则创建：O_RDWR(2) | O_CREAT(64) = 66
+            declare flags: int
+            declare fd1: int
+            fd1 = fd.open("output.txt", 66)
+
+            // 通过 fd 截断到 50 字节
+            fd.ftruncate(fd1, 50L)
+
+            // 输出提示
+            stdio.println("文件已通过 fd 截断到 50 字节")
+
+            // 关闭文件
+            fd.close(fd1)
+        end body
+    end function
+end module

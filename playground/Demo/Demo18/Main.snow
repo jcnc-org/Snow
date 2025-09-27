@@ -1,5 +1,7 @@
 module: Main
-    import: os
+    import: os.fs
+    import: os.fd
+    import: std.stdio
     function: main
         returns: int
         body:
@@ -31,8 +33,8 @@ module: Main
                             if j % 2 == 0 then
                                 continue
                             end if
-                            os.print(i)
-                            os.print(j)
+                            stdio.print(i)
+                            stdio.print(j)
                         end body
                     end loop
                 end body

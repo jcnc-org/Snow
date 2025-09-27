@@ -1,0 +1,32 @@
+module: app
+    import: os.fs
+    import: os.fd
+    import: std.stdio.fs
+    import: os.fs
+    import: os.fd
+    import: std.stdio.fd
+    import: stdio
+
+    function: main
+        params:
+            declare args: any
+        body:
+            declare path: string
+            declare rc: long
+            declare info: any
+
+            path = "utime_demo.txt"
+
+            // 确保文件存在（O_CREAT | O_WRONLY）
+            fd.close(fd.open(path, 65))
+
+            // 使用固定时间戳 (2023-11-14 22:13:20 UTC)
+            rc = fs.utime(path, 1700000000000l, 1700000000000l)
+            stdio.println("utime 返回: " + rc)
+
+            // 查询文件属性验证
+            info = fd.stat(path)
+            stdio.println("stat: " + info)
+        end body
+    end function
+end module

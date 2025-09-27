@@ -9,8 +9,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.jcnc.snow.common.SnowConfig.print;
-
 /**
  * Snow 语言词法分析器核心实现。
  * <p>采用“<b>先扫描 → 后批量校验 → 统一报告</b>”策略:
@@ -65,7 +63,6 @@ public class LexerEngine {
 
     public static void report(List<LexicalError> errors) {
         if (errors == null || errors.isEmpty()) {
-            print("\n## 词法分析通过，没有发现错误\n");
             return;
         }
         System.err.println("\n词法分析发现 " + errors.size() + " 个错误: ");

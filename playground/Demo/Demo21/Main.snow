@@ -1,5 +1,7 @@
 module: Main
-    import: os
+    import: os.fs
+    import: os.fd
+    import: std.stdio
     globals:
         declare sum: int = 123
     function: main
@@ -26,7 +28,7 @@ module: Main
                 step:
                     i = i + 1
                 body:
-                    os.print(arr[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][i][0])
+                    stdio.print(arr[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][i][0])
                 end body
             end loop
             return 0

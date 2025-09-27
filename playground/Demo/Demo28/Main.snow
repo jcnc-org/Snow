@@ -1,5 +1,7 @@
 module: Main
-    import: os
+    import: os.fs
+    import: os.fd
+    import: std.stdio
     // Animal结构体
     struct: Animal
         // 字段
@@ -44,9 +46,9 @@ module: Main
             declare a: Animal = new Animal("GenericAnimal", 1)
             // 直接调用已导入模块内的静态函数
             a.setAge(2)
-            os.println(a.getAge())
+            stdio.println(a.getAge())
             a.setAge(3)
-            os.println(a.getAge())
+            stdio.println(a.getAge())
 
 
         end body

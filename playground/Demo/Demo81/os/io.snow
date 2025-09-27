@@ -1,0 +1,21 @@
+module: io
+    /**
+     * stdout_write(data)
+     *
+     * <b>Stack：</b> 入参 (data:any) → 出参 (int)
+     *
+     * <b>语义：</b> 向标准输出 (fd=1) 写入数据。
+     * 支持 string、byte[] 或任意对象（对象将以 UTF-8 编码字符串形式写出）。
+     *
+     * <b>返回：</b> 实际写入的字节数 (int)。
+     */
+    function: stdout_write
+        params:
+            declare data:any
+        returns: int
+        body:
+            declare written:int = syscall("0x1201", data)
+            return written
+        end body
+    end function
+end module

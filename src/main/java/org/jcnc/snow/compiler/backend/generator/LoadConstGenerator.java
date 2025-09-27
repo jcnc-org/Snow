@@ -84,7 +84,7 @@ public class LoadConstGenerator implements InstructionGenerator<LoadConstInstruc
             return insideArray ? (b + "b") : Byte.toString(b);
         }
         if (v instanceof Boolean b) {
-            return b ? "1" : "0";
+            return b ? "true" : "false";
         }
         return String.valueOf(v);
     }
@@ -111,7 +111,6 @@ public class LoadConstGenerator implements InstructionGenerator<LoadConstInstruc
                 case '\'' -> sb.append("\\'");
                 case '\\' -> sb.append("\\\\");
                 default -> {
-                    // Escape non-ASCII and control characters using uXXXX
                     if (ch < 0x20 || ch > 0x7E) {
                         sb.append(String.format("\\u%04X", (int) ch));
                     } else {
@@ -166,7 +165,7 @@ public class LoadConstGenerator implements InstructionGenerator<LoadConstInstruc
             case Float _ -> 'F';     // Float
             case Boolean _ -> 'I';   // Booleans are treated as integers (1/0)
             case String _ -> 'R';    // Reference type for strings
-            case java.util.List<?> _ -> 'R'; // Reference type for arrays/lists
+            case List<?> _ -> 'R'; // Reference type for arrays/lists
             case null, default -> throw new IllegalStateException("Unknown constant type: "
                     + (value != null ? value.getClass() : null));
         };

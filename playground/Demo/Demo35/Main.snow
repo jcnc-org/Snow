@@ -1,9 +1,11 @@
 module: main
-    import: os
+    import: os.fs
+    import: os.fd
+    import: std.stdio
 	function: main
 	    returns: void
 	    body:
-	        os.print("Hello" + " "+"World!")
+	        stdio.print("Hello" + " "+"World!")
 	    end body
 	end function
 end module

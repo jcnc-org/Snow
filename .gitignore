@@ -41,3 +41,5 @@ target/
 ### Snow 虚拟机指令 ###
 *.water
 /.lingma/
+*.txt
+/demoDir/

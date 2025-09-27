@@ -1,4 +1,6 @@
 module: Main
+    import: std.stdio
+
     function: main
         returns: int
         body:
@@ -62,7 +64,7 @@ module: Main
             f == d
 
             d == d
-
+			stdio.print("Hello, World!")
             return 65537
         end body
     end function

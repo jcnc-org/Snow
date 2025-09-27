@@ -1,0 +1,27 @@
+module: app
+    import: os.fs
+    import: os.fd
+    import: std.stdio.fs
+    import: os.fs
+    import: os.fd
+    import: std.stdio.fd
+    import: os.fs
+    import: os.fd
+    import: std.stdio.io
+    import: std.stdio
+
+    function: main
+        params:
+            declare args: any
+        body:
+            declare info: any
+
+            // 获取文件属性
+            info = fd.stat("seek_demo.txt")
+
+            // 直接打印整个对象
+            stdio.println("stat结果: " + info)
+
+        end body
+    end function
+end module

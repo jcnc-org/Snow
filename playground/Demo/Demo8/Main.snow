@@ -1,4 +1,5 @@
 module: Main
+	import: stdio
     function: main
         params:
         returns: long
@@ -6,6 +7,7 @@ module: Main
             declare n: long
             n = 2147483647
             n = n + 1
+            stdio.print(n)
             return n
         end body
     end function

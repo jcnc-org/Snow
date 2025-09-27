@@ -1,0 +1,45 @@
+module: app
+    import: os.fs
+    import: os.fd
+    import: std.stdio.fs
+    import: os.fs
+    import: os.fd
+    import: std.stdio.fd
+    import: os.fs
+    import: os.fd
+    import: std.stdio.io
+    import: std.stdio
+
+
+    function: main
+        params:
+            declare args: any
+        body:
+            // 1. 在当前目录下创建 demoDir
+            fs.mkdir("demoDir", 0)
+            stdio.println("已创建目录 demoDir")
+
+            declare cwd: string
+            cwd = fs.getcwd()
+            stdio.println("当前工作目录: " + cwd)
+
+            // 2. 切换到 demoDir
+            fs.chdir("demoDir")
+            stdio.println("已切换到 demoDir")
+
+           // 3. 获取并打印当前工作目录
+            cwd = fs.getcwd()
+            stdio.println("当前工作目录: " + cwd)
+
+            // 4. 切回上级目录
+            fs.chdir("..")
+            stdio.println("已切换回上级目录")
+            cwd = fs.getcwd()
+            stdio.println("当前工作目录: " + cwd)
+
+            // 5. 删除 demoDir
+            fs.rmdir("demoDir")
+            stdio.println("已删除目录 demoDir")
+        end body
+    end function
+end module

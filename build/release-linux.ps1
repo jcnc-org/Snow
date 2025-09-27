@@ -46,8 +46,8 @@ if (-not $version) {
 
 # ===== Step 4: Define output paths =====
 $targetDir = Join-Path $projectRoot "target\release"
-$outDir    = Join-Path $targetDir "Snow-v$version-linux-x64"
-$tgzPath   = Join-Path $targetDir "Snow-v$version-linux-x64.tgz"
+$outDir    = Join-Path $targetDir "snow-v$version-linux-x64"
+$tgzPath   = Join-Path $targetDir "snow-v$version-linux-x64.tgz"
 
 # ===== Step 5: Package to .tgz (no extra top-level dir, max compression) =====
 Write-Host "Step 5: Package to .tgz..."

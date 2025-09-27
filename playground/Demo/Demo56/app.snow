@@ -1,0 +1,28 @@
+module: app
+    import: os.fs
+    import: os.fd
+    import: std.stdio.fd
+    import: os.fs
+    import: os.fd
+    import: std.stdio.fs
+    import: std.stdio
+
+    function: main
+        params:
+            declare args: any
+        body:
+            // 创建一个真实文件 real.txt
+            fd.truncate("real.txt", 0L)
+            stdio.println("已创建源文件 real.txt")
+
+            // 创建符号链接 alias.txt 指向 real.txt
+            fd.symlink("real.txt", "alias.txt")
+            stdio.println("已创建符号链接 alias.txt -> real.txt")
+
+            // 读取符号链接的目标
+            declare target: any
+            target = fd.readlink("alias.txt")
+            stdio.println("alias.txt 指向的目标是: " + target)
+        end body
+    end function
+end module

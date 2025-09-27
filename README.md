@@ -1,10 +1,16 @@
 <p align="center">
-  <img src="docs/README/IMG/icon/IMG_Snow_icon_128.svg" alt="Snow Icon">
+<img src="docs/README/IMG/icon/IMG_Snow.svg" alt="Snow Icon" width="125" height="125">
 <h1 align="center" style="margin: 30px 0 30px; font-weight: bold;">Snow编程语言</h1>
 
 <p align="center">
-<a href='https://gitee.com/jcnc-org/snow/stargazers'><img src='https://gitee.com/jcnc-org/snow/badge/star.svg?theme=dark' alt='star'></a>
-<a href='https://gitcode.com/jcnc-org/snow'><img src='https://gitcode.com/jcnc-org/snow/star/badge.svg' alt='fork'></a> 
+  <a href="https://gitee.com/jcnc-org/snow/stargazers">
+    <img src="https://gitee.com/jcnc-org/snow/badge/star.svg?theme=dark"
+         alt="Gitee Star" height="20">
+  </a>
+  <a href="https://gitcode.com/jcnc-org/snow">
+    <img src="https://gitcode.com/jcnc-org/snow/star/badge.svg"
+         alt="GitCode Star" height="20">
+  </a>
 </p>
 
 
@@ -12,8 +18,8 @@
     <a href="https://gitee.com/jcnc-org/snow/blob/main/LICENSE">
         <img src="https://img.shields.io/badge/%20license-Apache--2.0%20-blue" alt="">
     </a>
-    <a href="https://gitee.com/jcnc-org/snow/tree/v0.10.0/">
-        <img src="https://img.shields.io/badge/version-v0.10.0-blue" alt="">
+    <a href="https://gitee.com/jcnc-org/snow/tree/v0.11.0/">
+        <img src="https://img.shields.io/badge/version-v0.11.0-blue" alt="">
     </a>
 </p>
 
@@ -69,6 +75,30 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
 ## 下载 Snow 发行版
 
 [https://gitee.com/jcnc-org/snow/releases](https://gitee.com/jcnc-org/snow/releases)
+
+### Arch Linux 安装
+
+- 通过 [AUR 仓库](https://aur.archlinux.org/packages/snow)或[自建源仓库](https://github.com/taotieren/aur-repo)安装 `snow` 发行版。
+
+```bash
+# AUR
+yay -Syu snow
+# 或自建源
+sudo pacman -Syu snow
+# 或安装包组
+sudo pacman -Syu snow-lang
+```
+
+- 通过 [AUR 仓库](https://aur.archlinux.org/packages/snow-git)或[自建源仓库](https://github.com/taotieren/aur-repo)安装 `snow-git` 开发版。
+
+```bash
+# AUR
+yay -Syu snow-git
+# 或自建源
+sudo pacman -Syu snow-git
+# 或安装包组
+sudo pacman -Syu snow-lang-git
+``` 
 
 ## 相关文档
 [Snow-Lang 指南](docs/Snow-Lang-Syntax/Snow-Lang-Syntax.md)
@@ -402,7 +432,7 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
 
 ### 1. 独立编译 (Standalone Compilation)
 
-独立编译不依赖 `.cloud` 文件，而是直接使用 `Snow` 编译器进行 `.snow` 文件的编译和执行。
+独立编译不依赖 `.cloud` 文件，而是直接使用 `snow` 编译器进行 `.snow` 文件的编译和执行。
 
 #### 独立编译步骤: 
 
@@ -412,19 +442,19 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
     * **单个文件编译:**
 
       ```bash
-      Snow complete [SnowCode].snow
+      snow complete [SnowCode].snow
       ```
 
     * **多个文件编译:**
 
       ```bash
-      Snow complete [SnowCode1].snow [SnowCode2].snow [SnowCode3].snow -o [Name]
+      snow complete [SnowCode1].snow [SnowCode2].snow [SnowCode3].snow -o [Name]
       ```
 
     * **目录递归编译:**
 
       ```bash
-      Snow -d path/to/source_dir
+      snow -d path/to/source_dir
       ```
 
 2. **查看编译输出:**

@@ -4,67 +4,78 @@ import org.jcnc.snow.compiler.lexer.token.TokenType;
 import org.jcnc.snow.compiler.parser.ast.ImportNode;
 import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.context.ParserContext;
+import org.jcnc.snow.compiler.parser.context.TokenStream;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * {@code ImportParser} 类用于解析源码中的 import 导入语句。
- * <p>
- * 支持以下格式的语法:
+ * {@code ImportParser} 用于解析源码中的 import 导入语句，支持逗号分隔与多级模块名。
+ *
+ * <p><b>支持语法</b>：</p>
  * <pre>
- * import: module1, module2, module3
+ * import: foo
+ * import: foo, bar, baz
+ * import: os.file
+ * import: net.http.client
  * </pre>
- * 每个模块名称必须为合法的标识符，多个模块之间使用英文逗号（,）分隔，语句末尾必须以换行符结尾。
- * 本类的职责是识别并提取所有导入模块的名称，并将其封装为 {@link ImportNode} 节点，供后续语法树构建或语义分析阶段使用。
+ *
+ * <p>
+ * 每个导入将解析为 {@link ImportNode}，其 {@code moduleName} 字段为完整点分名称（如 "os.file"）。
+ * 该名称可直接映射到源文件路径（如 {@code os/file.snow}）。
+ * </p>
+ *
+ * <p><b>用法</b>：调用 {@link #parse(ParserContext)} 解析一行 import，返回本行所有导入节点。</p>
  */
 public class ImportParser {
 
     /**
-     * 解析 import 语句，并返回表示被导入模块的语法树节点列表。
-     * <p>
-     * 该方法会依次执行以下操作:
-     * <ol>
-     *     <li>确认当前语句以关键字 {@code import} 开头。</li>
-     *     <li>确认后跟一个冒号 {@code :}。</li>
-     *     <li>解析至少一个模块名称（标识符），多个模块使用逗号分隔。</li>
-     *     <li>确认语句以换行符 {@code NEWLINE} 结束。</li>
-     * </ol>
-     * 若语法不符合上述规则，将在解析过程中抛出异常。
+     * 解析一行 import 语句（以换行结束），返回所有导入节点。
      *
-     * @param ctx 表示当前解析器所处的上下文环境，包含词法流及语法状态信息。
-     * @return 返回一个包含所有被导入模块的 {@link ImportNode} 实例列表。
+     * @param ctx 解析上下文
+     * @return 导入节点列表，每个节点包含模块名和位置信息
      */
     public List<ImportNode> parse(ParserContext ctx) {
-        // 期望第一个 token 是 "import" 关键字
-        ctx.getTokens().expect("import");
+        TokenStream ts = ctx.getTokens();
 
-        // 紧接其后必须是冒号 ":"
-        ctx.getTokens().expect(":");
+        // 'import' ':'
+        ts.expect("import");
+        ts.expect(":");
 
-        // 用于存储解析得到的 ImportNode 对象
         List<ImportNode> imports = new ArrayList<>();
 
-        // 解析一个或多个模块名（标识符），允许使用逗号分隔多个模块
         do {
-            // 获取当前 token 的行号、列号和文件名
-            int line = ctx.getTokens().peek().getLine();
-            int column = ctx.getTokens().peek().getCol();
+            // 每个模块名的起始位置信息
+            int line = ts.peek().getLine();
+            int column = ts.peek().getCol();
             String file = ctx.getSourceName();
 
-            // 获取当前标识符类型的词法单元，并提取其原始词素
-            String mod = ctx.getTokens()
-                    .expectType(TokenType.IDENTIFIER)
-                    .getLexeme();
+            // 解析形如 IDENT ('.' IDENT)*
+            String moduleName = parseQualifiedName(ts);
 
-            // 创建 ImportNode 节点并加入列表
-            imports.add(new ImportNode(mod, new NodeContext(line, column, file)));
-        } while (ctx.getTokens().match(",")); // 如果匹配到逗号，继续解析下一个模块名
+            imports.add(new ImportNode(moduleName, new NodeContext(line, column, file)));
+        } while (ts.match(",")); // 逗号分隔的多个导入
 
-        // 最后必须匹配换行符，标志 import 语句的结束
-        ctx.getTokens().expectType(TokenType.NEWLINE);
-
-        // 返回完整的 ImportNode 列表
+        // 行结束
+        ts.expectType(TokenType.NEWLINE);
         return imports;
+    }
+
+    /**
+     * 解析由一个或多个标识符通过点号连接的限定名（qualified name）。
+     * 形如：IDENT ('.' IDENT)*
+     *
+     * @param ts 词法流
+     * @return 完整点分模块名
+     */
+    private String parseQualifiedName(TokenStream ts) {
+        StringBuilder sb = new StringBuilder();
+        // 第一个标识符
+        sb.append(ts.expectType(TokenType.IDENTIFIER).getLexeme());
+        // 后续 .IDENTIFIER
+        while (ts.match(".")) {
+            sb.append('.').append(ts.expectType(TokenType.IDENTIFIER).getLexeme());
+        }
+        return sb.toString();
     }
 }
