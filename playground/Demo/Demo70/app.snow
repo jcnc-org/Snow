@@ -1,0 +1,49 @@
+module: app
+    import: io
+    import: web
+
+    // AF_INET=2, SOCK_DGRAM=2
+    function: main
+        params:
+            declare args:any
+        body:
+            // 1) 创建 UDP 套接字
+            declare fd:int = web.socket(2, 2, 0)
+            io.stdout_write("UDP 客户端套接字 fd=" + fd + "\n")
+
+            // 2) 可选：重用地址（与服务器保持一致）
+            declare SOL_SOCKET:int   = 1
+            declare SO_REUSEADDR:int = 2
+            declare rc:int = web.setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, 1)
+            io.stdout_write("设置套接字选项 SO_REUSEADDR 返回值 rc=" + rc + "\n")
+
+            // 3) 可选：绑定到本地任意端口（0 表示让系统分配临时端口）
+            rc = web.bind(fd, "127.0.0.1", 0)
+            io.stdout_write("绑定返回值 rc=" + rc + " @127.0.0.1:0（系统将分配临时端口）\n")
+
+            // 4) 发送一条消息到服务器
+            declare msg:string = "Hello from Snow UDP client"
+            io.stdout_write("发送 -> " + msg + "\n")
+            declare sent:int = web.sendto(fd, msg, "127.0.0.1", 9090)
+            io.stdout_write("sendto 返回值 sent=" + sent + "\n")
+
+            // 5) 接收服务器回显
+            declare pkt:any[] = web.recvfrom(fd, 2048)
+            io.stdout_write("收到 -> ")
+            io.stdout_write(pkt)
+            io.stdout_write("\n")
+
+            // 解构：pkt[0]=data, pkt[1]=addr, pkt[2]=port
+            declare data:any     = pkt[0]
+            declare saddr:string = pkt[1]
+            declare sport:int    = pkt[2]
+            io.stdout_write("来源 " + saddr + ":" + sport + "，数据: ")
+            io.stdout_write(data)
+            io.stdout_write("\n")
+
+            // 6) 关闭
+            rc = web.shutdown(fd, 2)
+            io.stdout_write("关闭套接字返回值 rc=" + rc + "\n")
+        end body
+    end function
+end module

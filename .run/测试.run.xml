@@ -70,6 +70,7 @@
     <toRun name="Demo47" type="Application" />
     <toRun name="Demo48" type="Application" />
     <toRun name="Demo49" type="Application" />
+    <toRun name="Demo5" type="Application" />
     <toRun name="Demo50" type="Application" />
     <toRun name="Demo51" type="Application" />
     <toRun name="Demo52" type="Application" />
@@ -85,8 +86,30 @@
     <toRun name="Demo61" type="Application" />
     <toRun name="Demo62" type="Application" />
     <toRun name="Demo63" type="Application" />
+    <toRun name="Demo64" type="Application" />
+    <toRun name="Demo65" type="Application" />
+    <toRun name="Demo66" type="Application" />
+    <toRun name="Demo67" type="Application" />
+    <toRun name="Demo68" type="Application" />
+    <toRun name="Demo69" type="Application" />
     <toRun name="Demo7" type="Application" />
+    <toRun name="Demo70" type="Application" />
+    <toRun name="Demo71" type="Application" />
+    <toRun name="Demo72" type="Application" />
+    <toRun name="Demo73" type="Application" />
+    <toRun name="Demo74" type="Application" />
+    <toRun name="Demo75" type="Application" />
+    <toRun name="Demo76" type="Application" />
+    <toRun name="Demo77" type="Application" />
+    <toRun name="Demo78" type="Application" />
+    <toRun name="Demo79" type="Application" />
     <toRun name="Demo8" type="Application" />
+    <toRun name="Demo80" type="Application" />
+    <toRun name="Demo81" type="Application" />
+    <toRun name="Demo82" type="Application" />
+    <toRun name="Demo83" type="Application" />
+    <toRun name="Demo84" type="Application" />
+    <toRun name="Demo85" type="Application" />
     <toRun name="Demo9" type="Application" />
     <method v="2" />
   </configuration>

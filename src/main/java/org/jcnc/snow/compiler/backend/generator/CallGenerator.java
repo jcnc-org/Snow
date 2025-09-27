@@ -72,6 +72,7 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
             case "double" -> 'D';
             case "string" -> 'R';
             case "void" -> 'V';
+
             default -> 'R';
         };
     }
@@ -233,7 +234,8 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
         String s = subcmd.toUpperCase(Locale.ROOT);
         return switch (s) {
             // 返回引用（字符串/字节数组/Map/数组等）
-            case "0X1001", "READ",
+            case "0X1802", "ARR_GET",
+                 "0X1001", "READ",
                  "0X1005", "STAT",
                  "0X1006", "FSTAT",
                  "0X1904", "ERRSTR",
@@ -241,8 +243,20 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
                  "0X100A", "PIPE",
                  "0X1010", "READLINK",
                  "0X1103", "GETCWD",
-                 "0X1104", "READDIR" -> 'R';
-
+                 "0X1104", "READDIR",
+                 "0X1300", "SELECT",
+                 "0X1303", "EPOLL_WAIT",
+                 "0X1304", "IO_WAIT",
+                 "0X1406", "RECV",
+                 "0X1408", "RECVFROM",
+                 "0X140C", "GETPEERNAME",
+                 "0X140D", "GETSOCKNAME",
+                 "0X140E", "GETADDRINFO",
+                 "0X140B", "GETSOCKOPT",
+                 "0X1507", "THREAD_JOIN",
+                 "0X1900", "STDERR_WRITE",
+                 "0X1906", "MEMINFO",
+                 "0X1903", "RANDOM_BYTES" -> 'R';
 
             // 返回 long
             case "0X1003", "SEEK",

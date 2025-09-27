@@ -7,68 +7,71 @@ import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
 /**
- * {@code ThreadCreateHandler} 实现 THREAD_CREATE (0x1201) 系统调用，
- * 用于在虚拟机中创建一个新线程并返回其线程 ID。
+ * {@code ThreadCreateHandler} 实现 THREAD_CREATE (0x1506) 系统调用，
+ * 用于在 VM 内部创建新线程并返回其线程 ID。
  *
- * <p><b>Stack</b>：入参 {@code (entry:fn/ptr, arg:any)} → 出参 {@code (tid:int)}</p>
+ * <p><b>Stack：</b>
+ * 入参 {@code (entry:any, arg:any)} →
+ * 出参 {@code (tid:int)}
+ * </p>
  *
- * <p><b>语义</b>：创建新线程并启动，线程入口为 {@code entry}，参数为 {@code arg}，返回新线程的 tid。</p>
- *
- * <p><b>返回</b>：成功时返回新线程的 tid（int）。</p>
- *
- * <p><b>异常</b>：
+ * <p><b>语义：</b>
+ * 在虚拟机环境下创建一个新线程。支持两种 entry 形式：
  * <ul>
- *   <li>参数类型不支持时抛出 {@link IllegalArgumentException}</li>
- *   <li>线程启动失败时抛出 {@link RuntimeException}</li>
+ *   <li>{@code Runnable}：直接作为线程体执行</li>
+ *   <li>{@code String}：通用入口名（如 "app.worker"），模拟为打印 arg 并返回 {@code "done:" + arg}</li>
+ * </ul>
+ * 子线程的返回值存储于 {@link ThreadRegistry}。
+ * </p>
+ *
+ * <p><b>返回：</b>
+ * 成功返回新线程的 tid（int），失败返回 -1。
+ * </p>
+ *
+ * <p><b>异常：</b>
+ * <ul>
+ *   <li>entry 类型不支持时返回 -1，不抛出异常</li>
+ *   <li>其它异常理论上被 Runnable 体捕获，返回值通过 ThreadRegistry 提交</li>
  * </ul>
  * </p>
  */
 public class ThreadCreateHandler implements SyscallHandler {
 
-    /**
-     * 处理 THREAD_CREATE 调用。
-     *
-     * @param stack     操作数栈，依次提供线程入口 entry 和参数 arg
-     * @param locals    局部变量存储器（未使用）
-     * @param callStack 调用栈（未使用）
-     * @throws Exception 参数错误或线程创建失败时抛出
-     */
     @Override
-    public void handle(OperandStack stack,
-                       LocalVariableStore locals,
-                       CallStack callStack) throws Exception {
-
-        // 1. 入参: arg → entry
+    public void handle(OperandStack stack, LocalVariableStore locals, CallStack callStack) {
+        // 出栈顺序：先 arg，再 entry
         Object arg = stack.pop();
         Object entry = stack.pop();
 
-        // 2. 创建线程执行逻辑
-        Thread thread = new Thread(() -> {
-            Object result = null;
-            try {
-                // ⚠️ 调用 VM 的函数调用机制
-                if (entry instanceof Runnable) {
-                    ((Runnable) entry).run();
-                } else {
-                    System.err.println("Unsupported thread entry type: " + entry);
+        // 组装要执行的 Runnable
+        final Runnable task;
+
+        if (entry instanceof Runnable runnable) {
+            task = runnable;
+        } else if (entry instanceof String name) {
+            task = () -> {
+                Object result = null;
+                try {
+                    System.out.println("子线程运行中: " + arg);
+                    result = "done:" + arg;
+                } finally {
+                    ThreadRegistry.setResult(Thread.currentThread().threadId(), result);
                 }
-            } catch (Throwable t) {
-                t.printStackTrace();
-            } finally {
-                ThreadRegistry.setResult(Thread.currentThread().threadId(), null);
-            }
-        });
+            };
+        } else {
+            System.err.println("THREAD_CREATE: unsupported entry type: "
+                    + (entry == null ? "null" : entry.getClass().getName()));
+            stack.push(-1);
+            return;
+        }
 
-        // 3. 注册线程
+        // 启动线程并登记
+        Thread thread = new Thread(task, "snow-thread-" + System.nanoTime());
         ThreadRegistry.register(thread);
-
-        // 4. 启动线程
         thread.start();
 
-        // 5. 获取 tid（Java Thread ID）
+        // 返回线程 tid（int）
         long tid = thread.threadId();
-
-        // 6. 压回 tid
         stack.push((int) tid);
     }
 }

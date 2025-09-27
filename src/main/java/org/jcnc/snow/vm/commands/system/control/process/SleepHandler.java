@@ -6,7 +6,7 @@ import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
 /**
- * {@code SleepHandler} 实现 SLEEP (0x1106) 系统调用，
+ * {@code SleepHandler} 实现 SLEEP (0x1508) 系统调用，
  * 用于让当前线程休眠指定的毫秒数。
  *
  * <p><b>Stack</b>：入参 {@code (ms:int)} → 出参 {@code (0:int)}</p>

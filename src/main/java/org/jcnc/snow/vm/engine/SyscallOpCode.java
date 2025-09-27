@@ -291,76 +291,117 @@ public final class SyscallOpCode {
 
     // region 多路复用 (0x1300 – 0x13FF)
     /**
-     * I/O 多路复用 select。
+     * {@code SELECT} (0x1300) — I/O 多路复用系统调用。
      *
-     * <p><b>Stack</b>：入参 {@code (readSet:array, writeSet:array, exceptSet:array, timeout_ms:int)}
-     * → 出参 {@code (ready:map)}</p>
+     * <p><b>Stack：</b>
+     * 入参 {@code (readSet: List<int>, writeSet: List<int>, exceptSet: List<int>, timeout_ms:int)} →
+     * 出参 {@code (ready: Map{ "read":List<int>, "write":List<int>, "except":List<int> })}
+     * </p>
      *
-     * <p><b>语义</b>：检查给定 fd 集合的可读、可写及异常状态，返回各类就绪 fd。
-     * 结果 map 至少包含键 {@code read}、{@code write}、{@code except}。</p>
+     * <p><b>语义：</b>
+     * 基于 Java NIO {@link java.nio.channels.Selector}，监视给定的 fd 集合，等待其可读、可写或异常就绪。
+     * 返回结果 {@code Map} 至少包含 {@code "read"}、{@code "write"}、{@code "except"} 三个键。
+     * </p>
      *
-     * <p><b>返回</b>：成功返回 map，其中的值为就绪 fd 列表。</p>
+     * <p><b>返回：</b>
+     * 成功时返回一个包含就绪 fd 列表的 Map。若无事件触发，则各列表为空。
+     * </p>
      *
-     * <p><b>异常</b>：参数类型错误，timeout 非法，或底层 I/O 失败。</p>
+     * <p><b>异常：</b>
+     * 参数类型非法，timeout 非法，或底层 I/O 错误时抛出异常。
+     * </p>
      */
     public static final int SELECT = 0x1300;
 
     /**
-     * 创建 epoll 实例。
+     * {@code EPOLL_CREATE} (0x1301) — 创建 epoll 实例。
      *
-     * <p><b>Stack</b>：入参 {@code (flags:int?)} → 出参 {@code (epfd:int)}</p>
+     * <p><b>Stack：</b>
+     * 入参 {@code (flags:int?)} → 出参 {@code (epfd:int)}
+     * </p>
      *
-     * <p><b>语义</b>：分配一个新的 epoll 文件描述符（epfd），并在内部注册 epoll 实例。</p>
+     * <p><b>语义：</b>
+     * 分配并注册一个新的 epoll 实例，返回对应的文件描述符 {@code epfd}。
+     * </p>
      *
-     * <p><b>返回</b>：成功返回新的 epfd。</p>
+     * <p><b>返回：</b>
+     * 成功时返回新的 epfd。
+     * </p>
      *
-     * <p><b>异常</b>：flags 非法，资源不足，或底层 I/O 错误。</p>
+     * <p><b>异常：</b>
+     * flags 非法、资源不足或底层 I/O 错误时抛出异常。
+     * </p>
      */
     public static final int EPOLL_CREATE = 0x1301;
 
     /**
-     * 管理 epoll 监控项。
+     * {@code EPOLL_CTL} (0x1302) — 管理 epoll 监控项。
      *
-     * <p><b>Stack</b>：入参 {@code (epfd:int, op:int, fd:int, events:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>Stack：</b>
+     * 入参 {@code (epfd:int, op:int, fd:int, events:int)} → 出参 {@code (rc:int)}
+     * </p>
      *
-     * <p><b>语义</b>：
+     * <p><b>语义：</b>
+     * 管理 epoll 实例中监控的文件描述符：
      * <ul>
-     *   <li>op=1 (ADD)：将 fd 添加到 epoll 并关注指定事件</li>
-     *   <li>op=2 (MOD)：修改已存在 fd 的事件掩码</li>
-     *   <li>op=3 (DEL)：移除 fd 的监控</li>
-     * </ul></p>
+     *   <li>{@code op=1 (ADD)} → 将 fd 添加并关注指定事件</li>
+     *   <li>{@code op=2 (MOD)} → 修改已注册 fd 的事件掩码</li>
+     *   <li>{@code op=3 (DEL)} → 移除 fd 的监控</li>
+     * </ul>
+     * </p>
      *
-     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>返回：</b>
+     * 成功时返回 {@code 0}。
+     * </p>
      *
-     * <p><b>异常</b>：epfd 无效，op 非法，fd 未注册 (MOD/DEL)，或底层 I/O 错误。</p>
+     * <p><b>异常：</b>
+     * epfd 无效、op 非法、fd 未注册 (MOD/DEL) 或底层 I/O 错误时抛出异常。
+     * </p>
      */
     public static final int EPOLL_CTL = 0x1302;
 
     /**
-     * 等待 epoll 事件。
+     * {@code EPOLL_WAIT} (0x1303) — 等待 epoll 事件。
      *
-     * <p><b>Stack</b>：入参 {@code (epfd:int, max:int, timeout_ms:int)} → 出参 {@code (events:array)}</p>
+     * <p><b>Stack：</b>
+     * 入参 {@code (epfd:int, max:int, timeout_ms:int)} → 出参 {@code (events: List<Map{fd:int, events:int}})}
+     * </p>
      *
-     * <p><b>语义</b>：从 epoll 实例中获取就绪事件，返回不超过 {@code max} 个。
-     * 数组元素为 {@code {fd:int, events:int}} 的 map。</p>
+     * <p><b>语义：</b>
+     * 阻塞或超时等待 epoll 实例中就绪的 I/O 事件，最多返回 {@code max} 个。
+     * 每个事件为 {@code {"fd":int, "events":int}}。
+     * </p>
      *
-     * <p><b>返回</b>：就绪事件数组。</p>
+     * <p><b>返回：</b>
+     * 成功时返回就绪事件数组。若无事件触发，则返回空数组。
+     * </p>
      *
-     * <p><b>异常</b>：epfd 无效，max 非法，或底层 I/O 错误。</p>
+     * <p><b>异常：</b>
+     * epfd 无效、max 非法或底层 I/O 错误时抛出异常。
+     * </p>
      */
     public static final int EPOLL_WAIT = 0x1303;
 
     /**
-     * 跨平台 I/O 多路等待。
+     * {@code IO_WAIT} (0x1304) — 跨平台 I/O 多路等待。
      *
-     * <p><b>Stack</b>：入参 {@code (fds:array(fd,events), timeout_ms:int)} → 出参 {@code (events:array)}</p>
+     * <p><b>Stack：</b>
+     * 入参 {@code (fds: List<Map{fd:int, events:int}}, timeout_ms:int)} →
+     * 出参 {@code (events: List<Map{fd:int, events:int}})}
+     * </p>
      *
-     * <p><b>语义</b>：对指定的 fd 集合等待事件，可由底层封装到 select/epoll/poll。
-     * 返回数组元素为 {@code {fd:int, events:int}} 的 map。</p>
+     * <p><b>语义：</b>
+     * 对指定的 fd 集合等待就绪事件。底层可能封装为 select/epoll/poll 实现。
+     * 返回的数组元素为 {@code {"fd":int, "events":int}}。
+     * </p>
      *
-     * <p><b>返回</b>：就绪事件数组。</p>
+     * <p><b>返回：</b>
+     * 成功时返回就绪事件数组；若超时或无事件触发，则返回空数组。
+     * </p>
      *
-     * <p><b>异常</b>：fds 参数非法，timeout 非法，或底层 I/O 错误。</p>
+     * <p><b>异常：</b>
+     * fds 参数非法、timeout 非法或底层 I/O 错误时抛出异常。
+     * </p>
      */
     public static final int IO_WAIT = 0x1304;
     // endregion
@@ -533,7 +574,7 @@ public final class SyscallOpCode {
     /**
      * 分叉当前进程。
      *
-     * <p><b>Stack</b>：入参 — → 出参 {@code (pid:int)}</p>
+     * <p><b>Stack</b>：入参 {@code (cmds:any[])} → 出参 {@code (pid:int)}</p>
      * <p><b>语义</b>：复制当前进程上下文，生成子进程。</p>
      * <p><b>返回</b>：在子进程中返回 {@code 0}，在父进程中返回子进程 pid。</p>
      * <p><b>异常</b>：进程创建失败、资源不足。</p>
@@ -613,22 +654,150 @@ public final class SyscallOpCode {
 
 
     // region 并发原语 (0x1600 – 0x16FF)
+
+    /**
+     * 创建一个新的互斥量。
+     *
+     * <p><b>Stack</b>：入参 {@code ()} → 出参 {@code (mid:int)}</p>
+     * <p><b>语义</b>：分配并返回一个互斥量 ID。</p>
+     * <p><b>返回</b>：成功返回新互斥量的 ID。</p>
+     * <p><b>异常</b>：资源不足或内部错误时抛出异常。</p>
+     */
     public static final int MUTEX_NEW = 0x1600;
+
+    /**
+     * 加锁互斥量。
+     *
+     * <p><b>Stack</b>：入参 {@code (mid:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：阻塞直到获得互斥量锁。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：无效 ID 或线程被中断时抛出异常。</p>
+     */
     public static final int MUTEX_LOCK = 0x1601;
+
+    /**
+     * 尝试加锁互斥量（非阻塞）。
+     *
+     * <p><b>Stack</b>：入参 {@code (mid:int)} → 出参 {@code (ok:int)}</p>
+     * <p><b>语义</b>：立即尝试获取互斥量。</p>
+     * <p><b>返回</b>：成功返回 {@code 1}，失败返回 {@code 0}。</p>
+     * <p><b>异常</b>：无效 ID 时抛出异常。</p>
+     */
     public static final int MUTEX_TRYLOCK = 0x1602;
+
+    /**
+     * 解锁互斥量。
+     *
+     * <p><b>Stack</b>：入参 {@code (mid:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：释放当前线程持有的互斥量。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：若线程未持有锁则抛出异常。</p>
+     */
     public static final int MUTEX_UNLOCK = 0x1603;
+
+    /**
+     * 创建一个新的条件变量。
+     *
+     * <p><b>Stack</b>：入参 {@code ()} → 出参 {@code (cid:int)}</p>
+     * <p><b>语义</b>：分配并返回一个条件变量 ID。</p>
+     * <p><b>返回</b>：成功返回新条件变量的 ID。</p>
+     */
     public static final int COND_NEW = 0x1604;
+
+    /**
+     * 等待条件变量。
+     *
+     * <p><b>Stack</b>：入参 {@code (cid:int, mid:int, timeout_ms:int?)} → 出参 {@code (reason:int)}</p>
+     * <p><b>语义</b>：在释放互斥量后等待条件满足，返回前会重新加锁。</p>
+     * <p><b>返回</b>：{@code 0}=信号唤醒，{@code 1}=超时，{@code -1}=被中断。</p>
+     * <p><b>异常</b>：无效 ID 时抛出异常。</p>
+     */
     public static final int COND_WAIT = 0x1605;
+
+    /**
+     * 唤醒一个等待在条件变量上的线程。
+     *
+     * <p><b>Stack</b>：入参 {@code (cid:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：对条件变量执行一次 {@code signal}。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     */
     public static final int COND_SIGNAL = 0x1606;
+
+    /**
+     * 唤醒所有等待在条件变量上的线程。
+     *
+     * <p><b>Stack</b>：入参 {@code (cid:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：对条件变量执行一次 {@code broadcast}。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     */
     public static final int COND_BROADCAST = 0x1607;
+
+    /**
+     * 创建一个新的信号量。
+     *
+     * <p><b>Stack</b>：入参 {@code (init:int)} → 出参 {@code (sid:int)}</p>
+     * <p><b>语义</b>：分配并返回一个初始值为 {@code init} 的信号量。</p>
+     * <p><b>返回</b>：成功返回新信号量的 ID。</p>
+     */
     public static final int SEM_NEW = 0x1608;
+
+    /**
+     * 等待信号量。
+     *
+     * <p><b>Stack</b>：入参 {@code (sid:int, timeout_ms:int?)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：尝试获取信号量。</p>
+     * <p><b>返回</b>：成功 {@code 1}，超时 {@code 0}，中断 {@code -1}。</p>
+     */
     public static final int SEM_WAIT = 0x1609;
+
+    /**
+     * 释放信号量。
+     *
+     * <p><b>Stack</b>：入参 {@code (sid:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：对信号量执行一次 {@code post}。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     */
     public static final int SEM_POST = 0x160A;
+
+    /**
+     * 创建一个新的读写锁。
+     *
+     * <p><b>Stack</b>：入参 {@code ()} → 出参 {@code (rwl:int)}</p>
+     * <p><b>语义</b>：分配并返回一个读写锁 ID。</p>
+     * <p><b>返回</b>：成功返回新读写锁的 ID。</p>
+     */
     public static final int RWLOCK_NEW = 0x160B;
+
+    /**
+     * 获取读写锁的读锁。
+     *
+     * <p><b>Stack</b>：入参 {@code (rwl:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：阻塞直到获取读锁。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     */
     public static final int RWLOCK_RLOCK = 0x160C;
+
+    /**
+     * 获取读写锁的写锁。
+     *
+     * <p><b>Stack</b>：入参 {@code (rwl:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：阻塞直到获取写锁。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     */
     public static final int RWLOCK_WLOCK = 0x160D;
+
+    /**
+     * 解锁读写锁。
+     *
+     * <p><b>Stack</b>：入参 {@code (rwl:int)} → 出参 {@code (rc:int)}</p>
+     * <p><b>语义</b>：释放当前线程持有的读锁或写锁。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：若线程未持有任何锁则抛出异常。</p>
+     */
     public static final int RWLOCK_UNLOCK = 0x160E;
+
     // endregion
+
 
     // region 时间 & 计时 (0x1700 – 0x17FF)
     /**
@@ -676,11 +845,54 @@ public final class SyscallOpCode {
 
 
     // region 数组操作 (0x1800 – 0x18FF)
-    public static final int ARR_LOAD = 0x1800;
-    public static final int ARR_STORE = 0x1801;
+
+    /**
+     * ARR_LEN (0x1801)
+     *
+     * <p><b>Stack</b>：入参 {@code (arr:any)} → 出参 {@code (len:int)}</p>
+     *
+     * <p><b>语义</b>：返回数组/列表/字符串的长度。</p>
+     *
+     * <p><b>支持</b>：{@link java.util.List}、原生 Java 数组、{@link CharSequence}；若为 {@code null} 则视为长度 0。</p>
+     *
+     * <p><b>返回</b>：长度 {@code (int)}。</p>
+     *
+     * <p><b>异常</b>：若类型不支持，则抛出 {@link IllegalArgumentException}。</p>
+     */
+    public static final int ARR_LEN = 0x1801;
+
+    /**
+     * ARR_GET (0x1802)
+     *
+     * <p><b>Stack</b>：入参 {@code (arr:any, index:int)} → 出参 {@code (elem:any)}</p>
+     *
+     * <p><b>语义</b>：获取数组/列表在指定索引位置的元素。</p>
+     *
+     * <p><b>支持</b>：{@link java.util.List}、原生 Java 数组、{@link CharSequence}。</p>
+     *
+     * <p><b>返回</b>：对应索引位置的元素；若是 {@link CharSequence}，返回 {@code char} 或其包装形式。</p>
+     *
+     * <p><b>异常</b>：若 {@code arr} 为 {@code null} 或索引越界，应抛出 {@link IndexOutOfBoundsException} 或 {@link IllegalArgumentException}。</p>
+     */
     public static final int ARR_GET = 0x1802;
+
+    /**
+     * ARR_SET (0x1803)
+     *
+     * <p><b>Stack</b>：入参 {@code (arr:any, index:int, value:any)} → 出参 {@code ()}</p>
+     *
+     * <p><b>语义</b>：设置数组/列表在指定索引位置的元素为给定值。</p>
+     *
+     * <p><b>支持</b>：{@link java.util.List}、原生 Java 数组。</p>
+     *
+     * <p><b>限制</b>：不可变类型（如 {@link CharSequence}）不支持写操作。</p>
+     *
+     * <p><b>异常</b>：若 {@code arr} 为 {@code null}、索引越界或类型不支持写入，应抛出 {@link IndexOutOfBoundsException} 或 {@link IllegalArgumentException}。</p>
+     */
     public static final int ARR_SET = 0x1803;
+
     // endregion
+
 
     // region 系统信息 (0x1900 – 0x19FF)
     /**

@@ -6,7 +6,7 @@ import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
 /**
- * {@code ExitHandler} 实现 EXIT (0x1101) 系统调用，
+ * {@code ExitHandler} 实现 EXIT (0x1500) 系统调用，
  * 用于直接结束当前虚拟机进程。
  *
  * <p><b>Stack</b>：入参 {@code (code:int)} → 无返回</p>

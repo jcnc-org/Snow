@@ -7,7 +7,7 @@ import org.jcnc.snow.vm.module.OperandStack;
 
 /**
  * 实现 NCPU () -> n:int
- *
+ * <p>
  * 将逻辑处理器数量（Runtime.availableProcessors()）作为 Integer 推回操作数栈。
  */
 public class NcpuHandler implements SyscallHandler {

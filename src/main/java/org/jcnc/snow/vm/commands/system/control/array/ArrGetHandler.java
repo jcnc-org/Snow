@@ -40,10 +40,8 @@ public class ArrGetHandler implements SyscallHandler {
      * @param stack     操作数栈，提供方法参数与返回值
      * @param locals    局部变量存储器（本方法未使用）
      * @param callStack 调用栈（本方法未使用）
-     * @throws Exception
-     *         如果类型不匹配或索引非法，或发生其他错误时抛出
-     * @throws IllegalArgumentException
-     *         当传入的对象不是 List 也不是数组时抛出
+     * @throws Exception                如果类型不匹配或索引非法，或发生其他错误时抛出
+     * @throws IllegalArgumentException 当传入的对象不是 List 也不是数组时抛出
      */
     @Override
     public void handle(OperandStack stack,

@@ -1,0 +1,75 @@
+module: process
+    /**
+     * exit(code:int)
+     *
+     * <b>Stack：</b> 入参 (code:int) → 无返回
+     *
+     * <b>语义：</b> 以指定退出码直接终止虚拟机进程。
+     */
+    function: exit
+        params:
+            declare code:int
+        body:
+            syscall("0x1500", code)
+        end body
+    end function
+
+    /**
+     * fork(cmds:any[])
+     *
+     * <b>Stack：</b> 入参 (cmds:any[]) → 出参 (pid:int)
+     *
+     * <b>语义：</b> 启动子进程执行指定命令数组，父进程返回子进程 pid。
+     * 例如：fork(["java", "-version"])
+     */
+    function: fork
+        params:
+            declare cmds:any[]
+        returns: int
+        body:
+            declare pid:int = syscall("0x1501", cmds)
+            return pid
+        end body
+    end function
+
+
+    /**
+     * exec(env:map, argv:any[], path:string)
+     *
+     * <b>Stack：</b> 入参 (env:map, argv:any[], path:string) → 无返回
+     *
+     * <b>语义：</b> 启动一个新进程，并立即结束当前 Snow VM 进程，模拟 exec。
+     */
+    function: exec
+        params:
+            declare env:any
+            declare argv:any[]
+            declare path:string
+        body:
+            syscall("0x1502", env, argv, path)
+        end body
+    end function
+
+    /**
+     * wait(pid:int?)
+     *
+     * <b>Stack：</b> 入参 (pid:int?) → 出参 (status:int)
+     *
+     * <b>语义：</b> 等待指定 pid 的子进程退出并返回其退出码。
+     * 如果 pid 为 0 或 null，表示等待任意子进程。
+     *
+     * <b>返回：</b> 子进程退出状态码。
+     */
+    function: wait
+        params:
+            declare pid:int
+        returns: int
+        body:
+            declare status:int = syscall("0x1503", pid)
+            return status
+        end body
+    end function
+
+
+
+end module

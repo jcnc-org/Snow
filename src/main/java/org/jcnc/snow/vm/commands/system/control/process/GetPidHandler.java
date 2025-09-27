@@ -6,7 +6,7 @@ import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
 /**
- * {@code GetPidHandler} 实现 GETPID (0x1104) 系统调用，
+ * {@code GetPidHandler} 实现 GETPID (0x1504) 系统调用，
  * 用于获取当前虚拟机进程的进程 ID（pid）。
  *
  * <p><b>Stack</b>：无入参 → 出参 {@code (pid:int)}</p>
@@ -36,7 +36,7 @@ public class GetPidHandler implements SyscallHandler {
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
 
-        // 获取当前 JVM 进程 ID（JDK 9+）
+        // 获取当前 JVM 进程 ID
         long pid = ProcessHandle.current().pid();
 
         // 压回结果（int 类型，如果需要兼容更大 PID 可保留 long 类型）

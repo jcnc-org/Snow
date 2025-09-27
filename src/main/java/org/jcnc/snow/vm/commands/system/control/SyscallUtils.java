@@ -2,8 +2,8 @@ package org.jcnc.snow.vm.commands.system.control;
 
 import org.jcnc.snow.vm.module.OperandStack;
 
-import java.util.Arrays;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 /**
  * {@code SyscallUtils} 提供系统调用相关的全局工具函数，供 {@link SyscallCommand} 及其子模块使用。
@@ -17,9 +17,6 @@ import java.nio.charset.StandardCharsets;
  */
 public class SyscallUtils {
 
-    private SyscallUtils() {
-    }
-
     /**
      * 全局 errno（进程/虚拟机级），-1 表示最近一次系统调用失败
      */
@@ -28,6 +25,8 @@ public class SyscallUtils {
      * 全局错误字符串（进程/虚拟机级）
      */
     private static volatile String LAST_ERRSTR = null;
+    private SyscallUtils() {
+    }
 
     /**
      * 获取最近一次系统调用的 errno。

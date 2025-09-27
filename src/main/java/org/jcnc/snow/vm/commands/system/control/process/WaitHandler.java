@@ -7,7 +7,7 @@ import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
 /**
- * {@code WaitHandler} 实现 WAIT (0x1107) 系统调用，
+ * {@code WaitHandler} 实现 WAIT (0x1503) 系统调用，
  * 用于等待子进程结束并返回其退出状态码。
  *
  * <p><b>Stack</b>：入参 {@code (pid:int?)} → 出参 {@code (status:int)}</p>
@@ -43,33 +43,44 @@ public class WaitHandler implements SyscallHandler {
         Object pidObj = stack.pop();
         Integer pid = (pidObj instanceof Integer) ? (Integer) pidObj : null;
 
-        int status = -1;
+        int status;
 
         if (pid == null || pid == 0) {
-            // 2. 等待任意子进程
+            // 等待任意子进程
+            Process target = null;
             for (Process p : ProcessRegistry.all()) {
-                try {
-                    status = p.waitFor();
-                    ProcessRegistry.unregister(p.pid());
-                    break;
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
+                target = p;
+                break;
+            }
+            if (target == null) {
+                throw new IllegalArgumentException("No child processes");
+            }
+            try {
+                status = target.waitFor();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                status = -2; // 特殊值表示被中断
+            } finally {
+                ProcessRegistry.unregister(target.pid());
             }
         } else {
-            // 3. 等待指定 pid
+            // 等待指定 pid
             Process p = ProcessRegistry.get(pid.longValue());
             if (p == null) {
                 throw new IllegalArgumentException("Invalid pid: " + pid);
             }
             try {
                 status = p.waitFor();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                status = -2;
             } finally {
                 ProcessRegistry.unregister(pid.longValue());
             }
         }
 
-        // 4. 压回退出码
+        // 压回退出码
         stack.push(status);
+
     }
 }

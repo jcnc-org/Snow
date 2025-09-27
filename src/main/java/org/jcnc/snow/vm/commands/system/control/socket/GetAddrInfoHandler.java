@@ -6,22 +6,21 @@ import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
 import java.net.InetAddress;
-import java.util.*;
 
 /**
- * {@code GetAddrInfoHandler} 实现 GETADDRINFO (0x1404) 系统调用，
+ * {@code GetAddrInfoHandler} 实现 GETADDRINFO (0x140E) 系统调用，
  * 用于解析主机名和服务端口，返回可用于 socket 连接的地址列表。
  *
- * <p><b>Stack</b>：入参 {@code (host:String, service:String, hints:any?)} → 出参 {@code (List<Map<String,Object>>)}</p>
+ * <p><b>Stack</b>：入参 {@code (host:String, service:String, hints:any?)} →
+ * 出参 {@code (Object[][])}</p>
  *
- * <p><b>语义</b>：将 host/service 解析为一组 {addr, port, family} 的地址对象列表。</p>
+ * <p><b>语义</b>：将 host/service 解析为一组 {addr, port, family} 的数组。</p>
  *
- * <p><b>返回</b>：地址信息数组，每个元素为 Map，包含 "addr"、"port"、"family" 字段。</p>
- *
- * <p><b>异常</b>：
+ * <p><b>返回</b>：地址信息二维数组：
  * <ul>
- *   <li>service 端口无效时抛出 {@link IllegalArgumentException}</li>
- *   <li>host 解析失败时抛出 {@link java.net.UnknownHostException}</li>
+ *   <li>[i][0] = addr:String</li>
+ *   <li>[i][1] = port:int</li>
+ *   <li>[i][2] = family:int (4 或 6)</li>
  * </ul>
  * </p>
  */
@@ -40,7 +39,7 @@ public class GetAddrInfoHandler implements SyscallHandler {
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
 
-        // 1. 取参数 (注意栈顺序: hints → service → host)
+        // 1. 参数顺序: hints → service → host
         Object hintsObj = stack.pop();
         String service = (String) stack.pop();
         String host = (String) stack.pop();
@@ -57,16 +56,15 @@ public class GetAddrInfoHandler implements SyscallHandler {
         InetAddress[] addresses = InetAddress.getAllByName(host);
 
         // 4. 构造返回数组
-        List<Map<String, Object>> results = new ArrayList<>();
-        for (InetAddress addr : addresses) {
-            Map<String, Object> entry = new HashMap<>();
-            entry.put("addr", addr.getHostAddress());
-            entry.put("port", port);
-            entry.put("family", addr instanceof java.net.Inet6Address ? 6 : 4);
-            results.add(entry);
+        Object[][] results = new Object[addresses.length][3];
+        for (int i = 0; i < addresses.length; i++) {
+            InetAddress addr = addresses[i];
+            results[i][0] = addr.getHostAddress();
+            results[i][1] = port;
+            results[i][2] = (addr instanceof java.net.Inet6Address) ? 6 : 4;
         }
 
-        // 5. 压回数组 (假设 OperandStack 支持直接存放 List)
+        // 5. 压回二维数组
         stack.push(results);
     }
 }

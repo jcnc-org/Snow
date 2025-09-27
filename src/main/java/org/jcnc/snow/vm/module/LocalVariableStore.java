@@ -37,7 +37,7 @@ public class LocalVariableStore {
      */
     public LocalVariableStore(int initialCapacity) {
         this.localVariables = new ArrayList<>(initialCapacity);
-        handleMode();
+//        handleMode();
     }
 
     /**
@@ -45,7 +45,7 @@ public class LocalVariableStore {
      */
     public LocalVariableStore() {
         this.localVariables = new ArrayList<>();
-        handleMode();
+//        handleMode();
     }
 
     /* ---------- Public API ---------- */

@@ -1,0 +1,115 @@
+module: sync_test
+
+    import :sync
+    import :stdio
+
+    // ============= MUTEX =============
+    function: test_mutex
+        body:
+            stdio.println("== MUTEX ==")
+            declare mid:int = sync.mutex_new()
+            stdio.println("new mid=" + mid)
+
+            stdio.println("lock()")
+            sync.mutex_lock(mid)
+
+            stdio.println("trylock() while holding -> expect 0 (busy)")
+            declare ok1:int = sync.mutex_trylock(mid)
+            stdio.println("trylock rc=" + ok1)
+
+            stdio.println("unlock()")
+            sync.mutex_unlock(mid)
+
+            stdio.println("trylock() after unlock -> expect 1 (acquired)")
+            declare ok2:int = sync.mutex_trylock(mid)
+            stdio.println("trylock rc=" + ok2)
+
+            stdio.println("unlock()")
+            sync.mutex_unlock(mid)
+        end body
+    end function
+
+    // ============= CONDITION VARIABLE =============
+    function: test_cond_timeout
+        body:
+            stdio.println("== COND ==")
+            declare mid:int = sync.mutex_new()
+            declare cid:int = sync.cond_new()
+            stdio.println("new mid=" + mid + ", cid=" + cid)
+
+            stdio.println("lock() then cond_wait(timeout=100ms) -> expect 1 (timeout)")
+            sync.mutex_lock(mid)
+            declare reason:int = sync.cond_wait(cid, mid, 100)
+            stdio.println("cond_wait reason=" + reason + " (0=wakeup,1=timeout,-1=interrupt)")
+            // cond_wait 返回前会重新加锁，这里只需解一次
+            sync.mutex_unlock(mid)
+
+            stdio.println("signal/broadcast with no waiters (just smoke test)")
+            declare rc1:int = sync.cond_signal(cid)
+            stdio.println("cond_signal rc=" + rc1)
+            declare rc2:int = sync.cond_broadcast(cid)
+            stdio.println("cond_broadcast rc=" + rc2)
+        end body
+    end function
+
+    // ============= SEMAPHORE =============
+    function: test_sem
+        body:
+            stdio.println("== SEM ==")
+            declare sid:int = sync.sem_new(0)
+            stdio.println("new sid=" + sid)
+
+            stdio.println("wait 100ms on empty -> expect 0 (timeout)")
+            declare w1:int = sync.sem_wait(sid, 100)
+            stdio.println("sem_wait rc=" + w1)
+
+            stdio.println("post -> wait -> expect 1 (success)")
+            declare p1:int = sync.sem_post(sid)
+            stdio.println("sem_post rc=" + p1)
+            declare w2:int = sync.sem_wait(sid, 100)
+            stdio.println("sem_wait rc=" + w2)
+        end body
+    end function
+
+    // ============= RWLOCK =============
+    function: test_rwlock
+        body:
+            stdio.println("== RWLOCK ==")
+            declare rwl:int = sync.rwlock_new()
+            stdio.println("new rwl=" + rwl)
+
+            stdio.println("rlock() -> unlock()")
+            declare r1:int = sync.rwlock_rlock(rwl)
+            stdio.println("rlock rc=" + r1)
+            declare u1:int = sync.rwlock_unlock(rwl)
+            stdio.println("unlock rc=" + u1)
+
+            stdio.println("wlock() -> unlock()")
+            declare w1:int = sync.rwlock_wlock(rwl)
+            stdio.println("wlock rc=" + w1)
+            declare u2:int = sync.rwlock_unlock(rwl)
+            stdio.println("unlock rc=" + u2)
+        end body
+    end function
+
+    // ============= MAIN =============
+    function: main
+        body:
+            stdio.println("== sync syscalls smoke test ==")
+
+            test_mutex()
+            stdio.println("")
+
+            test_cond_timeout()
+            stdio.println("")
+
+            test_sem()
+            stdio.println("")
+
+            test_rwlock()
+
+            stdio.println("== done ==")
+        end body
+    end function
+
+end module

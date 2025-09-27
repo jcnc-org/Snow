@@ -1,5 +1,6 @@
 package org.jcnc.snow.vm.io;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -44,7 +45,7 @@ public final class EpollRegistry {
      * @param flags 创建参数（当前未使用，预留）
      * @return 新的 epfd
      */
-    public static int create(int flags) {
+    public static int create(int flags) throws IOException {
         int epfd = COUNTER.incrementAndGet();
         REGISTRY.put(epfd, new EpollInstance(flags));
         return epfd;

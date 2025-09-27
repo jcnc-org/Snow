@@ -1,0 +1,15 @@
+module: app
+    import: io
+    import: process
+
+    function: main
+        params:
+            declare args:any
+        body:
+            io.stdout_write("获取当前进程 PID...\n")
+
+            declare pid:int = process.getpid()
+            io.stdout_write("当前进程 PID = " + pid + "\n")
+        end body
+    end function
+end module

@@ -8,7 +8,7 @@ import org.jcnc.snow.vm.module.OperandStack;
 import java.util.Optional;
 
 /**
- * {@code GetPpidHandler} 实现 GETPPID (0x1105) 系统调用，
+ * {@code GetPpidHandler} 实现 GETPPID (0x1505) 系统调用，
  * 用于获取当前虚拟机进程的父进程 ID（ppid）。
  *
  * <p><b>Stack</b>：无入参 → 出参 {@code (ppid:int)}</p>
