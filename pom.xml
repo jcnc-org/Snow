@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.jcnc.snow</groupId>
-    <artifactId>Snow</artifactId>
+    <artifactId>snow</artifactId>
     <version>0.11.0</version>
 
     <properties>
@@ -89,7 +89,7 @@
 
                         <configuration>
                             <mainClass>org.jcnc.snow.cli.SnowCLI</mainClass>
-                            <imageName>Snow</imageName>
+                            <imageName>snow</imageName>
                             <outputDirectory>${project.build.directory}</outputDirectory>
                             <buildArgs>
                                 <buildArg>--static</buildArg>
@@ -191,7 +191,7 @@
 
                         <configuration>
                             <mainClass>org.jcnc.snow.cli.SnowCLI</mainClass>
-                            <imageName>Snow</imageName>
+                            <imageName>snow</imageName>
                             <outputDirectory>${project.build.directory}</outputDirectory>
                             <buildArgs>
                                 <buildArg>--emit=build-report</buildArg>

@@ -59,13 +59,13 @@ try {
     # ===== Step 3: Prepare release directory structure =====
     Write-Host "Step 3: Prepare release directory structure..."
     $targetDir   = Join-Path $projectRoot "target"
-    $exePath     = Join-Path $targetDir "Snow.exe"
+    $exePath     = Join-Path $targetDir "snow.exe"
     if (-not (Test-Path $exePath)) {
         Write-Error "Expected build artifact not found: $exePath"
         exit 1
     }
 
-    $verName     = "Snow-v${snowVersion}-windows-x64"
+    $verName     = "snow-v${snowVersion}-windows-x64"
     $releaseRoot = Join-Path $targetDir "release"
     $outDir      = Join-Path $releaseRoot $verName
     $binDir      = Join-Path $outDir "bin"
@@ -78,8 +78,8 @@ try {
     }
 
     New-Item -ItemType Directory -Force -Path $binDir | Out-Null
-    Copy-Item -Path $exePath -Destination (Join-Path $binDir "Snow.exe") -Force
-    Write-Host ">>> Collected Snow.exe"
+    Copy-Item -Path $exePath -Destination (Join-Path $binDir "snow.exe") -Force
+    Write-Host ">>> Collected snow.exe"
 
     # Optional lib
     $projectLib = Join-Path $projectRoot "lib"
