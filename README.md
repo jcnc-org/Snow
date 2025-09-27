@@ -76,6 +76,30 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
 
 [https://gitee.com/jcnc-org/snow/releases](https://gitee.com/jcnc-org/snow/releases)
 
+### Arch Linux 安装
+
+- 通过 [AUR 仓库](https://aur.archlinux.org/packages/snow)或[自建源仓库](https://github.com/taotieren/aur-repo)安装 `snow` 发行版。
+
+```bash
+# AUR
+yay -Syu snow
+# 或自建源
+sudo pacman -Syu snow
+# 或安装包组
+sudo pacman -Syu snow-lang
+```
+
+- 通过 [AUR 仓库](https://aur.archlinux.org/packages/snow-git)或[自建源仓库](https://github.com/taotieren/aur-repo)安装 `snow-git` 开发版。
+
+```bash
+# AUR
+yay -Syu snow-git
+# 或自建源
+sudo pacman -Syu snow-git
+# 或安装包组
+sudo pacman -Syu snow-lang-git
+``` 
+
 ## 相关文档
 [Snow-Lang 指南](docs/Snow-Lang-Syntax/Snow-Lang-Syntax.md)
 
