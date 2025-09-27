@@ -77,7 +77,7 @@ mvn -P native-linux -DskipTests clean package
 4. 安装到系统目录
 
 ```bash
-install -Dm0755 target/Snow /usr/bin/snow
+install -Dm0755 target/snow  -t /usr/bin/
 install -dm0775 /usr/lib/snow \
         /usr/share/doc/snow
 
