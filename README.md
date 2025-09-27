@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/README/IMG/icon/IMG_Snow_icon_128.svg" alt="Snow Icon">
+<img src="docs/README/IMG/icon/IMG_Snow.svg" alt="Snow Icon" width="125" height="125">
 <h1 align="center" style="margin: 30px 0 30px; font-weight: bold;">Snow编程语言</h1>
 
 <p align="center">
