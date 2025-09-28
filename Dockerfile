@@ -54,4 +54,4 @@ RUN mvn -P native-linux -DskipTests clean package
 # ------------------------------------------------------------
 FROM busybox AS export
 WORKDIR /export
-COPY --from=builder /app/org.jcnc.snow.cli.SnowCLI /export/Snow
+COPY --from=builder /app/org.jcnc.snow.cli.SnowCLI /export/snow

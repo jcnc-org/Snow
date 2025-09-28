@@ -1,5 +1,5 @@
 # Set the tar package name
-$tarName = "Snow.tar"
+$tarName = "snow.tar"
 
 # Get the script's current directory (build folder)
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
