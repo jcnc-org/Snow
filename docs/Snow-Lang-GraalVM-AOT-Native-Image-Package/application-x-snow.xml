@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+    <mime-type type="application/x-snow">
+        <comment>Snow source code</comment>
+        <comment xml:lang="zh_CN">Snow 语言源代码</comment>
+        <glob pattern="*.snow"/>
+        <icon name="application-x-snow"/>
+    </mime-type>
+</mime-info>

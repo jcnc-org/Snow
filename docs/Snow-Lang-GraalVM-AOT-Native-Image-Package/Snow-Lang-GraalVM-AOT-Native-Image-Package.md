@@ -86,6 +86,16 @@ cp -R docs/* /usr/share/doc/snow
 cp -R *.md /usr/share/doc/snow
 ```
 
+5. 设置 snow 源码文件关联的图标和描述信息
+
+    ![snow-source-code](img/snow-source-code.png)
+
+```bash
+install -Dm0644 docs/README/IMG/icon/IMG_Snow.svg /usr/share/icons/hicolor/scalable/mimetypes/application-x-snow.svg
+install -Dm0644 docs/Snow-Lang-GraalVM-AOT-Native-Image-Package/application-x-snow.xml /usr/share/mime/packages/application-x-snow.xml
+update-mime-database /usr/share/mime
+```
+
 注意：安装过程中会使用到 `root` 权限，如果提示权限不足，可以在命令行前增加 `sudo` 进行安装
 
 ## 4. Maven 项目配置文件
