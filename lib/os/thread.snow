@@ -1,22 +1,21 @@
-// thread module: 线程相关系统调用封装
-// ──────────────────────────────────────────────
-//  • 0x1506  THREAD_CREATE  → 创建并启动新线程
-//  • 0x1507  THREAD_JOIN    → 等待线程结束并获取返回值
-//  • 0x1508  THREAD_SLEEP   → 让当前线程休眠指定毫秒数
-// ──────────────────────────────────────────────
-
+/**
+@module thread
+@summary 线程相关系统调用模块，封装线程创建、同步和休眠等操作。
+@syscalls
+  0x1506 THREAD_CREATE 创建并启动新线程
+  0x1507 THREAD_JOIN   等待线程结束并获取返回值
+  0x1508 THREAD_SLEEP  让当前线程休眠指定毫秒数
+*/
 module: thread
 
     /**
-     * create(entry, arg)
-     *
-     * <b>Stack</b>：入参 (entry:any, arg:any) → 出参 (tid:int)
-     *
-     * <b>语义</b>：在 VM 中创建并启动一个新线程，线程入口为 entry，
-     *               其参数为 arg，返回新线程的 tid。
-     *
-     * <b>返回</b>：新线程 tid（int）
-     */
+    @function create
+    @summary 创建一个新线程，并在线程中执行 entry。
+    @param entry 线程入口函数或指针
+    @param arg 传递给线程入口函数的参数
+    @returns int 新线程的线程 ID
+    @throws Exception 线程创建失败、资源不足时抛出异常
+    */
     function: create
         params:
             declare entry:any
@@ -28,14 +27,12 @@ module: thread
     end function
 
     /**
-     * join(tid)
-     *
-     * <b>Stack</b>：入参 (tid:int) → 出参 (retval:any)
-     *
-     * <b>语义</b>：阻塞等待指定线程结束，并获取其返回值。
-     *
-     * <b>返回</b>：线程返回值，可能为 null。
-     */
+    @function join
+    @summary 阻塞等待指定线程退出，并获取其返回值。
+    @param tid 线程 ID
+    @returns any 线程的返回值，可能为 null
+    @throws Exception 线程不存在、已结束或 join 失败时抛出异常
+    */
     function: join
         params:
             declare tid:int
@@ -46,14 +43,12 @@ module: thread
     end function
 
     /**
-     * sleep(ms)
-     *
-     * <b>Stack</b>：入参 (ms:int) → 出参 (0:int)
-     *
-     * <b>语义</b>：让当前线程休眠指定毫秒数。
-     *
-     * <b>返回</b>：始终返回 0。
-     */
+    @function sleep
+    @summary 让当前线程挂起指定毫秒数。
+    @param ms 要休眠的毫秒数
+    @returns int 成功返回 0
+    @throws Exception 被中断时可能抛出异常
+    */
     function: sleep
         params:
             declare ms:int
