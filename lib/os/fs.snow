@@ -82,7 +82,7 @@ module: fs
 
     /**
     @function readdir
-    @summary 读取目录内容，返回条目列表。
+    @summary 读取目录内容，返回直接子项列表（非递归）。
     @param path any 目录路径
     @returns any 字符串数组或条目对象数组（实现定义）
     @throws ENOENT 不存在; ENOTDIR 非目录; EPERM 权限不足; EIO I/O错误
@@ -99,7 +99,7 @@ module: fs
 
     /**
     @function chmod
-    @summary 修改 path 的权限位。
+    @summary 修改 path 的权限位（在不支持 POSIX 权限的平台上可能退化）。
     @param path any 目标路径
     @param mode int(octal) 权限位（如 0o755）
     @returns int 0 表示成功
@@ -118,7 +118,7 @@ module: fs
 
     /**
     @function fchmod
-    @summary 修改 fd 对应对象的权限位。
+    @summary 修改 fd 对应对象的权限位（在不支持 POSIX 权限的平台上可能退化）。
     @param fd int 文件描述符
     @param mode int(octal) 权限位（如 0o600, 0o644, 0o755）
     @returns int 0 表示成功
@@ -137,7 +137,7 @@ module: fs
 
     /**
     @function utime
-    @summary 更新文件/目录的 atime 与 mtime（毫秒）。
+    @summary 更新文件/目录的 atime 与 mtime（毫秒时间戳，自 Epoch 起；在部分平台可能仅支持修改时间）。
     @param path any 目标路径
     @param mtime long 修改时间（epoch毫秒）
     @param atime long 访问时间（epoch毫秒）
