@@ -1,33 +1,45 @@
-// fs module: File System(FS) 系统调用
-// ──────────────────────────────────────────────
-//  • 0x1100  MKDIR     →  创建目录（可选权限位）
-//  • 0x1101  RMDIR     →  删除空目录
-//  • 0x1102  CHDIR     →  改变 VM 的当前工作目录
-//  • 0x1103  GETCWD    →  获取 VM 的当前工作目录
-//  • 0x1104  READDIR   →  读取目录内容
-//  • 0x1105  CHMOD     →  修改文件/目录权限
-//  • 0x1106  FCHMOD    →  修改 fd 对应文件/目录权限
-//  • 0x1107  UTIME     →  更新文件/目录的访问与修改时间
-// ──────────────────────────────────────────────
-
+/**
+@module fs
+@summary 文件系统模块，封装基础目录与权限操作。
+@syscalls
+  0x1100 MKDIR   创建目录
+  0x1101 RMDIR   删除空目录
+  0x1102 CHDIR   改变当前工作目录
+  0x1103 GETCWD  获取当前工作目录
+  0x1104 READDIR 读取目录内容
+  0x1105 CHMOD   修改权限
+  0x1106 FCHMOD  修改 fd 权限
+  0x1107 UTIME   更新时间戳
+*/
 module: fs
-    // mkdir(path, mode?): 在指定路径创建目录，可选权限位 mode。
-    // 成功返回 0。
-    // 在不支持 POSIX 权限的平台上，mode 可能被忽略或部分生效。
-    // 出错时抛出异常（路径非法/已存在/父目录不存在/权限不足/I/O 错误）。
+
+    /**
+    @function mkdir
+    @summary 在 path 创建目录，可选权限 mode。
+    @param path any 目录路径（字符串或路径对象）
+    @param mode int(octal)? 可选权限位，在部分平台可能被忽略
+    @returns int 0 表示成功
+    @throws EINVAL 路径非法; EEXIST 目录已存在; ENOENT 父目录不存在; EPERM 权限不足; EIO I/O错误
+    @example fs.mkdir("/tmp/new", 0o755)
+    */
     function: mkdir
         params:
             declare path: any
-            declare mode: int   // 可选参数，调用时可传 null
+            declare mode: int   // optional: 可传 null
         returns: int
         body:
             return syscall("0x1100", path, mode)
         end body
     end function
 
-    // rmdir(path): 删除空目录。
-    // 成功返回 0。
-    // 出错时抛出异常（路径不是目录/目录非空/不存在/权限不足/I/O 错误）。
+    /**
+    @function rmdir
+    @summary 删除空目录。
+    @param path any 目录路径
+    @returns int 0 表示成功
+    @throws ENOTDIR 非目录; ENOTEMPTY 目录非空; ENOENT 不存在; EPERM 权限不足; EIO I/O错误
+    @example fs.rmdir("/tmp/empty")
+    */
     function: rmdir
         params:
             declare path: any
@@ -37,9 +49,14 @@ module: fs
         end body
     end function
 
-    // chdir(path): 改变当前工作目录。
-    // 成功返回 0。
-    // 出错时抛出异常（路径不存在/非目录/不可访问/I/O 错误）。
+    /**
+    @function chdir
+    @summary 设置当前工作目录。
+    @param path any 目录路径
+    @returns int 0 表示成功
+    @throws ENOENT 不存在; ENOTDIR 非目录; EPERM 权限不足; EIO I/O错误
+    @example fs.chdir("/var/log")
+    */
     function: chdir
         params:
             declare path: any
@@ -49,9 +66,13 @@ module: fs
         end body
     end function
 
-    // getcwd(): 获取当前工作目录的绝对路径。
-    // 成功返回字符串。
-    // 出错时抛出异常（未初始化 CWD/内部状态无效）。
+    /**
+    @function getcwd
+    @summary 获取当前工作目录绝对路径。
+    @returns string 绝对路径
+    @throws ESTATE CWD未初始化或内部状态无效
+    @example let cwd = fs.getcwd()
+    */
     function: getcwd
         returns: string
         body:
@@ -59,21 +80,32 @@ module: fs
         end body
     end function
 
-    // readdir(path): 读取目录内容。
-    // 返回字符串数组或条目对象数组（实现决定返回格式）。
-    // 出错时抛出异常（路径不存在/非目录/不可读/I/O 错误）。
-	function: readdir
-	    params:
-	        declare path: any
-	    returns: any
-	    body:
-	        return syscall("0x1104", path)
-	    end body
-	end function
+    /**
+    @function readdir
+    @summary 读取目录内容，返回条目列表。
+    @param path any 目录路径
+    @returns any 字符串数组或条目对象数组（实现定义）
+    @throws ENOENT 不存在; ENOTDIR 非目录; EPERM 权限不足; EIO I/O错误
+    @example let items = fs.readdir("/etc")
+    */
+    function: readdir
+        params:
+            declare path: any
+        returns: any
+        body:
+            return syscall("0x1104", path)
+        end body
+    end function
 
-    // chmod(path, mode): 修改文件/目录的权限。
-    // mode: 整数，八进制权限位（如 0o755）
-    // 成功返回 0，失败抛出异常。
+    /**
+    @function chmod
+    @summary 修改 path 的权限位。
+    @param path any 目标路径
+    @param mode int(octal) 权限位（如 0o755）
+    @returns int 0 表示成功
+    @throws ENOENT 路径不存在; EPERM 权限不足; EINVAL 模式非法; EIO I/O错误
+    @example fs.chmod("/bin/tool", 0o755)
+    */
     function: chmod
         params:
             declare path: any
@@ -84,9 +116,15 @@ module: fs
         end body
     end function
 
-    // fchmod(fd, mode): 修改 fd 对应文件/目录的权限。
-    // mode: 整数，八进制权限位（如 0o644, 0o755）
-    // 成功返回 0；失败时抛出异常（fd 非法/权限不足/模式非法/I/O 错误）。
+    /**
+    @function fchmod
+    @summary 修改 fd 对应对象的权限位。
+    @param fd int 文件描述符
+    @param mode int(octal) 权限位（如 0o600, 0o644, 0o755）
+    @returns int 0 表示成功
+    @throws EBADF fd非法; EPERM 权限不足; EINVAL 模式非法; EIO I/O错误
+    @example fs.fchmod(fd, 0o600)
+    */
     function: fchmod
         params:
             declare fd: int
@@ -97,9 +135,16 @@ module: fs
         end body
     end function
 
-    // utime(path, mtime, atime): 更新文件/目录的访问与修改时间
-    // mtime/atime 单位: 毫秒 (epoch)
-    // 成功返回 0；失败抛出异常
+    /**
+    @function utime
+    @summary 更新文件/目录的 atime 与 mtime（毫秒）。
+    @param path any 目标路径
+    @param mtime long 修改时间（epoch毫秒）
+    @param atime long 访问时间（epoch毫秒）
+    @returns int 0 表示成功
+    @throws ENOENT 路径不存在; EPERM 权限不足; EIO I/O错误
+    @example fs.utime("/tmp/a.log", now_ms, now_ms)
+    */
     function: utime
         params:
             declare path: any
@@ -110,4 +155,5 @@ module: fs
             return syscall("0x1107", path, mtime, atime)
         end body
     end function
+
 end module
