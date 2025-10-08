@@ -10,30 +10,27 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 
 /**
- * {@code ReadHandler} 实现虚拟机的系统调用 {@code READ} 逻辑。
- * <p>
- * 支持从指定虚拟 fd（文件描述符）对应的通道读取数据，并将实际读取到的字节数组返回。
+ * {@code ReadHandler} 实现 READ (0x1001) 系统调用，
+ * 用于从指定 fd 对应的可读通道读取数据。
  *
- * <p><b>调用约定：</b></p>
- * <ul>
- *   <li>参数顺序（自底向上）：fd（int），length（int）</li>
- *   <li>返回值：{@code byte[]}，即实际读取到的数据；可能比 length 小，也可能为 0</li>
- * </ul>
+ * <p><b>Stack</b>：入参 {@code (fd:int, length:int)} → 出参 {@code (data:byte[])}</p>
  *
- * <p><b>行为说明：</b></p>
+ * <p><b>语义</b>：
  * <ul>
- *   <li>如果读取到 EOF 或 size 小于等于 0，则返回长度为 0 的数组</li>
- *   <li>若 fd 无效或不是可读通道，将抛出 {@link IllegalArgumentException}</li>
- *   <li>读取过程中如遇 I/O 错误，将抛出 {@link java.io.IOException}</li>
+ *   <li>若读到 EOF 或 {@code length <= 0}，返回长度为 0 的字节数组</li>
+ *   <li>否则返回实际读取的字节数组</li>
  * </ul>
+ * </p>
  *
- * <p><b>异常：</b></p>
+ * <p><b>返回</b>：实际读取的字节数组。</p>
+ *
+ * <p><b>异常</b>：
  * <ul>
- *   <li>fd 不是整数，抛出 {@link IllegalArgumentException}</li>
- *   <li>length 不是整数或小于 0，抛出 {@link IllegalArgumentException}</li>
- *   <li>通道不可读，抛出 {@link IllegalArgumentException}</li>
- *   <li>I/O 操作失败时，抛出 {@link java.io.IOException}</li>
+ *   <li>fd 非法/不可读时抛出 {@link IllegalArgumentException}</li>
+ *   <li>length 类型错误或为负时抛出 {@link IllegalArgumentException}</li>
+ *   <li>I/O 失败时抛出 {@link java.io.IOException}</li>
  * </ul>
+ * </p>
  */
 public class ReadHandler implements SyscallHandler {
 
