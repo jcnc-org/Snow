@@ -1,0 +1,37 @@
+module: multiplication_table
+    import: stdio
+
+    function: main
+        returns: void
+        body:
+            loop:
+                init:
+                    declare i: int = 1
+                cond:
+                    i <= 9
+                step:
+                    i = i + 1
+                body:
+                    loop:
+                        init:
+                            declare j: int = 1
+                        cond:
+                            j <= i
+                        step:
+                            j = j + 1
+                        body:
+                            declare result: int = i * j
+                            stdio.print(j)
+                            stdio.print(" * ")
+                            stdio.print(i)
+                            stdio.print(" = ")
+                            stdio.print(result)
+                            stdio.print("\t")
+                        end body
+                    end loop
+                    stdio.println("")
+                end body
+            end loop
+        end body
+    end function
+end module
