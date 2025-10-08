@@ -18,7 +18,7 @@ module: time
     @function clock_gettime
     @summary 返回给定时钟的纳秒时间戳。
     @param clockId 时钟ID，REALTIME=0：自 Unix 纪元以来的墙钟时间（单位 ns），MONO=1：单调时钟（适合测量间隔）
-    @returns long 成功时返回纳秒时间
+    @returns 成功时返回纳秒时间
     @throws IllegalArgumentException 若 clockId 非法或不被支持时抛出异常
     */
     function: clock_gettime
@@ -34,7 +34,7 @@ module: time
     @function nanosleep
     @summary 让当前线程挂起指定的纳秒数。
     @param ns 要挂起的纳秒数
-    @returns int 成功返回 0
+    @returns 成功返回 0
     @throws InterruptedException 被中断时可能抛出异常，调用者应处理或恢复中断状态
     */
     function: nanosleep
@@ -49,7 +49,7 @@ module: time
     /**
     @function timeofday_raw
     @summary 兼容式获取 (sec, usec)。
-    @returns any 成功返回两个值：sec:long 和 usec:int（注意压栈顺序由实现约定）
+    @returns 成功返回两个值：sec:long 和 usec:int（注意压栈顺序由实现约定）
     */
     function: timeofday_raw
         returns: any
@@ -61,7 +61,7 @@ module: time
     /**
     @function tick_ms
     @summary 返回单调计数的毫秒数（适合计算时间间隔，不是绝对时间）。
-    @returns long 成功返回单调毫秒数
+    @returns 成功返回单调毫秒数
     */
     function: tick_ms
         returns: long
@@ -75,7 +75,7 @@ module: time
     /**
     @function now_ns
     @summary 以纳秒返回墙钟时间（REALTIME）。
-    @returns long 墙钟时间纳秒数
+    @returns 墙钟时间纳秒数
     */
     function: now_ns
         returns: long
@@ -87,7 +87,7 @@ module: time
     /**
     @function mono_ns
     @summary 以纳秒返回单调时钟（MONO）。
-    @returns long 单调时钟纳秒数
+    @returns 单调时钟纳秒数
     */
     function: mono_ns
         returns: long
@@ -99,7 +99,7 @@ module: time
     /**
     @function now_ms
     @summary 以毫秒返回墙钟时间。
-    @returns long 墙钟时间毫秒数
+    @returns 墙钟时间毫秒数
     */
     function: now_ms
         returns: long
@@ -113,7 +113,7 @@ module: time
     /**
     @function mono_ms
     @summary 以毫秒返回单调时钟。
-    @returns long 单调时钟毫秒数
+    @returns 单调时钟毫秒数
     */
     function: mono_ms
         returns: long
@@ -126,7 +126,7 @@ module: time
     /**
     @function epoch_sec
     @summary 返回自 Unix 纪元以来的秒数（long）。
-    @returns long 自 Unix 纪元以来的秒数
+    @returns 自 Unix 纪元以来的秒数
     */
     function: epoch_sec
         returns: long
@@ -139,7 +139,7 @@ module: time
     /**
     @function epoch_usec_in_sec
     @summary 返回当前秒内的微秒部分（0..999_999）。
-    @returns long 当前秒内的微秒部分
+    @returns 当前秒内的微秒部分
     */
     function: epoch_usec_in_sec
         returns: long
@@ -156,7 +156,7 @@ module: time
     @function sleep_ms
     @summary 以毫秒为单位的睡眠。
     @param ms 要睡眠的毫秒数
-    @returns int 成功返回 0
+    @returns 成功返回 0
     */
     function: sleep_ms
         params:
@@ -173,7 +173,7 @@ module: time
     @function sleep_us
     @summary 以微秒为单位的睡眠。
     @param us 要睡眠的微秒数
-    @returns int 成功返回 0
+    @returns 成功返回 0
     */
     function: sleep_us
         params:

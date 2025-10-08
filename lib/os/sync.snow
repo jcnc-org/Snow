@@ -23,7 +23,7 @@ module: sync
     /**
     @function mutex_new
     @summary 创建并返回一个新的互斥量 ID。
-    @returns int 成功返回新互斥量的 ID
+    @returns 成功返回新互斥量的 ID
     @throws Exception 资源不足或内部错误时抛出异常
     */
     function: mutex_new
@@ -37,7 +37,7 @@ module: sync
     @function mutex_lock
     @summary 阻塞直到获取互斥量。
     @param mid 互斥量 ID
-    @returns int 成功返回 0
+    @returns 成功返回 0
     @throws Exception 无效 ID 或线程被中断时抛出异常
     */
     function: mutex_lock
@@ -53,7 +53,7 @@ module: sync
     @function mutex_trylock
     @summary 立即尝试获取互斥量。
     @param mid 互斥量 ID
-    @returns int 成功返回 1，失败返回 0
+    @returns 成功返回 1，失败返回 0
     @throws Exception 无效 ID 时抛出异常
     */
     function: mutex_trylock
@@ -69,7 +69,7 @@ module: sync
     @function mutex_unlock
     @summary 释放互斥量。
     @param mid 互斥量 ID
-    @returns int 成功返回 0
+    @returns 成功返回 0
     @throws Exception 若线程未持有锁则抛出异常
     */
     function: mutex_unlock
@@ -84,7 +84,7 @@ module: sync
     /**
     @function cond_new
     @summary 创建条件变量。
-    @returns int 成功返回新条件变量的 ID
+    @returns 成功返回新条件变量的 ID
     */
     function: cond_new
         returns: int
@@ -99,7 +99,7 @@ module: sync
     @param cid 条件变量 ID
     @param mid 互斥量 ID
     @param timeout 可选超时时间（毫秒）
-    @returns int 0=唤醒，1=超时，-1=中断
+    @returns 0=唤醒，1=超时，-1=中断
     @throws Exception 无效 ID 时抛出异常
     */
     function: cond_wait
@@ -117,7 +117,7 @@ module: sync
     @function cond_signal
     @summary 唤醒一个等待线程。
     @param cid 条件变量 ID
-    @returns int 成功返回 0
+    @returns 成功返回 0
     @throws Exception 无效 ID 时抛出异常
     */
     function: cond_signal
@@ -133,7 +133,7 @@ module: sync
     @function cond_broadcast
     @summary 唤醒所有等待线程。
     @param cid 条件变量 ID
-    @returns int 成功返回 0
+    @returns 成功返回 0
     @throws Exception 无效 ID 时抛出异常
     */
     function: cond_broadcast
@@ -149,7 +149,7 @@ module: sync
     @function sem_new
     @summary 创建一个指定初值的信号量。
     @param init1 信号量初始值
-    @returns int 成功返回新信号量的 ID
+    @returns 成功返回新信号量的 ID
     */
     function: sem_new
         params:
@@ -165,7 +165,7 @@ module: sync
     @summary 等待信号量。
     @param sid 信号量 ID
     @param timeout 可选超时时间（毫秒）
-    @returns int 1=成功，0=超时，-1=中断
+    @returns 1=成功，0=超时，-1=中断
     @throws Exception 无效 ID 时抛出异常
     */
     function: sem_wait
@@ -182,7 +182,7 @@ module: sync
     @function sem_post
     @summary 释放信号量。
     @param sid 信号量 ID
-    @returns int 成功返回 0
+    @returns 成功返回 0
     */
     function: sem_post
         params:
@@ -196,7 +196,7 @@ module: sync
     /**
     @function rwlock_new
     @summary 创建读写锁。
-    @returns int 成功返回新读写锁的 ID
+    @returns 成功返回新读写锁的 ID
     */
     function: rwlock_new
         returns: int
@@ -209,7 +209,7 @@ module: sync
     @function rwlock_rlock
     @summary 加读锁。
     @param rwl 读写锁 ID
-    @returns int 成功返回 0
+    @returns 成功返回 0
     */
     function: rwlock_rlock
         params:
@@ -224,7 +224,7 @@ module: sync
     @function rwlock_wlock
     @summary 加写锁。
     @param rwl 读写锁 ID
-    @returns int 成功返回 0
+    @returns 成功返回 0
     */
     function: rwlock_wlock
         params:
@@ -239,7 +239,7 @@ module: sync
     @function rwlock_unlock
     @summary 释放读写锁。
     @param rwl 读写锁 ID
-    @returns int 成功返回 0
+    @returns 成功返回 0
     @throws Exception 若线程未持有任何锁则抛出异常
     */
     function: rwlock_unlock

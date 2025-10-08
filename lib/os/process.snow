@@ -29,7 +29,7 @@ module: process
     @function fork
     @summary 复制当前进程上下文，生成子进程。
     @param cmds 命令数组
-    @returns int 在子进程中返回 0，在父进程中返回子进程 pid
+    @returns 在子进程中返回 0，在父进程中返回子进程 pid
     @throws Exception 进程创建失败、资源不足
     */
     function: fork
@@ -64,7 +64,7 @@ module: process
     @function wait
     @summary 阻塞等待子进程退出。
     @param pid 可选的进程 ID，如果为 0 或 null，表示等待任意子进程
-    @returns int 子进程的退出状态码
+    @returns 子进程的退出状态码
     @throws Exception 进程不存在、无子进程、等待失败
     */
     function: wait
