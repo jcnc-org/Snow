@@ -179,7 +179,7 @@ public final class SyscallOpCode {
     /**
      * 创建目录（可选权限位）。
      *
-     * <p><b>Stack</b>：入参 {@code (path:String, mode:int?)} → 出参 {@code (rc:int)}</p>
+     * <p><b>Stack</b>：入参 {@code (path:String, mode:int?)} → 出参 {@code (0:int)}</p>
      * <p><b>语义</b>：在 {@code path} 处新建目录。若 {@code mode} 未提供，则由实现采用默认权限；</p>
      * <p><b>返回</b>：成功返回 {@code 0}。</p>
      * <p><b>异常</b>：
@@ -191,7 +191,7 @@ public final class SyscallOpCode {
     /**
      * 删除空目录。
      *
-     * <p><b>Stack</b>：入参 {@code (path:String)} → 出参 {@code (rc:int)}</p>
+     * <p><b>Stack</b>：入参 {@code (path:String)} → 出参 {@code (0:int)}</p>
      * <p><b>语义</b>：仅当目录为空时删除；非空目录应返回错误。</p>
      * <p><b>返回</b>：成功返回 {@code 0}。</p>
      * <p><b>异常</b>：路径不是目录/目录非空/不存在/权限不足，I/O 失败。</p>
@@ -201,7 +201,7 @@ public final class SyscallOpCode {
     /**
      * 改变 VM 的当前工作目录（CWD）。
      *
-     * <p><b>Stack</b>：入参 {@code (path:String)} → 出参 {@code (rc:int)}</p>
+     * <p><b>Stack</b>：入参 {@code (path:String)} → 出参 {@code (0:int)}</p>
      * <p><b>语义</b>：将调用上下文的 CWD 切换到 {@code path}；实现需要在 VM 运行时保存 CWD 状态。</p>
      * <p><b>返回</b>：成功返回 {@code 0}。</p>
      * <p><b>异常</b>：路径不存在/非目录/不可访问，或实现未提供 CWD 语义。</p>
@@ -220,7 +220,7 @@ public final class SyscallOpCode {
     /**
      * 读取目录内容。
      *
-     * <p><b>Stack</b>：入参 {@code (path:String)} → 出参 {@code (entries:Array)}</p>
+     * <p><b>Stack</b>：入参 {@code (path:String)} → 出参 {@code (entries:String[])}</p>
      * <p><b>语义</b>：返回 {@code path} 下的直接子项列表（非递归）。实现可返回字符串数组（文件/目录名），
      * 或返回包含名称/类型等字段的条目对象数组。</p>
      * <p><b>异常</b>：路径不存在/非目录/不可读，I/O 失败。</p>
