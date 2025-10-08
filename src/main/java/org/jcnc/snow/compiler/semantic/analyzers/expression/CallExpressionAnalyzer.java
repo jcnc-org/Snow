@@ -38,7 +38,6 @@ import java.util.List;
  *   <ul>
  *     <li>参数数量校验</li>
  *     <li>参数类型兼容性（支持数值类型宽化和数值到字符串的隐式转换）</li>
- *     <li>特例支持 os.syscall 的可变参数规则</li>
  *   </ul>
  *   <li>权限和语义错误处理：</li>
  *   <ul>

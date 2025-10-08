@@ -120,7 +120,7 @@ semantic/
   │   ├── SignatureRegistrar.java       // 函数/方法/构造签名登记
   │   ├── FunctionChecker.java          // 函数体遍历与作用域/return 检查
   │   ├── ModuleInfo.java               // 模块元信息（imports/functions/structs/globals）
-  │   ├── BuiltinTypeRegistry.java      // 内置类型/内置模块与函数（如 os.syscall）
+  │   ├── BuiltinTypeRegistry.java      // 内置类型/内置模块与函数
   │   └── AnalyzerRegistrar.java        // 将全部分析器注册进 AnalyzerRegistry
   │
   ├── symbol/
