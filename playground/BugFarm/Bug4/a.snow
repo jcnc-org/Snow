@@ -1,8 +1,0 @@
-module: ModuleA
-    function: fun
-        returns: int
-        body:
-            return 123
-        end body
-    end function
-end module

@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Snow" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="org.jcnc.snow.cli.SnowCLI" />
-    <module name="Snow" />
+    <module name="snow" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="org.jcnc.snow.cli.SnowCLI" />
