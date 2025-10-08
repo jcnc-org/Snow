@@ -12,7 +12,13 @@ public final class SyscallOpCode {
      * <p><b>Stack</b>：入参 {@code (path:String, flags:int)} → 出参 {@code (fd:int)}</p>
      * <p><b>语义</b>：依据 {@code flags}（由 {@code OpenFlags} 解析为 {@code OpenOption} 集）打开
      * {@code path} 对应的文件，底层通过 {@code Files.newByteChannel(...)} 创建通道并注册到 {@code FDTable}。</p>
-     * <p><b>异常</b>：路径/flags 类型错误，flags 非法，文件不存在且未指定创建，权限不足，或底层 I/O 失败。</p>
+     * <p><b>异常</b>：
+     * <ul>
+     *   <li>路径/flags 类型错误时抛出 {@link IllegalArgumentException}</li>
+     *   <li>flags 非法时抛出 {@link IllegalArgumentException}</li>
+     *   <li>文件不存在且未指定创建、权限不足或底层 I/O 失败时抛出 {@link java.io.IOException}</li>
+     * </ul>
+     * </p>
      */
     public static final int OPEN = 0x1000;
 
@@ -21,7 +27,14 @@ public final class SyscallOpCode {
      *
      * <p><b>Stack</b>：入参 {@code (fd:int, length:int)} → 出参 {@code (data:byte[])}</p>
      * <p><b>语义</b>：若读到 EOF 或 {@code length <= 0}，返回长度为 0 的字节数组；否则返回实际读取的字节数组。</p>
-     * <p><b>异常</b>：fd 非法/不可读，length 类型错误或为负，I/O 失败。</p>
+     * <p><b>返回</b>：实际读取的字节数组。</p>
+     * <p><b>异常</b>：
+     * <ul>
+     *   <li>fd 非法/不可读时抛出 {@link IllegalArgumentException}</li>
+     *   <li>length 类型错误或为负时抛出 {@link IllegalArgumentException}</li>
+     *   <li>I/O 失败时抛出 {@link java.io.IOException}</li>
+     * </ul>
+     * </p>
      */
     public static final int READ = 0x1001;
 
@@ -29,8 +42,22 @@ public final class SyscallOpCode {
      * 向 fd 对应的可写通道写入字节数组。
      *
      * <p><b>Stack</b>：入参 {@code (fd:int, data:byte[])} → 出参 {@code (written:int)}</p>
-     * <p><b>语义</b>：写入 {@code data}，返回实际写入的字节数。</p>
-     * <p><b>异常</b>：fd 非法/不可写，data 非字节数组，I/O 失败。</p>
+     * <p><b>语义</b>：写入 {@code data}，返回实际写入的字节数。
+     * <ul>
+     *   <li>byte[]：按原样写入</li>
+     *   <li>String：UTF-8 编码写入</li>
+     *   <li>null：写入长度 0</li>
+     *   <li>其他类型：toString() 后 UTF-8 编码写入</li>
+     * </ul>
+     * </p>
+     * <p><b>返回</b>：实际写入的字节数（int）。</p>
+     * <p><b>异常</b>：
+     * <ul>
+     *   <li>fd 不是 int 时抛出 {@link IllegalArgumentException}</li>
+     *   <li>fd 不可写时抛出 {@link IllegalArgumentException}</li>
+     *   <li>写入失败时抛出 {@link java.io.IOException}</li>
+     * </ul>
+     * </p>
      */
     public static final int WRITE = 0x1002;
 
@@ -49,7 +76,13 @@ public final class SyscallOpCode {
      *
      * <p><b>Stack</b>：入参 {@code (fd:int)} → 出参：无</p>
      * <p><b>语义</b>：关闭并从 {@code FDTable} 移除，释放底层通道。</p>
-     * <p><b>异常</b>：fd 非法。</p>
+     * <p><b>返回</b>：无。</p>
+     * <p><b>异常</b>：
+     * <ul>
+     *   <li>fd 非法时抛出 {@link IllegalArgumentException}</li>
+     *   <li>I/O 操作失败时抛出 {@link java.io.IOException}</li>
+     * </ul>
+     * </p>
      */
     public static final int CLOSE = 0x1004;
 
@@ -267,7 +300,12 @@ public final class SyscallOpCode {
      *
      * <p><b>Stack</b>：入参：无 → 出参 {@code (line:String)}</p>
      * <p><b>语义</b>：从 {@code System.in} 读取一行字符串并返回；若到达 EOF 或读取失败，则返回空字符串。</p>
-     * <p><b>异常</b>：I/O 错误。</p>
+     * <p><b>返回</b>：读取到的字符串。</p>
+     * <p><b>异常</b>：
+     * <ul>
+     *   <li>I/O 错误时抛出 {@link Exception}</li>
+     * </ul>
+     * </p>
      */
     public static final int STDIN_READ = 0x1200;
 
@@ -275,9 +313,21 @@ public final class SyscallOpCode {
      * 向标准输出（stdout, fd=1）写入字节数组或字符串。
      *
      * <p><b>Stack</b>：入参 {@code (data:byte[]|String|Object)} → 出参 {@code (written:int)}</p>
-     * <p><b>语义</b>：将参数转换为字节数组（字符串按 UTF-8 编码，其它对象调用 {@code toString()}），
-     * 写入标准输出通道并返回实际写入的字节数。</p>
-     * <p><b>异常</b>：stdout 通道不可写，或写入过程中发生 I/O 错误。</p>
+     * <p><b>语义</b>：
+     * <ul>
+     *   <li>参数为 byte[] 时，按原始字节输出</li>
+     *   <li>参数为 null 时，输出字符串 "null"</li>
+     *   <li>其它类型，调用 {@code toString()} 后以 UTF-8 编码输出</li>
+     * </ul>
+     * 输出内容直接写到 System.out，不带自动换行。
+     * </p>
+     * <p><b>返回</b>：实际写入的字节数（int）。</p>
+     * <p><b>异常</b>：
+     * <ul>
+     *   <li>操作数栈为空时抛出 {@link IllegalStateException}</li>
+     *   <li>I/O 错误时抛出 {@link java.io.IOException}</li>
+     * </ul>
+     * </p>
      */
     public static final int STDOUT_WRITE = 0x1201;
 
@@ -287,7 +337,12 @@ public final class SyscallOpCode {
      * <p><b>Stack</b>：入参 {@code (data:Object)} → 出参 {@code (rc:int)}</p>
      * <p><b>语义</b>：将对象转换为字符串（null 输出为 "null"），写入 {@code System.err}；
      * 操作完成后返回 {@code 0}。</p>
-     * <p><b>异常</b>：写入过程中发生 I/O 错误。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：
+     * <ul>
+     *   <li>写入过程中发生 I/O 错误时抛出 {@link Exception}</li>
+     * </ul>
+     * </p>
      */
     public static final int STDERR_WRITE = 0x1202;
     // endregion
@@ -302,16 +357,32 @@ public final class SyscallOpCode {
      * </p>
      *
      * <p><b>语义：</b>
-     * 基于 Java NIO {@link java.nio.channels.Selector}，监视给定的 fd 集合，等待其可读、可写或异常就绪。
-     * 返回结果 {@code Map} 至少包含 {@code "read"}、{@code "write"}、{@code "except"} 三个键。
+     * 等待指定文件描述符集合的 I/O 就绪事件，返回三类结果：可读、可写、异常。
+     * <ul>
+     *   <li>支持 {@link java.nio.channels.SelectableChannel}（SocketChannel、ServerSocketChannel、DatagramChannel 等）</li>
+     *   <li>兼容标准流：
+     *     <ul>
+     *       <li>fd=0 (stdin)：支持 READ，采用 {@link System#in} 可用性轮询</li>
+     *       <li>fd=1/2 (stdout/stderr)：支持 WRITE，视为始终可写</li>
+     *     </ul>
+     *   </li>
+     *   <li>{@code readSet} → {@link java.nio.channels.SelectionKey#OP_READ} / {@link java.nio.channels.SelectionKey#OP_ACCEPT}</li>
+     *   <li>{@code writeSet} → {@link java.nio.channels.SelectionKey#OP_WRITE}</li>
+     *   <li>{@code exceptSet} → {@link java.nio.channels.SelectionKey#OP_CONNECT}</li>
+     * </ul>
      * </p>
      *
      * <p><b>返回：</b>
-     * 成功时返回一个包含就绪 fd 列表的 Map。若无事件触发，则各列表为空。
+     * 成功时返回一个 {@code Map}，包含 {@code "read"}、{@code "write"}、{@code "except"} 三个键，
+     * 其值为就绪 fd 列表。若无事件触发，则返回的列表为空。
      * </p>
      *
      * <p><b>异常：</b>
-     * 参数类型非法，timeout 非法，或底层 I/O 错误时抛出异常。
+     * <ul>
+     *   <li>参数类型非法时抛出 {@link IllegalArgumentException}</li>
+     *   <li>底层 I/O 操作失败时抛出 {@link java.io.IOException}</li>
+     *   <li>其他运行时错误时抛出 {@link RuntimeException}</li>
+     * </ul>
      * </p>
      */
     public static final int SELECT = 0x1300;
@@ -415,9 +486,14 @@ public final class SyscallOpCode {
      * 创建一个新的套接字。
      *
      * <p><b>Stack</b>：入参 {@code (family:int, type:int, proto:int)} → 出参 {@code (fd:int)}</p>
-     * <p><b>语义</b>：创建指定协议族、类型、协议的 socket，并返回文件描述符。</p>
-     * <p><b>返回</b>：成功返回 {@code fd}。</p>
-     * <p><b>异常</b>：协议族/类型不支持，资源不足。</p>
+     * <p><b>语义</b>：根据协议族 family、类型 type 创建新的 socket，并返回 fd。</p>
+     * <p><b>返回</b>：新分配的 socket fd（int）。</p>
+     * <p><b>异常</b>：
+     * <ul>
+     *   <li>family 或 type 不支持时抛出 {@link UnsupportedOperationException}</li>
+     *   <li>创建 socket 失败时抛出 {@link java.io.IOException}</li>
+     * </ul>
+     * </p>
      */
     public static final int SOCKET = 0x1400;
 
@@ -607,10 +683,14 @@ public final class SyscallOpCode {
     /**
      * 获取当前进程号。
      *
-     * <p><b>Stack</b>：入参 — → 出参 {@code (pid:int)}</p>
-     * <p><b>语义</b>：返回当前进程的标识符。</p>
-     * <p><b>返回</b>：当前进程 pid。</p>
-     * <p><b>异常</b>：无。</p>
+     * <p><b>Stack</b>：无入参 → 出参 {@code (pid:int)}</p>
+     * <p><b>语义</b>：返回当前 JVM 进程的 pid。</p>
+     * <p><b>返回</b>：成功时返回当前进程 pid（int）。</p>
+     * <p><b>异常</b>：
+     * <ul>
+     *   <li>如果当前 JVM 版本不支持 {@link ProcessHandle#current()}，可能抛出 {@link UnsupportedOperationException}</li>
+     * </ul>
+     * </p>
      */
     public static final int GETPID = 0x1504;
 
@@ -811,10 +891,18 @@ public final class SyscallOpCode {
      *
      * <p><b>Stack</b>：入参 {@code (clockId:int)} → 出参 {@code (nanos:long)}</p>
      * <p><b>语义</b>：
-     * 根据 {@code clockId} 返回纳秒时间戳。常见取值包括 {@code REALTIME=0}（自 Unix 纪元的墙钟时间，单位纳秒）
-     * 与 {@code MONO=1}（单调时钟，适用于测量时间间隔）。</p>
-     * <p><b>返回</b>：成功返回纳秒时间 {@code (long)}。</p>
-     * <p><b>异常</b>：若 {@code clockId} 非法或不被支持，可能抛出 {@link IllegalArgumentException}。</p>
+     * 根据 {@code clockId} 返回纳秒时间戳:
+     * <ul>
+     *   <li>{@code 0 (REALTIME)}: 自 Unix 纪元的墙钟时间，单位纳秒</li>
+     *   <li>{@code 1 (MONO)}: 单调时钟，适用于测量时间间隔</li>
+     * </ul>
+     * </p>
+     * <p><b>返回</b>：成功时返回纳秒时间 {@code (long)}。</p>
+     * <p><b>异常</b>：
+     * <ul>
+     *   <li>若 {@code clockId} 非法或不被支持，抛出 {@link IllegalArgumentException}</li>
+     * </ul>
+     * </p>
      */
     public static final int CLOCK_GETTIME = 0x1700;
 
@@ -857,11 +945,14 @@ public final class SyscallOpCode {
      *
      * <p><b>Stack</b>：入参 {@code (arr:any)} → 出参 {@code (len:int)}</p>
      *
-     * <p><b>语义</b>：返回数组/列表/字符串的长度。</p>
+     * <p><b>语义</b>：返回数组/列表/字符串的长度。
+     * <ul>
+     *   <li>支持 {@link java.util.List}、原生 Java 数组、{@link CharSequence}</li>
+     *   <li>若为 {@code null} 则视为长度 0</li>
+     * </ul>
+     * </p>
      *
-     * <p><b>支持</b>：{@link java.util.List}、原生 Java 数组、{@link CharSequence}；若为 {@code null} 则视为长度 0。</p>
-     *
-     * <p><b>返回</b>：长度 {@code (int)}。</p>
+     * <p><b>返回</b>：长度 {@code (int)}。若 arr 为 null，返回 0。</p>
      *
      * <p><b>异常</b>：若类型不支持，则抛出 {@link IllegalArgumentException}。</p>
      */
@@ -905,9 +996,24 @@ public final class SyscallOpCode {
      * 获取环境变量的值。
      *
      * <p><b>Stack</b>：入参 {@code (key:string)} → 出参 {@code (val:string?)}。</p>
-     * <p><b>语义</b>：根据指定的环境变量名 {@code key} 返回对应的值。</p>
-     * <p><b>返回</b>：若变量存在则返回其字符串值；若不存在则返回 {@code null}（调用方需能处理 {@code null}）。</p>
-     * <p><b>异常</b>：当栈为空或参数类型不符合预期时可能抛出 {@link IllegalStateException}/{@link IllegalArgumentException}。</p>
+     * <p><b>语义</b>：
+     * <ul>
+     *   <li>优先从 VM 环境变量覆盖层（{@link org.jcnc.snow.vm.io.EnvRegistry}）查找指定 key</li>
+     *   <li>若无，则回退查找 System.getenv（系统环境变量）</li>
+     *   <li>如变量不存在，返回 {@code null}，不抛出异常</li>
+     * </ul>
+     * </p>
+     * <p><b>返回</b>：
+     * <ul>
+     *   <li>指定环境变量的值（{@code String}），不存在则为 {@code null}</li>
+     * </ul>
+     * </p>
+     * <p><b>异常</b>：
+     * <ul>
+     *   <li>参数不足时抛出 {@link IllegalStateException}</li>
+     *   <li>其它参数类型错误时不抛出异常，自动转字符串</li>
+     * </ul>
+     * </p>
      */
     public static final int GETENV = 0x1900;
 
