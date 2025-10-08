@@ -1,0 +1,32 @@
+module: fibonacci
+    import: stdio
+
+    function: main
+        returns: void
+        body:
+            stdio.println("Fibonacci Sequence:")
+
+            declare a: int = 0
+            declare b: int = 1
+
+            stdio.println(a)
+            stdio.println(b)
+
+            loop:
+                init:
+                    declare i: int = 2
+                cond:
+                    i < 40
+                step:
+                    i = i + 1
+                body:
+                    declare next: int = a + b
+                    stdio.println(next)
+                    a = b
+                    b = next
+                end body
+            end loop
+            
+        end body
+    end function
+end module
