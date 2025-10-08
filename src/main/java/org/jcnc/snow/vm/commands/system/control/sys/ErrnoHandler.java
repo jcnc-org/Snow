@@ -7,13 +7,16 @@ import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
 /**
- * {@code ErrnoHandler} 实现对 VM 系统调用 errno 的获取。
- * <p>
- * 该处理器负责将最近一次系统调用的 errno（错误码）压入操作数栈。
- * <ul>
- *   <li>errno 为 0 时表示无错误；非 0 表示最近一次系统调用失败。</li>
- *   <li>本处理器不会自动清除 errno，留给上层或下一次成功的系统调用清空。</li>
- * </ul>
+ * {@code ErrnoHandler} 实现 ERRNO (0x1905) 系统调用，
+ * 用于获取最近一次系统调用的 errno（错误码）。
+ *
+ * <p><b>Stack</b>：入参 {@code ()} → 出参 {@code (errno:int)}</p>
+ *
+ * <p><b>语义</b>：将最近一次系统调用对应的整数错误码压入栈顶。</p>
+ *
+ * <p><b>返回</b>：无错误时返回 {@code 0}；非零值表示具体错误码（语义由上层/平台定义）。</p>
+ *
+ * <p><b>异常</b>：正常情况下不抛出异常；若读取 errno 失败可能抛出运行时异常。</p>
  */
 public class ErrnoHandler implements SyscallHandler {
 
