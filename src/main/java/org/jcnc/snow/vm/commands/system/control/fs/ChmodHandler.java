@@ -14,7 +14,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * {@code ChmodHandler} 用于实现系统调用 CHMOD。
+ * {@code ChmodHandler} 实现 CHMOD (0x1105) 系统调用，
  *
  * <p>
  * 功能：修改文件或目录的权限位（mode）。

@@ -13,7 +13,7 @@ import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.FileTime;
 
 /**
- * {@code UtimeHandler} 实现 UTIME (0x1103) 系统调用，
+ * {@code UtimeHandler} 实现 UTIME (0x1107) 系统调用，
  * 用于更新文件或目录的访问时间和修改时间。
  *
  * <p><b>Stack：</b> 入参 {@code (path:String, mtime:long, atime:long)} → 出参 {@code (rc:int)}</p>

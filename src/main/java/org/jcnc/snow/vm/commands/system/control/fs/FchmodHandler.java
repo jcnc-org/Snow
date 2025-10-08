@@ -14,7 +14,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * {@code FchmodHandler} 实现 FCHMOD (0x1403) 系统调用，
+ * {@code FchmodHandler} 实现 FCHMOD (0x1106) 系统调用，
  * 用于设置 fd 对应文件或目录的权限。
  *
  * <p><b>Stack：</b> 入参 {@code (fd:int, mode:int)} → 出参 {@code (rc:int)}</p>
