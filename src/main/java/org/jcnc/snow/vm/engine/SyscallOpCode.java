@@ -59,6 +59,7 @@ public final class SyscallOpCode {
      * <p><b>Stack</b>：入参 {@code (path:String)} → 出参 {@code (attrs:Map)}</p>
      * <p><b>实现</b>：通过 {@code Files.readAttributes(..., BasicFileAttributes.class)} 填充
      * {@code size/isDirectory/isRegularFile/lastModified/created} 等键。</p>
+     * <p><b>返回</b>：包含文件属性的 Map 对象。</p>
      * <p><b>异常</b>：路径类型错误，文件不存在，权限不足，I/O 失败。</p>
      */
     public static final int STAT = 0x1005;
@@ -69,6 +70,7 @@ public final class SyscallOpCode {
      * <p><b>Stack</b>：入参 {@code (fd:int)} → 出参 {@code (attrs:Map)}</p>
      * <p><b>实现</b>：针对 {@code SeekableByteChannel}，至少提供
      * {@code size} 与 {@code position}；如未跟踪 Path，则 {@code lastModified/created} 等可能返回占位值（-1）。</p>
+     * <p><b>返回</b>：包含文件属性的 Map 对象。</p>
      * <p><b>异常</b>：fd 非法/不可定位，I/O 失败。</p>
      */
     public static final int FSTAT = 0x1006;
@@ -78,6 +80,7 @@ public final class SyscallOpCode {
      *
      * <p><b>Stack</b>：入参 {@code (path:String)} → 出参：int（0 表示成功）</p>
      * <p><b>实现</b>：{@code Files.delete(path)}，若为非空目录会抛出相应异常。</p>
+     * <p><b>返回</b>：成功返回 {@code 0}。</p>
      * <p><b>异常</b>：路径类型错误，目标不存在/是目录/权限不足，I/O 失败。</p>
      */
     public static final int UNLINK = 0x1007;
