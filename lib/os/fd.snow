@@ -1,26 +1,35 @@
-// fd module: File Descriptor(FD) 系统调用
-// ──────────────────────────────────────────────
-//  • 0x1001  READ         →  从文件描述符读取最多 n 字节并返回 byte[]
-//  • 0x1000  OPEN         →  打开文件，返回 fd
-//  • 0x1002  WRITE        →  向 fd 写入字节数据（支持 byte[] / String / 其他 toString()）
-//  • 0x1003  SEEK         →  移动文件指针，返回新位置 (long)
-//  • 0x1004  CLOSE        →  关闭文件描述符
-//  • 0x1005  STAT         →  获取文件的基本属性
-//  • 0x1007  UNLINK       →  删除路径
-//  • 0x1008  DUP          →  复制 oldfd，返回由系统分配的新 fd（指向同一底层文件）
-//  • 0x1009  DUP2         →  使 newfd 指向与 oldfd 相同的文件（若 newfd 已被占用会先关闭）
-//  • 0x100A  PIPE         →  创建匿名管道，VM 返回 int[]: [readfd, writefd]
-//  • 0x100B  TRUNCATE     →  将文件截断到指定长度
-//  • 0x100C  FTRUNCATE    →  将 fd 对应文件截断到指定长度
-//  • 0x100D  RENAME       →  重命名（或移动）文件/目录；若目标存在则覆盖
-//  • 0x100E  LINK         →  创建硬链接，让 newPath 指向 oldPath
-//  • 0x100F  SYMLINK      →  创建符号链接，让 linkPath 指向 target
-//  • 0x1010  READLINK     →  读取符号链接的目标路径
-//  • 0x1011  SET_NONBLOCK → 设置 fd 的非阻塞/阻塞模式
-// ──────────────────────────────────────────────
-
+/**
+@module fd
+@summary File Descriptor(FD) 系统调用模块，封装基础文件描述符操作。
+@syscalls
+  0x1000 OPEN         打开文件并返回一个新的 fd
+  0x1001 READ         从 fd 对应的可读通道读取最多 length 字节
+  0x1002 WRITE        向 fd 对应的可写通道写入字节数组
+  0x1003 SEEK         移动文件指针并返回新位置 (long)
+  0x1004 CLOSE        关闭 fd
+  0x1005 STAT         获取路径对应文件的基本属性
+  0x1006 FSTAT        根据 fd 获取文件的基本属性
+  0x1007 UNLINK       删除路径
+  0x1008 DUP          复制一个已打开的 fd，返回新的 fd（指向同一底层通道）
+  0x1009 DUP2         将 newfd 变为 oldfd 的副本（若 newfd 已占用会先关闭）
+  0x100A PIPE         创建匿名管道，返回一对 fd：读端与写端
+  0x100B TRUNCATE     将路径对应文件截断到指定长度
+  0x100C FTRUNCATE    将 fd 对应文件截断到指定长度
+  0x100D RENAME       重命名（或移动）文件/目录；若目标存在则覆盖
+  0x100E LINK         创建硬链接：newPath 指向 oldPath
+  0x100F SYMLINK      创建符号链接：在 linkPath 处创建指向 target 的 symlink
+  0x1010 READLINK     读取符号链接的目标路径
+  0x1011 SET_NONBLOCK 设置 fd 的非阻塞/阻塞模式（仅对 SelectableChannel 生效）
+*/
 module: fd
-    // read(fd, n): 从文件描述符 fd 读取最多 n 字节。
+    /**
+    @function read
+    @summary 从 fd 对应的可读通道读取最多 n 字节。
+    @param fd 文件描述符
+    @param n 要读取的最大字节数
+    @returns any 实际读取的字节数组
+    @throws EBADF fd 非法/不可读; EINVAL length 类型错误或为负; EIO I/O 失败
+    */
     function: read
         params:
             declare fd: int
@@ -31,7 +40,14 @@ module: fd
         end body
     end function
 
-    // open(path, flags): 以 flags 打开文件，返回文件描述符（fd）。
+    /**
+    @function open
+    @summary 依据 flags 打开 path 对应的文件，返回一个新的 fd。
+    @param path 文件路径（字符串或路径对象）
+    @param flags 打开标志（由 OpenFlags 解析为 OpenOption 集）
+    @returns int 文件描述符
+    @throws EINVAL 路径/flags 类型错误或 flags 非法; EIO 文件不存在且未指定创建、权限不足或底层 I/O 失败
+    */
     function: open
         params:
             declare path: any
@@ -42,8 +58,14 @@ module: fd
         end body
     end function
 
-    // write(fd, data): 向文件描述符 fd 写入数据。
-    // data 可为 byte[] / String / null / 其他（toString() 后按 UTF-8）。
+    /**
+    @function write
+    @summary 向 fd 对应的可写通道写入字节数组。
+    @param fd 文件描述符
+    @param data 要写入的数据（byte[]、String、null 或其他类型）
+    @returns int 实际写入的字节数
+    @throws EBADF fd 不是 int 或 fd 不可写; EIO 写入失败
+    */
     function: write
         params:
             declare fd:   int
@@ -54,8 +76,15 @@ module: fd
         end body
     end function
 
-    // seek(fd, offset, whence): 移动文件指针并返回新位置。
-    // whence: 0=SEEK_SET, 1=SEEK_CUR, 2=SEEK_END
+    /**
+    @function seek
+    @summary 移动文件指针并返回新位置（仅适用于 SeekableByteChannel）。
+    @param fd 文件描述符
+    @param offset 偏移量
+    @param whence 0=SEEK_SET, 1=SEEK_CUR, 2=SEEK_END
+    @returns void 无返回值
+    @throws EBADF fd 非法/不可定位; EINVAL whence 非法或计算得到的新位置为负; EIO I/O 失败
+    */
     function: seek
         params:
             declare fd:     int
@@ -67,7 +96,13 @@ module: fd
         end body
     end function
 
-    // close(fd): 关闭指定文件描述符 fd。
+    /**
+    @function close
+    @summary 关闭 fd 并从 FDTable 移除，释放底层通道。
+    @param fd 文件描述符
+    @returns void 无返回值
+    @throws EBADF fd 非法; EIO I/O 操作失败
+    */
     function: close
         params:
             declare fd: int
@@ -77,8 +112,13 @@ module: fd
         end body
     end function
 
-    // stat(path): 获取文件的基本属性。
-    // 返回 Map，包含 size / isDirectory / isRegularFile / isSymbolicLink / lastModified / created 等键。
+    /**
+    @function stat
+    @summary 获取路径对应文件的基本属性。
+    @param path 文件路径（字符串或路径对象）
+    @returns map 包含文件属性的 Map 对象（size/isDirectory/isRegularFile/lastModified/created 等键）
+    @throws EINVAL 路径类型错误; ENOENT 文件不存在; EPERM 权限不足; EIO I/O 失败
+    */
     function: stat
         params:
             declare path: any
@@ -88,7 +128,29 @@ module: fd
         end body
     end function
 
-    // unlink(path): 删除指定路径。
+    /**
+    @function fstat
+    @summary 根据 fd 获取文件的基本属性。
+    @param fd 文件描述符
+    @returns map 包含文件属性的 Map 对象（针对 SeekableByteChannel，至少提供 size 与 position）
+    @throws EBADF fd 非法/不可定位; EIO I/O 失败
+    */
+    function: fstat
+        params:
+            declare fd: int
+        returns: map
+        body:
+            return syscall("0x1006", fd)
+        end body
+    end function
+
+    /**
+    @function unlink
+    @summary 删除路径（通过 Files.delete(path) 实现，若为非空目录会抛出相应异常）。
+    @param path 文件路径（字符串或路径对象）
+    @returns void 无返回值
+    @throws EINVAL 路径类型错误; ENOENT 目标不存在; EPERM 权限不足; EIO I/O 失败
+    */
     function: unlink
         params:
             declare path: any
@@ -98,7 +160,13 @@ module: fd
         end body
     end function
 
-    // dup(oldfd): 复制一个已打开的 fd，返回新的 fd。
+    /**
+    @function dup
+    @summary 复制一个已打开的 fd，返回新的 fd（指向同一底层通道）。
+    @param oldfd 原始文件描述符
+    @returns int 新的文件描述符
+    @throws EBADF oldfd 非法或复制失败
+    */
     function: dup
         params:
             declare oldfd: int
@@ -108,8 +176,14 @@ module: fd
         end body
     end function
 
-    // dup2(oldfd, newfd): 将 newfd 变为 oldfd 的副本；若 newfd 已经打开，会先关闭它。
-    // 返回值为 newfd。
+    /**
+    @function dup2
+    @summary 将 newfd 变为 oldfd 的副本（若 newfd 已占用会先关闭）。
+    @param oldfd 原始文件描述符
+    @param newfd 目标文件描述符
+    @returns int newfd
+    @throws EBADF oldfd 非法; EINVAL newfd 非法或不可用; EIO 复制失败
+    */
     function: dup2
         params:
             declare oldfd: int
@@ -120,9 +194,12 @@ module: fd
         end body
     end function
 
-    // pipe(): 创建一个匿名管道，返回一对 fd (readfd, writefd)。
-    // 先通过 ARR_GET 取出两个元素，再写入一个预先创建（常量元素构造）的数组中返回，
-    // 以避免“数组字面量仅允许常量元素”的限制。
+    /**
+    @function pipe
+    @summary 创建匿名管道，返回一对 fd：读端与写端。
+    @returns int[] 包含两个元素的数组：[readfd, writefd]
+    @throws ENFILE 资源不足; EIO 底层 I/O 失败
+    */
     function: pipe
         returns: int[]
         body:
@@ -144,9 +221,14 @@ module: fd
         end body
     end function
 
-    // truncate(path, length): 将文件截断到指定长度。
-    // 若文件不存在，会尝试创建并截断。
-    // 失败时抛出异常（权限不足、路径错误、I/O 错误等）。
+    /**
+    @function truncate
+    @summary 将路径对应文件截断到指定长度（以可写方式打开，必要时创建并调用 SeekableByteChannel.truncate(length)）。
+    @param path 文件路径（字符串或路径对象）
+    @param length 文件长度
+    @returns void 无返回值
+    @throws EINVAL 路径/长度类型错误; EPERM 权限不足; EIO I/O 失败
+    */
     function: truncate
         params:
             declare path: any
@@ -157,9 +239,14 @@ module: fd
         end body
     end function
 
-    // ftruncate(fd, length): 将 fd 对应的文件截断到指定长度。
-    // 成功返回 0。
-    // 失败时抛出异常（fd 非法/不可写，长度非法，I/O 错误等）。
+    /**
+    @function ftruncate
+    @summary 将 fd 对应文件截断到指定长度。
+    @param fd 文件描述符
+    @param length 文件长度
+    @returns int 成功返回 0
+    @throws EBADF fd 非法/不可定位或不可写; EINVAL 长度非法; EIO I/O 失败
+    */
     function: ftruncate
         params:
             declare fd: int
@@ -170,9 +257,14 @@ module: fd
         end body
     end function
 
-    // rename(oldPath, newPath): 重命名（或移动）文件/目录；若目标存在则覆盖。
-    // 成功返回 0。
-    // 失败时抛出异常（参数类型错误，源不存在/权限不足，I/O 错误等）。
+    /**
+    @function rename
+    @summary 重命名（或移动）文件/目录；若目标存在则覆盖。
+    @param oldPath 原始路径（字符串或路径对象）
+    @param newPath 目标路径（字符串或路径对象）
+    @returns int 成功返回 0
+    @throws EINVAL 参数类型错误; ENOENT 源不存在; EPERM 权限不足; EIO I/O 失败
+    */
     function: rename
         params:
             declare oldPath: any
@@ -183,9 +275,14 @@ module: fd
         end body
     end function
 
-    // link(oldPath, newPath): 创建硬链接，让 newPath 指向 oldPath。
-    // 成功返回 0。
-    // 失败时抛出异常（参数错误、文件系统不支持、权限不足、I/O 错误等）。
+    /**
+    @function link
+    @summary 创建硬链接：newPath 指向 oldPath。
+    @param oldPath 原始路径（字符串或路径对象）
+    @param newPath 目标路径（字符串或路径对象）
+    @returns int 成功返回 0
+    @throws EINVAL 参数类型错误; EPERM 文件系统不支持硬链接; EACCES 权限不足; EIO I/O 失败
+    */
     function: link
         params:
             declare oldPath: any
@@ -196,9 +293,14 @@ module: fd
         end body
     end function
 
-    // symlink(target, linkPath): 在 linkPath 处创建指向 target 的符号链接。
-    // 成功返回 0。
-    // 失败时抛出异常（参数类型错误，文件系统/平台限制，权限不足，I/O 错误等）。
+    /**
+    @function symlink
+    @summary 创建符号链接：在 linkPath 处创建指向 target 的 symlink。
+    @param target 目标路径（字符串或路径对象）
+    @param linkPath 符号链接路径（字符串或路径对象）
+    @returns int 成功返回 0
+    @throws EINVAL 参数类型错误; EPERM 文件系统/平台限制; EACCES 权限不足; EIO I/O 失败
+    */
     function: symlink
         params:
             declare target: any
@@ -209,9 +311,13 @@ module: fd
         end body
     end function
 
-    // readlink(path): 读取符号链接的目标路径。
-    // 返回值为 target:String。
-    // 出错时抛出异常（参数类型错误，目标不是符号链接，权限不足，I/O 错误等）。
+    /**
+    @function readlink
+    @summary 读取符号链接的目标路径。
+    @param path 符号链接路径（字符串或路径对象）
+    @returns string 目标路径字符串
+    @throws EINVAL 参数类型错误; EINVAL 目标不是符号链接; EACCES 权限不足; EIO I/O 失败
+    */
     function: readlink
         params:
             declare path: any
@@ -221,9 +327,14 @@ module: fd
         end body
     end function
 
-    // setNonblock(fd, on): 设置 fd 的非阻塞/阻塞模式（仅对 SelectableChannel 生效）。
-    // on=1 → 非阻塞，on=0 → 阻塞。
-    // 成功返回 0；失败时抛出异常（fd 非法或通道不支持）。
+    /**
+    @function setNonblock
+    @summary 设置 fd 的非阻塞/阻塞模式（仅对 SelectableChannel 生效）。
+    @param fd 文件描述符
+    @param on 1 → 设为非阻塞，0 → 阻塞
+    @returns int 成功返回 0
+    @throws EBADF fd 非法或通道不支持选择器/模式配置
+    */
     function: setNonblock
         params:
             declare fd: int
