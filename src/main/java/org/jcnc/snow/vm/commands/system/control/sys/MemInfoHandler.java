@@ -11,7 +11,26 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 实现 MEMINFO () -> map { heapTotal, heapFree, heapUsed, heapMax, physicalTotal?, physicalFree?, physicalUsed?, ... }
+ * {@code MemInfoHandler} 实现 MEMINFO (0x1906) 系统调用，
+ * 用于获取内存与系统资源信息。
+ *
+ * <p><b>Stack</b>：入参 {@code ()} → 出参 {@code (map:Map<String,Object>)}</p>
+ *
+ * <p><b>语义</b>：收集 JVM 堆内存信息以及在可用时的操作系统物理内存 / CPU 负载等指标，返回为键值映射。</p>
+ *
+ * <p><b>返回（典型键）</b>：
+ * <ul>
+ *   <li>{@code "heapTotal"}: JVM 堆已分配总字节数（long）</li>
+ *   <li>{@code "heapFree"}: JVM 堆空闲字节数（long）</li>
+ *   <li>{@code "heapUsed"}: JVM 堆已使用字节数（long）</li>
+ *   <li>{@code "heapMax"}: JVM 堆最大可用字节数（long）</li>
+ *   <li>{@code "physicalTotal"}: 物理内存总量（long，平台可用时提供）</li>
+ *   <li>{@code "physicalFree"}: 物理内存空闲量（long，平台可用时提供）</li>
+ *   <li>{@code "physicalUsed"}: 物理内存已用量（long，平台可用时提供）</li>
+ * </ul>
+ * </p>
+ *
+ * <p><b>异常</b>：收集平台级指标时若遇到权限或平台差异，处理器会忽略这些额外项并仍返回 JVM heap 信息；因此通常不会向上抛出异常。</p>
  */
 public class MemInfoHandler implements SyscallHandler {
     @Override

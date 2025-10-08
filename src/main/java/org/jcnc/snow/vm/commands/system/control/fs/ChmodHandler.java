@@ -14,33 +14,21 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * {@code ChmodHandler} 用于实现系统调用 CHMOD。
+ * {@code ChmodHandler} 实现 CHMOD (0x1105) 系统调用，
+ * 用于修改路径对应文件/目录的权限。
  *
- * <p>
- * 功能：修改文件或目录的权限位（mode）。
- * 在支持 POSIX 权限的平台（Linux/macOS）上会应用真实权限；
- * 在不支持的平台（如 Windows）上会忽略该操作，但返回成功。
+ * <p><b>Stack</b>：入参 {@code (path:String, mode:int)} → 出参 {@code (rc:int)}</p>
+ *
+ * <p><b>语义</b>：将 {@code path} 的权限设置为 {@code mode}；在不支持 POSIX 权限的平台上可能退化。</p>
+ *
+ * <p><b>返回</b>：成功返回 {@code 0}。</p>
+ *
+ * <p><b>异常</b>：
+ * <ul>
+ *   <li>路径不存在/权限不足/模式非法时抛出 {@link java.io.IOException}</li>
+ *   <li>参数类型错误时抛出 {@link IllegalArgumentException}</li>
+ * </ul>
  * </p>
- *
- * <p>调用约定：</p>
- * <ul>
- *   <li>入参：{@code path:string}, {@code mode:int}</li>
- *   <li>出参：int，成功返回 0</li>
- * </ul>
- *
- * <p>说明：</p>
- * <ul>
- *   <li>POSIX 平台：将 {@code mode} 转换为 {@link PosixFilePermission} 集合并应用。</li>
- *   <li>非 POSIX 平台：直接忽略操作（权限不会改变）。</li>
- *   <li>{@code mode} 使用八进制整数表示，例如 {@code 0755 → 493}。</li>
- * </ul>
- *
- * <p>异常：</p>
- * <ul>
- *   <li>如果 {@code path} 不是字符串或 {@code mode} 不是整数 → {@link IllegalArgumentException}</li>
- *   <li>如果文件不存在或不可访问 → {@link java.io.IOException}</li>
- *   <li>如果底层文件系统不支持 POSIX 权限 → 自动忽略（不抛异常）。</li>
- * </ul>
  */
 public class ChmodHandler implements SyscallHandler {
     @Override

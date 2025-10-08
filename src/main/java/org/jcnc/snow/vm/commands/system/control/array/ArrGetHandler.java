@@ -6,26 +6,22 @@ import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
 /**
- * <p>
- * {@code ArrGetHandler} 是一个系统调用处理器，实现了从数组或列表对象中获取指定索引元素的功能。
- * 本处理器会从操作数栈中弹出索引和数组对象，读取对应位置的元素，并将其重新压入操作数栈。
- * </p>
- * <p>
- * 入栈规则如下：
- * <ul>
- *     <li>若元素为 {@link Number} 类型，则直接入栈。</li>
- *     <li>若元素为 {@link Boolean} 类型，true 入栈 1，false 入栈 0。</li>
- *     <li>其他类型直接入栈。</li>
- * </ul>
- * </p>
+ * {@code ArrGetHandler} 实现 ARR_GET (0x1802) 系统调用，
+ * 用于获取数组/列表在指定索引位置的元素。
  *
- * <p>
- * 处理流程：
- * <ol>
- *     <li>从操作数栈弹出索引（可为数字或字符串）。</li>
- *     <li>再弹出目标数组或列表对象。</li>
- *     <li>根据索引读取元素，并重新压入栈顶。</li>
- * </ol>
+ * <p><b>Stack</b>：入参 {@code (arr:any, index:int)} → 出参 {@code (elem:any)}</p>
+ *
+ * <p><b>语义</b>：获取数组/列表在指定索引位置的元素。</p>
+ *
+ * <p><b>支持</b>：{@link java.util.List}、原生 Java 数组、{@link CharSequence}。</p>
+ *
+ * <p><b>返回</b>：对应索引位置的元素；若是 {@link CharSequence}，返回 {@code char} 或其包装形式。</p>
+ *
+ * <p><b>异常</b>：
+ * <ul>
+ *   <li>若 {@code arr} 为 {@code null} 或索引越界，抛出 {@link IndexOutOfBoundsException} 或 {@link IllegalArgumentException}</li>
+ *   <li>若类型不支持，抛出 {@link IllegalArgumentException}</li>
+ * </ul>
  * </p>
  */
 public class ArrGetHandler implements SyscallHandler {

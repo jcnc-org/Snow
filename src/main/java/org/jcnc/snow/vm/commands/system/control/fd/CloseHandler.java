@@ -7,29 +7,21 @@ import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
 /**
- * {@code CloseHandler} 用于实现系统调用 CLOSE。
+ * {@code CloseHandler} 实现 CLOSE (0x1004) 系统调用，
+ * 用于关闭指定的 fd。
  *
- * <p>
- * 功能：关闭指定的虚拟文件描述符（fd），并从 {@link FDTable} 中移除。
+ * <p><b>Stack</b>：入参 {@code (fd:int)} → 出参：无</p>
+ *
+ * <p><b>语义</b>：关闭并从 {@code FDTable} 移除，释放底层通道。</p>
+ *
+ * <p><b>返回</b>：无。</p>
+ *
+ * <p><b>异常</b>：
+ * <ul>
+ *   <li>fd 非法时抛出 {@link IllegalArgumentException}</li>
+ *   <li>I/O 操作失败时抛出 {@link java.io.IOException}</li>
+ * </ul>
  * </p>
- *
- * <p>调用约定：</p>
- * <ul>
- *   <li>入参：{@code fd:int}</li>
- *   <li>出参：无</li>
- * </ul>
- *
- * <p>说明：</p>
- * <ul>
- *   <li>标准输入输出错误（fd=0,1,2）不会被关闭。</li>
- *   <li>关闭后再次使用同一 fd 会抛出错误。</li>
- * </ul>
- *
- * <p>异常：</p>
- * <ul>
- *   <li>如果 fd 不是整数，抛出 {@link IllegalArgumentException}</li>
- *   <li>I/O 操作失败时，抛出 {@link java.io.IOException}</li>
- * </ul>
  */
 public class CloseHandler implements SyscallHandler {
 

@@ -9,29 +9,20 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
 /**
- * {@code StdinReadHandler} 用于实现系统调用 STDIN_READ。
+ * {@code StdinReadHandler} 实现 STDIN_READ (0x1200) 系统调用，
+ * 用于从标准输入读取一行文本。
  *
- * <p>
- * 功能：从标准输入流（{@link System#in}）读取一行文本，
- * 并将读取到的字符串结果压入操作数栈。
+ * <p><b>Stack</b>：入参：无 → 出参 {@code (line:String)}</p>
+ *
+ * <p><b>语义</b>：从 {@code System.in} 读取一行字符串并返回；若到达 EOF 或读取失败，则返回空字符串。</p>
+ *
+ * <p><b>返回</b>：读取到的字符串。</p>
+ *
+ * <p><b>异常</b>：
+ * <ul>
+ *   <li>I/O 错误时抛出 {@link Exception}</li>
+ * </ul>
  * </p>
- *
- * <p>调用约定：</p>
- * <ul>
- *   <li>入参：无</li>
- *   <li>出参：{@code line:String}，读取到的字符串，若 EOF 或错误则为 ""</li>
- * </ul>
- *
- * <p>说明：</p>
- * <ul>
- *   <li>若到达输入结束（EOF）或发生异常，压入空字符串 ""。</li>
- *   <li>本操作不会抛出异常，所有异常将由上层捕获处理。</li>
- * </ul>
- *
- * <p>异常：</p>
- * <ul>
- *   <li>执行过程中发生 I/O 错误时，抛出 {@link Exception}</li>
- * </ul>
  */
 public class StdinReadHandler implements SyscallHandler {
 

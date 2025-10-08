@@ -1,11 +1,22 @@
+/**
+@module process
+@summary 进程/线程系统调用模块，封装进程管理和线程操作。
+@syscalls
+  0x1500 EXIT    结束当前进程/线程
+  0x1501 FORK    分叉当前进程
+  0x1502 EXEC    执行映像替换
+  0x1503 WAIT    等待子进程结束
+  0x1504 GETPID  获取当前进程号
+  0x1505 GETPPID 获取父进程号
+*/
 module: process
+
     /**
-     * exit(code:int)
-     *
-     * <b>Stack：</b> 入参 (code:int) → 无返回
-     *
-     * <b>语义：</b> 以指定退出码直接终止虚拟机进程。
-     */
+    @function exit
+    @summary 终止当前进程，退出码为 code。
+    @param code 进程退出码
+    @throws VM 终止异常 调用环境可能抛出 VM 终止异常
+    */
     function: exit
         params:
             declare code:int
@@ -15,13 +26,12 @@ module: process
     end function
 
     /**
-     * fork(cmds:any[])
-     *
-     * <b>Stack：</b> 入参 (cmds:any[]) → 出参 (pid:int)
-     *
-     * <b>语义：</b> 启动子进程执行指定命令数组，父进程返回子进程 pid。
-     * 例如：fork(["java", "-version"])
-     */
+    @function fork
+    @summary 复制当前进程上下文，生成子进程。
+    @param cmds 命令数组
+    @returns 在子进程中返回 0，在父进程中返回子进程 pid
+    @throws Exception 进程创建失败、资源不足
+    */
     function: fork
         params:
             declare cmds:any[]
@@ -32,14 +42,14 @@ module: process
         end body
     end function
 
-
     /**
-     * exec(env:map, argv:any[], path:string)
-     *
-     * <b>Stack：</b> 入参 (env:map, argv:any[], path:string) → 无返回
-     *
-     * <b>语义：</b> 启动一个新进程，并立即结束当前 Snow VM 进程，模拟 exec。
-     */
+    @function exec
+    @summary 用指定的程序映像替换当前进程。
+    @param env 环境变量映射
+    @param argv 参数列表
+    @param path 程序路径
+    @throws Exception 路径不存在、权限不足、执行失败
+    */
     function: exec
         params:
             declare env:any
@@ -51,15 +61,12 @@ module: process
     end function
 
     /**
-     * wait(pid:int?)
-     *
-     * <b>Stack：</b> 入参 (pid:int?) → 出参 (status:int)
-     *
-     * <b>语义：</b> 等待指定 pid 的子进程退出并返回其退出码。
-     * 如果 pid 为 0 或 null，表示等待任意子进程。
-     *
-     * <b>返回：</b> 子进程退出状态码。
-     */
+    @function wait
+    @summary 阻塞等待子进程退出。
+    @param pid 可选的进程 ID，如果为 0 或 null，表示等待任意子进程
+    @returns 子进程的退出状态码
+    @throws Exception 进程不存在、无子进程、等待失败
+    */
     function: wait
         params:
             declare pid:int
@@ -69,7 +76,5 @@ module: process
             return status
         end body
     end function
-
-
 
 end module

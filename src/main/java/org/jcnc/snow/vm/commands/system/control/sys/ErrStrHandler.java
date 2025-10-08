@@ -7,14 +7,16 @@ import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
 /**
- * {@code ErrStrHandler} 实现对最近一次系统调用错误信息（字符串）的获取。
- * <p>
- * 该处理器会将最近一次系统调用的错误字符串（errstr）压入虚拟机操作数栈顶：
- * <ul>
- *   <li>若无错误，推入空字符串</li>
- *   <li>否则，推入错误消息内容</li>
- * </ul>
- * 错误字符串的获取由 {@link SyscallUtils#getErrStr()} 完成。
+ * {@code ErrStrHandler} 实现 ERRSTR (0x1904) 系统调用，
+ * 用于获取最近一次系统调用的错误字符串（errstr）。
+ *
+ * <p><b>Stack</b>：入参 {@code ()} → 出参 {@code (errstr:string)}</p>
+ *
+ * <p><b>语义</b>：将最近一次系统调用产生的错误信息字符串压入栈顶。</p>
+ *
+ * <p><b>返回</b>：若最近一次系统调用没有错误，则返回空字符串 {@code ""}；否则返回错误信息文本。</p>
+ *
+ * <p><b>异常</b>：正常情况下不抛出异常；若底层错误信息读取失败可能抛出运行时异常。</p>
  */
 public class ErrStrHandler implements SyscallHandler {
 

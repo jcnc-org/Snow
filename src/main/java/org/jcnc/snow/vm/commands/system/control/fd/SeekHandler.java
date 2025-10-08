@@ -9,31 +9,31 @@ import org.jcnc.snow.vm.module.OperandStack;
 import java.nio.channels.SeekableByteChannel;
 
 /**
- * {@code SeekHandler} 用于实现系统调用 SEEK。
+ * {@code SeekHandler} 实现 SEEK (0x1003) 系统调用，
+ * 用于移动文件指针并返回新位置。
  *
- * <p>
- * 功能：移动文件指针到指定位置，并返回新的位置。
+ * <p><b>Stack</b>：入参 {@code (fd:int, offset:long, whence:int)} → 出参 {@code (newPos:long)}</p>
+ *
+ * <p><b>whence</b>：
+ * <ul>
+ *   <li>0 = 从文件开头（SEEK_SET）</li>
+ *   <li>1 = 相对当前位置（SEEK_CUR）</li>
+ *   <li>2 = 相对文件末尾（SEEK_END）</li>
+ * </ul>
  * </p>
  *
- * <p>调用约定：</p>
- * <ul>
- *   <li>入参：{@code fd:int}, {@code offset:long}, {@code whence:int}</li>
- *   <li>出参：{@code newPos:long}</li>
- * </ul>
+ * <p><b>语义</b>：仅适用于 {@code SeekableByteChannel}。结果位置不得为负。</p>
  *
- * <p>whence 参数：</p>
- * <ul>
- *   <li>0 = SEEK_SET：从文件开头计算偏移</li>
- *   <li>1 = SEEK_CUR：从当前位置计算偏移</li>
- *   <li>2 = SEEK_END：从文件末尾计算偏移</li>
- * </ul>
+ * <p><b>返回</b>：新的文件指针位置（long）。</p>
  *
- * <p>异常：</p>
+ * <p><b>异常</b>：
  * <ul>
- *   <li>如果 fd 无效或不是可定位通道，抛出 {@link IllegalArgumentException}</li>
- *   <li>如果 whence 无效，抛出 {@link IllegalArgumentException}</li>
- *   <li>I/O 操作失败时，抛出 {@link java.io.IOException}</li>
+ *   <li>fd 非法/不可定位时抛出 {@link IllegalArgumentException}</li>
+ *   <li>whence 非法时抛出 {@link IllegalArgumentException}</li>
+ *   <li>计算得到的新位置为负时抛出 {@link IllegalArgumentException}</li>
+ *   <li>I/O 失败时抛出 {@link java.io.IOException}</li>
  * </ul>
+ * </p>
  */
 public class SeekHandler implements SyscallHandler {
 
