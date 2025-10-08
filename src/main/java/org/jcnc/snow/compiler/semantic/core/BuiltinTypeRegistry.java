@@ -1,11 +1,8 @@
 package org.jcnc.snow.compiler.semantic.core;
 
-import org.jcnc.snow.compiler.semantic.type.ArrayType;
 import org.jcnc.snow.compiler.semantic.type.BuiltinType;
-import org.jcnc.snow.compiler.semantic.type.FunctionType;
 import org.jcnc.snow.compiler.semantic.type.Type;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,14 +11,7 @@ import java.util.Map;
  * <b>语言内置类型、标准库模块与内核函数的注册中心。</b>
  *
  * <p>
- * 本类统一负责注册和管理 Snow 语言编译器中的所有内置基础类型、标准库模块以及内核级函数（如 syscall）。
- * 主要职责：
- * <ul>
- *   <li>定义并集中管理所有语言内置基础类型（如 int、string 等），
- *       方便类型系统与语义分析统一引用。</li>
- *   <li>注册标准库模块及其内核函数到语义分析上下文，确保全局唯一性与一致性。</li>
- *   <li>设计为工具类，禁止被实例化，仅通过静态成员进行访问。</li>
- * </ul>
+ * 本类统一负责注册和管理 Snow 语言编译器中的所有内置基础类型、标准库模块以及内核级函数。
  * </p>
  *
  * <p><b>使用说明：</b>
@@ -79,36 +69,20 @@ public final class BuiltinTypeRegistry {
     }
 
     /**
-     * <b>向语义分析上下文注册所有标准库模块及其内核函数。</b>
+     * <b>向语义分析上下文注册内置模块（当前版本：无）。</b>
      *
      * <p>
-     * 当前注册内容包括：
+     * 说明：
      * <ul>
-     *   <li><b>os 模块</b>
-     *     <ul>
-     *       <li><b>syscall(string, any[]): void</b> —— 用于标准库内部与底层系统通信的内核函数。</li>
-     *     </ul>
-     *   </li>
+     *   <li>保留该初始化钩子，便于未来增加标准库模块或其它内置符号。</li>
+     *   <li><code>syscall</code> 为全局内置函数，已由语义分析器直接识别，
+     *       此处无需注册任何模块或符号。</li>
      * </ul>
      * </p>
      *
-     * @param ctx 语义分析上下文，用于存储全局模块与符号表。
+     * @param ctx 语义分析上下文
      */
     public static void init(Context ctx) {
-        // 注册标准库模块 os
-        ModuleInfo utils = new ModuleInfo("os");
-
-        // 注册 syscall(string, any[]): void 内核函数
-        // 参数类型：string, any[]
-        // 返回类型：void
-        FunctionType syscallFn = new FunctionType(
-                Arrays.asList(BuiltinType.STRING, new ArrayType(BuiltinType.ANY)),
-                BuiltinType.ANY
-        );
-        // 添加到 os 模块函数表
-        utils.getFunctions().put("syscall", syscallFn);
-
-        //写入上下文中的模块表，已存在则不覆盖
-        ctx.getModules().putIfAbsent("os", utils);
+        // 当前不注册任何内置模块。
     }
 }
