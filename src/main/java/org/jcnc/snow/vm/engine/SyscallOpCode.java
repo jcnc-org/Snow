@@ -723,6 +723,7 @@ public final class SyscallOpCode {
      * <p><b>Stack</b>：入参 {@code (cid:int)} → 出参 {@code (rc:int)}</p>
      * <p><b>语义</b>：对条件变量执行一次 {@code signal}。</p>
      * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：无效 ID 时抛出异常。</p>
      */
     public static final int COND_SIGNAL = 0x1606;
 
@@ -732,6 +733,7 @@ public final class SyscallOpCode {
      * <p><b>Stack</b>：入参 {@code (cid:int)} → 出参 {@code (rc:int)}</p>
      * <p><b>语义</b>：对条件变量执行一次 {@code broadcast}。</p>
      * <p><b>返回</b>：成功返回 {@code 0}。</p>
+     * <p><b>异常</b>：无效 ID 时抛出异常。</p>
      */
     public static final int COND_BROADCAST = 0x1607;
 
@@ -750,6 +752,7 @@ public final class SyscallOpCode {
      * <p><b>Stack</b>：入参 {@code (sid:int, timeout_ms:int?)} → 出参 {@code (rc:int)}</p>
      * <p><b>语义</b>：尝试获取信号量。</p>
      * <p><b>返回</b>：成功 {@code 1}，超时 {@code 0}，中断 {@code -1}。</p>
+     * <p><b>异常</b>：无效 ID 时抛出异常。</p>
      */
     public static final int SEM_WAIT = 0x1609;
 
