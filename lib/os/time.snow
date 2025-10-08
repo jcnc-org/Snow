@@ -1,11 +1,12 @@
-// time module: 时钟与睡眠相关系统调用封装
-// ──────────────────────────────────────────────
-//  • 0x1700  CLOCK_GETTIME  → 获取时钟纳秒时间戳（REALTIME=0, MONO=1）
-//  • 0x1701  NANOSLEEP      → 让当前线程按纳秒挂起
-//  • 0x1702  TIMEOFDAY      → 兼容式获取 (sec, usec)
-//  • 0x1703  TICK_MS        → 获取单调时钟的毫秒计数（用于计时）
-// ──────────────────────────────────────────────
-
+/**
+@module time
+@summary 时钟与睡眠相关系统调用模块，封装时间获取和线程休眠等操作。
+@syscalls
+  0x1700 CLOCK_GETTIME 获取时钟纳秒时间戳（REALTIME=0, MONO=1）
+  0x1701 NANOSLEEP     让当前线程按纳秒挂起
+  0x1702 TIMEOFDAY     兼容式获取 (sec, usec)
+  0x1703 TICK_MS       获取单调时钟的毫秒计数（用于计时）
+*/
 module: time
 
     // 常用时钟 ID
@@ -14,14 +15,12 @@ module: time
         declare MONO:int     = 1
 
     /**
-     * clock_gettime(clockId)
-     *
-     * <b>Stack</b>：入参 (clockId:int) → 出参 (nanos:long)
-     *
-     * <b>语义</b>：返回给定时钟的纳秒时间戳。
-     *   - REALTIME=0：自 Unix 纪元以来的墙钟时间（单位 ns）
-     *   - MONO=1    ：单调时钟（适合测量间隔）
-     */
+    @function clock_gettime
+    @summary 返回给定时钟的纳秒时间戳。
+    @param clockId 时钟ID，REALTIME=0：自 Unix 纪元以来的墙钟时间（单位 ns），MONO=1：单调时钟（适合测量间隔）
+    @returns long 成功时返回纳秒时间
+    @throws IllegalArgumentException 若 clockId 非法或不被支持时抛出异常
+    */
     function: clock_gettime
         params:
             declare clockId:int
@@ -32,13 +31,12 @@ module: time
     end function
 
     /**
-     * nanosleep(ns)
-     *
-     * <b>Stack</b>：入参 (ns:long) → 出参 (rc:int)
-     *
-     * <b>语义</b>：让当前线程挂起指定的纳秒数。
-     * <b>返回</b>：成功=0。
-     */
+    @function nanosleep
+    @summary 让当前线程挂起指定的纳秒数。
+    @param ns 要挂起的纳秒数
+    @returns int 成功返回 0
+    @throws InterruptedException 被中断时可能抛出异常，调用者应处理或恢复中断状态
+    */
     function: nanosleep
         params:
             declare ns: long
@@ -49,14 +47,10 @@ module: time
     end function
 
     /**
-     * timeofday_raw()
-     *
-     * <b>Stack</b>：入参 () → 出参 (sec:long, usec:int)（实现相关）
-     *
-     * <b>语义</b>：兼容式获取 (sec, usec)。注意：Snow 语言当前函数签名为单返回值，
-     * 此处按“原始调用”形式暴露，主要用于调试/验证；具体返回形态由 VM 的 syscall 实现决定。
-     * 若你的 VM 将 (sec,usec) 打包为对象/字符串，本函数会直接返回该对象/字符串。
-     */
+    @function timeofday_raw
+    @summary 兼容式获取 (sec, usec)。
+    @returns any 成功返回两个值：sec:long 和 usec:int（注意压栈顺序由实现约定）
+    */
     function: timeofday_raw
         returns: any
         body:
@@ -65,12 +59,10 @@ module: time
     end function
 
     /**
-     * tick_ms()
-     *
-     * <b>Stack</b>：入参 () → 出参 (ms:long)
-     *
-     * <b>语义</b>：返回单调计数的毫秒数（适合计算时间间隔，不是绝对时间）。
-     */
+    @function tick_ms
+    @summary 返回单调计数的毫秒数（适合计算时间间隔，不是绝对时间）。
+    @returns long 成功返回单调毫秒数
+    */
     function: tick_ms
         returns: long
         body:
@@ -81,8 +73,10 @@ module: time
     // ─────────────── 便捷封装（基于上面四个原始 syscall） ───────────────
 
     /**
-     * now_ns(): 以纳秒返回墙钟时间（REALTIME）。
-     */
+    @function now_ns
+    @summary 以纳秒返回墙钟时间（REALTIME）。
+    @returns long 墙钟时间纳秒数
+    */
     function: now_ns
         returns: long
         body:
@@ -91,8 +85,10 @@ module: time
     end function
 
     /**
-     * mono_ns(): 以纳秒返回单调时钟（MONO）。
-     */
+    @function mono_ns
+    @summary 以纳秒返回单调时钟（MONO）。
+    @returns long 单调时钟纳秒数
+    */
     function: mono_ns
         returns: long
         body:
@@ -101,8 +97,10 @@ module: time
     end function
 
     /**
-     * now_ms(): 以毫秒返回墙钟时间。
-     */
+    @function now_ms
+    @summary 以毫秒返回墙钟时间。
+    @returns long 墙钟时间毫秒数
+    */
     function: now_ms
         returns: long
         body:
@@ -113,8 +111,10 @@ module: time
     end function
 
     /**
-     * mono_ms(): 以毫秒返回单调时钟。
-     */
+    @function mono_ms
+    @summary 以毫秒返回单调时钟。
+    @returns long 单调时钟毫秒数
+    */
     function: mono_ms
         returns: long
         body:
@@ -124,9 +124,10 @@ module: time
     end function
 
     /**
-     * epoch_sec(): 返回自 Unix 纪元以来的秒数（long）。
-     * 通过 REALTIME 纳秒时间转换得到。
-     */
+    @function epoch_sec
+    @summary 返回自 Unix 纪元以来的秒数（long）。
+    @returns long 自 Unix 纪元以来的秒数
+    */
     function: epoch_sec
         returns: long
         body:
@@ -136,9 +137,10 @@ module: time
     end function
 
     /**
-     * epoch_usec_in_sec(): 返回当前秒内的微秒部分（0..999_999）。
-     * 通过 REALTIME 纳秒时间转换得到。
-     */
+    @function epoch_usec_in_sec
+    @summary 返回当前秒内的微秒部分（0..999_999）。
+    @returns long 当前秒内的微秒部分
+    */
     function: epoch_usec_in_sec
         returns: long
         body:
@@ -151,8 +153,11 @@ module: time
     end function
 
     /**
-     * sleep_ms(ms): 以毫秒为单位的睡眠。
-     */
+    @function sleep_ms
+    @summary 以毫秒为单位的睡眠。
+    @param ms 要睡眠的毫秒数
+    @returns int 成功返回 0
+    */
     function: sleep_ms
         params:
             declare ms:int
@@ -165,8 +170,11 @@ module: time
     end function
 
     /**
-     * sleep_us(us): 以微秒为单位的睡眠。
-     */
+    @function sleep_us
+    @summary 以微秒为单位的睡眠。
+    @param us 要睡眠的微秒数
+    @returns int 成功返回 0
+    */
     function: sleep_us
         params:
             declare us:int
