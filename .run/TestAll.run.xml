@@ -2,7 +2,7 @@
   <configuration default="false" name="TestAll" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="org.jcnc.snow.cli.SnowCLI" />
     <module name="snow" />
-    <option name="PROGRAM_PARAMETERS" value="test-all" />
+    <option name="PROGRAM_PARAMETERS" value="test-all --verbose" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="org.jcnc.snow.cli.SnowCLI" />
