@@ -14,7 +14,11 @@ module: Main
                 step:
                     i = i + 1
                 body:
+                    if i==0 then
 					stdio.println(i)
+					else
+					return 1
+					end if
                 end body
             end loop
             return 0
