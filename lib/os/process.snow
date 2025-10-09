@@ -77,4 +77,32 @@ module: process
         end body
     end function
 
+    /**
+    @function getpid
+    @summary 获取当前进程的进程号。
+    @returns 当前进程的 PID（int）
+    @throws Exception 获取失败时抛出异常
+    */
+    function: getpid
+        returns: int
+        body:
+            declare pid:int = syscall("0x1504")
+            return pid
+        end body
+    end function
+
+    /**
+    @function getppid
+    @summary 获取当前进程的父进程号。
+    @returns 父进程的 PID（int），若不存在父进程则返回 0
+    @throws Exception 获取失败时抛出异常
+    */
+    function: getppid
+        returns: int
+        body:
+            declare ppid:int = syscall("0x1505")
+            return ppid
+        end body
+    end function
+
 end module
