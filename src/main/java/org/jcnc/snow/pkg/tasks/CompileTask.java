@@ -26,8 +26,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static org.jcnc.snow.common.SnowConfig.print;
 
@@ -62,9 +64,7 @@ public record CompileTask(Project project, String[] args) implements Task {
      *   <li>否则用默认 "program"</li>
      * </ul>
      */
-    private static Path deriveOutputPath(List<Path> sources,
-                                         String outName,
-                                         Path dir) {
+    private static Path deriveOutputPath(List<Path> sources, String outName, Path dir) {
         String base;
         if (outName != null) { // 优先使用用户指定的输出名
             base = outName;
@@ -110,60 +110,103 @@ public record CompileTask(Project project, String[] args) implements Task {
         return src.getFileName().toString();
     }
 
-    /**
-     * 加载标准库模块。
-     * 
-     * @param astList AST节点列表，用于添加标准库模块
-     */
-    private void loadStdlibModules(List<Node> astList) {
-        Path stdlibPath = SnowConfig.getStdlibPath();
-        print("正在加载标准库模块，路径: " + stdlibPath);
-        if (!Files.exists(stdlibPath)) {
-            // 如果标准库路径不存在，尝试在项目根目录下查找
-            stdlibPath = Paths.get(".").resolve("lib").toAbsolutePath();
-            print("标准库路径不存在，尝试使用: " + stdlibPath);
-            if (!Files.exists(stdlibPath)) {
-                print("警告: 标准库路径不存在: " + SnowConfig.getStdlibPath());
-                return;
-            }
+    // 1. 从项目根/源码目录向上找最近 lib
+    private static Path findNearestLibDir(Path start) {
+        String env = System.getenv("SNOW_LIB");
+        if (env == null) env = System.getProperty("snow.lib");
+        if (env != null) {
+            Path p = Path.of(env);
+            if (Files.isDirectory(p)) return p;
         }
-        
-        try {
-            // 递归遍历标准库目录，加载所有.snow文件
-            Files.walk(stdlibPath)
-                .filter(path -> path.toString().endsWith(".snow"))
-                .sorted()
-                .forEach(path -> {
-                    try {
-                        String code = Files.readString(path, StandardCharsets.UTF_8);
-                        print("#### [stdlib] " + path.getFileName());
-                        print(code);
-                        
-                        // 构造词法分析器
-                        LexerEngine lex = new LexerEngine(code, path.toString());
-                        if (!lex.getErrors().isEmpty()) {
-                            print("警告: 标准库模块解析错误: " + path);
-                            return;
-                        }
-                        
-                        // 构造语法分析上下文并生成 AST
-                        ParserContext ctx = new ParserContext(lex.getAllTokens(), path.toString());
-                        astList.addAll(new ParserEngine(ctx).parse());
-                    } catch (Exception e) {
-                        print("警告: 无法加载标准库模块: " + path + ", 错误: " + e.getMessage());
-                    }
-                });
-        } catch (IOException e) {
-            print("警告: 无法遍历标准库目录: " + stdlibPath + ", 错误: " + e.getMessage());
+        if (start == null) return null;
+        Path cur = start.toAbsolutePath();
+        while (cur != null) {
+            Path lib = cur.resolve("lib");
+            if (Files.isDirectory(lib)) return lib;
+            cur = cur.getParent();
         }
+        return null;
     }
 
-    /**
-     * 执行任务主入口，捕获异常向上抛出
-     */
+    // 2. 收集 lib 下全部 .snow 文件
+    private static List<Path> collectSnowFiles(Path dir) throws IOException {
+        List<Path> ret = new ArrayList<>();
+        try (Stream<Path> s = Files.walk(dir)) {
+            s.filter(p -> p.toString().endsWith(".snow"))
+                    .sorted()
+                    .forEach(ret::add);
+        }
+        return ret;
+    }
+
+    // 3. 从源码提取 import 模块名（支持 import: a.b.c, x.y, Foo）——逗号分隔每个都取最后一段
+    private static Set<String> extractImportsFromText(String code) {
+        Set<String> r = new LinkedHashSet<>();
+        Pattern p = Pattern.compile("(?m)^\\s*import:\\s*([A-Za-z0-9_\\.,\\s]+)\\s*$");
+        Matcher m = p.matcher(code);
+        while (m.find()) {
+            String group = m.group(1).trim();
+            for (String entry : group.split(",")) {
+                String mod = entry.trim();
+                if (mod.isEmpty()) continue;
+                String[] parts = mod.split("\\.");
+                r.add(parts[parts.length - 1]);
+            }
+        }
+        return r;
+    }
+
+    // 4. 读 module: xxx
+    private static String readModuleName(Path file) throws IOException {
+        String head = Files.readString(file, StandardCharsets.UTF_8);
+        Matcher m = Pattern.compile("(?m)^\\s*module:\\s*([A-Za-z0-9_]+)\\s*$").matcher(head);
+        if (m.find()) return m.group(1).trim();
+        return null;
+    }
+
+    // 5. 建索引: 模块名 -> 文件路径
+    private static Map<String, Path> indexLibModules(Path libDir) throws IOException {
+        Map<String, Path> idx = new LinkedHashMap<>();
+        for (Path f : collectSnowFiles(libDir)) {
+            String mod = readModuleName(f);
+            if (mod != null && !idx.containsKey(mod)) {
+                idx.put(mod, f);
+            }
+        }
+        return idx;
+    }
+
+    // 6. 读取库文件的 import
+    private static Set<String> readImportsOfLibFile(Path libFile) throws IOException {
+        String code = Files.readString(libFile, StandardCharsets.UTF_8);
+        return extractImportsFromText(code);
+    }
+
+    // 7. 闭包：从直接 import 出发递归抓取传递依赖
+    private static List<Path> resolveNeededLibFiles(Path libDir, Set<String> projectImports) throws IOException {
+        if (libDir == null || projectImports.isEmpty()) return List.of();
+        Map<String, Path> idx = indexLibModules(libDir);
+        Set<Path> needed = new LinkedHashSet<>();
+        Deque<String> q = new ArrayDeque<>(projectImports);
+        Set<String> seen = new HashSet<>();
+
+        while (!q.isEmpty()) {
+            String mod = q.removeFirst();
+            if (!seen.add(mod)) continue;
+            Path f = idx.get(mod);
+            if (f == null) continue; // 没有的模块交语义报错
+            if (needed.add(f)) {
+                for (String dep : readImportsOfLibFile(f)) {
+                    if (!seen.contains(dep)) q.addLast(dep);
+                }
+            }
+        }
+        return new ArrayList<>(needed);
+    }
+
     @Override
     public void run() throws Exception {
-        execute(this.args); // 调用 execute 方法
+        execute(this.args);
     }
 
     /**
@@ -202,9 +245,8 @@ public record CompileTask(Project project, String[] args) implements Task {
                 }
                 default -> {
                     // 识别 .snow 源文件，否则报错
-                    if (args[i].endsWith(".snow")) {
-                        sources.add(Path.of(args[i]));
-                    } else {
+                    if (args[i].endsWith(".snow")) sources.add(Path.of(args[i]));
+                    else {
                         System.err.println("Unknown option or file: " + args[i]);
                         new CompileCommand().printUsage();
                         return 1;
@@ -236,79 +278,84 @@ public record CompileTask(Project project, String[] args) implements Task {
             return 1;
         }
 
-        List<Node> allAst = new ArrayList<>(); // 存放解析后的 AST
-
         print("## 编译器输出");
         print("### Snow 源代码");
 
-        // 阶段1：词法 + 语法分析
-        // 首先加载标准库模块
-        loadStdlibModules(allAst);
-        
-        // 然后处理用户源码
+        // 1. 先处理用户源码，收集 import
+        List<Node> projectAst = new ArrayList<>();
+        Set<String> projectImports = new LinkedHashSet<>();
+
         for (Path src : sources) {
-            String code = Files.readString(src, StandardCharsets.UTF_8); // 读取源码
+            String code = Files.readString(src, StandardCharsets.UTF_8);
             print("#### " + fromDemoXX(src));
             print(code);
 
-            // 构造词法分析器
+            projectImports.addAll(extractImportsFromText(code));
             LexerEngine lex = new LexerEngine(code, src.toString());
-            if (!lex.getErrors().isEmpty()) return 1; // 有错误则退出
-
-            // 构造语法分析上下文并生成 AST
+            if (!lex.getErrors().isEmpty()) return 1;
             ParserContext ctx = new ParserContext(lex.getAllTokens(), src.toString());
-            allAst.addAll(new ParserEngine(ctx).parse());
+            projectAst.addAll(new ParserEngine(ctx).parse());
         }
 
-        // 阶段2：语义分析
+        // 2. 只加载需要的标准库（含递归依赖）
+        Path baseDirForLib = (dir != null) ? dir : sources.getFirst().getParent();
+        Path libDir = findNearestLibDir(baseDirForLib);
+        List<Node> libAst = new ArrayList<>();
+        if (libDir != null) {
+            List<Path> neededLibFiles = resolveNeededLibFiles(libDir, projectImports);
+            for (Path libSrc : neededLibFiles) {
+                String code = Files.readString(libSrc, StandardCharsets.UTF_8);
+                LexerEngine lex = new LexerEngine(code, libSrc.toString());
+                if (!lex.getErrors().isEmpty()) return 1;
+                ParserContext ctx0 = new ParserContext(lex.getAllTokens(), libSrc.toString());
+                libAst.addAll(new ParserEngine(ctx0).parse());
+            }
+        }
+
+        // 3. 合并 AST
+        List<Node> allAst = new ArrayList<>(libAst.size() + projectAst.size());
+        allAst.addAll(libAst);
+        allAst.addAll(projectAst);
+
+        // 4. 语义分析
         SemanticAnalyzerRunner.runSemanticAnalysis(allAst, false);
 
-        // 阶段3：AST 转 IR 并调整入口函数位置
+        // 5. AST → IR
         IRProgram program = new IRProgramBuilder().buildProgram(allAst);
         program = reorderForEntry(program);
 
         print("### IR");
-        print(program.toString()); // 输出 IR
+        print(program.toString());
 
-        // 阶段4：IR 转 VM 指令
+        // 6. IR → VM
         VMProgramBuilder builder = new VMProgramBuilder();
-        List<InstructionGenerator<? extends IRInstruction>> gens =
-                InstructionGeneratorProvider.defaultGenerators();
+        List<InstructionGenerator<? extends IRInstruction>> gens = InstructionGeneratorProvider.defaultGenerators();
 
         for (IRFunction fn : program.functions()) {
-            // 分配寄存器槽位
-            Map<IRVirtualRegister, Integer> slotMap =
-                    new RegisterAllocator().allocate(fn);
-            // 生成 VM 代码
+            Map<IRVirtualRegister, Integer> slotMap = new RegisterAllocator().allocate(fn);
             new VMCodeGenerator(slotMap, builder, gens).generate(fn);
         }
         List<String> vmCode = builder.build();
 
-        // 输出 VM 代码
         print("### VM code");
         if (SnowConfig.isDebug()) {
             for (int i = 0; i < vmCode.size(); i++) {
                 String[] parts = vmCode.get(i).split(" ");
-                String name = OpHelper.opcodeName(parts[0]); // 转换 opcode 为可读名
+                String name = OpHelper.opcodeName(parts[0]);
                 parts = Arrays.copyOfRange(parts, 1, parts.length);
                 print("%04d: %-10s %s%n", i, name, String.join(" ", parts));
             }
         }
 
-        // 阶段5：写出 .water 文件
         Path outFile = deriveOutputPath(sources, outputName, dir);
         Files.write(outFile, vmCode, StandardCharsets.UTF_8);
         print("Written to " + outFile.toAbsolutePath());
 
-        // 阶段6：可选运行 VM
         if (runAfterCompile) {
             print("\nLaunching VM");
             VMLauncher.main(new String[]{outFile.toString()});
             print("\nVM exited");
         }
-
         return 0;
-
-
     }
 }

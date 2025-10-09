@@ -85,10 +85,12 @@ public class CallHandler implements ExpressionHandler<CallExpressionNode> {
                     // 追加 _N 后缀（N=总参数，包括this）
                     callee = callee + "_" + finalArgs.size();
                 } else {
-                    // 常规对象方法调用 recv.method(...)
+                    // 检查是否是模块名而不是变量
+                    // 如果recvName在当前作用域中没有对应的类型信息，很可能是一个模块名
                     String recvType = b.ctx().getScope().lookupType(recvName);
                     if (recvType == null || recvType.isEmpty()) {
-                        // 静态/未知类型方法，直接按符号名拼接
+                        // 没有类型信息，很可能是模块调用
+                        // 直接使用模块名.函数名格式
                         callee = recvName + "." + m.member();
                         finalArgs.addAll(explicitRegs);
                     } else {

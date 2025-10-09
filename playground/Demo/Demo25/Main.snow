@@ -1,7 +1,8 @@
 module: Main
     import: os.fs
     import: os.fd
-    import: std.stdio,ModuleA
+    import: std.stdio
+    import: ModuleA
     globals:
         declare c: int = 10
     function: main
