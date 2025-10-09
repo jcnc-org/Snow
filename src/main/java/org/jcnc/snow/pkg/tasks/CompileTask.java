@@ -22,9 +22,11 @@ import org.jcnc.snow.compiler.semantic.core.SemanticAnalyzerRunner;
 import org.jcnc.snow.pkg.model.Project;
 import org.jcnc.snow.vm.VMLauncher;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 import static org.jcnc.snow.common.SnowConfig.print;
@@ -106,6 +108,54 @@ public record CompileTask(Project project, String[] args) implements Task {
         }
         // fallback，只返回文件名
         return src.getFileName().toString();
+    }
+
+    /**
+     * 加载标准库模块。
+     * 
+     * @param astList AST节点列表，用于添加标准库模块
+     */
+    private void loadStdlibModules(List<Node> astList) {
+        Path stdlibPath = SnowConfig.getStdlibPath();
+        print("正在加载标准库模块，路径: " + stdlibPath);
+        if (!Files.exists(stdlibPath)) {
+            // 如果标准库路径不存在，尝试在项目根目录下查找
+            stdlibPath = Paths.get(".").resolve("lib").toAbsolutePath();
+            print("标准库路径不存在，尝试使用: " + stdlibPath);
+            if (!Files.exists(stdlibPath)) {
+                print("警告: 标准库路径不存在: " + SnowConfig.getStdlibPath());
+                return;
+            }
+        }
+        
+        try {
+            // 递归遍历标准库目录，加载所有.snow文件
+            Files.walk(stdlibPath)
+                .filter(path -> path.toString().endsWith(".snow"))
+                .sorted()
+                .forEach(path -> {
+                    try {
+                        String code = Files.readString(path, StandardCharsets.UTF_8);
+                        print("#### [stdlib] " + path.getFileName());
+                        print(code);
+                        
+                        // 构造词法分析器
+                        LexerEngine lex = new LexerEngine(code, path.toString());
+                        if (!lex.getErrors().isEmpty()) {
+                            print("警告: 标准库模块解析错误: " + path);
+                            return;
+                        }
+                        
+                        // 构造语法分析上下文并生成 AST
+                        ParserContext ctx = new ParserContext(lex.getAllTokens(), path.toString());
+                        astList.addAll(new ParserEngine(ctx).parse());
+                    } catch (Exception e) {
+                        print("警告: 无法加载标准库模块: " + path + ", 错误: " + e.getMessage());
+                    }
+                });
+        } catch (IOException e) {
+            print("警告: 无法遍历标准库目录: " + stdlibPath + ", 错误: " + e.getMessage());
+        }
     }
 
     /**
@@ -192,6 +242,10 @@ public record CompileTask(Project project, String[] args) implements Task {
         print("### Snow 源代码");
 
         // 阶段1：词法 + 语法分析
+        // 首先加载标准库模块
+        loadStdlibModules(allAst);
+        
+        // 然后处理用户源码
         for (Path src : sources) {
             String code = Files.readString(src, StandardCharsets.UTF_8); // 读取源码
             print("#### " + fromDemoXX(src));
