@@ -9,7 +9,7 @@ module: app
         body:
             declare fd1: int
             fd1 = fd.open("README.md", 0)   // 打开文件
-            stdio.println(fd.read(fd1, 100000))   // 一次性读并打印
+            stdio.println(fd.read(fd1, 10))   // 一次性读并打印
         end body
     end function
 end module

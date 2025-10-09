@@ -57,6 +57,7 @@
     <toRun name="Demo35" type="Application" />
     <toRun name="Demo36" type="Application" />
     <toRun name="Demo37" type="Application" />
+    <toRun name="Demo37" type="Application" />
     <toRun name="Demo38" type="Application" />
     <toRun name="Demo39" type="Application" />
     <toRun name="Demo4" type="Application" />
@@ -110,8 +111,6 @@
     <toRun name="Demo83" type="Application" />
     <toRun name="Demo84" type="Application" />
     <toRun name="Demo85" type="Application" />
-    <toRun name="Demo86" type="Application" />
-    <toRun name="Demo87" type="Application" />
     <toRun name="Demo9" type="Application" />
     <method v="2" />
   </configuration>
