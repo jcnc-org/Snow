@@ -57,7 +57,6 @@ public final class TestAllCommand implements CLICommand {
     private static final String BRIGHT_YEL = "\u001B[93m";
     private static final String CYAN = "\u001B[36m";
     private static final String BRIGHT_CYAN = "\u001B[96m";
-    private static final String GREEN = "\u001B[32m";
     private static final String BRIGHT_GRN = "\u001B[92m";
 
     @Override
@@ -106,7 +105,7 @@ public final class TestAllCommand implements CLICommand {
         List<Path> demoDirs = Files.list(demoRoot)
                 .filter(Files::isDirectory)
                 .sorted()
-                .collect(Collectors.toList());
+                .toList();
 
         if (demoDirs.isEmpty()) {
             System.out.println(BRIGHT_YEL + "No demo directories found in " + demoRoot.toAbsolutePath() + RESET);
