@@ -1,0 +1,131 @@
+module: SimpleBenchmark
+    import: stdio
+    import: os.time
+
+    function: main
+        returns: void
+        body:
+            stdio.println("Simple Snow Performance Benchmark")
+            stdio.println("================================")
+            
+            // 算术运算测试
+            benchmarkArithmetic()
+            
+            // 字符串操作测试
+            benchmarkStringOps()
+            
+            // 循环测试
+            benchmarkLoops()
+            
+            // 函数调用测试
+            benchmarkFunctionCalls()
+        end body
+    end function
+
+    function: benchmarkArithmetic
+        returns: void
+        body:
+            stdio.print("Arithmetic test... ")
+            declare startTime: long = time.mono_ms()
+            
+            declare result: int = 0
+            loop:
+                init:
+                    declare i: int = 0
+                cond:
+                    i < 100000
+                step:
+                    i = i + 1
+                body:
+                    result = result + i
+                end body
+            end loop
+            
+            declare endTime: long = time.mono_ms()
+            stdio.println("completed in " + (endTime - startTime) + " ms")
+        end body
+    end function
+
+    function: benchmarkStringOps
+        returns: void
+        body:
+            stdio.print("String operations test... ")
+            declare startTime: long = time.mono_ms()
+            
+            declare str: string = ""
+            loop:
+                init:
+                    declare i: int = 0
+                cond:
+                    i < 1000
+                step:
+                    i = i + 1
+                body:
+                    str = str + "a"
+                end body
+            end loop
+            
+            declare endTime: long = time.mono_ms()
+            declare length: int = syscall("0x1801", str)
+            stdio.println("completed in " + (endTime - startTime) + " ms (length: " + length + ")")
+        end body
+    end function
+
+    function: benchmarkLoops
+        returns: void
+        body:
+            stdio.print("Loop test... ")
+            declare startTime: long = time.mono_ms()
+            
+            declare sum: int = 0
+            loop:
+                init:
+                    declare i: int = 0
+                cond:
+                    i < 1000000
+                step:
+                    i = i + 1
+                body:
+                    sum = sum + 1
+                end body
+            end loop
+            
+            declare endTime: long = time.mono_ms()
+            stdio.println("completed in " + (endTime - startTime) + " ms")
+        end body
+    end function
+
+    function: benchmarkFunctionCalls
+        returns: void
+        body:
+            stdio.print("Function calls test... ")
+            declare startTime: long = time.mono_ms()
+            
+            declare result: int = 0
+            loop:
+                init:
+                    declare i: int = 0
+                cond:
+                    i < 10000
+                step:
+                    i = i + 1
+                body:
+                    result = result + add(1, 2)
+                end body
+            end loop
+            
+            declare endTime: long = time.mono_ms()
+            stdio.println("completed in " + (endTime - startTime) + " ms")
+        end body
+    end function
+
+    function: add
+        params:
+            declare a: int
+            declare b: int
+        returns: int
+        body:
+            return a + b
+        end body
+    end function
+end module
