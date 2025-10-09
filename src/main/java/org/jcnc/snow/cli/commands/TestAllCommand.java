@@ -135,6 +135,12 @@ public final class TestAllCommand implements CLICommand {
                 failed.incrementAndGet();
                 failedTests.add(demoName + " (Exception: " + e.getMessage() + ")");
                 
+                // 打印详细的错误信息，包括堆栈跟踪
+                System.err.println("\n=== Error in " + demoName + " ===");
+                System.err.println("Directory: " + demoDir.toAbsolutePath());
+                e.printStackTrace();
+                System.err.println("==================================\n");
+                
                 // 如果启用了stop-on-failure选项，则在第一个失败时停止
                 if (stopOnFailure) {
                     System.out.println("\n\n=== Test stopped due to exception ===");

@@ -1,4 +1,4 @@
-# Snow 批量测试脚本 (改进版)
+# Snow 批量测试脚本(1)
 # 用于测试 playground/Demo 目录下的所有示例
 
 param(
@@ -10,7 +10,7 @@ param(
 
 # 显示帮助信息
 if ($Help) {
-    Write-Host "Snow 批量测试脚本 (改进版)" -ForegroundColor Green
+    Write-Host "Snow 批量测试脚本(1)" -ForegroundColor Green
     Write-Host "========================" -ForegroundColor Green
     Write-Host "用法:" -ForegroundColor Yellow
     Write-Host "  .\improved-test-all-demos.ps1          # 编译并运行所有示例" -ForegroundColor White
@@ -21,7 +21,7 @@ if ($Help) {
     exit 0
 }
 
-Write-Host "Snow 批量测试脚本 (改进版)" -ForegroundColor Green
+Write-Host "Snow 批量测试脚本(1)" -ForegroundColor Green
 Write-Host "========================" -ForegroundColor Green
 
 # 检查Java环境
