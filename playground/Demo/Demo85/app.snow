@@ -1,8 +1,8 @@
 module: demo_sys
 
-    import :sys
-    import :stdio
-    import :io
+    import: sys
+    import: stdio
+    import: io
 
     // 打印分隔线的小工具
     function: hr

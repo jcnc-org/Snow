@@ -1,7 +1,7 @@
 module: app
 
-    import :sync
-    import :stdio
+    import: sync
+    import: stdio
 
     // 统一的加锁/解锁流程（用 trylock 展示进入/退出临界区）
     function: do_work

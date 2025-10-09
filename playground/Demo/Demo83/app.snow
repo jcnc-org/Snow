@@ -1,7 +1,7 @@
 module: sync_test
 
-    import :sync
-    import :stdio
+    import: sync
+    import: stdio
 
     // ============= MUTEX =============
     function: test_mutex
