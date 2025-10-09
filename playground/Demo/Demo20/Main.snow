@@ -1,5 +1,4 @@
 module: Main
-    import: os
     import: stdio
     function: main
         returns: void
