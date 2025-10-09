@@ -1,5 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Demo74" type="Application" factoryName="Application" folderName="Demo">
+    <option name="ALTERNATIVE_JRE_PATH" value="graalvm-25" />
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <option name="MAIN_CLASS_NAME" value="org.jcnc.snow.cli.SnowCLI" />
     <module name="snow" />
     <option name="PROGRAM_PARAMETERS" value="compile run -d playground/Demo/Demo74 -o target/Demo74" />
