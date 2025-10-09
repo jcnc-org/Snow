@@ -6,13 +6,13 @@
 
 ## 文件说明
 
-- [Main.snow](file:///D:/Devs/IdeaProjects/Snow/playground/Demo/PerformanceTest/Main.snow) - 主程序入口，调用完整的基准测试
-- [Benchmark.snow](file:///D:/Devs/IdeaProjects/Snow/playground/Demo/PerformanceTest/Benchmark.snow) - 完整的基准测试实现
-- [SimpleBenchmark.snow](file:///D:/Devs/IdeaProjects/Snow/playground/Demo/PerformanceTest/SimpleBenchmark.snow) - 简化版的基准测试
-- [JavaBenchmark.java](file:///D:/Devs/IdeaProjects/Snow/playground/Demo/PerformanceTest/JavaBenchmark.java) - Java版本的基准测试（用于性能比较）
-- [PERFORMANCE_REPORT.md](file:///D:/Devs/IdeaProjects/Snow/playground/Demo/PerformanceTest/PERFORMANCE_REPORT.md) - 性能测试报告
-- [PERFORMANCE_TESTING_GUIDE.md](file:///D:/Devs/IdeaProjects/Snow/playground/Demo/PerformanceTest/PERFORMANCE_TESTING_GUIDE.md) - 性能测试指南
-- [PERFORMANCE_COMPARISON.md](file:///D:/Devs/IdeaProjects/Snow/playground/Demo/PerformanceTest/PERFORMANCE_COMPARISON.md) - Snow语言与Java性能比较报告
+- [Main.snow](Main.snow) - 主程序入口，调用完整的基准测试
+- [Benchmark.snow](Benchmark.snow) - 完整的基准测试实现
+- [SimpleBenchmark.snow](SimpleBenchmark.snow) - 简化版的基准测试
+- [JavaBenchmark.java](JavaBenchmark.java) - Java版本的基准测试（用于性能比较）
+- [PERFORMANCE_REPORT.md](PERFORMANCE_REPORT.md) - 性能测试报告
+- [PERFORMANCE_TESTING_GUIDE.md](PERFORMANCE_TESTING_GUIDE.md) - 性能测试指南
+- [PERFORMANCE_COMPARISON.md](PERFORMANCE_COMPARISON.md) - Snow语言与Java性能比较报告
 
 ## 如何运行性能测试
 
