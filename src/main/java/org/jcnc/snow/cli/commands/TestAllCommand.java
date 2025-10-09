@@ -1,11 +1,12 @@
 package org.jcnc.snow.cli.commands;
 
 import org.jcnc.snow.cli.api.CLICommand;
-import org.jcnc.snow.pkg.tasks.CompileTask;
 import org.jcnc.snow.pkg.model.Project;
+import org.jcnc.snow.pkg.tasks.CompileTask;
 
-import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -45,7 +46,7 @@ public final class TestAllCommand implements CLICommand {
         boolean runAfterCompile = true;
         boolean verbose = false;
         boolean stopOnFailure = false;
-        
+
         // 解析参数
         for (String arg : args) {
             if ("--no-run".equals(arg)) {
@@ -86,7 +87,7 @@ public final class TestAllCommand implements CLICommand {
             if (verbose) {
                 System.out.println("Testing " + demoName + "...");
             }
-            
+
             try {
                 // 构造编译参数
                 List<String> compileArgs = new ArrayList<>();
@@ -94,15 +95,15 @@ public final class TestAllCommand implements CLICommand {
                 compileArgs.add(demoDir.toString());
                 compileArgs.add("-o");
                 compileArgs.add("target/" + demoName);
-                
+
                 if (runAfterCompile) {
                     compileArgs.add("run");
                 }
 
                 // 执行编译任务
-                int result = new CompileTask(Project.fromFlatMap(Collections.emptyMap()), 
-                                           compileArgs.toArray(new String[0])).execute(compileArgs.toArray(new String[0]));
-                
+                int result = new CompileTask(Project.fromFlatMap(Collections.emptyMap()),
+                        compileArgs.toArray(new String[0])).execute(compileArgs.toArray(new String[0]));
+
                 if (result == 0) {
                     if (!verbose) {
                         System.out.print(".");
@@ -118,7 +119,7 @@ public final class TestAllCommand implements CLICommand {
                     }
                     failed.incrementAndGet();
                     failedTests.add(demoName);
-                    
+
                     // 如果启用了stop-on-failure选项，则在第一个失败时停止
                     if (stopOnFailure) {
                         System.out.println("\n\n=== Test stopped due to failure ===");
@@ -134,20 +135,20 @@ public final class TestAllCommand implements CLICommand {
                 }
                 failed.incrementAndGet();
                 failedTests.add(demoName + " (Exception: " + e.getMessage() + ")");
-                
+
                 // 打印详细的错误信息，包括堆栈跟踪
                 System.err.println("\n=== Error in " + demoName + " ===");
                 System.err.println("Directory: " + demoDir.toAbsolutePath());
                 e.printStackTrace();
                 System.err.println("==================================\n");
-                
+
                 // 如果启用了stop-on-failure选项，则在第一个失败时停止
                 if (stopOnFailure) {
                     System.out.println("\n\n=== Test stopped due to exception ===");
                     break;
                 }
             }
-            
+
             // 刷新输出，确保及时显示进度
             System.out.flush();
         }
@@ -157,7 +158,7 @@ public final class TestAllCommand implements CLICommand {
         System.out.println("Passed: " + passed.get());
         System.out.println("Failed: " + failed.get());
         System.out.println("Total:  " + (passed.get() + failed.get()));
-        
+
         // 如果有失败的测试，列出它们
         if (!failedTests.isEmpty()) {
             System.out.println("\nFailed tests:");
@@ -165,7 +166,7 @@ public final class TestAllCommand implements CLICommand {
                 System.out.println("  - " + failedTest);
             }
         }
-        
+
         return failed.get() > 0 ? 1 : 0;
     }
 }
