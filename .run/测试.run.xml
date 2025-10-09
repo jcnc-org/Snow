@@ -110,6 +110,8 @@
     <toRun name="Demo83" type="Application" />
     <toRun name="Demo84" type="Application" />
     <toRun name="Demo85" type="Application" />
+    <toRun name="Demo86" type="Application" />
+    <toRun name="Demo87" type="Application" />
     <toRun name="Demo9" type="Application" />
     <method v="2" />
   </configuration>
