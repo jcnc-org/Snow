@@ -1,7 +1,7 @@
 module: stdio
     import: os.fs
     import: os.fd
-    import: std.stdio.io
+    import: os.io
 
     function: print
         params:
