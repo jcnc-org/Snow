@@ -2,7 +2,7 @@
   <configuration default="false" name="Demo42" type="Application" factoryName="Application" folderName="Demo">
     <option name="MAIN_CLASS_NAME" value="org.jcnc.snow.cli.SnowCLI" />
     <module name="Snow" />
-    <option name="PROGRAM_PARAMETERS" value="compile run -d playground/Demo/Demo42 -o target/Demo42" />
+    <option name="PROGRAM_PARAMETERS" value="compile run -d playground/Demo/DemoA/Demo42 -o target/Demo42" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>
@@ -12,7 +12,7 @@
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <option name="MAIN_CLASS_NAME" value="org.jcnc.snow.cli.SnowCLI" />
     <module name="snow" />
-    <option name="PROGRAM_PARAMETERS" value="compile run -d playground/Demo/Demo42 -o target/Demo42 " />
+    <option name="PROGRAM_PARAMETERS" value="compile run -d playground/Demo/DemoA/Demo42 -o target/Demo42 " />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

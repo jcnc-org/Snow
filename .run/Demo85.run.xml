@@ -4,7 +4,7 @@
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <option name="MAIN_CLASS_NAME" value="org.jcnc.snow.cli.SnowCLI" />
     <module name="snow" />
-    <option name="PROGRAM_PARAMETERS" value="compile run -d playground/Demo/Demo85 -o target/Demo85" />
+    <option name="PROGRAM_PARAMETERS" value="compile run -d playground/Demo/DemoA/Demo85 -o target/Demo85" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>
