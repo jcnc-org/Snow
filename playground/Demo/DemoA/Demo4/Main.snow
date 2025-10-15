@@ -1,5 +1,5 @@
 module: Main
-	import: stdio
+	import: std_io
 
     function: main
         params:
@@ -8,9 +8,9 @@ module: Main
            declare b1: boolean =false
            
 			if (b1) then
-				stdio.print(0)
+				std_io.print(0)
 			else
-				stdio.print(1)
+				std_io.print(1)
 			end if
         return b1
         end body

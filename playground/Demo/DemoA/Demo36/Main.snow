@@ -2,7 +2,7 @@
 module: Main
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio
+    import: std_io
 
     // Animal结构体
     struct: Animal
@@ -83,27 +83,27 @@ module: Main
         body:
             // 使用 2参构造
             declare a: Animal = new Animal("GenericAnimal", 1)
-            stdio.println("a.age init -> " + a.getAge())     // 1
+            std_io.println("a.age init -> " + a.getAge())     // 1
 
             // 使用单参构造（age 默认 0）
             declare b: Animal = new Animal("OnlyName")
-            stdio.println("b.age init -> " + b.getAge())     // 0
+            std_io.println("b.age init -> " + b.getAge())     // 0
 
             // 使用无参构造（默认 Unknown, 0）
             declare c: Animal = new Animal()
-            stdio.println("c.age init -> " + c.getAge())     // 0
+            std_io.println("c.age init -> " + c.getAge())     // 0
 
             // 方法重载调用：绝对设置年龄
             a.setAge(5)
-            stdio.println("a.setAge(5) -> " + a.getAge())    // 5
+            std_io.println("a.setAge(5) -> " + a.getAge())    // 5
 
             // 方法重载调用：按增量增加年龄（+2）
             a.setAge(2, true)
-            stdio.println("a.setAge(2, true) -> " + a.getAge()) // 7
+            std_io.println("a.setAge(2, true) -> " + a.getAge()) // 7
 
             // 如果第二个参数为 false，则等同于绝对设置
             a.setAge(10, false)
-            stdio.println("a.setAge(10, false) -> " + a.getAge()) // 10
+            std_io.println("a.setAge(10, false) -> " + a.getAge()) // 10
         end body
     end function
 end module

@@ -1,11 +1,11 @@
 module: app
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio.fd
+    import: std_io.fd
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio.fs
-    import: std.stdio
+    import: std_io.fs
+    import: std_io
 
     function: main
         params:
@@ -17,11 +17,11 @@ module: app
 
             // 设置非阻塞模式
             fd.setNonblock(fd1, 1)
-            stdio.println("fd 已设置为非阻塞模式")
+            std_io.println("fd 已设置为非阻塞模式")
 
             // 再切回阻塞模式
             fd.setNonblock(fd1, 0)
-            stdio.println("fd 已切回阻塞模式")
+            std_io.println("fd 已切回阻塞模式")
 
             fd.close(fd1)
         end body

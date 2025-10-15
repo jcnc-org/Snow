@@ -1,6 +1,6 @@
 module: Main
     import: ModuleA
-    import: std.stdio
+    import: std_io
 
     globals:
         declare const c: int = 10
@@ -8,7 +8,7 @@ module: Main
         returns: void
         body:
             declare a: int = ModuleA.sum(c,2)
-            stdio.print(a)
+            std_io.print(a)
         end body
     end function
 end module

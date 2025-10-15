@@ -1,11 +1,11 @@
 module: app
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio.fd
+    import: std_io.fd
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio.fs
-    import: std.stdio
+    import: std_io.fs
+    import: std_io
 
     function: main
         params:
@@ -13,11 +13,11 @@ module: app
         body:
             // 在当前目录下创建一个新目录 demoDir
             fs.mkdir("demoDir", 0)
-            stdio.println("已创建目录 demoDir")
+            std_io.println("已创建目录 demoDir")
 
             // 在 demoDir 下再创建子目录 subDir
             fs.mkdir("demoDir/subDir", 0)
-            stdio.println("已创建目录 demoDir/subDir")
+            std_io.println("已创建目录 demoDir/subDir")
         end body
     end function
 end module

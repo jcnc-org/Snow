@@ -1,16 +1,16 @@
 module: fibonacci
-    import: stdio
+    import: std_io
 
     function: main
         returns: void
         body:
-            stdio.println("Fibonacci Sequence:")
+            std_io.println("Fibonacci Sequence:")
 
             declare a: int = 0
             declare b: int = 1
 
-            stdio.println(a)
-            stdio.println(b)
+            std_io.println(a)
+            std_io.println(b)
 
             loop:
                 init:
@@ -21,7 +21,7 @@ module: fibonacci
                     i = i + 1
                 body:
                     declare next: int = a + b
-                    stdio.println(next)
+                    std_io.println(next)
                     a = b
                     b = next
                 end body

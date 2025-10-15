@@ -1,7 +1,7 @@
 module: app
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio
+    import: std_io
 
     function: main
         params:
@@ -14,7 +14,7 @@ module: app
             declare content: any
             content = fd.read(fd1, 100000)
             // 打印文件内容（带自动换行）
-            stdio.println(content)
+            std_io.println(content)
             // 关闭文件
             fd.close(fd1)
         end body

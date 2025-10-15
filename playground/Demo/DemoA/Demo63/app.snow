@@ -1,11 +1,11 @@
 module: app
-    import: stdio
+    import: std_io
 
     function: main
         params:
             declare args: any
         body:
-            stdio.print("stdout_write 实际写入字节数:")
+            std_io.print("stdout_write 实际写入字节数:")
         end body
     end function
 end module

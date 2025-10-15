@@ -1,7 +1,7 @@
 module: Main
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio
+    import: std_io
 
     function: main
         returns: void
@@ -20,15 +20,15 @@ module: Main
             declare sUnicode  : string = "𪚥𠮷: \u4F60\u597D, Snow!"
 
             // 打印所有示例
-            stdio.println(sNewline)
-            stdio.println(sTab)
-            stdio.println(sBackslash)
-            stdio.println(sDQuote)
-            stdio.println(sSQuote)
-            stdio.println(sCarriage)
-            stdio.println(sBackspace)
-            stdio.println(sFormFeed)
-            stdio.println(sUnicode)
+            std_io.println(sNewline)
+            std_io.println(sTab)
+            std_io.println(sBackslash)
+            std_io.println(sDQuote)
+            std_io.println(sSQuote)
+            std_io.println(sCarriage)
+            std_io.println(sBackspace)
+            std_io.println(sFormFeed)
+            std_io.println(sUnicode)
 
         end body
     end function

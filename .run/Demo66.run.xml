@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Demo66" type="Application" factoryName="Application" folderName="Demo">
+  <configuration default="false" name="Demo66" type="Application" factoryName="Application" folderName="DemoA">
     <option name="ALTERNATIVE_JRE_PATH" value="graalvm-25" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <option name="MAIN_CLASS_NAME" value="org.jcnc.snow.cli.SnowCLI" />

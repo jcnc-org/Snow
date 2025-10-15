@@ -1,5 +1,5 @@
 module: multiplication_table
-    import: stdio
+    import: std_io
 
     function: main
         returns: void
@@ -21,15 +21,15 @@ module: multiplication_table
                             j = j + 1
                         body:
                             declare result: int = i * j
-                            stdio.print(j)
-                            stdio.print(" * ")
-                            stdio.print(i)
-                            stdio.print(" = ")
-                            stdio.print(result)
-                            stdio.print("\t")
+                            std_io.print(j)
+                            std_io.print(" * ")
+                            std_io.print(i)
+                            std_io.print(" = ")
+                            std_io.print(result)
+                            std_io.print("\t")
                         end body
                     end loop
-                    stdio.println("")
+                    std_io.println("")
                 end body
             end loop
         end body

@@ -1,11 +1,11 @@
 module: Main
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio
+    import: std_io
     function: main
         returns: void
         body:
-            stdio.print(222)
+            std_io.print(222)
         end body
     end function
 end module

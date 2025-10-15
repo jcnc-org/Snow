@@ -1,7 +1,7 @@
 module: Main
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio
+    import: std_io
     // Animal结构体
     struct: Animal
         // 字段
@@ -46,9 +46,9 @@ module: Main
             declare a: Animal = new Animal("GenericAnimal", 1)
             // 直接调用已导入模块内的静态函数
             a.setAge(2)
-            stdio.println(a.getAge())
+            std_io.println(a.getAge())
             a.setAge(3)
-            stdio.println(a.getAge())
+            std_io.println(a.getAge())
 
 
         end body

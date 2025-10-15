@@ -1,12 +1,12 @@
 module: Main
-    import: stdio
+    import: std_io
     function: main
         returns: void
         body:
             declare arr: int[] = [1, 2, 3]
             arr[0] = 5
 
-            stdio.print(arr[0])
+            std_io.print(arr[0])
         end body
     end function
 end module

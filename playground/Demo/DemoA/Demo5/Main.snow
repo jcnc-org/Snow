@@ -1,5 +1,5 @@
 module: Main
-	import: stdio
+	import: std_io
 
     function: main
         params:
@@ -15,7 +15,7 @@ module: Main
                     i = i + 1
                 body:
                     if i==0 then
-					stdio.println(i)
+					std_io.println(i)
 					else
 					return 1
 					end if

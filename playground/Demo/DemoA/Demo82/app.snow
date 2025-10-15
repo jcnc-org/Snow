@@ -1,7 +1,7 @@
 module: app
 
     import: sync
-    import: stdio
+    import: std_io
 
     // 统一的加锁/解锁流程（用 trylock 展示进入/退出临界区）
     function: do_work
@@ -9,17 +9,17 @@ module: app
             declare name:string
             declare mid:int
         body:
-            stdio.println(name + ": 尝试加锁...")
+            std_io.println(name + ": 尝试加锁...")
             // 非阻塞 trylock：成功=1，失败=0
             declare ok:int = sync.mutex_trylock(mid)
 
             if ok == 1 then
-                stdio.println(name + ": 已进入临界区")
-                stdio.println(name + ": 即将解锁")
+                std_io.println(name + ": 已进入临界区")
+                std_io.println(name + ": 即将解锁")
                 sync.mutex_unlock(mid)
-                stdio.println(name + ": 已解锁")
+                std_io.println(name + ": 已解锁")
             else
-                stdio.println(name + ": 未能获取锁，跳过解锁")
+                std_io.println(name + ": 未能获取锁，跳过解锁")
             end if
         end body
     end function
@@ -28,13 +28,13 @@ module: app
     function: main
         body:
             declare mid:int = sync.mutex_new()
-            stdio.println("主线程: 创建互斥量 mid=" + mid)
+            std_io.println("主线程: 创建互斥量 mid=" + mid)
 
             // 依次模拟线程 A / B 的工作（此示例为串行调用）
             do_work("A", mid)
             do_work("B", mid)
 
-            stdio.println("主线程: 测试结束")
+            std_io.println("主线程: 测试结束")
         end body
     end function
 

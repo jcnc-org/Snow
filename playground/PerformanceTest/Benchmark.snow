@@ -1,11 +1,11 @@
 module: Benchmark
-    import: stdio
+    import: std_io
     import: syscall.time
 
     function: runBenchmark
         returns: void
         body:
-            stdio.println("Starting performance benchmark...")
+            std_io.println("Starting performance benchmark...")
             
             // 测试1: 简单算术运算
             benchmarkArithmetic()
@@ -19,7 +19,7 @@ module: Benchmark
             // 测试4: 函数调用开销
             benchmarkFunctionCalls()
             
-            stdio.println("Benchmark completed.")
+            std_io.println("Benchmark completed.")
         end body
     end function
 
@@ -42,7 +42,7 @@ module: Benchmark
             end loop
             
             declare endTime: long = time.mono_ms()
-            stdio.println("Arithmetic test: " + (endTime - startTime) + " ms, result = " + result)
+            std_io.println("Arithmetic test: " + (endTime - startTime) + " ms, result = " + result)
         end body
     end function
 
@@ -67,7 +67,7 @@ module: Benchmark
             declare endTime: long = time.mono_ms()
             // 使用系统调用获取字符串长度
             declare length: int = syscall("0x1801", str)
-            stdio.println("String operations test: " + (endTime - startTime) + " ms, length = " + length)
+            std_io.println("String operations test: " + (endTime - startTime) + " ms, length = " + length)
         end body
     end function
 
@@ -90,7 +90,7 @@ module: Benchmark
             end loop
             
             declare endTime: long = time.mono_ms()
-            stdio.println("Loop performance test: " + (endTime - startTime) + " ms, sum = " + sum)
+            std_io.println("Loop performance test: " + (endTime - startTime) + " ms, sum = " + sum)
         end body
     end function
 
@@ -113,7 +113,7 @@ module: Benchmark
             end loop
             
             declare endTime: long = time.mono_ms()
-            stdio.println("Function calls test: " + (endTime - startTime) + " ms, result = " + result)
+            std_io.println("Function calls test: " + (endTime - startTime) + " ms, result = " + result)
         end body
     end function
 

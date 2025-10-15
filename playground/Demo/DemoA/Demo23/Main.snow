@@ -1,12 +1,12 @@
 module: Main
     import: ModuleA
-    import: std.stdio
+    import: std_io
 
     function: main
         returns: void
         body:
            declare sum: byte = ModuleA.a
-           stdio.print(sum)
+           std_io.print(sum)
         end body
     end function
 end module

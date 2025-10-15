@@ -1,7 +1,7 @@
 module: Main
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio
+    import: std_io
     globals:
         declare sum: int = 123
     function: main
@@ -28,7 +28,7 @@ module: Main
                 step:
                     i = i + 1
                 body:
-                    stdio.print(arr[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][i][0])
+                    std_io.print(arr[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][i][0])
                 end body
             end loop
             return 0

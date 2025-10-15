@@ -1,7 +1,7 @@
 module: Main
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio
+    import: std_io
 
     function: main
         returns: void
@@ -23,7 +23,7 @@ module: Main
             declare l: int = 0
 
             declare x: int = n[i][j][k][l]
-            stdio.print(x)
+            std_io.print(x)
         end body
     end function
 end module

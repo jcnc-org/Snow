@@ -1,14 +1,14 @@
 module: main
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio,Student, Person
+    import: std_io,Student, Person
 
 	function: main
 	    returns: void
 	    body:
 	        declare a: Person = new Student(1)
 
-	        stdio.println(a.getName())
+	        std_io.println(a.getName())
 
 
 	    end body

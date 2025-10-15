@@ -1,7 +1,7 @@
 module: app
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio
+    import: std_io
 
     function: main
         params:
@@ -22,11 +22,11 @@ module: app
 
             // 查看文件属性
             info = fd.stat("demo_stat.txt")
-            stdio.println("文件属性: " + info)
+            std_io.println("文件属性: " + info)
 
             // 删除文件
             fd.unlink("demo_stat.txt")
-            stdio.println("文件已删除。")
+            std_io.println("文件已删除。")
         end body
     end function
 end module

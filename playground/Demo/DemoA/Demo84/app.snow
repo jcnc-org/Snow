@@ -1,20 +1,20 @@
 module: app
 	import: time
-	import: stdio
+	import: std_io
 
 	function: main
 	    body:
-	        stdio.println("now_ns=" + time.now_ns())
-	        stdio.println("now_ms=" + time.now_ms())
-	        stdio.println("mono_ms=" + time.mono_ms())
-	        stdio.println("tick_ms=" + time.tick_ms())
+	        std_io.println("now_ns=" + time.now_ns())
+	        std_io.println("now_ms=" + time.now_ms())
+	        std_io.println("mono_ms=" + time.mono_ms())
+	        std_io.println("tick_ms=" + time.tick_ms())
 
-	        stdio.println("epoch_sec=" + time.epoch_sec())
-	        stdio.println("epoch_usec_in_sec=" + time.epoch_usec_in_sec())
+	        std_io.println("epoch_sec=" + time.epoch_sec())
+	        std_io.println("epoch_usec_in_sec=" + time.epoch_usec_in_sec())
 
-	        stdio.println("sleep 10ms ...")
+	        std_io.println("sleep 10ms ...")
 	        time.sleep_ms(10)
-	        stdio.println("awake")
+	        std_io.println("awake")
 	    end body
 	end function
 end module

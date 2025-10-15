@@ -1,12 +1,12 @@
 module: Main
-    import: std.stdio
+    import: std_io
 
-	import: stdio
+	import: std_io
 
     function: main
         returns: void
         body:
-            stdio.print(foo())
+            std_io.print(foo())
         end body
     end function
 

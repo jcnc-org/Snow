@@ -1,8 +1,8 @@
 module: Main
-	import: std.stdio
+	import: std_io
 	function: main
 		body:
-		stdio.print(1)
+		std_io.print(1)
 		end body
 	end function
 end  module

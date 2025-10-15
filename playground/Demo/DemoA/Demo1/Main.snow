@@ -1,11 +1,11 @@
 module: Main
     import: Math
-    import: stdio
+    import: std_io
 
     function: main
         returns: void
         body:
-            stdio.print(Math.add(6,1))
+            std_io.print(Math.add(6,1))
         end body
     end function
 end module

@@ -1,7 +1,7 @@
 module: Main
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio
+    import: std_io
     import: ModuleA
     globals:
         declare c: int = 10
@@ -9,7 +9,7 @@ module: Main
         returns: void
         body:
              c = ModuleA.getA()
-             stdio.print(c)
+             std_io.print(c)
         end body
     end function
 end module

@@ -1,10 +1,10 @@
 module: fibonacci
-    import: stdio
+    import: std_io
 
     function: main
         returns: void
         body:
-            stdio.eprintln(10)
+            std_io.eprintln(10)
             
         end body
     end function

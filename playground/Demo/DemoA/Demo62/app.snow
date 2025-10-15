@@ -1,11 +1,11 @@
 module: app
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio.fs
+    import: std_io.fs
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio.fd
-    import: stdio
+    import: std_io.fd
+    import: std_io
 
     function: main
         params:
@@ -22,11 +22,11 @@ module: app
 
             // 使用固定时间戳 (2023-11-14 22:13:20 UTC)
             rc = fs.utime(path, 1700000000000l, 1700000000000l)
-            stdio.println("utime 返回: " + rc)
+            std_io.println("utime 返回: " + rc)
 
             // 查询文件属性验证
             info = fd.stat(path)
-            stdio.println("stat: " + info)
+            std_io.println("stat: " + info)
         end body
     end function
 end module

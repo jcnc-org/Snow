@@ -1,11 +1,11 @@
 module: Math
-	import: stdio
+	import: std_io
     function: main
         params:
         returns: void
         body:
 	        declare n:int =Math.factorial(6)
-			stdio.print(n)
+			std_io.print(n)
         end body
     end function
 

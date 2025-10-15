@@ -1,11 +1,11 @@
 module: app
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio.fs
+    import: std_io.fs
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio.fd
-    import: std.stdio
+    import: std_io.fd
+    import: std_io
 
     function: writer
         params:
@@ -22,7 +22,7 @@ module: app
         body:
             declare msg: any
             msg = fd.read(rfd, 128)
-            stdio.println("模拟进程B收到: " + msg)
+            std_io.println("模拟进程B收到: " + msg)
             fd.close(rfd)
         end body
     end function
@@ -42,7 +42,7 @@ module: app
             writer(wfd)
             // 模拟进程 B（读端）
             reader(rfd)
-            stdio.println("模拟双进程通信完成")
+            std_io.println("模拟双进程通信完成")
         end body
     end function
 end module

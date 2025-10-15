@@ -1,18 +1,18 @@
 module: app
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio.fs
+    import: std_io.fs
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio.fd
-    import: std.stdio
+    import: std_io.fd
+    import: std_io
 
     function: main
         params:
             declare args: any
         body:
             fd.truncate("output.txt", 100L)
-            stdio.println("文件已截断到 100 字节")
+            std_io.println("文件已截断到 100 字节")
         end body
     end function
 end module

@@ -1,14 +1,14 @@
 module: app
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio.fs
+    import: std_io.fs
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio.fd
+    import: std_io.fd
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio.io
-    import: std.stdio
+    import: std_io.io
+    import: std_io
 
     function: main
         params:
@@ -20,7 +20,7 @@ module: app
             info = fd.stat("seek_demo.txt")
 
             // 直接打印整个对象
-            stdio.println("stat结果: " + info)
+            std_io.println("stat结果: " + info)
 
         end body
     end function

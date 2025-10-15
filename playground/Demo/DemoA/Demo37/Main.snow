@@ -1,7 +1,7 @@
 module: app
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio
+    import: std_io
 
     function: main
         params:
@@ -9,7 +9,7 @@ module: app
         body:
             declare fd1: int
             fd1 = fd.open("README.md", 0)   // 打开文件
-            stdio.println(fd.read(fd1, 10))   // 一次性读并打印
+            std_io.println(fd.read(fd1, 10))   // 一次性读并打印
         end body
     end function
 end module

@@ -1,7 +1,7 @@
 module: Main
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio
+    import: std_io
     function: main
         returns: int
         body:
@@ -33,8 +33,8 @@ module: Main
                             if j % 2 == 0 then
                                 continue
                             end if
-                            stdio.print(i)
-                            stdio.print(j)
+                            std_io.print(i)
+                            std_io.print(j)
                         end body
                     end loop
                 end body

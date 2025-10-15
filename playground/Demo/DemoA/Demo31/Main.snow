@@ -1,7 +1,7 @@
 module: Main
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio
+    import: std_io
 
     // 父类 Person
     struct: Person
@@ -51,8 +51,8 @@ module: Main
             declare s: Student = new Student(123, 1001)
 
             // Student 拥有父类方法
-            stdio.println(s.getName())      // 来自 Person → 123
-            stdio.println(s.getStudentId()) // 来自 Student → 1001
+            std_io.println(s.getName())      // 来自 Person → 123
+            std_io.println(s.getStudentId()) // 来自 Student → 1001
         end body
     end function
 end module

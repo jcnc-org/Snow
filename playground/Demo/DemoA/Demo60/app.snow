@@ -1,21 +1,21 @@
 module: app
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio.fs
+    import: std_io.fs
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio.fd
-	import: std.stdio
+    import: std_io.fd
+	import: std_io
 
     function: main
         params:
             declare args: any
         body:
             fs.mkdir("demoDir", 0)
-            stdio.println("已创建 demoDir")
+            std_io.println("已创建 demoDir")
 
             fs.chmod("demoDir", 493)
-            stdio.println("已修改 demoDir 权限为 755")
+            std_io.println("已修改 demoDir 权限为 755")
         end body
     end function
 end module

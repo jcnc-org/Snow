@@ -1,11 +1,11 @@
 module: app
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio.fs
+    import: std_io.fs
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio.fd
-    import: std.stdio
+    import: std_io.fd
+    import: std_io
 
     function: main
         params:
@@ -20,7 +20,7 @@ module: app
             fd.ftruncate(fd1, 50L)
 
             // 输出提示
-            stdio.println("文件已通过 fd 截断到 50 字节")
+            std_io.println("文件已通过 fd 截断到 50 字节")
 
             // 关闭文件
             fd.close(fd1)

@@ -2,7 +2,7 @@ module: app
     import: syscall.fs
     import: syscall.fd
     import: syscall.io
-    import: std.stdio
+    import: std_io
 
     function: main
         params:
@@ -15,7 +15,7 @@ module: app
             ret = io.stderr_write("\n")
 
             // 打印返回值，正常情况下是 0
-            stdio.println("stderrWrite 返回值: " + ret)
+            std_io.println("stderrWrite 返回值: " + ret)
         end body
     end function
 end module

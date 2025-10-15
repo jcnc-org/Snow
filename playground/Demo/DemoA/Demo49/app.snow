@@ -1,11 +1,11 @@
 module: app
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio.fs
+    import: std_io.fs
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio.fd
-    import: std.stdio
+    import: std_io.fd
+    import: std_io
 
 
     function: main
@@ -21,20 +21,20 @@ module: app
             fds = fd.pipe()
             rfd = fds[0]   // 读端
             wfd = fds[1]   // 写端
-            stdio.println("管道创建成功: rfd=" + rfd + ", wfd=" + wfd)
+            std_io.println("管道创建成功: rfd=" + rfd + ", wfd=" + wfd)
 
             // 向管道写入数据
             fd.write(wfd, "Hello via pipe!")
 
             // 从管道读出数据
             data = fd.read(rfd, 64)
-            stdio.println("从管道读取: " + data)
+            std_io.println("从管道读取: " + data)
 
             // 关闭管道两端
             fd.close(rfd)
             fd.close(wfd)
 
-            stdio.println("完成管道测试")
+            std_io.println("完成管道测试")
         end body
     end function
 end module

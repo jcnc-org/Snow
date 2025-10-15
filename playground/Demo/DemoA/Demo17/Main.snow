@@ -1,7 +1,7 @@
 module: Main
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio
+    import: std_io
 
     function: main
         returns: int
@@ -15,7 +15,7 @@ module: Main
                     i = i + 1
                 body:
                     if i % 2 == 0 then
-                        stdio.print(i)
+                        std_io.print(i)
                         break
                     end if
                 end body

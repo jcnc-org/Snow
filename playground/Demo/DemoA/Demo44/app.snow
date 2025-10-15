@@ -1,7 +1,7 @@
 module: app
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio
+    import: std_io
 
     function: main
         params:
@@ -19,14 +19,14 @@ module: app
 
             // 移动到文件开头 (SEEK_SET)
             fd.seek(fd1, 0, 0)
-            stdio.println("指针已移动到文件开头")
+            std_io.println("指针已移动到文件开头")
 
             // 覆盖前 5 个字符
             n = fd.write(fd1, "World")
 
             // 移动到文件末尾 (SEEK_END, 偏移 0)
             fd.seek(fd1, 0, 2)
-            stdio.println("指针已移动到文件末尾")
+            std_io.println("指针已移动到文件末尾")
 
             // 在文件末尾追加写
             n = fd.write(fd1, "\n\tAppend line")

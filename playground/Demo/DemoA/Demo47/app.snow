@@ -1,7 +1,7 @@
 module: app
     import: syscall.fs
     import: syscall.fd
-    import: std.stdio
+    import: std_io
 
     function: main
         params:
@@ -12,11 +12,11 @@ module: app
 
             // 打开文件（写模式 + 创建 + 截断）
             fd1 = fd.open("dup_seek_demo.txt", 577)
-            stdio.println("fd1 = " + fd1)
+            std_io.println("fd1 = " + fd1)
 
             // 复制 fd
             fd2 = fd.dup(fd1)
-            stdio.println("fd2 = " + fd2)
+            std_io.println("fd2 = " + fd2)
 
             // 使用 fd1 写入 5 个字节
             fd.write(fd1, "ABCDE")
@@ -35,7 +35,7 @@ module: app
             fd.close(fd1)
             fd.close(fd2)
 
-            stdio.println("完成 dup + seek 测试")
+            std_io.println("完成 dup + seek 测试")
         end body
     end function
 end module

@@ -1,7 +1,7 @@
 module: Main
 	import: syscall.fs
     import: syscall.fd
-    import: std.stdio
+    import: std_io
     struct: Address
         fields:
             declare country: int
@@ -59,8 +59,8 @@ module: Main
             // 初始化 Person 和 Address 的实例
             declare p: Person = new Person(123, new Address(1, 2))
             declare a: Person = p
-            stdio.println(a.getName())   // -> 123
-            stdio.println(a.getAddr().getCity()) // -> 2
+            std_io.println(a.getName())   // -> 123
+            std_io.println(a.getAddr().getCity()) // -> 2
 
         end body
     end function
