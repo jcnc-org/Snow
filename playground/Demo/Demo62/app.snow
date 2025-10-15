@@ -1,9 +1,9 @@
 module: app
-    import: os.fs
-    import: os.fd
+    import: syscall.fs
+    import: syscall.fd
     import: std.stdio.fs
-    import: os.fs
-    import: os.fd
+    import: syscall.fs
+    import: syscall.fd
     import: std.stdio.fd
     import: stdio
 

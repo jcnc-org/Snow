@@ -1,7 +1,7 @@
 // overload 示例
 module: Main
-    import: os.fs
-    import: os.fd
+    import: syscall.fs
+    import: syscall.fd
     import: std.stdio
 
     // Animal结构体

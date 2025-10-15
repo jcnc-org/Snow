@@ -1,6 +1,6 @@
 module: main
-    import: os.fs
-    import: os.fd
+    import: syscall.fs
+    import: syscall.fd
     import: std.stdio
 	function: main
 	    returns: void

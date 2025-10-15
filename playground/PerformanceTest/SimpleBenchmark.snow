@@ -1,6 +1,6 @@
 module: SimpleBenchmark
     import: stdio
-    import: os.time
+    import: syscall.time
 
     function: main
         returns: void

@@ -1,7 +1,7 @@
 module: app
-    import: os.fs
-    import: os.fd
-    import: os.io
+    import: syscall.fs
+    import: syscall.fd
+    import: syscall.io
     import: std.stdio
 
     function: main
