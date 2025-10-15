@@ -125,7 +125,7 @@ public final class TestAllCommand implements CLICommand {
 
     @Override
     public String description() {
-        return "Compile and run all demo examples in the specified directories (default: playground/Demo).";
+        return "Compile and run all demo examples in the specified directories (default: playground/Demo/DemoA).";
     }
 
     @Override
@@ -135,7 +135,7 @@ public final class TestAllCommand implements CLICommand {
         System.out.println("Options:");
         System.out.println("  --dir=<path>             指定要测试的根目录；可重复使用多次。");
         System.out.println("                           传父目录（遍历其子目录）或直接传单个 demo 目录。");
-        System.out.println("                           未指定时默认使用 playground/Demo。");
+        System.out.println("                           未指定时默认使用 playground/Demo/DemoA。");
         System.out.println("  --no-run                 仅编译不运行");
         System.out.println("  --verbose                输出详细信息");
         System.out.println("  --stop-on-failure        首次失败/异常时中止（超时不触发）");
@@ -145,7 +145,6 @@ public final class TestAllCommand implements CLICommand {
         System.out.println();
         System.out.println("Examples:");
         System.out.println("  snow test-all");
-        System.out.println("  snow test-all --dir=playground/Demo");
         System.out.println("  snow test-all --dir=playground/Demo/DemoA");
         System.out.println("  snow test-all --dir=demo/set1 --dir=demo/set2 --dir=/abs/one");
     }
@@ -188,9 +187,9 @@ public final class TestAllCommand implements CLICommand {
             }
         }
 
-        // 2. 若未显式指定 --dir，则回退默认目录 playground/Demo
+        // 2. 若未显式指定 --dir，则回退默认目录 playground/Demo/DemoA
         if (demoRoots.isEmpty()) {
-            demoRoots.add(Paths.get("playground", "Demo"));
+            demoRoots.add(Paths.get("playground", "Demo", "DemoA"));
         }
 
         // 3. 校验所有根目录都存在；任意不存在则报错退出（保持原策略的严格性）
