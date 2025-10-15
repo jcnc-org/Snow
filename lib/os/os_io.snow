@@ -1,0 +1,75 @@
+/**
+@module os_io
+@summary I/O 的过程式稳定层：统一少量约定，便于上层复用。
+*/
+module: os_io
+
+	import: io
+
+    globals:
+        declare const NEWLINE :string = "\n"
+
+    /**
+    @function read_line
+    @summary 从标准输入读取一行文本；EOF 返回 ""；I/O 错误透传异常。
+    */
+    function: read_line
+        params:
+        returns: string
+        body:
+            return io.stdin_read()
+        end body
+    end function
+
+    /**
+    @function stdout_write
+    @summary 写入 stdout（任意对象将转字符串，按 UTF-8 写入）
+    */
+    function: stdout_write
+        params:
+            declare data:any
+        returns: int
+        body:
+            return io.stdout_write(data)
+        end body
+    end function
+
+    /**
+    @function stderr_write
+    @summary 写入 stderr（任意对象将转字符串，按 UTF-8 写入）
+    */
+    function: stderr_write
+        params:
+            declare data:any
+        returns: int
+        body:
+            return io.stderr_write(data)
+        end body
+    end function
+
+    /**
+    @function stdout_writeln
+    @summary 写入 stdout 并自动追加换行。
+    */
+    function: stdout_writeln
+        params:
+            declare data:any
+        returns: int
+        body:
+            return io.stdout_write(("" + data) + NEWLINE)
+        end body
+    end function
+
+    /**
+    @function stderr_writeln
+    @summary 写入 stderr 并自动追加换行。
+    */
+    function: stderr_writeln
+        params:
+            declare data:any
+        returns: int
+        body:
+            return io.stderr_write(("" + data) + NEWLINE)
+        end body
+    end function
+end module
