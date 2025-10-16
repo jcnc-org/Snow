@@ -1,0 +1,27 @@
+module: Strings
+    import: std_io
+    
+    function: main
+        returns: void
+        body:
+            // 基本字符串
+            declare str: string = "Hello World"
+            std_io.println("Basic string: " + str)
+            
+            // 包含转义序列的字符串
+            declare strWithNewline: string = "Hello\nWorld"
+            std_io.println("String with newline:")
+            std_io.println(strWithNewline)
+            
+            declare strWithPath: string = "C:\\Snow\\file.txt"
+            std_io.println("String with path: " + strWithPath)
+            
+            declare strWithQuotes: string = "He said \"Hello\""
+            std_io.println("String with quotes: " + strWithQuotes)
+            
+            // 字符串连接
+            declare greeting: string = "Hello" + " " + "World"
+            std_io.println("Greeting: " + greeting)
+        end body
+    end function
+end module

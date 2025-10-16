@@ -1,0 +1,58 @@
+module: Structs
+    import: std_io
+    
+    struct: Person
+        fields:
+            declare name: string
+            declare age: int
+        
+        init:
+            params:
+                declare n: string
+                declare a: int
+            body:
+                this.name = n
+                this.age = a
+            end body
+        end init
+        
+        function: getName
+            returns: string
+            body:
+                return this.name
+            end body
+        end function
+        
+        function: getAge
+            returns: int
+            body:
+                return this.age
+            end body
+        end function
+        
+        function: setAge
+            params:
+                declare newAge: int
+            returns: void
+            body:
+                this.age = newAge
+            end body
+        end function
+    end struct
+    
+    function: main
+        returns: void
+        body:
+            // 创建结构体实例
+            declare p: Person = new Person("Alice", 30)
+            
+            // 访问字段和方法
+            std_io.println("Person name: " + p.getName())
+            std_io.println("Person age: " + p.getAge())
+            
+            // 修改字段
+            p.setAge(31)
+            std_io.println("Updated age: " + p.getAge())
+        end body
+    end function
+end module

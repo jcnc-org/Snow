@@ -1,0 +1,21 @@
+module: Globals
+    import: std_io
+    
+    globals:
+        declare globalInt: int = 100
+        declare globalStr: string = "Global String"
+        declare globalBool: boolean = true
+    
+    function: main
+        returns: void
+        body:
+            std_io.println("Global int: " + globalInt)
+            std_io.println("Global string: " + globalStr)
+            std_io.println("Global boolean: " + globalBool)
+            
+            // 修改全局变量
+            globalInt = 200
+            std_io.println("Modified global int: " + globalInt)
+        end body
+    end function
+end module

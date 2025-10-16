@@ -1,0 +1,10 @@
+module: BasicModule
+    import: std_io
+    
+    function: main
+        returns: void
+        body:
+            std_io.println("Hello, Snow!")
+        end body
+    end function
+end module
