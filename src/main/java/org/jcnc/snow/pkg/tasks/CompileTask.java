@@ -65,20 +65,26 @@ public record CompileTask(Project project, String[] args) implements Task {
      * </ul>
      */
     private static Path deriveOutputPath(List<Path> sources, String outName, Path dir) {
-        String base;
+        Path outputPath;
         if (outName != null) { // 优先使用用户指定的输出名
-            base = outName;
+            outputPath = Path.of(outName);
+            // 如果没有扩展名或者扩展名不是.water，则添加.water扩展名
+            if (!outputPath.toString().endsWith(".water")) {
+                outputPath = outputPath.resolveSibling(outputPath.getFileName() + ".water");
+            }
         } else if (dir != null) { // 如果指定了目录，则使用目录名作为基名
-            base = dir.getFileName().toString();
+            String base = dir.getFileName().toString();
+            outputPath = dir.resolve(base + ".water");
         } else if (sources.size() == 1) { // 单个源文件时，使用源文件名（去掉扩展名）
-            base = sources.getFirst()
+            String base = sources.getFirst()
                     .getFileName()
                     .toString()
                     .replaceFirst("\\.snow$", "");
+            outputPath = Path.of(base + ".water");
         } else { // 默认情况
-            base = "program";
+            outputPath = Path.of("program.water");
         }
-        return Path.of(base + ".water"); // 拼接生成 .water 文件路径
+        return outputPath; // 返回完整的输出路径
     }
 
     /**
@@ -125,18 +131,18 @@ public record CompileTask(Project project, String[] args) implements Task {
             if (Files.isDirectory(lib)) return lib;
             cur = cur.getParent();
         }
-        
+
         // 如果在项目目录中找不到lib，则尝试查找Snow SDK目录
         return findSnowSdkLibDir();
     }
-    
+
     /**
      * 查找Snow SDK安装目录下的lib目录
      * 查找顺序：
      * 1. SNOW_HOME环境变量指定的目录
      * 2. snow.home系统属性指定的目录
      * 3. 可执行文件所在目录的上级目录
-     * 
+     *
      * @return Snow SDK的lib目录路径，如果找不到则返回null
      */
     private static Path findSnowSdkLibDir() {
@@ -148,7 +154,7 @@ public record CompileTask(Project project, String[] args) implements Task {
                 return sdkLib;
             }
         }
-        
+
         // 2. 检查snow.home系统属性
         String snowHomeProperty = System.getProperty("snow.home");
         if (snowHomeProperty != null) {
@@ -157,7 +163,7 @@ public record CompileTask(Project project, String[] args) implements Task {
                 return sdkLib;
             }
         }
-        
+
         // 3. 尝试从可执行文件路径推断SDK目录
         try {
             // 获取当前JAR文件或类文件的路径
@@ -177,7 +183,7 @@ public record CompileTask(Project project, String[] args) implements Task {
         } catch (Exception e) {
             // 忽略异常，继续其他查找方式
         }
-        
+
         return null;
     }
 
@@ -401,6 +407,11 @@ public record CompileTask(Project project, String[] args) implements Task {
         }
 
         Path outFile = deriveOutputPath(sources, outputName, dir);
+        // 确保输出目录存在
+        Path parentDir = outFile.getParent();
+        if (parentDir != null) {
+            Files.createDirectories(parentDir);
+        }
         Files.write(outFile, vmCode, StandardCharsets.UTF_8);
         print("Written to " + outFile.toAbsolutePath());
 
