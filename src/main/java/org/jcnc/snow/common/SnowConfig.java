@@ -18,6 +18,13 @@ public final class SnowConfig {
 
     /**
      * 标准库路径，默认为项目根目录下的 lib 文件夹
+     * <p>
+     * 查找优先级：
+     * 1. 环境变量 SNOW_LIB
+     * 2. 系统属性 snow.lib
+     * 3. 项目目录下的 lib 文件夹
+     * 4. Snow SDK安装目录下的 lib 文件夹 (通过SNOW_HOME环境变量或snow.home系统属性)
+     * 5. 可执行文件所在目录推断的SDK目录
      */
     public static Path STDLIB_PATH = Paths.get("lib").toAbsolutePath();
 

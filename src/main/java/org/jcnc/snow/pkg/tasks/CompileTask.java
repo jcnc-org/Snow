@@ -125,6 +125,59 @@ public record CompileTask(Project project, String[] args) implements Task {
             if (Files.isDirectory(lib)) return lib;
             cur = cur.getParent();
         }
+        
+        // 如果在项目目录中找不到lib，则尝试查找Snow SDK目录
+        return findSnowSdkLibDir();
+    }
+    
+    /**
+     * 查找Snow SDK安装目录下的lib目录
+     * 查找顺序：
+     * 1. SNOW_HOME环境变量指定的目录
+     * 2. snow.home系统属性指定的目录
+     * 3. 可执行文件所在目录的上级目录
+     * 
+     * @return Snow SDK的lib目录路径，如果找不到则返回null
+     */
+    private static Path findSnowSdkLibDir() {
+        // 1. 检查SNOW_HOME环境变量
+        String snowHome = System.getenv("SNOW_HOME");
+        if (snowHome != null) {
+            Path sdkLib = Path.of(snowHome).resolve("lib");
+            if (Files.isDirectory(sdkLib)) {
+                return sdkLib;
+            }
+        }
+        
+        // 2. 检查snow.home系统属性
+        String snowHomeProperty = System.getProperty("snow.home");
+        if (snowHomeProperty != null) {
+            Path sdkLib = Path.of(snowHomeProperty).resolve("lib");
+            if (Files.isDirectory(sdkLib)) {
+                return sdkLib;
+            }
+        }
+        
+        // 3. 尝试从可执行文件路径推断SDK目录
+        try {
+            // 获取当前JAR文件或类文件的路径
+            String classPath = CompileTask.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+
+            // 向上查找可能的SDK目录结构
+            Path current = Path.of(classPath).toAbsolutePath().getParent();
+            while (current != null) {
+                // 检查是否存在bin和lib目录
+                Path binDir = current.resolve("bin");
+                Path libDir = current.resolve("lib");
+                if (Files.isDirectory(binDir) && Files.isDirectory(libDir)) {
+                    return libDir;
+                }
+                current = current.getParent();
+            }
+        } catch (Exception e) {
+            // 忽略异常，继续其他查找方式
+        }
+        
         return null;
     }
 
