@@ -50,8 +50,8 @@ public class ExpressionStatementParser implements StatementParser {
         }
         if (ts.peek().getType() == TokenType.KEYWORD) {
             String kw = ts.peek().getLexeme();
-            // 仅允许 this 作为表达式起始；其它关键字（如 end/if/else 等）仍禁止
-            if (!"this".equals(kw)) {
+            // 仅允许 this/super 作为表达式起始；其它关键字（如 end/if/else 等）仍禁止
+            if (!"this".equals(kw) && !"super".equals(kw)) {
                 throw new UnexpectedToken(
                         "无法解析以关键字开头的表达式: " + kw,
                         ts.peek().getLine(),

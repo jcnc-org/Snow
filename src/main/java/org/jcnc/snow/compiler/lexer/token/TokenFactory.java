@@ -29,7 +29,7 @@ public class TokenFactory {
             ("module", "function", "params", "returns", "body", "end",
                     "if", "then", "else", "loop", "declare", "return", "import", "init",
                     "cond", "step", "globals", "break", "continue", "const",
-                    "new", "extends"
+                    "new", "extends", "struct", "fields", "this", "super"
             );
 
     /**

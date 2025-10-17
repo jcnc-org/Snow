@@ -25,6 +25,7 @@ import java.util.Map;
  * </p>
  */
 public class PrattExpressionParser implements ExpressionParser {
+    private static final IdentifierParselet IDENTIFIER_PREFIX = new IdentifierParselet();
 
     /**
      * 前缀解析器注册表（通过 Token 类型名或词素作为索引）。
@@ -48,7 +49,9 @@ public class PrattExpressionParser implements ExpressionParser {
         // ----------------- 前缀解析器注册 -----------------
         // 各种字面量/标识符
         prefixes.put(TokenType.NUMBER_LITERAL.name(), new NumberLiteralParselet());
-        prefixes.put(TokenType.IDENTIFIER.name(), new IdentifierParselet());
+        prefixes.put(TokenType.IDENTIFIER.name(), IDENTIFIER_PREFIX);
+        prefixes.put("this", IDENTIFIER_PREFIX);
+        prefixes.put("super", IDENTIFIER_PREFIX);
         prefixes.put(TokenType.STRING_LITERAL.name(), new StringLiteralParselet());
         prefixes.put(TokenType.BOOL_LITERAL.name(), new BoolLiteralParselet());
 
