@@ -153,4 +153,4 @@ try {
     }
 } catch {
     Write-Warning "Failed to create VERSION file: $($_.Exception.Message)"
-}"
+}
