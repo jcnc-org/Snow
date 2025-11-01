@@ -1,0 +1,98 @@
+/**
+@module os_sys
+@summary 系统信息与环境变量的统一接口。
+*/
+module: os_sys
+
+    import: sys
+
+    /**
+    @function getenv
+    @summary 返回环境变量值，若不存在则为 null。
+    */
+    function: getenv
+        params:
+            declare key:string
+        returns: string
+        body:
+            return sys.getenv(key)
+        end body
+    end function
+
+    /**
+    @function setenv
+    @summary 设置环境变量；value 为空表示删除。
+    */
+    function: setenv
+        params:
+            declare key:string
+            declare value:any
+            declare overwrite:boolean
+        returns: int
+        body:
+            declare flag:int = 0
+            if overwrite == true then
+                flag = 1
+            end if
+            return sys.setenv(key, value, flag)
+        end body
+    end function
+
+    /**
+    @function cpu_count
+    @summary 返回可用 CPU 数量。
+    */
+    function: cpu_count
+        returns: int
+        body:
+            return sys.ncpu()
+        end body
+    end function
+
+    /**
+    @function random_bytes
+    @summary 返回长度为 n 的随机字节数组。
+    */
+    function: random_bytes
+        params:
+            declare n:int
+        returns: any
+        body:
+            return sys.random_bytes(n)
+        end body
+    end function
+
+    /**
+    @function last_error_message
+    @summary 返回最近一次系统调用的错误描述。
+    */
+    function: last_error_message
+        returns: string
+        body:
+            return sys.errstr()
+        end body
+    end function
+
+    /**
+    @function last_error_code
+    @summary 返回最近一次系统调用的错误码。
+    */
+    function: last_error_code
+        returns: int
+        body:
+            return sys.errno()
+        end body
+    end function
+
+    /**
+    @function memory_info
+    @summary 返回 JVM/系统内存信息（Map）。
+    */
+    function: memory_info
+        returns: any
+        body:
+            return sys.meminfo()
+        end body
+    end function
+
+end module

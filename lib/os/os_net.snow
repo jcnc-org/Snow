@@ -1,0 +1,231 @@
+/**
+@module os_net
+@summary 套接字与网络操作的稳定封装。
+*/
+module: os_net
+
+    import: web
+
+    globals:
+        declare const AF_INET:int  = 2
+        declare const AF_INET6:int = 10
+        declare const SOCK_STREAM:int = 1
+        declare const SOCK_DGRAM:int  = 2
+        declare const SHUT_RD:int   = 0
+        declare const SHUT_WR:int   = 1
+        declare const SHUT_RDWR:int = 2
+
+    /**
+    @function socket
+    @summary 创建原始 socket。
+    */
+    function: socket
+        params:
+            declare family:int
+            declare type:int
+            declare proto:int
+        returns: int
+        body:
+            return web.socket(family, type, proto)
+        end body
+    end function
+
+    /**
+    @function tcp_socket
+    @summary 创建 IPv4 TCP 套接字。
+    */
+    function: tcp_socket
+        returns: int
+        body:
+            return web.socket(AF_INET, SOCK_STREAM, 0)
+        end body
+    end function
+
+    /**
+    @function udp_socket
+    @summary 创建 IPv4 UDP 套接字。
+    */
+    function: udp_socket
+        returns: int
+        body:
+            return web.socket(AF_INET, SOCK_DGRAM, 0)
+        end body
+    end function
+
+    function: bind
+        params:
+            declare fd:int
+            declare addr:string
+            declare port:int
+        returns: int
+        body:
+            return web.bind(fd, addr, port)
+        end body
+    end function
+
+    function: listen
+        params:
+            declare fd:int
+            declare backlog:int
+        returns: int
+        body:
+            return web.listen(fd, backlog)
+        end body
+    end function
+
+    function: accept
+        params:
+            declare fd:int
+        returns: any
+        body:
+            return web.accept(fd)
+        end body
+    end function
+
+    function: connect
+        params:
+            declare fd:int
+            declare addr:string
+            declare port:int
+        returns: int
+        body:
+            return web.connect(fd, addr, port)
+        end body
+    end function
+
+    function: send
+        params:
+            declare fd:int
+            declare data:any
+        returns: int
+        body:
+            return web.send(fd, data)
+        end body
+    end function
+
+    function: recv
+        params:
+            declare fd:int
+            declare n:int
+        returns: any
+        body:
+            return web.recv(fd, n)
+        end body
+    end function
+
+    function: send_to
+        params:
+            declare fd:int
+            declare data:any
+            declare addr:string
+            declare port:int
+        returns: int
+        body:
+            return web.sendto(fd, data, addr, port)
+        end body
+    end function
+
+    function: recv_from
+        params:
+            declare fd:int
+            declare n:int
+        returns: any
+        body:
+            return web.recvfrom(fd, n)
+        end body
+    end function
+
+    function: shutdown
+        params:
+            declare fd:int
+            declare how:int
+        returns: int
+        body:
+            return web.shutdown(fd, how)
+        end body
+    end function
+
+    function: shutdown_read
+        params:
+            declare fd:int
+        returns: int
+        body:
+            return web.shutdown(fd, SHUT_RD)
+        end body
+    end function
+
+    function: shutdown_write
+        params:
+            declare fd:int
+        returns: int
+        body:
+            return web.shutdown(fd, SHUT_WR)
+        end body
+    end function
+
+    function: shutdown_both
+        params:
+            declare fd:int
+        returns: int
+        body:
+            return web.shutdown(fd, SHUT_RDWR)
+        end body
+    end function
+
+    function: set_option
+        params:
+            declare fd:int
+            declare level:int
+            declare opt:int
+            declare value:any
+        returns: int
+        body:
+            return web.setsockopt(fd, level, opt, value)
+        end body
+    end function
+
+    function: get_option
+        params:
+            declare fd:int
+            declare level:int
+            declare opt:int
+        returns: any
+        body:
+            return web.getsockopt(fd, level, opt)
+        end body
+    end function
+
+    function: peer_name
+        params:
+            declare fd:int
+        returns: any
+        body:
+            return web.getpeername(fd)
+        end body
+    end function
+
+    function: local_name
+        params:
+            declare fd:int
+        returns: any
+        body:
+            return web.getsockname(fd)
+        end body
+    end function
+
+    /**
+    @function resolve
+    @summary DNS 解析，返回候选地址列表。
+    */
+    function: resolve
+        params:
+            declare host:string
+            declare service:string
+            declare hints:any
+        returns: any[]
+        body:
+            return web.getaddrinfo(host, service, hints)
+        end body
+    end function
+
+end module

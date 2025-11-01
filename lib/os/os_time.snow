@@ -1,0 +1,107 @@
+/**
+@module os_time
+@summary 时间与睡眠工具，基于 syscall.time 的稳定封装。
+*/
+module: os_time
+
+    import: time
+
+    globals:
+        declare const REALTIME:int = time.REALTIME
+        declare const MONO:int     = time.MONO
+
+    /**
+    @function now_ns
+    @summary 返回墙钟时间（纳秒）。
+    */
+    function: now_ns
+        returns: long
+        body:
+            return time.now_ns()
+        end body
+    end function
+
+    /**
+    @function now_ms
+    @summary 返回墙钟时间（毫秒）。
+    */
+    function: now_ms
+        returns: long
+        body:
+            return time.now_ms()
+        end body
+    end function
+
+    /**
+    @function mono_ns
+    @summary 返回单调时钟（纳秒）。
+    */
+    function: mono_ns
+        returns: long
+        body:
+            return time.mono_ns()
+        end body
+    end function
+
+    /**
+    @function mono_ms
+    @summary 返回单调时钟（毫秒）。
+    */
+    function: mono_ms
+        returns: long
+        body:
+            return time.mono_ms()
+        end body
+    end function
+
+    /**
+    @function sleep_ms
+    @summary 挂起当前线程指定毫秒。
+    */
+    function: sleep_ms
+        params:
+            declare ms:int
+        returns: int
+        body:
+            return time.sleep_ms(ms)
+        end body
+    end function
+
+    /**
+    @function sleep_us
+    @summary 挂起当前线程指定微秒。
+    */
+    function: sleep_us
+        params:
+            declare us:int
+        returns: int
+        body:
+            return time.sleep_us(us)
+        end body
+    end function
+
+    /**
+    @function sleep_ns
+    @summary 挂起当前线程指定纳秒。
+    */
+    function: sleep_ns
+        params:
+            declare ns:long
+        returns: int
+        body:
+            return time.nanosleep(ns)
+        end body
+    end function
+
+    /**
+    @function tick_ms
+    @summary 返回单调计数（毫秒）。
+    */
+    function: tick_ms
+        returns: long
+        body:
+            return time.tick_ms()
+        end body
+    end function
+
+end module

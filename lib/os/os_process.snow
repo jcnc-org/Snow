@@ -1,0 +1,95 @@
+/**
+@module os_process
+@summary 进程相关稳定接口：获取 PID、fork/exec、等待子进程。
+*/
+module: os_process
+
+    import: process
+
+    /**
+    @function exit
+    @summary 结束当前进程并返回指定退出码。
+    */
+    function: exit
+        params:
+            declare code:int
+        body:
+            process.exit(code)
+        end body
+    end function
+
+    /**
+    @function spawn
+    @summary 调用底层 fork，返回子进程 pid；在子进程内返回 0。
+    */
+    function: spawn
+        params:
+            declare argv:any[]
+        returns: int
+        body:
+            return process.fork(argv)
+        end body
+    end function
+
+    /**
+    @function exec_replace
+    @summary 用另一个程序映像替换当前进程。
+    @param env 额外环境变量映射，传 "" 或 null 保持默认
+    */
+    function: exec_replace
+        params:
+            declare path:string
+            declare argv:any[]
+            declare env:any
+        body:
+            process.exec(env, argv, path)
+        end body
+    end function
+
+    /**
+    @function wait_pid
+    @summary 等待指定 pid 退出并返回其状态码。
+    */
+    function: wait_pid
+        params:
+            declare pid:int
+        returns: int
+        body:
+            return process.wait(pid)
+        end body
+    end function
+
+    /**
+    @function wait_any
+    @summary 等待任意子进程退出。
+    */
+    function: wait_any
+        returns: int
+        body:
+            return process.wait(0)
+        end body
+    end function
+
+    /**
+    @function pid
+    @summary 返回当前进程 PID。
+    */
+    function: pid
+        returns: int
+        body:
+            return process.getpid()
+        end body
+    end function
+
+    /**
+    @function parent_pid
+    @summary 返回父进程 PID。
+    */
+    function: parent_pid
+        returns: int
+        body:
+            return process.getppid()
+        end body
+    end function
+
+end module

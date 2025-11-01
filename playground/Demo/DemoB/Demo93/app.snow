@@ -1,0 +1,102 @@
+module: app
+    import: os_fs
+    import: os_fd
+    import: os_multiplex
+    import: std_io
+
+    function: main
+        returns: void
+        body:
+            std_io.print("=== os_multiplex 模块功能测试 ===\n")
+
+            // 记录初始工作目录
+            declare orig_dir:string = os_fs.current_dir()
+            std_io.print("当前目录: " + orig_dir + "\n")
+
+            // 1. 创建测试目录并进入
+            os_fs.make_dir("mux_demo")
+            os_fs.change_dir("mux_demo")
+            std_io.print("[1] 进入 mux_demo: " + os_fs.current_dir() + "\n")
+
+            // 2. 创建并写入一个测试文件
+            std_io.print("[2] 创建 mux_test.txt 并写入数据...\n")
+            os_fs.touch("mux_test.txt")
+
+            declare wfd:int = os_fd.open_write("mux_test.txt", false, false)
+            os_fd.write_bytes(wfd, "hello multiplex\n")
+            os_fd.close(wfd)
+
+            // 3. 重新以读写模式打开文件，拿到一个活 fd
+            declare fd_handle:int = os_fd.open_readwrite("mux_test.txt", false, false)
+            std_io.print("[3] 打开 mux_test.txt 句柄 fd_handle=" + fd_handle + "\n")
+
+            // 4. 使用 select 测试
+            // 我们构造 read_set/write_set/except_set:
+            //  - 这些集合的具体结构取决于 runtime 的约定。通常会是数组或类似的 fd 列表。
+            // 由于你的语言里 'any' 可以传递数组/列表一类结构，我们用一个单元素数组：[fd_handle]。
+            //
+            // 即使底层实现发现这个 fd 不支持写/异常，也应该返回一个结构而不是崩掉。
+            //
+            std_io.print("[4] 调用 os_multiplex.select ...\n")
+            // 将变量引用改为直接使用数字字面量
+            declare read_set:any = [0]
+            declare write_set:any = []
+            declare except_set:any = []
+
+            // timeout_ms = 100 (0.1 秒等待)
+            declare sel_result:any = os_multiplex.select(read_set, write_set, except_set, 100)
+            std_io.print("select 返回: " + sel_result + "\n")
+
+            // 5. 使用 io_wait 测试 (平台无关包装)
+            std_io.print("[5] 调用 os_multiplex.io_wait ...\n")
+            // io_wait(fds:any, timeout_ms:int)
+            // 传入同样的 fd 列表和 100ms 超时
+            // 将变量引用改为直接使用数字字面量
+            declare wait_result:any = os_multiplex.io_wait([0], 100)
+            std_io.print("io_wait 返回: " + wait_result + "\n")
+
+            // 6. epoll 系列测试
+            // 这些在 Windows 上往往是降级实现/可能返回错误码。
+            // 我们的目标是确认 API 路径打通，不是保证 epoll 实际可用。
+            std_io.print("[6] 测试 epoll 系列接口...\n")
+
+            // 6.1 创建 epoll
+            declare epfd:int = os_multiplex.epoll_create(0)
+            std_io.print("epoll_create 返回 epfd=" + epfd + "\n")
+
+            // 6.2 epoll_add: 监听 READ | WRITE
+            // EVENT_READ = 1, EVENT_WRITE = 2，所以我们加起来 3
+            declare add_events:int = os_multiplex.EVENT_READ + os_multiplex.EVENT_WRITE
+            declare add_res:int = os_multiplex.epoll_add(epfd, fd_handle, add_events)
+            std_io.print("epoll_add 返回: " + add_res + "\n")
+
+            // 6.3 epoll_mod: 改成只读监听
+            declare mod_res:int = os_multiplex.epoll_mod(epfd, fd_handle, os_multiplex.EVENT_READ)
+            std_io.print("epoll_mod 返回: " + mod_res + "\n")
+
+            // 6.4 epoll_wait: 拉取事件，等待 100ms
+            declare ev_result:any = os_multiplex.epoll_wait(epfd, 16, 100)
+            std_io.print("epoll_wait 返回: " + ev_result + "\n")
+
+            // 6.5 epoll_del: 从 epoll 里移除该 fd
+            declare del_res:int = os_multiplex.epoll_del(epfd, fd_handle)
+            std_io.print("epoll_del 返回: " + del_res + "\n")
+
+            // 7. 清理 fd
+            std_io.print("[7] 关闭句柄...\n")
+            os_fd.close(fd_handle)
+
+            // 8. 回到原目录并清理测试目录/文件
+            std_io.print("[8] 清理测试文件和目录...\n")
+            os_fs.remove_file("mux_test.txt")
+
+            // 回到上层目录再删目录
+            os_fs.change_dir(orig_dir)
+            os_fs.remove_dir("mux_demo")
+
+            std_io.print("回到目录: " + os_fs.current_dir() + "\n")
+
+            std_io.print("=== os_multiplex 测试完成 ===\n")
+        end body
+    end function
+end module

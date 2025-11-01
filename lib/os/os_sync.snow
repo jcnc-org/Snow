@@ -1,0 +1,205 @@
+/**
+@module os_sync
+@summary 并发原语（互斥量/条件变量/信号量/读写锁）的统一封装。
+*/
+module: os_sync
+
+    import: sync
+
+    /**
+    @function mutex_create
+    @summary 创建互斥量，返回 ID。
+    */
+    function: mutex_create
+        returns: int
+        body:
+            return sync.mutex_new()
+        end body
+    end function
+
+    /**
+    @function mutex_lock
+    @summary 阻塞获取互斥量。
+    */
+    function: mutex_lock
+        params:
+            declare mid:int
+        returns: int
+        body:
+            return sync.mutex_lock(mid)
+        end body
+    end function
+
+    /**
+    @function mutex_trylock
+    @summary 尝试获取互斥量，成功返回 true。
+    */
+    function: mutex_trylock
+        params:
+            declare mid:int
+        returns: boolean
+        body:
+            declare rc:int = sync.mutex_trylock(mid)
+            if rc == 1 then
+                return true
+            end if
+            return false
+        end body
+    end function
+
+    /**
+    @function mutex_unlock
+    @summary 释放互斥量。
+    */
+    function: mutex_unlock
+        params:
+            declare mid:int
+        returns: int
+        body:
+            return sync.mutex_unlock(mid)
+        end body
+    end function
+
+    /**
+    @function cond_create
+    @summary 创建条件变量。
+    */
+    function: cond_create
+        returns: int
+        body:
+            return sync.cond_new()
+        end body
+    end function
+
+    /**
+    @function cond_wait
+    @summary 等待条件变量，timeout_ms<0 表示无限等待。
+    */
+    function: cond_wait
+        params:
+            declare cid:int
+            declare mid:int
+            declare timeout_ms:int
+        returns: int
+        body:
+            return sync.cond_wait(cid, mid, timeout_ms)
+        end body
+    end function
+
+    /**
+    @function cond_signal
+    @summary 唤醒一个等待线程。
+    */
+    function: cond_signal
+        params:
+            declare cid:int
+        returns: int
+        body:
+            return sync.cond_signal(cid)
+        end body
+    end function
+
+    /**
+    @function cond_broadcast
+    @summary 唤醒所有等待线程。
+    */
+    function: cond_broadcast
+        params:
+            declare cid:int
+        returns: int
+        body:
+            return sync.cond_broadcast(cid)
+        end body
+    end function
+
+    /**
+    @function sem_create
+    @summary 创建信号量，初值为 init。
+    */
+    function: sem_create
+        params:
+            declare init:int
+        returns: int
+        body:
+            return sync.sem_new(init)
+        end body
+    end function
+
+    /**
+    @function sem_wait
+    @summary 等待信号量，timeout_ms<0 表示永久等待。
+    */
+    function: sem_wait
+        params:
+            declare sid:int
+            declare timeout_ms:int
+        returns: int
+        body:
+            return sync.sem_wait(sid, timeout_ms)
+        end body
+    end function
+
+    /**
+    @function sem_post
+    @summary 释放信号量。
+    */
+    function: sem_post
+        params:
+            declare sid:int
+        returns: int
+        body:
+            return sync.sem_post(sid)
+        end body
+    end function
+
+    /**
+    @function rwlock_create
+    @summary 创建读写锁。
+    */
+    function: rwlock_create
+        returns: int
+        body:
+            return sync.rwlock_new()
+        end body
+    end function
+
+    /**
+    @function rwlock_read
+    @summary 获取读锁。
+    */
+    function: rwlock_read
+        params:
+            declare rwl:int
+        returns: int
+        body:
+            return sync.rwlock_rlock(rwl)
+        end body
+    end function
+
+    /**
+    @function rwlock_write
+    @summary 获取写锁。
+    */
+    function: rwlock_write
+        params:
+            declare rwl:int
+        returns: int
+        body:
+            return sync.rwlock_wlock(rwl)
+        end body
+    end function
+
+    /**
+    @function rwlock_unlock
+    @summary 释放读写锁。
+    */
+    function: rwlock_unlock
+        params:
+            declare rwl:int
+        returns: int
+        body:
+            return sync.rwlock_unlock(rwl)
+        end body
+    end function
+
+end module
