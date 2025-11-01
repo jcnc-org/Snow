@@ -1,7 +1,6 @@
 module: app
     import: os_fd
     import: std_io
-    import: fd
 
     function: main
         returns: void
