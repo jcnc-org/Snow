@@ -1,0 +1,41 @@
+module: server
+    import: os_web
+    import: std_io
+    import: fd
+
+    function: main
+        returns: void
+        body:
+            // 1. 创建 TCP 监听 socket
+            declare listener:int = os_web.tcp_socket()
+            std_io.println("listener fd = " + listener)
+
+            // 2. 绑定到本地 127.0.0.1:8080
+            declare rc:int = os_web.bind(listener, "127.0.0.1", 8080)
+            std_io.println("bind rc = " + rc)
+
+            // 3. 启动监听
+            rc = os_web.listen(listener, 5)
+            std_io.println("listen rc = " + rc)
+            std_io.println("server listening on 127.0.0.1:8080 ...")
+
+            // 4. 接收一个客户端连接
+            declare conn:any = os_web.accept(listener)
+            declare client:int = conn   // 如果 accept 返回数组，请改成 syscall("0x1802", conn, 0)
+            std_io.println("accepted client fd = " + client)
+
+            // 5. 接收数据
+            declare data:any = os_web.recv(client, 256)
+            std_io.println("recv from client: " + data)
+
+            // 6. 回一条响应
+            declare reply:string = "Hello from Snow server!\r\n"
+            os_web.send(client, reply)
+
+            // 7. 关闭连接
+            fd.close(client)
+            fd.close(listener)
+            std_io.println("server done.")
+        end body
+    end function
+end module
