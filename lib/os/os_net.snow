@@ -1,8 +1,8 @@
 /**
-@module os_net
+@module os_web
 @summary 套接字与网络操作的稳定封装。
 */
-module: os_net
+module: os_web
 
     import: web
 
