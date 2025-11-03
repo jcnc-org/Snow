@@ -53,7 +53,7 @@ module: sys
     @summary 返回运行时可用的逻辑处理器数。
     @returns 可用的逻辑处理器数量
     */
-    function: ncpu
+    function: cpu_count
         returns: int
         body:
             return syscall("0x1902")
@@ -77,11 +77,11 @@ module: sys
     end function
 
     /**
-    @function errstr
+    @function last_error_message
     @summary 返回最近一次系统调用的错误字符串；无错返回 ""。
     @returns 最近一次系统调用的错误信息文本，无错误时返回空字符串 ""
     */
-    function: errstr
+    function: last_error_message
         returns: string
         body:
             return syscall("0x1904")
@@ -89,11 +89,11 @@ module: sys
     end function
 
     /**
-    @function errno
+    @function last_error_code
     @summary 返回最近一次系统调用的错误码；无错返回 0。
     @returns 最近一次系统调用的错误码，无错误时返回 0
     */
-    function: errno
+    function: last_error_code
         returns: int
         body:
             return syscall("0x1905")
@@ -105,7 +105,7 @@ module: sys
     @summary 收集 JVM 堆内存信息以及在可用时的操作系统物理内存等指标。
     @returns 包含系统资源信息的 Map<String,Object>，典型键包括 heapTotal、heapFree、heapUsed、heapMax 等
     */
-    function: meminfo
+    function: memory_info
         returns: any   // 运行时为 Map<String,Object>
         body:
             return syscall("0x1906")
