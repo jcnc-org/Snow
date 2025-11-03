@@ -19,10 +19,10 @@ module: os_process
     end function
 
     /**
-    @function spawn
+    @function fork
     @summary 调用底层 fork，返回子进程 pid；在子进程内返回 0。
     */
-    function: spawn
+    function: fork
         params:
             declare argv:any[]
         returns: int
