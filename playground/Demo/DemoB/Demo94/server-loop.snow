@@ -1,0 +1,60 @@
+module: server
+    import: os_web
+    import: std_io
+    import: fd
+
+    function: main
+        returns: void
+        body:
+            // 1. 创建 TCP 监听 socket
+            declare listener:int = os_web.tcp_socket()
+            std_io.println("listener fd = " + listener)
+
+            // 2. 绑定到本地 127.0.0.1:8080
+            declare rc:int = os_web.bind(listener, "127.0.0.1", 8080)
+            std_io.println("bind rc = " + rc)
+
+            // 3. 启动监听
+            rc = os_web.listen(listener, 5)
+            std_io.println("listen rc = " + rc)
+            std_io.println("server listening on 127.0.0.1:8080 ...")
+
+            // 4. 进入主服务循环，永远处理客户端
+            loop:
+                // init: （不需要循环变量，这里可以留空或声明个哨兵变量）
+                init:
+                    declare dummy:int = 0
+                // cond: 永远为真，表示无限循环
+                cond:
+                    true
+                // step: 每轮之后没什么要自增的，可以留空或保持 dummy 不变
+                step:
+                    dummy = dummy
+                // body: 一次处理一个客户端
+                body:
+                    // 4a. 等待一个客户端连接
+                    declare conn:any = os_web.accept(listener)
+                    declare client:int = conn   // 如果 accept 返回数组，请改成 syscall("0x1802", conn, 0)
+                    std_io.println("accepted client fd = " + client)
+
+                    // 5. 接收数据
+                    declare data:any = os_web.recv(client, 256)
+                    std_io.println("recv from client: " + data)
+
+                    // 6. 回一条响应
+                    declare reply:string = "Hello from Snow server!\r\n"
+                    os_web.send(client, reply)
+
+                    // 7. 关闭这个客户端连接（但不关闭 listener）
+                    fd.close(client)
+                    std_io.println("client done.")
+                end body
+            end loop
+
+            // 理论上永远到不了这里，但如果以后你想加退出条件，
+            // 在退出前记得关掉监听 socket。
+            fd.close(listener)
+            std_io.println("server shutdown.")
+        end body
+    end function
+end module
