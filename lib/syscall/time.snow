@@ -31,13 +31,13 @@ module: time
     end function
 
     /**
-    @function nanosleep
+    @function sleep_ns
     @summary 让当前线程挂起指定的纳秒数。
     @param ns 要挂起的纳秒数
     @returns 成功返回 0
     @throws InterruptedException 被中断时可能抛出异常，调用者应处理或恢复中断状态
     */
-    function: nanosleep
+    function: sleep_ns
         params:
             declare ns: long
         returns: int
@@ -165,7 +165,7 @@ module: time
         body:
             // 避免中间溢出：先转 long 再乘
             declare ns: long = (ms + 0) * 1000000
-            return nanosleep(ns)
+            return sleep_ns(ns)
         end body
     end function
 
@@ -181,7 +181,7 @@ module: time
         returns: int
         body:
             declare ns: long = (us + 0) * 1000
-            return nanosleep(ns)
+            return sleep_ns(ns)
         end body
     end function
 

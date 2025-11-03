@@ -89,7 +89,7 @@ module: os_time
             declare ns:long
         returns: int
         body:
-            return time.nanosleep(ns)
+            return time.sleep_ns(ns)
         end body
     end function
 
