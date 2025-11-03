@@ -7,10 +7,10 @@ module: os_sync
     import: sync
 
     /**
-    @function mutex_create
+    @function mutex_new
     @summary 创建互斥量，返回 ID。
     */
-    function: mutex_create
+    function: mutex_new
         returns: int
         body:
             return sync.mutex_new()
@@ -61,10 +61,10 @@ module: os_sync
     end function
 
     /**
-    @function cond_create
+    @function cond_new
     @summary 创建条件变量。
     */
-    function: cond_create
+    function: cond_new
         returns: int
         body:
             return sync.cond_new()
@@ -113,10 +113,10 @@ module: os_sync
     end function
 
     /**
-    @function sem_create
+    @function sem_new
     @summary 创建信号量，初值为 init。
     */
-    function: sem_create
+    function: sem_new
         params:
             declare init:int
         returns: int
@@ -153,10 +153,10 @@ module: os_sync
     end function
 
     /**
-    @function rwlock_create
+    @function rwlock_new
     @summary 创建读写锁。
     */
-    function: rwlock_create
+    function: rwlock_new
         returns: int
         body:
             return sync.rwlock_new()
@@ -164,10 +164,10 @@ module: os_sync
     end function
 
     /**
-    @function rwlock_read
+    @function rwlock_rlock
     @summary 获取读锁。
     */
-    function: rwlock_read
+    function: rwlock_rlock
         params:
             declare rwl:int
         returns: int
@@ -177,10 +177,10 @@ module: os_sync
     end function
 
     /**
-    @function rwlock_write
+    @function rwlock_wlock
     @summary 获取写锁。
     */
-    function: rwlock_write
+    function: rwlock_wlock
         params:
             declare rwl:int
         returns: int
