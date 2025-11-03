@@ -1,0 +1,42 @@
+module: app
+    import: os_time
+    import: std_io
+
+    function: main
+        body:
+            std_io.println("=== 测试 os_time 模块 ===")
+
+            // 当前时间（纳秒 / 毫秒）
+            std_io.println("now_ns=" + os_time.now_ns())
+            std_io.println("now_ms=" + os_time.now_ms())
+
+            // 单调时钟（纳秒 / 毫秒）
+            std_io.println("mono_ns=" + os_time.mono_ns())
+            std_io.println("mono_ms=" + os_time.mono_ms())
+
+            // tick_ms 计数
+            declare start:long = os_time.tick_ms()
+            std_io.println("tick_ms(start)=" + start)
+
+            // 睡眠测试
+            std_io.println("sleep 50ms ...")
+            os_time.sleep_ms(50)
+            std_io.println("awake (50ms)")
+
+            std_io.println("sleep 200000us ...")
+            os_time.sleep_us(200000)
+            std_io.println("awake (200ms)")
+
+            std_io.println("sleep 100000000ns ...")
+            os_time.sleep_ns(100000000)
+            std_io.println("awake (100ms)")
+
+            // 结束时间
+            declare end_time:long = os_time.tick_ms()
+            std_io.println("tick_ms(end)=" + end_time)
+            std_io.println("总耗时约=" + (end_time - start) + "ms")
+
+            std_io.println("=== 测试完成 ===")
+        end body
+    end function
+end module
