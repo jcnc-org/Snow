@@ -114,14 +114,14 @@ module: os_sync
 
     /**
     @function sem_new
-    @summary 创建信号量，初值为 init。
+    @summary 创建信号量，初值为 init1。
     */
     function: sem_new
         params:
-            declare init:int
+            declare init1:int
         returns: int
         body:
-            return sync.sem_new(init)
+            return sync.sem_new(init1)
         end body
     end function
 
