@@ -7,13 +7,13 @@ module: os_web
     import: web
 
     globals:
-        declare const AF_INET:int  = 2
-        declare const AF_INET6:int = 10
+        declare const AF_INET:int     = 2
+        declare const AF_INET6:int    = 10
         declare const SOCK_STREAM:int = 1
         declare const SOCK_DGRAM:int  = 2
-        declare const SHUT_RD:int   = 0
-        declare const SHUT_WR:int   = 1
-        declare const SHUT_RDWR:int = 2
+        declare const SHUT_RD:int     = 0
+        declare const SHUT_WR:int     = 1
+        declare const SHUT_RDWR:int   = 2
 
     /**
     @function socket
