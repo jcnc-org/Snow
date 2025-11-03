@@ -85,7 +85,7 @@ public class ForkHandler implements SyscallHandler {
             // 3. 合并环境
             pb.environment().putAll(EnvRegistry.snapshot());
 
-            // 4. 子进程 stdin 继承父进程（这样如果它要读键盘，不会立刻死）
+            // 4. 子进程 stdin 继承父进程
             pb.redirectInput(ProcessBuilder.Redirect.INHERIT);
 
             // stdout/stderr 保持默认 (PIPE)，我们手动转发
@@ -112,12 +112,9 @@ public class ForkHandler implements SyscallHandler {
             errFwd.start();
 
             // 8. 阻塞等待子进程完成
-            //    这是和之前版本最大的区别：我们现在等它跑完。
-            //    这样在 GraalVM native-image 下，宿主不会马上 System.exit()，
-            //    你就能看到 dir/ping 的输出。
             child.waitFor();
 
-            // (可选) 等转发线程把尾巴读完再收工。
+            // 等转发线程把尾巴读完再收工。
             // 这里 join() 可以避免最后一行被截断。
             try {
                 outFwd.join();
