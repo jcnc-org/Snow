@@ -51,8 +51,7 @@ module: server
                 end body
             end loop
 
-            // 理论上永远到不了这里，但如果以后你想加退出条件，
-            // 在退出前记得关掉监听 socket。
+            // 理论上永远到不了这里
             fd.close(listener)
             std_io.println("server shutdown.")
         end body

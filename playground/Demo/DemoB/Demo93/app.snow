@@ -31,12 +31,6 @@ module: app
             std_io.print("[3] 打开 mux_test.txt 句柄 fd_handle=" + fd_handle + "\n")
 
             // 4. 使用 select 测试
-            // 我们构造 read_set/write_set/except_set:
-            //  - 这些集合的具体结构取决于 runtime 的约定。通常会是数组或类似的 fd 列表。
-            // 由于你的语言里 'any' 可以传递数组/列表一类结构，我们用一个单元素数组：[fd_handle]。
-            //
-            // 即使底层实现发现这个 fd 不支持写/异常，也应该返回一个结构而不是崩掉。
-            //
             std_io.print("[4] 调用 os_multiplex.select ...\n")
             // 将变量引用改为直接使用数字字面量
             declare read_set:any = [0]
@@ -56,8 +50,6 @@ module: app
             std_io.print("io_wait 返回: " + wait_result + "\n")
 
             // 6. epoll 系列测试
-            // 这些在 Windows 上往往是降级实现/可能返回错误码。
-            // 我们的目标是确认 API 路径打通，不是保证 epoll 实际可用。
             std_io.print("[6] 测试 epoll 系列接口...\n")
 
             // 6.1 创建 epoll
@@ -65,7 +57,7 @@ module: app
             std_io.print("epoll_create 返回 epfd=" + epfd + "\n")
 
             // 6.2 epoll_add: 监听 READ | WRITE
-            // EVENT_READ = 1, EVENT_WRITE = 2，所以我们加起来 3
+            // EVENT_READ = 1, EVENT_WRITE = 2，加起来 3
             declare add_events:int = os_multiplex.EVENT_READ + os_multiplex.EVENT_WRITE
             declare add_res:int = os_multiplex.epoll_add(epfd, fd_handle, add_events)
             std_io.print("epoll_add 返回: " + add_res + "\n")
