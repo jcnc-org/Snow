@@ -49,10 +49,10 @@ module: demo_sys
         body:
             hr("NCPU / MEMINFO")
 
-            declare n:int = sys.ncpu()
+            declare n:int = sys.cpu_count()
             std_io.println("NCPU => " + n)
 
-            declare mi:any = sys.meminfo()
+            declare mi:any = sys.memory_info()
             std_io.println("MEMINFO => " + mi)
         end body
     end function
@@ -74,8 +74,8 @@ module: demo_sys
             hr("ERRSTR / ERRNO（最近一次系统调用错误信息）")
 
             // 直接读取（若之前没有错误，通常为空/0）
-            declare es:string = sys.errstr()
-            declare en:int = sys.errno()
+            declare es:string = sys.last_error_message()
+            declare en:int = sys.last_error_code()
             std_io.println("ERRSTR => " + es)
             std_io.println("ERRNO  => " + en)
         end body
