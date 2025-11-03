@@ -1,5 +1,7 @@
 package org.jcnc.snow.vm.engine;
 
+import org.jcnc.snow.vm.io.EnvRegistry;
+
 /**
  * SyscallOpCode —— 系统调用操作码表
  */
@@ -651,14 +653,43 @@ public final class SyscallOpCode {
     public static final int EXIT = 0x1500;
 
     /**
-     * 分叉当前进程。
+     * 启动外部进程（同步版）。
      *
-     * <p><b>Stack</b>：入参 {@code (cmds:any[])} → 出参 {@code (pid:int)}</p>
-     * <p><b>语义</b>：复制当前进程上下文，生成子进程。</p>
-     * <p><b>返回</b>：在子进程中返回 {@code 0}，在父进程中返回子进程 pid。</p>
-     * <p><b>异常</b>：进程创建失败、资源不足。</p>
+     * <p><b>Stack：</b>入参 {@code (cmd:List<String>)} → 出参 {@code (pid:int)}</p>
+     *
+     * <p><b>语义：</b>
+     * <ul>
+     *   <li>以命令参数 {@code cmd} 启动一个新的系统进程，{@code cmd[0]} 通常为可执行程序路径。</li>
+     *   <li>子进程继承当前虚拟机的环境变量（{@link EnvRegistry#snapshot()}）。</li>
+     *   <li>标准输入继承父进程，标准输出和错误输出实时转发到当前控制台。</li>
+     *   <li>当前线程阻塞，直到子进程执行结束后返回。</li>
+     * </ul>
+     * </p>
+     *
+     * <p><b>返回：</b>
+     * <ul>
+     *   <li>成功时返回子进程的 PID（int），如无法获取则返回 {@code 0}。</li>
+     *   <li>启动失败时返回 {@code -1} 并抛出异常。</li>
+     * </ul>
+     * </p>
+     *
+     * <p><b>异常：</b>
+     * <ul>
+     *   <li>参数类型不符时抛出 {@link IllegalArgumentException}。</li>
+     *   <li>命令数组元素不是字符串时抛出 {@link IllegalArgumentException}。</li>
+     *   <li>I/O 错误（进程启动失败）时抛出 {@link java.io.IOException}。</li>
+     * </ul>
+     * </p>
+     *
+     * <p><b>注意事项：</b>
+     * <ul>
+     *   <li>此调用为同步版本，会阻塞直到子进程退出。</li>
+     *   <li>若需异步执行，可使用独立的 {@code spawn} 或异步 {@code fork} 版本。</li>
+     * </ul>
+     * </p>
      */
     public static final int FORK = 0x1501;
+
 
     /**
      * 执行映像替换。
