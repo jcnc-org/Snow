@@ -1,14 +1,18 @@
 /**
 @module os_process
-@summary 进程相关稳定接口：获取 PID、fork/exec、等待子进程。
+@summary 操作系统进程接口封装层，基于 process 模块实现。
+@description
+  提供与操作系统进程交互的高层封装接口，
+  内部调用底层 {@link process} 模块的系统调用。
 */
 module: os_process
-
     import: process
 
     /**
     @function exit
-    @summary 结束当前进程并返回指定退出码。
+    @summary 终止当前进程，退出码为 code。
+    @param code 进程退出码
+    @throws VM 终止异常 调用环境可能抛出 VM 终止异常
     */
     function: exit
         params:
@@ -20,75 +24,81 @@ module: os_process
 
     /**
     @function fork
-    @summary 调用底层 fork，返回子进程 pid；在子进程内返回 0。
+    @summary 复制当前进程上下文，生成子进程。
+    @param argv 命令数组
+    @returns 在子进程中返回 0，在父进程中返回子进程 pid
+    @throws Exception 进程创建失败、资源不足
     */
     function: fork
         params:
             declare argv:any[]
         returns: int
         body:
-            return process.fork(argv)
+            declare pid:int = process.fork(argv)
+            return pid
         end body
     end function
 
     /**
-    @function exec_replace
-    @summary 用另一个程序映像替换当前进程。
-    @param env 额外环境变量映射，传 "" 或 null 保持默认
+    @function exec
+    @summary 用指定的程序映像替换当前进程。
+    @param env 环境变量映射
+    @param argv 参数列表
+    @param path 程序路径
+    @throws Exception 路径不存在、权限不足、执行失败
     */
-    function: exec_replace
+    function: exec
         params:
-            declare path:string
-            declare argv:any[]
             declare env:any
+            declare argv:any[]
+            declare path:string
         body:
             process.exec(env, argv, path)
         end body
     end function
 
     /**
-    @function wait_pid
-    @summary 等待指定 pid 退出并返回其状态码。
+    @function wait
+    @summary 阻塞等待子进程退出。
+    @param pid 可选的进程 ID，如果为 0 或 null，表示等待任意子进程
+    @returns 子进程的退出状态码
+    @throws Exception 进程不存在、无子进程、等待失败
     */
-    function: wait_pid
+    function: wait
         params:
             declare pid:int
         returns: int
         body:
-            return process.wait(pid)
+            declare status:int = process.wait(pid)
+            return status
         end body
     end function
 
     /**
-    @function wait_any
-    @summary 等待任意子进程退出。
+    @function getpid
+    @summary 获取当前进程的进程号。
+    @returns 当前进程的 PID（int）
+    @throws Exception 获取失败时抛出异常
     */
-    function: wait_any
+    function: getpid
         returns: int
         body:
-            return process.wait(0)
+            declare pid:int = process.getpid()
+            return pid
         end body
     end function
 
     /**
-    @function pid
-    @summary 返回当前进程 PID。
+    @function getppid
+    @summary 获取当前进程的父进程号。
+    @returns 父进程的 PID（int），若不存在父进程则返回 0
+    @throws Exception 获取失败时抛出异常
     */
-    function: pid
+    function: getppid
         returns: int
         body:
-            return process.getpid()
-        end body
-    end function
-
-    /**
-    @function parent_pid
-    @summary 返回父进程 PID。
-    */
-    function: parent_pid
-        returns: int
-        body:
-            return process.getppid()
+            declare ppid:int = process.getppid()
+            return ppid
         end body
     end function
 
