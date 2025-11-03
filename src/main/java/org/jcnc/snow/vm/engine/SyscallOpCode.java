@@ -2,6 +2,8 @@ package org.jcnc.snow.vm.engine;
 
 import org.jcnc.snow.vm.io.EnvRegistry;
 
+import java.io.IOException;
+
 /**
  * SyscallOpCode —— 系统调用操作码表
  */
@@ -692,12 +694,42 @@ public final class SyscallOpCode {
 
 
     /**
-     * 执行映像替换。
+     * 启动新进程并用其输出“接管”当前控制台，随后终结当前 VM 进程。
      *
-     * <p><b>Stack</b>：入参 {@code (path:String, argv:List, env:Map?)} → 出参 {@code (rc:int)}</p>
-     * <p><b>语义</b>：用指定的程序映像替换当前进程。</p>
-     * <p><b>返回</b>：成功返回 {@code 0}，通常不会返回（进程映像被替换）。</p>
-     * <p><b>异常</b>：路径不存在、权限不足、执行失败。</p>
+     * <p><b>Stack：</b>
+     * 入参 {@code (env:Map<String,String>, argv:List<String>, path:String)} → 无返回
+     * </p>
+     *
+     * <p><b>语义：</b>
+     * <ul>
+     *   <li>以给定可执行文件 {@code path} 及参数 {@code argv} 启动一个新进程</li>
+     *   <li>新进程环境变量 = 虚拟机当前的 {@link EnvRegistry#snapshot()}，再叠加 {@code env}</li>
+     *   <li>新进程的标准输出/错误输出会被实时转发到当前控制台</li>
+     *   <li>当前线程会阻塞等待该进程结束，然后当前 VM 会直接退出（不返回 Snow 代码）</li>
+     * </ul>
+     * </p>
+     *
+     * <p><b>返回：</b>
+     * <ul>
+     *   <li>无返回值：本系统调用不会返回到调用方。目标进程结束后，当前 VM 直接终止</li>
+     * </ul>
+     * </p>
+     *
+     * <p><b>异常：</b>
+     * <ul>
+     *   <li>path 不是 String 时抛出 {@link IllegalArgumentException}</li>
+     *   <li>进程启动失败时抛出 {@link IOException}</li>
+     *   <li>栈参数不足时抛出 {@link IllegalStateException}</li>
+     * </ul>
+     * </p>
+     *
+     * <p><b>注意事项：</b>
+     * <ul>
+     *   <li>这是“接管式”执行：Snow 进程最终会终止，不会回到调用点继续运行</li>
+     *   <li>与传统 Unix {@code execve()} 类似，但在实际实现层面我们会等待子进程退出后再终止自身，
+     *       以确保在 GraalVM native-image 下也能正确刷新/显示子进程输出</li>
+     * </ul>
+     * </p>
      */
     public static final int EXEC = 0x1502;
 
