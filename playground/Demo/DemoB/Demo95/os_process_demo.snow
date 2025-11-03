@@ -1,155 +1,38 @@
-module: os_process_demo
-    import: std_io
+module: app
+    import: io
     import: os_process
 
-    //
-    // exec 后的目标程序：用于测试 exec_replace
-    //（注意：只有当 exec_replace 真正把进程映像换成这个程序时，
-    // 这个函数才会在那个新进程里跑。
-    // 在当前内存里我们只是把它定义好，方便你之后把它做成独立可执行。）
-    //
-    function: exec_target_main
-        returns: void
-        body:
-            std_io.println("[exec_target] hello, I'm the exec-replaced process.")
-            std_io.println("[exec_target] my pid = " + os_process.pid() + ", parent pid = " + os_process.parent_pid())
-            std_io.println("[exec_target] exiting with code 42.")
-            os_process.exit(42)
-        end body
-    end function
-
-
-    //
-    // 普通子进程逻辑：
-    // - 打印 pid / ppid
-    // - exit(7)
-    //
-    function: child_normal_main
+    function: main
         params:
-            declare argv:string[]
-        returns: void
+            declare args:any
         body:
-            std_io.println("[child_normal] hello, I'm the normal child.")
-            std_io.println("[child_normal] pid = " + os_process.pid() + ", ppid = " + os_process.parent_pid())
-            std_io.println("[child_normal] exiting with code 7.")
-            os_process.exit(7)
+            io.stdout_write("=== 测试 os_process 模块 ===\n")
+
+            // 1) getpid / getppid
+            declare pid:int = os_process.getpid()
+            declare ppid:int = os_process.getppid()
+            io.stdout_write("当前进程 PID = " + pid + "\n")
+            io.stdout_write("父进程 PPID = " + ppid + "\n")
+
+            // 2) fork + wait
+            io.stdout_write("\n准备 fork 子进程 (执行 java -version)...\n")
+            declare cmd:any[] = ["java", "-version"]
+            declare child:int = os_process.fork(cmd)
+            io.stdout_write("fork 返回 pid=" + child + "\n")
+
+            io.stdout_write("父进程等待子进程退出...\n")
+            declare status:int = os_process.wait(child)
+            io.stdout_write("子进程退出码 = " + status + "\n")
+
+            // 3) exec（不返回）
+            io.stdout_write("\n准备 exec 子进程 (java -version)...\n")
+            declare env:any = ""          // ⚠️ 空环境，用空字符串占位即可
+            declare argv:any[] = ["-version"]
+            declare path:string = "java"
+
+            os_process.exec(env, argv, path)
+            // 不会执行到这里
+            os_process.exit(0)
         end body
     end function
-
-
-    //
-    // 需要 exec 的子进程逻辑：
-    // - 打印 pid / ppid
-    // - 调用 exec_replace(...) 企图把自己替换成另一个程序
-    // - 如果 exec_replace 成功，永远不会再回到后面
-    // - 如果失败，就 exit(100)
-    //
-    function: child_exec_main
-        params:
-            declare argv:string[]
-        returns: void
-        body:
-            std_io.println("[child_exec] hello, I'm the exec child (before exec).")
-            std_io.println("[child_exec] pid = " + os_process.pid() + ", ppid = " + os_process.parent_pid())
-            std_io.println("[child_exec] about to exec_replace into exec_target ...")
-
-            // 构造传给新映像的 argv：必须先初始化成空数组 []
-            declare new_argv:string[] = []
-            new_argv[0] = "exec_target"
-
-            // env 传 "" 表示默认环境
-            // 注意：这里的 "exec_target" 必须是系统能 exec 的可执行名/路径
-            // 如果当前环境还没有真正的可执行文件叫这个名字，
-            // exec_replace 可能失败 -> 我们会走到 exit(100)
-            os_process.exec_replace("exec_target", new_argv, "")
-
-            // 如果 exec_replace 成功，这里不会再执行
-            std_io.println("[child_exec] ERROR: exec_replace returned (this should not happen).")
-            os_process.exit(100)
-        end body
-    end function
-
-
-    //
-    // 父进程（主测试）：
-    // - 打印自身 pid/ppid
-    // - spawn 普通子进程，子进程会 exit(7)
-    // - spawn exec 子进程，子进程会尝试 exec_replace
-    // - wait_pid() / wait_any() 收尸并打印退出码
-    // - 最后 exit(0)
-    //
- function: main
-     returns: void
-     body:
-         std_io.println("=== os_process_demo: parent start ===")
-         std_io.println("[parent] my pid = " + os_process.pid() + ", my parent pid = " + os_process.parent_pid())
-
-         // ---------- 1. spawn 普通子进程 ----------
-         declare argv_child_normal:string[] = []
-         argv_child_normal[0] = "child_normal"
-
-         declare child_normal_pid:int = os_process.spawn(argv_child_normal)
-
-         if child_normal_pid == 0 then
-             // 这里本该是子进程逻辑
-             child_normal_main(argv_child_normal)
-             os_process.exit(201)
-         end if
-
-         if child_normal_pid < 0 then
-             std_io.println("[parent] spawn normal child FAILED, pid = " + child_normal_pid)
-         else
-             std_io.println("[parent] spawned normal child pid = " + child_normal_pid)
-         end if
-
-
-         // ---------- 2. spawn exec 子进程 ----------
-         declare argv_child_exec:string[] = []
-         argv_child_exec[0] = "child_exec"
-
-         declare child_exec_pid:int = os_process.spawn(argv_child_exec)
-
-         if child_exec_pid == 0 then
-             // 这里本该是 exec 子进程逻辑
-             child_exec_main(argv_child_exec)
-             os_process.exit(202)
-         end if
-
-         if child_exec_pid < 0 then
-             std_io.println("[parent] spawn exec child FAILED, pid = " + child_exec_pid)
-         else
-             std_io.println("[parent] spawned exec child pid = " + child_exec_pid)
-         end if
-
-
-         // ---------- 3. wait 第一个子 ----------
-         if child_normal_pid >= 0 then
-             std_io.println("[parent] waiting for normal child (pid " + child_normal_pid + ") ...")
-             declare status_normal:int = os_process.wait_pid(child_normal_pid)
-             if status_normal < 0 then
-                 std_io.println("[parent] wait_pid(" + child_normal_pid + ") FAILED, rc = " + status_normal)
-             else
-                 std_io.println("[parent] wait_pid(" + child_normal_pid + ") exit = " + status_normal)
-             end if
-         else
-             std_io.println("[parent] skip wait_pid: no normal child (spawn failed)")
-         end if
-
-
-         // ---------- 4. wait 剩下的那个子 ----------
-         std_io.println("[parent] waiting for any remaining child ...")
-         declare status_any:int = os_process.wait_any()
-         if status_any < 0 then
-             std_io.println("[parent] wait_any() FAILED or no child, rc = " + status_any)
-         else
-             std_io.println("[parent] wait_any() exit = " + status_any)
-         end if
-
-         std_io.println("=== os_process_demo: parent done ===")
-
-         os_process.exit(0)
-     end body
- end function
-
-
 end module
