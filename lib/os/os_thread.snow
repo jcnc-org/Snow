@@ -7,10 +7,10 @@ module: os_thread
     import: thread
 
     /**
-    @function spawn
+    @function create
     @summary 创建新线程并执行入口函数。
     */
-    function: spawn
+    function: create
         params:
             declare entry:any
             declare arg:any
@@ -34,10 +34,10 @@ module: os_thread
     end function
 
     /**
-    @function sleep_ms
+    @function sleep
     @summary 让当前线程休眠指定毫秒。
     */
-    function: sleep_ms
+    function: sleep
         params:
             declare ms:int
         returns: int
