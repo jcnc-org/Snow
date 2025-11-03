@@ -28,16 +28,16 @@ module: process
     /**
     @function fork
     @summary 复制当前进程上下文，生成子进程。
-    @param cmds 命令数组
+    @param argv 命令数组
     @returns 在子进程中返回 0，在父进程中返回子进程 pid
     @throws Exception 进程创建失败、资源不足
     */
     function: fork
         params:
-            declare cmds:any[]
+            declare argv:any[]
         returns: int
         body:
-            declare pid:int = syscall("0x1501", cmds)
+            declare pid:int = syscall("0x1501", argv)
             return pid
         end body
     end function
