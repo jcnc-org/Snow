@@ -4,6 +4,8 @@ import org.jcnc.snow.vm.commands.flow.control.CallCommand;
 import org.jcnc.snow.vm.commands.flow.control.JumpCommand;
 import org.jcnc.snow.vm.commands.flow.control.RetCommand;
 import org.jcnc.snow.vm.commands.ref.control.RAddCommand;
+import org.jcnc.snow.vm.commands.ref.control.RCECommand;
+import org.jcnc.snow.vm.commands.ref.control.RCNECommand;
 import org.jcnc.snow.vm.commands.ref.control.RLoadCommand;
 import org.jcnc.snow.vm.commands.ref.control.RPushCommand;
 import org.jcnc.snow.vm.commands.ref.control.RStoreCommand;
@@ -228,6 +230,8 @@ public class CommandFactory {
         COMMANDS[VMOpCode.R_LOAD] = new RLoadCommand();
         COMMANDS[VMOpCode.R_STORE] = new RStoreCommand();
         COMMANDS[VMOpCode.R_ADD] = new RAddCommand();
+        COMMANDS[VMOpCode.R_CE] = new RCECommand();
+        COMMANDS[VMOpCode.R_CNE] = new RCNECommand();
         // endregion
 
         // region Stack Control (0x0100-0x01FF)
