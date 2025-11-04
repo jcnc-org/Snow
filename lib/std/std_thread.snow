@@ -1,0 +1,65 @@
+/**
+@module std_thread
+@summary 线程创建与同步的便捷封装。
+@details
+    面向用户提供线程的创建、等待与休眠工具，
+    内部直接调用 os_thread 模块。
+*/
+module: std_thread
+    import: os_thread
+
+    /**
+    @function spawn
+    @summary 创建新线程并返回线程 ID。
+    */
+    function: spawn
+        params:
+            declare entry:any
+            declare arg:any
+        returns: int
+        body:
+            return os_thread.create(entry, arg)
+        end body
+    end function
+
+    /**
+    @function join
+    @summary 阻塞等待线程结束并返回其返回值。
+    */
+    function: join
+        params:
+            declare tid:int
+        returns: any
+        body:
+            return os_thread.join(tid)
+        end body
+    end function
+
+    /**
+    @function sleep
+    @summary 让当前线程休眠指定毫秒。
+    */
+    function: sleep
+        params:
+            declare ms:int
+        returns: int
+        body:
+            return os_thread.sleep(ms)
+        end body
+    end function
+
+    /**
+    @function sleep_seconds
+    @summary 线程休眠的秒级别辅助。
+    */
+    function: sleep_seconds
+        params:
+            declare seconds:int
+        returns: int
+        body:
+            declare ms:int = seconds * 1000
+            return os_thread.sleep(ms)
+        end body
+    end function
+
+end module

@@ -1,0 +1,131 @@
+/**
+@module std_process
+@summary 进程管理的高级封装。
+@details
+    基于 os_process 模块提供的系统调用，
+    提供 PID 查询、进程创建与等待等常用能力，
+    以便在应用代码中快速组合子进程逻辑。
+*/
+module: std_process
+    import: os_process
+
+    /**
+    @function pid
+    @summary 返回当前进程 PID。
+    */
+    function: pid
+        returns: int
+        body:
+            return os_process.getpid()
+        end body
+    end function
+
+    /**
+    @function parent_pid
+    @summary 返回父进程 PID。
+    */
+    function: parent_pid
+        returns: int
+        body:
+            return os_process.getppid()
+        end body
+    end function
+
+    /**
+    @function exit
+    @summary 以指定退出码终止当前进程。
+    */
+    function: exit
+        params:
+            declare code:int
+        returns: void
+        body:
+            os_process.exit(code)
+        end body
+    end function
+
+    /**
+    @function spawn
+    @summary 启动子进程，返回其 PID。
+    */
+    function: spawn
+        params:
+            declare argv:any[]
+        returns: int
+        body:
+            return os_process.fork(argv)
+        end body
+    end function
+
+    /**
+    @function wait
+    @summary 等待指定 PID 的子进程退出，返回其退出码。
+    */
+    function: wait
+        params:
+            declare pid:int
+        returns: int
+        body:
+            return os_process.wait(pid)
+        end body
+    end function
+
+    /**
+    @function wait_any
+    @summary 等待任意子进程退出，返回其退出码。
+    */
+    function: wait_any
+        returns: int
+        body:
+            return os_process.wait(0)
+        end body
+    end function
+
+    /**
+    @function run
+    @summary 启动子进程并等待完成，返回退出码。
+    */
+    function: run
+        params:
+            declare argv:any[]
+        returns: int
+        body:
+            declare pid:int = os_process.fork(argv)
+            if pid <= 0 then
+                return pid
+            end if
+            return os_process.wait(pid)
+        end body
+    end function
+
+    /**
+    @function exec
+    @summary 用 path 对当前进程执行镜像替换，继承现有环境。
+    */
+    function: exec
+        params:
+            declare path:string
+            declare argv:any[]
+        returns: void
+        body:
+            declare env:any = ""
+            os_process.exec(env, argv, path)
+        end body
+    end function
+
+    /**
+    @function exec_with_env
+    @summary 带显式环境变量设置的进程镜像替换。
+    */
+    function: exec_with_env
+        params:
+            declare path:string
+            declare argv:any[]
+            declare env:any
+        returns: void
+        body:
+            os_process.exec(env, argv, path)
+        end body
+    end function
+
+end module

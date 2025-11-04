@@ -1,0 +1,242 @@
+/**
+@module std_fs
+@summary 文件系统的便捷接口。
+@details
+    构建在 os_fs 与 os_fd 之上，提供常见的路径与文件读写操作，
+    以更贴近应用代码的语义封装底层系统调用。
+*/
+module: std_fs
+    import: os_fs
+    import: os_fd
+
+    /**
+    @function current_dir
+    @summary 获取当前工作目录。
+    */
+    function: current_dir
+        returns: string
+        body:
+            return os_fs.current_dir()
+        end body
+    end function
+
+    /**
+    @function change_dir
+    @summary 切换工作目录，成功返回 true。
+    */
+    function: change_dir
+        params:
+            declare path:any
+        returns: boolean
+        body:
+            declare rc:int = os_fs.change_dir(path)
+            if rc == 0 then
+                return true
+            end if
+            return false
+        end body
+    end function
+
+    /**
+    @function make_dir
+    @summary 创建目录，成功返回 true。
+    */
+    function: make_dir
+        params:
+            declare path:any
+        returns: boolean
+        body:
+            declare rc:int = os_fs.make_dir(path)
+            if rc == 0 then
+                return true
+            end if
+            return false
+        end body
+    end function
+
+    /**
+    @function remove_dir
+    @summary 删除空目录，成功返回 true。
+    */
+    function: remove_dir
+        params:
+            declare path:any
+        returns: boolean
+        body:
+            declare rc:int = os_fs.remove_dir(path)
+            if rc == 0 then
+                return true
+            end if
+            return false
+        end body
+    end function
+
+    /**
+    @function remove_file
+    @summary 删除文件或符号链接。
+    */
+    function: remove_file
+        params:
+            declare path:any
+        returns: boolean
+        body:
+            os_fs.remove_file(path)
+            return true
+        end body
+    end function
+
+    /**
+    @function touch
+    @summary 若文件不存在则创建空文件。
+    */
+    function: touch
+        params:
+            declare path:any
+        returns: void
+        body:
+            os_fs.touch(path)
+        end body
+    end function
+
+    /**
+    @function list
+    @summary 列出目录内容。
+    */
+    function: list
+        params:
+            declare path:any
+        returns: any
+        body:
+            return os_fs.list_dir(path)
+        end body
+    end function
+
+    /**
+    @function read_text
+    @summary 读取文件全部文本内容。
+    */
+    function: read_text
+        params:
+            declare path:any
+        returns: string
+        body:
+            declare handle:int = os_fd.open_read(path)
+            declare buffer:string = ""
+            declare chunk_size:int = 4096
+
+            loop:
+                init:
+                    declare keep:boolean = true
+                cond:
+                    keep == true
+                step:
+                    keep = keep
+                body:
+                    declare chunk:any = os_fd.read_bytes(handle, chunk_size)
+                    if chunk == null then
+                        keep = false
+                        continue
+                    end if
+
+                    declare count:int = syscall("0x1801", chunk)
+                    if count == 0 then
+                        keep = false
+                        continue
+                    end if
+
+                    buffer = buffer + ("" + chunk)
+
+                    if count < chunk_size then
+                        keep = false
+                    end if
+                end body
+            end loop
+
+            os_fd.close(handle)
+            return buffer
+        end body
+    end function
+
+    /**
+    @function write_text
+    @summary 写入文本到文件（默认创建并截断）。
+    */
+    function: write_text
+        params:
+            declare path:any
+            declare data:any
+        returns: int
+        body:
+            declare handle:int = os_fd.open_write(path, true, true)
+            declare written:int = os_fd.write_bytes(handle, "" + data)
+            os_fd.close(handle)
+            return written
+        end body
+    end function
+
+    /**
+    @function append_text
+    @summary 追加文本到文件末尾。
+    */
+    function: append_text
+        params:
+            declare path:any
+            declare data:any
+        returns: int
+        body:
+            declare handle:int = os_fd.open_append(path)
+            declare written:int = os_fd.write_bytes(handle, "" + data)
+            os_fd.close(handle)
+            return written
+        end body
+    end function
+
+    /**
+    @function copy_file
+    @summary 按块复制文件内容，目标文件会被覆盖。
+    */
+    function: copy_file
+        params:
+            declare source:any
+            declare target:any
+        returns: boolean
+        body:
+            declare input:int = os_fd.open_read(source)
+            declare output:int = os_fd.open_write(target, true, true)
+            declare chunk_size:int = 4096
+
+            loop:
+                init:
+                    declare keep:boolean = true
+                cond:
+                    keep == true
+                step:
+                    keep = keep
+                body:
+                    declare chunk:any = os_fd.read_bytes(input, chunk_size)
+                    if chunk == null then
+                        keep = false
+                        continue
+                    end if
+
+                    declare count:int = syscall("0x1801", chunk)
+                    if count == 0 then
+                        keep = false
+                        continue
+                    end if
+
+                    os_fd.write_bytes(output, chunk)
+
+                    if count < chunk_size then
+                        keep = false
+                    end if
+                end body
+            end loop
+
+            os_fd.close(input)
+            os_fd.close(output)
+            return true
+        end body
+    end function
+
+end module

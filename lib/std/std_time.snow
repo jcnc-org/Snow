@@ -1,0 +1,138 @@
+/**
+@module std_time
+@summary 时间与延迟处理的高层接口。
+@details
+    封装 os_time 模块，提供统一的时间戳与睡眠工具函数，
+    方便在业务代码中做耗时统计与超时控制。
+*/
+module: std_time
+    import: os_time
+
+    /**
+    @function now_ns
+    @summary 返回当前墙钟时间（纳秒）。
+    */
+    function: now_ns
+        returns: long
+        body:
+            return os_time.now_ns()
+        end body
+    end function
+
+    /**
+    @function now_ms
+    @summary 返回当前墙钟时间（毫秒）。
+    */
+    function: now_ms
+        returns: long
+        body:
+            return os_time.now_ms()
+        end body
+    end function
+
+    /**
+    @function mono_ns
+    @summary 返回单调时钟（纳秒）。
+    */
+    function: mono_ns
+        returns: long
+        body:
+            return os_time.mono_ns()
+        end body
+    end function
+
+    /**
+    @function mono_ms
+    @summary 返回单调时钟（毫秒）。
+    */
+    function: mono_ms
+        returns: long
+        body:
+            return os_time.mono_ms()
+        end body
+    end function
+
+    /**
+    @function sleep_ms
+    @summary 挂起当前线程指定毫秒。
+    */
+    function: sleep_ms
+        params:
+            declare ms:int
+        returns: int
+        body:
+            return os_time.sleep_ms(ms)
+        end body
+    end function
+
+    /**
+    @function sleep_seconds
+    @summary 以秒为单位的休眠辅助。
+    */
+    function: sleep_seconds
+        params:
+            declare seconds:int
+        returns: int
+        body:
+            declare ms:int = seconds * 1000
+            return os_time.sleep_ms(ms)
+        end body
+    end function
+
+    /**
+    @function sleep_ns
+    @summary 挂起当前线程指定纳秒。
+    */
+    function: sleep_ns
+        params:
+            declare ns:long
+        returns: int
+        body:
+            return os_time.sleep_ns(ns)
+        end body
+    end function
+
+    /**
+    @function elapsed_ms
+    @summary 计算从起始单调时间起经过的毫秒数。
+    */
+    function: elapsed_ms
+        params:
+            declare start_ms:long
+        returns: long
+        body:
+            return os_time.mono_ms() - start_ms
+        end body
+    end function
+
+    /**
+    @function elapsed_ns
+    @summary 计算从起始单调时间起经过的纳秒数。
+    */
+    function: elapsed_ns
+        params:
+            declare start_ns:long
+        returns: long
+        body:
+            return os_time.mono_ns() - start_ns
+        end body
+    end function
+
+    /**
+    @function timeout_exceeded
+    @summary 判断从起点开始是否超过超时时间（毫秒）。
+    */
+    function: timeout_exceeded
+        params:
+            declare start_ms:long
+            declare timeout_ms:long
+        returns: boolean
+        body:
+            if elapsed_ms(start_ms) >= timeout_ms then
+                return true
+            end if
+            return false
+        end body
+    end function
+
+end module

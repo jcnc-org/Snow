@@ -1,0 +1,132 @@
+/**
+@module std_env
+@summary 面向应用的环境变量辅助接口。
+@details
+    基于 os_sys 模块提供的底层能力，封装常用的环境变量操作，
+    包括读取、写入、删除与设置默认值等便捷函数。
+*/
+module: std_env
+    import: os_sys
+
+    /**
+    @function get
+    @summary 获取环境变量值，不存在时返回 null。
+    */
+    function: get
+        params:
+            declare key:string
+        returns: string
+        body:
+            return os_sys.getenv(key)
+        end body
+    end function
+
+    /**
+    @function get_or_default
+    @summary 获取环境变量，若不存在则返回 fallback。
+    */
+    function: get_or_default
+        params:
+            declare key:string
+            declare fallback:string
+        returns: string
+        body:
+            declare value:string = os_sys.getenv(key)
+            if value == null then
+                return fallback
+            end if
+            return value
+        end body
+    end function
+
+    /**
+    @function contains
+    @summary 判断环境变量是否存在。
+    */
+    function: contains
+        params:
+            declare key:string
+        returns: boolean
+        body:
+            declare value:string = os_sys.getenv(key)
+            if value == null then
+                return false
+            end if
+            return true
+        end body
+    end function
+
+    /**
+    @function set
+    @summary 设置环境变量（覆盖已有值）。
+    */
+    function: set
+        params:
+            declare key:string
+            declare value:any
+        returns: boolean
+        body:
+            declare rc:int = os_sys.setenv(key, value, true)
+            if rc == 0 then
+                return true
+            end if
+            return false
+        end body
+    end function
+
+    /**
+    @function set_if_absent
+    @summary 在环境变量不存在时设置默认值。
+    */
+    function: set_if_absent
+        params:
+            declare key:string
+            declare value:any
+        returns: boolean
+        body:
+            declare rc:int = os_sys.setenv(key, value, false)
+            if rc == 0 then
+                return true
+            end if
+            return false
+        end body
+    end function
+
+    /**
+    @function unset
+    @summary 删除环境变量（内部使用空值触发删除语义）。
+    */
+    function: unset
+        params:
+            declare key:string
+        returns: boolean
+        body:
+            declare empty:any = ""
+            declare rc:int = os_sys.setenv(key, empty, true)
+            if rc == 0 then
+                return true
+            end if
+            return false
+        end body
+    end function
+
+    /**
+    @function ensure
+    @summary 获取环境变量，若缺失则写入默认值并返回。
+    */
+    function: ensure
+        params:
+            declare key:string
+            declare default_value:any
+        returns: string
+        body:
+            declare current:string = os_sys.getenv(key)
+            if current == null then
+                os_sys.setenv(key, default_value, false)
+                return "" + default_value
+            end if
+            return current
+        end body
+    end function
+
+end module
