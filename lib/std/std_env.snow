@@ -10,7 +10,7 @@ module: std_env
 
     /**
     @function get
-    @summary 获取环境变量值，不存在时返回 null。
+    @summary 获取环境变量值，不存在时返回空字符串 ""。
     */
     function: get
         params:
@@ -23,7 +23,7 @@ module: std_env
 
     /**
     @function get_or_default
-    @summary 获取环境变量，若不存在则返回 fallback。
+    @summary 获取环境变量，若不存在（空字符串）则返回 fallback。
     */
     function: get_or_default
         params:
@@ -32,7 +32,7 @@ module: std_env
         returns: string
         body:
             declare value:string = os_sys.getenv(key)
-            if value == null then
+            if value == "" then
                 return fallback
             end if
             return value
@@ -41,7 +41,7 @@ module: std_env
 
     /**
     @function contains
-    @summary 判断环境变量是否存在。
+    @summary 判断环境变量是否存在（非空即存在）。
     */
     function: contains
         params:
@@ -49,7 +49,7 @@ module: std_env
         returns: boolean
         body:
             declare value:string = os_sys.getenv(key)
-            if value == null then
+            if value == "" then
                 return false
             end if
             return true
@@ -121,7 +121,7 @@ module: std_env
         returns: string
         body:
             declare current:string = os_sys.getenv(key)
-            if current == null then
+            if current == "" then
                 os_sys.setenv(key, default_value, false)
                 return "" + default_value
             end if
