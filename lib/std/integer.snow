@@ -98,7 +98,7 @@ module: std_integer
 
         /**
         @function max
-        @summary 与另一个 Integer 比较并返回较大值
+        @summary 与另一个 Integer 比较并返回较大值（兼容旧接口）
         @param other 用于比较的 Integer
         @returns 返回较大值的 int
         */
@@ -118,7 +118,7 @@ module: std_integer
 
         /**
         @function min
-        @summary 与另一个 Integer 比较并返回较小值
+        @summary 与另一个 Integer 比较并返回较小值（兼容旧接口）
         @param other 用于比较的 Integer
         @returns 返回较小值的 int
         */
@@ -127,15 +127,53 @@ module: std_integer
                 declare other:Integer
             returns: int
             body:
-                declare negSelf:int = -value
-                declare negOther:int = -other.getValue()
-                declare tempSelf:Integer = new Integer(negSelf)
-                declare tempOther:Integer = new Integer(negOther)
-                declare negMax:int = tempSelf.max(tempOther)
-                return -negMax
+                declare selfValue:int = value
+                declare otherValue:int = other.getValue()
+                if otherValue < selfValue then
+                    return otherValue
+                end if
+                return selfValue
             end body
         end function
 
     end struct
+
+    /**
+    @function max
+    @summary 比较两个整数并返回较大值（类似 Java Math.max）
+    @param lhs 第一整数
+    @param rhs 第二整数
+    @returns 返回两个整数中的较大者
+    */
+    function: max
+        params:
+            declare lhs:int
+            declare rhs:int
+        returns: int
+        body:
+            declare lhsInteger:Integer = new Integer(lhs)
+            declare rhsInteger:Integer = new Integer(rhs)
+            return lhsInteger.max(rhsInteger)
+        end body
+    end function
+
+    /**
+    @function min
+    @summary 比较两个整数并返回较小值（类似 Java Math.min）
+    @param lhs 第一整数
+    @param rhs 第二整数
+    @returns 返回两个整数中的较小者
+    */
+    function: min
+        params:
+            declare lhs:int
+            declare rhs:int
+        returns: int
+        body:
+            declare lhsInteger:Integer = new Integer(lhs)
+            declare rhsInteger:Integer = new Integer(rhs)
+            return lhsInteger.min(rhsInteger)
+        end body
+    end function
 
 end module

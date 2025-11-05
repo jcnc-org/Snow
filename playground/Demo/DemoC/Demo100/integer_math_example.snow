@@ -28,25 +28,25 @@ module: integer_math_example
             
             declare num1:Integer = new Integer(15)
             declare num2:Integer = new Integer(8)
-            declare maxResult:int = num1.max(num2)
+            declare maxResult:int = std_integer.max(15, 8)
             std_io.print("15 和 8 的最大值: ")
             std_io.println(maxResult)
 
             // === 演示 min() 方法 ===
             std_io.println("\n=== 演示 min() 方法 ===")
             
-            declare minResult:int = num1.min(num2)
+            declare minResult:int = std_integer.min(15, 8)
             std_io.print("15 和 8 的最小值: ")
             std_io.println(minResult)
 
             // === 进一步演示 ===
             std_io.println("\n=== 进一步演示 ===")
             
-            declare maxResult2:int = negNum.max(num1)
+            declare maxResult2:int = std_integer.max(negNum.getValue(), num1.getValue())
             std_io.print("-25 和 15 的最大值: ")
             std_io.println(maxResult2)
 
-            declare minResult2:int = negNum.min(num2)
+            declare minResult2:int = std_integer.min(negNum.getValue(), num2.getValue())
             std_io.print("-25 和 8 的最小值: ")
             std_io.println(minResult2)
             
