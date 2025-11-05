@@ -1,0 +1,52 @@
+/**
+@module IntegerExample
+@summary Integer 结构体的使用示例
+@description
+    演示如何使用标准库中的 Integer 结构体进行各种操作。
+*/
+module: IntegerExample
+
+    import: std_integer
+
+    function: main
+        returns: int
+        body:
+            // 创建两个 Integer 对象
+            declare num1:std_integer.Integer
+            declare num2:std_integer.Integer
+            
+            // 使用构造函数初始化
+            num1.setValue(10)
+            num2.setValue(5)
+
+            // 获取值
+            declare val1:int = num1.getValue()
+            declare val2:int = num2.getValue()
+
+            // 加法运算
+            declare sum:std_integer.Integer
+            sum = num1.add(num2)
+            
+            // 减法运算
+            declare diff:std_integer.Integer
+            diff = num1.subtract(num2)
+
+            // 乘法运算
+            declare product:std_integer.Integer
+            product = num1.multiply(num2)
+
+            // 除法运算
+            declare quotient:std_integer.Integer
+            quotient = num1.divide(num2)
+
+            // 比较操作
+            declare isEqual:boolean = num1.equals(num2)
+            declare isGreater:boolean = num1.isGreaterThan(num2)
+            declare isLess:boolean = num1.isLessThan(num2)
+            declare cmp:int = num1.compareTo(num2)
+
+            return 0
+        end body
+    end function
+
+end module
