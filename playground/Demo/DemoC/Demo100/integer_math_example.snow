@@ -19,13 +19,7 @@ module: integer_math_example
             std_io.println("=== 演示 abs() 方法 ===")
             
             declare negNum:Integer = new Integer(-25)
-            declare negVal:int = negNum.getValue()
-            declare absResult:int
-            if negVal < 0 then
-                absResult = 0 - negVal
-            else
-                absResult = negVal
-            end if
+            declare absResult:int = negNum.abs()
             std_io.print("负数 -25 的绝对值: ")
             std_io.println(absResult)
 
@@ -34,47 +28,25 @@ module: integer_math_example
             
             declare num1:Integer = new Integer(15)
             declare num2:Integer = new Integer(8)
-            declare val1:int = num1.getValue()
-            declare val2:int = num2.getValue()
-            declare maxResult:int
-            if val1 > val2 then
-                maxResult = val1
-            else
-                maxResult = val2
-            end if
+            declare maxResult:int = num1.max(num2)
             std_io.print("15 和 8 的最大值: ")
             std_io.println(maxResult)
 
             // === 演示 min() 方法 ===
             std_io.println("\n=== 演示 min() 方法 ===")
             
-            declare minResult:int
-            if val1 < val2 then
-                minResult = val1
-            else
-                minResult = val2
-            end if
+            declare minResult:int = num1.min(num2)
             std_io.print("15 和 8 的最小值: ")
             std_io.println(minResult)
 
             // === 进一步演示 ===
             std_io.println("\n=== 进一步演示 ===")
             
-            declare maxResult2:int
-            if negVal > val1 then
-                maxResult2 = negVal
-            else
-                maxResult2 = val1
-            end if
+            declare maxResult2:int = negNum.max(num1)
             std_io.print("-25 和 15 的最大值: ")
             std_io.println(maxResult2)
 
-            declare minResult2:int
-            if negVal < val2 then
-                minResult2 = negVal
-            else
-                minResult2 = val2
-            end if
+            declare minResult2:int = negNum.min(num2)
             std_io.print("-25 和 8 的最小值: ")
             std_io.println(minResult2)
             
