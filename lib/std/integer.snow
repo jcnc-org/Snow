@@ -1,0 +1,231 @@
+/**
+@module std_integer
+@summary Integer 结构体 - 对 int 基本数据类型的封装
+@details
+    提供 Integer 结构体及相关的整数操作方法，包括：
+    - 值存储与访问
+    - 类型转换
+    - 基本算术运算
+    - 大小比较
+*/
+module: std_integer
+
+    /**
+    @struct Integer
+    @summary 整数值对象的包装类
+    @description
+        包装基本 int 类型，提供面向对象的整数操作接口。
+        支持构造、值访问、类型转换与比较等操作。
+    */
+    struct: Integer
+
+        fields:
+            declare value:int
+
+        /**
+        @init default
+        @summary 无参构造函数，创建值为 0 的 Integer
+        */
+        init:
+            body:
+                value = 0
+            end body
+        end init
+
+        /**
+        @init with_value
+        @summary 带参构造函数，根据给定值创建 Integer
+        @param val 初始整数值
+        */
+        init:
+            params:
+                declare val:int
+            body:
+                value = val
+            end body
+        end init
+
+        /**
+        @function getValue
+        @summary 获取包装的整数值
+        @returns 返回内部存储的 int 值
+        */
+        function: getValue
+            returns: int
+            body:
+                return value
+            end body
+        end function
+
+        /**
+        @function setValue
+        @summary 设置包装的整数值
+        @param val 要设置的新值
+        */
+        function: setValue
+            params:
+                declare val:int
+            body:
+                value = val
+            end body
+        end function
+
+        /**
+        @function toInt
+        @summary 显式转换为 int 类型
+        @returns 返回内部整数值
+        */
+        function: toInt
+            returns: int
+            body:
+                return value
+            end body
+        end function
+
+        /**
+        @function add
+        @summary 加法运算
+        @param other 要相加的另一个 Integer 对象
+        @returns 返回相加结果的新 Integer 对象
+        */
+        function: add
+            params:
+                declare other:Integer
+            returns: Integer
+            body:
+                declare result:Integer
+                result.setValue(value + other.getValue())
+                return result
+            end body
+        end function
+
+        /**
+        @function subtract
+        @summary 减法运算
+        @param other 要相减的另一个 Integer 对象
+        @returns 返回相减结果的新 Integer 对象
+        */
+        function: subtract
+            params:
+                declare other:Integer
+            returns: Integer
+            body:
+                declare result:Integer
+                result.setValue(value - other.getValue())
+                return result
+            end body
+        end function
+
+        /**
+        @function multiply
+        @summary 乘法运算
+        @param other 要相乘的另一个 Integer 对象
+        @returns 返回相乘结果的新 Integer 对象
+        */
+        function: multiply
+            params:
+                declare other:Integer
+            returns: Integer
+            body:
+                declare result:Integer
+                result.setValue(value * other.getValue())
+                return result
+            end body
+        end function
+
+        /**
+        @function divide
+        @summary 除法运算
+        @param other 作为除数的 Integer 对象
+        @returns 返回整数除法结果的新 Integer 对象
+        */
+        function: divide
+            params:
+                declare other:Integer
+            returns: Integer
+            body:
+                declare result:Integer
+                result.setValue(value / other.getValue())
+                return result
+            end body
+        end function
+
+        /**
+        @function equals
+        @summary 相等判断
+        @param other 要比较的另一个 Integer 对象
+        @returns 如果两个 Integer 值相等返回 true，否则返回 false
+        */
+        function: equals
+            params:
+                declare other:Integer
+            returns: boolean
+            body:
+                if value == other.getValue() then
+                    return true
+                end if
+                return false
+            end body
+        end function
+
+        /**
+        @function compareTo
+        @summary 比较两个 Integer 对象的大小
+        @param other 要比较的另一个 Integer 对象
+        @returns 返回值：负数表示 this < other，0 表示相等，正数表示 this > other
+        */
+        function: compareTo
+            params:
+                declare other:Integer
+            returns: int
+            body:
+                declare otherValue:int = other.getValue()
+                if value < otherValue then
+                    return -1
+                end if
+                if value > otherValue then
+                    return 1
+                end if
+                return 0
+            end body
+        end function
+
+        /**
+        @function isGreaterThan
+        @summary 大于判断
+        @param other 要比较的另一个 Integer 对象
+        @returns 如果 this > other 返回 true
+        */
+        function: isGreaterThan
+            params:
+                declare other:Integer
+            returns: boolean
+            body:
+                if value > other.getValue() then
+                    return true
+                end if
+                return false
+            end body
+        end function
+
+        /**
+        @function isLessThan
+        @summary 小于判断
+        @param other 要比较的另一个 Integer 对象
+        @returns 如果 this < other 返回 true
+        */
+        function: isLessThan
+            params:
+                declare other:Integer
+            returns: boolean
+            body:
+                if value < other.getValue() then
+                    return true
+                end if
+                return false
+            end body
+        end function
+
+    end struct
+
+end module
