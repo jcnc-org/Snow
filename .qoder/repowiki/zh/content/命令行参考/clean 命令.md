@@ -173,16 +173,16 @@ CleanTask 实现了具体的清理功能，采用安全的递归删除策略：
 
 ```mermaid
 flowchart TD
-Start([开始清理]) --> CheckBuild{"build 目录存在?"}
-CheckBuild --> |是| DeleteBuild[递归删除 build 目录]
-CheckBuild --> |否| SkipBuild[跳过 build 清理]
-DeleteBuild --> CheckDist{"dist 目录存在?"}
-SkipBuild --> CheckDist
-CheckDist --> |是| DeleteDist[递归删除 dist 目录]
-CheckDist --> |否| SkipDist[跳过 dist 清理]
-DeleteDist --> PrintDone[输出 "done."]
-SkipDist --> PrintDone
-PrintDone --> End([清理完成])
+    Start([开始清理]) --> CheckBuild{"build 目录存在?"}
+    CheckBuild --> |是| DeleteBuild["递归删除 build 目录"]
+    CheckBuild --> |否| SkipBuild["跳过 build 清理"]
+    DeleteBuild --> CheckDist{"dist 目录存在?"}
+    SkipBuild --> CheckDist
+    CheckDist --> |是| DeleteDist["递归删除 dist 目录"]
+    CheckDist --> |否| SkipDist["跳过 dist 清理"]
+    DeleteDist --> PrintDone["输出 \"done.\""]
+    SkipDist --> PrintDone
+    PrintDone --> End([清理完成])
 ```
 
 **图表来源**
