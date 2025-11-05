@@ -12,16 +12,10 @@ module: IntegerExample
         returns: int
         body:
             // === 示例1: 创建和初始化 Integer 对象 ===
-            declare num1:Integer
-            declare num2:Integer
-            declare num3:Integer
-
-            // 使用无参构造函数创建（值为 0）
-            // num1 已通过声明隐式初始化
-
-            // 使用带参构造函数创建
-            num2.setValue(10)
-            num3.setValue(20)
+            // 使用 new 关键字创建对象
+            declare num1:Integer = new Integer()
+            declare num2:Integer = new Integer(10)
+            declare num3:Integer = new Integer(20)
 
             // === 示例2: 获取值 ===
             declare val1:int = num1.getValue()
@@ -67,8 +61,7 @@ module: IntegerExample
             declare newVal:int = num1.getValue()
 
             // === 示例7: 链式操作演示 ===
-            declare temp:Integer
-            temp.setValue(15)
+            declare temp:Integer = new Integer(15)
             declare tempVal:int = temp.getValue()
 
             // 计算组合结果
