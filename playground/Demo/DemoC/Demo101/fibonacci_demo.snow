@@ -1,0 +1,156 @@
+/**
+@module fibonacci_demo
+@summary 使用 Snow 计算斐波拉契数列
+@details
+    演示如何在 Snow 中同时使用迭代与递归两种方式计算斐波拉契数列，
+    并展示前若干项以及特定位置的值。
+*/
+module: fibonacci_demo
+
+    import: std_io
+    import: os_time
+
+    /**
+    @summary 迭代方式求第 n 个斐波拉契数
+    */
+    function: fib_iterative
+        params:
+            declare n: int
+        returns: int
+        body:
+            if n <= 1 then
+                return n
+            end if
+
+            declare previous: int = 0
+            declare current: int = 1
+
+            loop:
+                init:
+                    declare i: int = 2
+                cond:
+                    i <= n
+                step:
+                    i = i + 1
+                body:
+                    declare nextValue: int = previous + current
+                    previous = current
+                    current = nextValue
+                end body
+            end loop
+
+            return current
+        end body
+    end function
+
+    /**
+    @summary 递归方式求第 n 个斐波拉契数
+    */
+    function: fib_recursive
+        params:
+            declare n: int
+        returns: int
+        body:
+            if n <= 1 then
+                return n
+            end if
+            return fib_recursive(n - 1) + fib_recursive(n - 2)
+        end body
+    end function
+
+    /**
+    @summary 打印迭代版斐波拉契数列
+    */
+    function: print_iterative_series
+        params:
+            declare count: int
+        returns: void
+        body:
+            std_io.print("Fibonacci Series (iterative, first ")
+            std_io.print(count)
+            std_io.println(" terms):")
+            loop:
+                init:
+                    declare i: int = 0
+                cond:
+                    i < count
+                step:
+                    i = i + 1
+                body:
+                    std_io.print("F(")
+                    std_io.print(i)
+                    std_io.print(") = ")
+                    std_io.println(fib_iterative(i))
+                end body
+            end loop
+
+        end body
+    end function
+
+    /**
+    @summary 使用递归校验前 count 项
+    */
+    function: print_recursive_series
+        params:
+            declare count: int
+        returns: void
+        body:
+            std_io.println("Fibonacci Series (recursive check):")
+            loop:
+                init:
+                    declare j: int = 0
+                cond:
+                    j < count
+                step:
+                    j = j + 1
+                body:
+                    std_io.print("F(")
+                    std_io.print(j)
+                    std_io.print(") = ")
+                    std_io.println(fib_recursive(j))
+                end body
+            end loop
+
+        end body
+    end function
+
+    function: main
+        returns: void
+        body:
+            declare terms: int = 36
+            declare iterativeStart: long = os_time.tick_ms()
+            print_iterative_series(terms)
+            declare iterativeElapsed: long = os_time.tick_ms() - iterativeStart
+            std_io.print("迭代段耗时(打印): ")
+            std_io.print(iterativeElapsed)
+            std_io.println(" ms")
+
+            std_io.println("")
+            declare recursiveStart: long = os_time.tick_ms()
+            print_recursive_series(terms)
+            declare recursiveElapsed: long = os_time.tick_ms() - recursiveStart
+            std_io.print("递归段耗时(校验): ")
+            std_io.print(recursiveElapsed)
+            std_io.println(" ms")
+
+            declare targetIndex: int = 35
+            std_io.print("\n使用迭代方式单独求解 F(")
+            std_io.print(targetIndex)
+            std_io.println(")")
+
+            declare singleStart: long = os_time.tick_ms()
+            declare targetValue: int = fib_iterative(targetIndex)
+            declare singleElapsed: long = os_time.tick_ms() - singleStart
+
+            std_io.print("F(")
+            std_io.print(targetIndex)
+            std_io.print(") = ")
+            std_io.println(targetValue)
+
+            std_io.print("单次迭代耗时: ")
+            std_io.print(singleElapsed)
+            std_io.println(" ms")
+        end body
+    end function
+
+end module
