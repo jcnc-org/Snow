@@ -1,28 +1,28 @@
 /**
 @module std_integer
-@summary Integer 结构体 - 对 int 基本数据类型的封装
+@summary std_integer 结构体 - 对 int 基本数据类型的封装
 @details
-    提供 Integer 结构体及相关的整数操作方法，包括：
+    提供 std_integer 结构体及相关的整数操作方法，包括：
     - 值存储与访问
     - 类型转换
 */
 module: std_integer
 
     /**
-    @struct Integer
+    @struct std_integer
     @summary 整数值对象的包装类
     @description
         包装基本 int 类型，提供面向对象的整数操作接口。
         支持构造、值访问、类型转换等操作。
     */
-    struct: Integer
+    struct: std_integer
 
         fields:
             declare value:int
 
         /**
         @init default
-        @summary 无参构造函数，创建值为 0 的 Integer
+        @summary 无参构造函数，创建值为 0 的 std_integer
         */
         init:
             body:
@@ -32,7 +32,7 @@ module: std_integer
 
         /**
         @init with_value
-        @summary 带参构造函数，根据给定值创建 Integer
+        @summary 带参构造函数，根据给定值创建 std_integer
         @param val 初始整数值
         */
         init:
@@ -98,13 +98,13 @@ module: std_integer
 
         /**
         @function max
-        @summary 与另一个 Integer 比较并返回较大值（兼容旧接口）
-        @param other 用于比较的 Integer
+        @summary 与另一个 std_integer 比较并返回较大值（兼容旧接口）
+        @param other 用于比较的 std_integer
         @returns 返回较大值的 int
         */
         function: max
             params:
-                declare other:Integer
+                declare other:std_integer
             returns: int
             body:
                 declare selfValue:int = value
@@ -118,13 +118,13 @@ module: std_integer
 
         /**
         @function min
-        @summary 与另一个 Integer 比较并返回较小值（兼容旧接口）
-        @param other 用于比较的 Integer
+        @summary 与另一个 std_integer 比较并返回较小值（兼容旧接口）
+        @param other 用于比较的 std_integer
         @returns 返回较小值的 int
         */
         function: min
             params:
-                declare other:Integer
+                declare other:std_integer
             returns: int
             body:
                 declare selfValue:int = value
@@ -151,9 +151,9 @@ module: std_integer
             declare rhs:int
         returns: int
         body:
-            declare lhsInteger:Integer = new Integer(lhs)
-            declare rhsInteger:Integer = new Integer(rhs)
-            return lhsInteger.max(rhsInteger)
+            declare lhsstd_integer:std_integer = new std_integer(lhs)
+            declare rhsstd_integer:std_integer = new std_integer(rhs)
+            return lhsstd_integer.max(rhsstd_integer)
         end body
     end function
 
@@ -170,9 +170,9 @@ module: std_integer
             declare rhs:int
         returns: int
         body:
-            declare lhsInteger:Integer = new Integer(lhs)
-            declare rhsInteger:Integer = new Integer(rhs)
-            return lhsInteger.min(rhsInteger)
+            declare lhsstd_integer:std_integer = new std_integer(lhs)
+            declare rhsstd_integer:std_integer = new std_integer(rhs)
+            return lhsstd_integer.min(rhsstd_integer)
         end body
     end function
 

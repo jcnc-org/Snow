@@ -1,8 +1,8 @@
 /**
 @module integer_math_example
-@summary Integer 数学方法演示
+@summary std_integer 数学方法演示
 @details
-    演示 Integer 结构体的数学方法：
+    演示 std_integer 结构体的数学方法：
     - abs(): 获取绝对值
     - max(other): 获取最大值
     - min(other): 获取最小值
@@ -18,15 +18,15 @@ module: integer_math_example
             // === 演示 abs() 方法 ===
             std_io.println("=== 演示 abs() 方法 ===")
             
-            declare negNum:Integer = new Integer(-25)
+            declare negNum:std_integer = new std_integer(-25)
             std_io.print("负数 -25 的绝对值: ")
             std_io.println(negNum.abs())
 
             // === 演示 max() 方法 ===
             std_io.println("\n=== 演示 max() 方法 ===")
             
-            declare num1:Integer = new Integer(15)
-            declare num2:Integer = new Integer(8)
+            declare num1:std_integer = new std_integer(15)
+            declare num2:std_integer = new std_integer(8)
             std_io.print(num1.getValue() + " 和 " + num2.getValue() + " 的最大值: ")
             std_io.println(std_integer.max(num1.getValue(), num2.getValue()))
 
@@ -47,7 +47,7 @@ module: integer_math_example
             std_io.print(negNum.getValue() + " 和 " + num2.getValue() + " 的最小值: ")
             std_io.println(minResult2)
             
-            std_io.println("\n=== Integer 数学方法演示完成! ===")
+            std_io.println("\n=== std_integer 数学方法演示完成! ===")
 
             return 0
         end body
