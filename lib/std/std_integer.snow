@@ -69,30 +69,18 @@ module: std_integer
         end function
 
         /**
-        @function toInt
-        @summary 显式转换为 int 类型
-        @returns 返回内部整数值
-        */
-        function: toInt
-            returns: int
-            body:
-                return value
-            end body
-        end function
-
-        /**
         @function abs
         @summary 计算当前整数的绝对值
-        @returns 返回当前整数值的绝对值
+        @returns 返回当前整数值绝对值的 std_integer 实例
         */
         function: abs
-            returns: int
+            returns: std_integer
             body:
                 declare result:int = value
                 if result < 0 then
                     result = -result
                 end if
-                return result
+                return new std_integer(result)
             end body
         end function
 
