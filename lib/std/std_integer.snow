@@ -98,7 +98,7 @@ module: std_integer
 
         /**
         @function max
-        @summary 与另一个 std_integer 比较并返回较大值（兼容旧接口）
+        @summary 与另一个 std_integer 比较并返回较大值
         @param other 用于比较的 std_integer
         @returns 返回较大值的 int
         */
@@ -118,7 +118,7 @@ module: std_integer
 
         /**
         @function min
-        @summary 与另一个 std_integer 比较并返回较小值（兼容旧接口）
+        @summary 与另一个 std_integer 比较并返回较小值
         @param other 用于比较的 std_integer
         @returns 返回较小值的 int
         */
@@ -140,7 +140,7 @@ module: std_integer
 
     /**
     @function max
-    @summary 比较两个整数并返回较大值（类似 Java Math.max）
+    @summary 比较两个整数并返回较大值
     @param lhs 第一整数
     @param rhs 第二整数
     @returns 返回两个整数中的较大者
@@ -159,7 +159,7 @@ module: std_integer
 
     /**
     @function min
-    @summary 比较两个整数并返回较小值（类似 Java Math.min）
+    @summary 比较两个整数并返回较小值
     @param lhs 第一整数
     @param rhs 第二整数
     @returns 返回两个整数中的较小者
