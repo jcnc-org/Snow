@@ -22,6 +22,24 @@ module: integer_math_example
             std_io.print("负数 -25 的绝对值: ")
             std_io.println(negNum.abs().getValue())
 
+            // === 演示 max()/min() 方法 ===
+            std_io.println("\n=== 演示 max()/min() 方法 ===")
+
+            declare numA:std_integer = new std_integer(18)
+            declare numB:std_integer = new std_integer(-9)
+
+            std_io.print("比较 18 和 -9 的较大值(结构体方法): ")
+            std_io.println(numA.max(numB).getValue())
+
+            std_io.print("比较 18 和 -9 的较小值(结构体方法): ")
+            std_io.println(numA.min(numB).getValue())
+
+            std_io.print("比较 -3 和 7 的较大值(模块函数): ")
+            std_io.println(std_integer.max(-3, 7))
+
+            std_io.print("比较 -3 和 7 的较小值(模块函数): ")
+            std_io.println(std_integer.min(-3, 7))
+
             return 0
         end body
     end function
