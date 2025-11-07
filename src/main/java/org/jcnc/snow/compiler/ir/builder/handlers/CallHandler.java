@@ -3,6 +3,7 @@ package org.jcnc.snow.compiler.ir.builder.handlers;
 import org.jcnc.snow.compiler.ir.builder.core.IRBuilderScope;
 import org.jcnc.snow.compiler.ir.builder.expression.ExpressionBuilder;
 import org.jcnc.snow.compiler.ir.builder.expression.ExpressionHandler;
+import org.jcnc.snow.compiler.ir.common.GlobalFunctionTable;
 import org.jcnc.snow.compiler.ir.core.IRValue;
 import org.jcnc.snow.compiler.ir.instruction.CallInstruction;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
@@ -112,12 +113,17 @@ public class CallHandler implements ExpressionHandler<CallExpressionNode> {
             case MemberExpressionNode m -> {
                 // 递归求值 object 部分
                 IRVirtualRegister objReg = b.build(m.object());
-                callee = m.member();
+                String recvType = b.ctx().getScope().getRegisterType(objReg);
+                if (recvType != null && !recvType.isBlank()) {
+                    callee = recvType + "." + m.member();
+                } else {
+                    callee = m.member();
+                }
                 // 第一个参数是对象寄存器
                 finalArgs.add(objReg);
                 finalArgs.addAll(explicitRegs);
 
-                // 追加 _N 后缀（N=总参数，包括this
+                // 追加 _N 后缀（N=总参数，包括this）
                 callee = callee + "_" + finalArgs.size();
             }
 
@@ -144,6 +150,10 @@ public class CallHandler implements ExpressionHandler<CallExpressionNode> {
         // 3. 分配结果寄存器并生成调用指令
         IRVirtualRegister dest = b.ctx().newRegister();
         b.ctx().addInstruction(new CallInstruction(dest, callee, finalArgs));
+        String returnType = GlobalFunctionTable.getReturnType(callee);
+        if (returnType != null) {
+            b.ctx().getScope().setRegisterType(dest, returnType);
+        }
         return dest;
     }
 }
