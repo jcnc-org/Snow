@@ -13,7 +13,6 @@ module: integer_math_example
     import: std_io
 
     function: main
-        returns: int
         body:
             // === 演示 abs() 方法 ===
             std_io.println("=== 演示 abs() 方法 ===")
@@ -40,7 +39,6 @@ module: integer_math_example
             std_io.print("比较 -3 和 7 的较小值(模块函数): ")
             std_io.println(std_integer.min(-3, 7))
 
-            return 0
         end body
     end function
 
