@@ -5,6 +5,7 @@
     提供 std_integer 结构体及相关的整数操作方法，包括：
     - 值存储与访问
     - 类型转换
+    - 面向对象风格的 abs / min / max 操作
 */
 module: std_integer
 
@@ -127,40 +128,56 @@ module: std_integer
     end struct
 
     /**
+    @function abs
+    @summary 计算给定整数的绝对值
+    @param val 要计算的整数值
+    @returns 返回绝对值对应的 std_integer 实例
+    */
+    function: abs
+        params:
+            declare val:int
+        returns: std_integer
+        body:
+            declare obj:std_integer = new std_integer(val)
+            return obj.abs()
+        end body
+    end function
+
+    /**
     @function max
-    @summary 比较两个整数并返回较大值
+    @summary 比较两个整数并返回较大值（std_integer）
     @param lhs 第一整数
     @param rhs 第二整数
-    @returns 返回两个整数中的较大者
+    @returns 返回两个整数中较大值的 std_integer 实例
     */
     function: max
         params:
             declare lhs:int
             declare rhs:int
-        returns: int
+        returns: std_integer
         body:
-            declare lhsstd_integer:std_integer = new std_integer(lhs)
-            declare rhsstd_integer:std_integer = new std_integer(rhs)
-            return lhsstd_integer.max(rhsstd_integer).getValue()
+            declare lhsObj:std_integer = new std_integer(lhs)
+            declare rhsObj:std_integer = new std_integer(rhs)
+            return lhsObj.max(rhsObj)
         end body
     end function
 
     /**
     @function min
-    @summary 比较两个整数并返回较小值
+    @summary 比较两个整数并返回较小值（std_integer）
     @param lhs 第一整数
     @param rhs 第二整数
-    @returns 返回两个整数中的较小者
+    @returns 返回两个整数中较小值的 std_integer 实例
     */
     function: min
         params:
             declare lhs:int
             declare rhs:int
-        returns: int
+        returns: std_integer
         body:
-            declare lhsstd_integer:std_integer = new std_integer(lhs)
-            declare rhsstd_integer:std_integer = new std_integer(rhs)
-            return lhsstd_integer.min(rhsstd_integer).getValue()
+            declare lhsObj:std_integer = new std_integer(lhs)
+            declare rhsObj:std_integer = new std_integer(rhs)
+            return lhsObj.min(rhsObj)
         end body
     end function
 

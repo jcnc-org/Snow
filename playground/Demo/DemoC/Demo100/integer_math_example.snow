@@ -34,10 +34,10 @@ module: integer_math_example
             std_io.println(numA.min(numB).abs().getValue())
 
             std_io.print("比较 -3 和 7 的较大值(模块函数): ")
-            std_io.println(std_integer.max(-3, 7))
+            std_io.println(std_integer.max(-3, 7).getValue())
 
             std_io.print("比较 -3 和 7 的较小值(模块函数): ")
-            std_io.println(std_integer.min(-3, 7))
+            std_io.println(std_integer.min(-3, 7).getValue())
 
         end body
     end function
