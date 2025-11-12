@@ -27,12 +27,6 @@ module: integer_math_example
             declare numA:std_integer = new std_integer(18)
             declare numB:std_integer = new std_integer(-9)
 
-            std_io.print("比较 18 和 -9 的较大值(结构体方法): ")
-            std_io.println(numA.max(numB).getValue())
-
-            std_io.print("比较 18 和 -9 的较小值的绝对值(结构体方法，链式调用): ")
-            std_io.println(numA.min(numB).abs().getValue())
-
             std_io.print("比较 -3 和 7 的较大值(模块函数): ")
             std_io.println(std_integer.max(-3, 7).getValue())
 
