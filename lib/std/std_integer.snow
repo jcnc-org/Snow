@@ -88,22 +88,6 @@ module: std_integer
     end struct
 
     /**
-    @function abs
-    @summary 计算给定整数的绝对值
-    @param val 要计算的整数值
-    @returns 返回绝对值对应的 std_integer 实例
-    */
-    function: abs
-        params:
-            declare val:int
-        returns: std_integer
-        body:
-            declare obj:std_integer = new std_integer(val)
-            return obj.abs()
-        end body
-    end function
-
-    /**
     @function max
     @summary 比较两个整数并返回较大值（std_integer）
     @param lhs 第一整数
