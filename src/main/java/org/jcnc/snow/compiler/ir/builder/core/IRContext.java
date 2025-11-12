@@ -99,7 +99,7 @@ public class IRContext {
      * @return 形如 "L0", "L1" 等的唯一字符串标签
      */
     public String newLabel() {
-        return "L" + (labelCounter++);
+        return function.name() + "$L" + (labelCounter++);
     }
 
     /**
