@@ -1,6 +1,11 @@
 /**
 @module integer_math_example
 @summary std_integer 数学方法演示
+@details
+    演示 std_integer 结构体的数学方法:
+   - abs(): 获取绝对值
+   - std_integer.max(a, b): 返回两个整数中的较大值
+   - std_integer.min(a, b): 返回两个整数中的较小值
 */
 module: integer_math_example
 
