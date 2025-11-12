@@ -14,6 +14,8 @@ module: integer_math_example
 
     function: main
         body:
+            std_io.println("=== std_integer 数学方法演示 ===")
+            std_io.println(std_integer.INT_MIN)
             // === 演示 abs() 方法 ===
             std_io.println("=== 演示 abs() 方法 ===")
             
