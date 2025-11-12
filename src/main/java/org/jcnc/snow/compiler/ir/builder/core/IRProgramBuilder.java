@@ -280,8 +280,48 @@ public final class IRProgramBuilder {
             }
             case StringLiteralNode str -> str.value(); // 字符串字面量直接返回
             case BoolLiteralNode b -> b.getValue() ? 1 : 0; // 布尔常量转为 1/0
+            case UnaryExpressionNode unary -> {
+                Object operand = evalLiteral(unary.operand());
+                if (operand == null) {
+                    yield null;
+                }
+                yield switch (unary.operator()) {
+                    case "-" -> negateNumberLiteral(operand);
+                    case "!" -> invertBooleanLiteral(operand);
+                    default -> null;
+                };
+            }
             default -> null; // 其他情况不支持常量折叠
         };
+    }
+
+    /**
+     * 处理取负运算的编译期常量折叠，保持原始数值类型以减少信息丢失。
+     */
+    private Object negateNumberLiteral(Object operand) {
+        if (!(operand instanceof Number num)) {
+            return null;
+        }
+        if (operand instanceof Byte b) return (byte) -b;
+        if (operand instanceof Short s) return (short) -s;
+        if (operand instanceof Integer i) return -i;
+        if (operand instanceof Long l) return -l;
+        if (operand instanceof Float f) return -f;
+        if (operand instanceof Double d) return -d;
+        return -num.doubleValue();
+    }
+
+    /**
+     * 处理逻辑非运算的编译期常量折叠，沿用 1/0 表示布尔值。
+     */
+    private Object invertBooleanLiteral(Object operand) {
+        if (operand instanceof Number num) {
+            return num.longValue() == 0 ? 1 : 0;
+        }
+        if (operand instanceof Boolean bool) {
+            return bool ? 0 : 1;
+        }
+        return null;
     }
 
     // ===================== IRFunction 构建辅助 =====================
