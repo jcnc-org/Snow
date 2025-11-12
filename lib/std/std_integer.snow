@@ -57,19 +57,6 @@ module: std_integer
         end function
 
         /**
-        @function setValue
-        @summary 设置包装的整数值
-        @param val 要设置的新值
-        */
-        function: setValue
-            params:
-                declare val:int
-            body:
-                value = val
-            end body
-        end function
-
-        /**
         @function abs
         @summary 计算当前整数的绝对值
         @returns 返回当前整数值绝对值的 std_integer 实例
