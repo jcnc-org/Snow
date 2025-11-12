@@ -1,3 +1,4 @@
+/*
 module: app
     import: io
     import: process
@@ -18,3 +19,4 @@ module: app
         end body
     end function
 end module
+*/

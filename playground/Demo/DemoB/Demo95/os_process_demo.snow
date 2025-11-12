@@ -1,3 +1,4 @@
+/*
 module: app
     import: io
     import: os_process
@@ -36,3 +37,4 @@ module: app
         end body
     end function
 end module
+*/

@@ -1,3 +1,4 @@
+/**
 module: app
     import: io
     import: process
@@ -12,10 +13,11 @@ module: app
             declare argv:any[] = ["-version"]
 
             // 可执行文件路径
-            declare path:string = "java"
+           // declare path:string = "java"
 
             // 调用 exec (不会返回，VM 会直接退出)
-            process.exec("", argv, path)
+           // process.exec("", argv, path)
         end body
     end function
 end module
+*/
