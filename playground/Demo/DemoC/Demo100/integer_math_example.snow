@@ -1,11 +1,6 @@
 /**
 @module integer_math_example
 @summary std_integer 数学方法演示
-@details
-    演示 std_integer 结构体的数学方法：
-    - abs(): 获取绝对值
-    - max(other): 获取最大值
-    - min(other): 获取最小值
 */
 module: integer_math_example
 
@@ -14,10 +9,11 @@ module: integer_math_example
 
     function: main
         body:
-            std_io.println("=== std_integer 数学方法演示 ===")
-            std_io.println(std_integer.INT_MIN)
+            std_io.println("=== std_integer 演示 ===")
+            std_io.println("int 最大: " + std_integer.INT_MAX)
+            std_io.println("int 最小: " + std_integer.INT_MIN)
             // === 演示 abs() 方法 ===
-            std_io.println("=== 演示 abs() 方法 ===")
+            std_io.println("\n=== 演示 abs() 方法 ===")
             
             declare negNum:std_integer = new std_integer(-25)
             std_io.print("负数 -25 的绝对值: ")
