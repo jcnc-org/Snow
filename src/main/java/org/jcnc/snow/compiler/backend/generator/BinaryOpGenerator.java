@@ -5,6 +5,7 @@ import org.jcnc.snow.compiler.backend.core.InstructionGenerator;
 import org.jcnc.snow.compiler.backend.utils.IROpCodeMapper;
 import org.jcnc.snow.compiler.backend.utils.OpHelper;
 import org.jcnc.snow.compiler.backend.utils.TypePromoteUtils;
+import org.jcnc.snow.compiler.ir.core.IROpCode;
 import org.jcnc.snow.compiler.ir.core.IRValue;
 import org.jcnc.snow.compiler.ir.instruction.BinaryOperationInstruction;
 import org.jcnc.snow.compiler.ir.value.IRConstant;
@@ -69,6 +70,34 @@ public class BinaryOpGenerator implements InstructionGenerator<BinaryOperationIn
         };
     }
 
+    /**
+     * 根据操作码推断其“主类型”前缀（B/S/I/L/F/D/R），用于在缺失类型信息时兜底。
+     */
+    private static char opcodeTypeHint(IROpCode op) {
+        if (op == null) return 0;
+        String name = op.name();
+        int idx = name.indexOf('_');
+        if (idx < 0) return 0;
+        String suffix = name.substring(idx + 1);
+        return switch (suffix) {
+            case "B8" -> 'B';
+            case "S16" -> 'S';
+            case "I32" -> 'I';
+            case "L64" -> 'L';
+            case "F32" -> 'F';
+            case "D64" -> 'D';
+            case "R" -> 'R';
+            case "BEQ", "BNE", "BLT", "BGT", "BLE", "BGE" -> 'B';
+            case "SEQ", "SNE", "SLT", "SGT", "SLE", "SGE" -> 'S';
+            case "IEQ", "INE", "ILT", "IGT", "ILE", "IGE" -> 'I';
+            case "LEQ", "LNE", "LLT", "LGT", "LLE", "LGE" -> 'L';
+            case "FEQ", "FNE", "FLT", "FGT", "FLE", "FGE" -> 'F';
+            case "DEQ", "DNE", "DLT", "DGT", "DLE", "DGE" -> 'D';
+            case "REQ", "RNE" -> 'R';
+            default -> 0;
+        };
+    }
+
     /*  接口实现  */
 
     @Override
@@ -97,6 +126,7 @@ public class BinaryOpGenerator implements InstructionGenerator<BinaryOperationIn
 
         // 0. +0 → MOV Peephole 优化
         String irName = ins.op().name();
+        char opTypeHint = opcodeTypeHint(ins.op());
         if (irName.startsWith("ADD_")) {
             IRValue lhs = ins.operands().getFirst();
             IRValue rhs = ins.operands().get(1);
@@ -117,8 +147,13 @@ public class BinaryOpGenerator implements InstructionGenerator<BinaryOperationIn
                 if (srcSlot != destSlot) {
                     out.emit(OpHelper.opcode("MOV") + " " + srcSlot + " " + destSlot);
                 }
+                char srcType = out.getSlotType(srcSlot);
+                if (opTypeHint != 0 && opTypeHint != 'R' && srcType == 'R') {
+                    srcType = opTypeHint;
+                    out.setSlotType(srcSlot, srcType);
+                }
                 // 同步目标槽位类型信息，防止类型遗漏
-                out.setSlotType(destSlot, out.getSlotType(srcSlot));
+                out.setSlotType(destSlot, srcType);
                 return; // 优化路径结束
             }
         }
@@ -130,6 +165,16 @@ public class BinaryOpGenerator implements InstructionGenerator<BinaryOperationIn
 
         char lType = out.getSlotType(lSlot); // 未登记时默认 'I'
         char rType = out.getSlotType(rSlot);
+        if (opTypeHint != 0 && opTypeHint != 'R') {
+            if (lType == 'R') {
+                lType = opTypeHint;
+                out.setSlotType(lSlot, lType);
+            }
+            if (rType == 'R') {
+                rType = opTypeHint;
+                out.setSlotType(rSlot, rType);
+            }
+        }
 
         char tType = TypePromoteUtils.promote(lType, rType); // 类型提升结果
         String tPre = TypePromoteUtils.str(tType);
