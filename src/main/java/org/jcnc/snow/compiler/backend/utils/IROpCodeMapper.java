@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * IR 操作码与虚拟机指令名映射工具类。
  * <p>
- * 本类用于将 IR 展示的操作码（{@link IROpCode}）映射为目标虚拟机的指令名（{@code String}）。
+ * 本类用于将 IR 层的操作码（{@link IROpCode}）映射为目标虚拟机的指令名（{@code String}）。
  * 该工具类在编译器后端阶段提供指令名转换功能，不处理参数或操作数，仅负责纯映射。
  * </p>
  * <p>
@@ -148,7 +148,7 @@ public final class IROpCodeMapper {
         opcodeMap.put(IROpCode.ADD_R, "R_ADD");     // 引用/字符串运算
 
         // 跳转与标签
-        opcodeMap.put(IROpCode.JUMP, "JUMP");        // 无条件跳转
+        opcodeMap.put(IROpCode.JUMP, "JMP");        // 无条件跳转
         opcodeMap.put(IROpCode.LABEL, "LABEL");     // 标签
 
         // 函数相关

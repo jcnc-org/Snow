@@ -3,10 +3,7 @@ package org.jcnc.snow.compiler.ir.core;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 表示单个函数的中间表示（IR）。
@@ -31,10 +28,6 @@ public class IRFunction {
      * 正式参数所对应的虚拟寄存器列表，按声明顺序排列。
      */
     private final List<IRVirtualRegister> parameters = new ArrayList<>();
-    /**
-     * 寄存器到类型名的映射，用于在后端阶段传递类型信息。
-     */
-    private final Map<IRVirtualRegister, String> registerTypes = new HashMap<>();
     /**
      * 用于生成新的虚拟寄存器编号的计数器。
      */
@@ -105,38 +98,6 @@ public class IRFunction {
      */
     public String name() {
         return name;
-    }
-
-    /**
-     * 记录指定寄存器的类型。
-     *
-     * @param reg  寄存器
-     * @param type 类型名
-     */
-    public void setRegisterType(IRVirtualRegister reg, String type) {
-        if (reg == null) return;
-        if (type == null || type.isBlank() || "void".equalsIgnoreCase(type)) {
-            registerTypes.remove(reg);
-        } else {
-            registerTypes.put(reg, type);
-        }
-    }
-
-    /**
-     * 查询寄存器绑定的类型。
-     *
-     * @param reg 寄存器
-     * @return 类型名或 null
-     */
-    public String getRegisterType(IRVirtualRegister reg) {
-        return reg == null ? null : registerTypes.get(reg);
-    }
-
-    /**
-     * 获取所有寄存器类型映射（只读视图）。
-     */
-    public Map<IRVirtualRegister, String> registerTypes() {
-        return Collections.unmodifiableMap(registerTypes);
     }
 
     /**

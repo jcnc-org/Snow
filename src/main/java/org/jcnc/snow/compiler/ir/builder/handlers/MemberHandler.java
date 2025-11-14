@@ -44,9 +44,6 @@ public class MemberHandler implements ExpressionHandler<MemberExpressionNode> {
             if (constVal != null) {
                 IRVirtualRegister outConst = b.ctx().newRegister();
                 b.ctx().addInstruction(new LoadConstInstruction(outConst, IRConstant.fromObject(constVal)));
-                if (constVal instanceof String) {
-                    b.ctx().getScope().setRegisterType(outConst, "string");
-                }
                 return outConst;
             }
         }

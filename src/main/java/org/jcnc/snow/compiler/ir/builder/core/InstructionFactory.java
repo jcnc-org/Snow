@@ -6,32 +6,26 @@ import org.jcnc.snow.compiler.ir.value.IRConstant;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 
 /**
- * IR 指令统一生成工厂类。
- * <p>
- * 该类负责封装常量加载、二元运算、赋值、控制流、返回等 IR 指令生成逻辑，
- * 以提高 IR 生成阶段的可维护性与复用性。
- * <p>
- * 每个方法都会根据输入参数生成对应的 IR 指令并注册到 {@link IRContext} 中，
- * 返回值通常是存储结果的 {@link IRVirtualRegister}。
+ * IR 指令统一生成工厂类，负责封装常量加载、二元运算、赋值、控制流等指令生成逻辑。
+ * 提高 IR 生成阶段的可维护性与复用性。
  */
 public class InstructionFactory {
 
     /**
-     * 加载一个 int 类型常量到新分配的寄存器中。
+     * 加载整数常量，将其写入一个新分配的虚拟寄存器，并返回该寄存器。
      *
      * @param ctx   当前 IR 上下文
-     * @param value int 类型常量值
+     * @param value 整数常量值
      * @return 存储该常量的新虚拟寄存器
      */
     public static IRVirtualRegister loadConst(IRContext ctx, int value) {
         IRVirtualRegister r = ctx.newRegister();
         ctx.addInstruction(new LoadConstInstruction(r, new IRConstant(value)));
-        ctx.getScope().setRegisterType(r, "int");
         return r;
     }
 
     /**
-     * 加载一个 long 类型常量到新寄存器。
+     * 加载 long 类型常量到新寄存器。
      *
      * @param ctx   当前 IR 上下文
      * @param value long 类型常量值
@@ -40,12 +34,11 @@ public class InstructionFactory {
     public static IRVirtualRegister loadConst(IRContext ctx, long value) {
         IRVirtualRegister r = ctx.newRegister();
         ctx.addInstruction(new LoadConstInstruction(r, new IRConstant(value)));
-        ctx.getScope().setRegisterType(r, "long");
         return r;
     }
 
     /**
-     * 加载一个 float 类型常量到新寄存器。
+     * 加载 float 类型常量到新寄存器。
      *
      * @param ctx   当前 IR 上下文
      * @param value float 类型常量值
@@ -54,12 +47,11 @@ public class InstructionFactory {
     public static IRVirtualRegister loadConst(IRContext ctx, float value) {
         IRVirtualRegister r = ctx.newRegister();
         ctx.addInstruction(new LoadConstInstruction(r, new IRConstant(value)));
-        ctx.getScope().setRegisterType(r, "float");
         return r;
     }
 
     /**
-     * 加载一个 double 类型常量到新寄存器。
+     * 加载 double 类型常量到新寄存器。
      *
      * @param ctx   当前 IR 上下文
      * @param value double 类型常量值
@@ -68,13 +60,11 @@ public class InstructionFactory {
     public static IRVirtualRegister loadConst(IRContext ctx, double value) {
         IRVirtualRegister r = ctx.newRegister();
         ctx.addInstruction(new LoadConstInstruction(r, new IRConstant(value)));
-        ctx.getScope().setRegisterType(r, "double");
         return r;
     }
 
     /**
-     * 执行二元运算（如加法、减法等），
-     * 将结果写入新分配的虚拟寄存器并返回。
+     * 执行二元运算（如加法、减法等），结果写入新分配的虚拟寄存器并返回该寄存器。
      *
      * @param ctx 当前 IR 上下文
      * @param op  二元运算操作码
@@ -85,7 +75,6 @@ public class InstructionFactory {
     public static IRVirtualRegister binOp(IRContext ctx, IROpCode op, IRVirtualRegister a, IRVirtualRegister b) {
         IRVirtualRegister dest = ctx.newRegister();
         ctx.addInstruction(new BinaryOperationInstruction(op, dest, a, b));
-        markResultType(ctx, dest, op);
         return dest;
     }
 
@@ -98,7 +87,6 @@ public class InstructionFactory {
      */
     public static void loadConstInto(IRContext ctx, IRVirtualRegister dest, IRConstant value) {
         ctx.addInstruction(new LoadConstInstruction(dest, value));
-        markConstType(ctx, dest, value != null ? value.value() : null);
     }
 
     /**
@@ -112,12 +100,10 @@ public class InstructionFactory {
      */
     public static void binOpInto(IRContext ctx, IROpCode op, IRVirtualRegister a, IRVirtualRegister b, IRVirtualRegister dest) {
         ctx.addInstruction(new BinaryOperationInstruction(op, dest, a, b));
-        markResultType(ctx, dest, op);
     }
 
     /**
      * 生成“值拷贝”语义（src → dest）。
-     * <p>
      * 通过在 IR 中构造 “src + 0” 的形式，触发 Peephole 优化折叠成 MOV。
      *
      * @param ctx  当前 IR 上下文
@@ -159,15 +145,18 @@ public class InstructionFactory {
                     zeroConst = new IRConstant(0.0);
                 }
                 default -> {
+                    // 引用类型 / 结构体等统一走 int 路径
                     op = IROpCode.ADD_I32;
                     zeroConst = new IRConstant(0);
                 }
             }
         } else {
+            // 无法推断类型时，退化为 int 方案
             op = IROpCode.ADD_I32;
             zeroConst = new IRConstant(0);
         }
 
+        // 注意：这里传入的是立即数 zeroConst，而不是寄存器
         ctx.addInstruction(new BinaryOperationInstruction(op, dest, src, zeroConst));
     }
 
@@ -205,7 +194,7 @@ public class InstructionFactory {
     }
 
     /**
-     * 生成带返回值的 return 指令。
+     * 生成返回指令（带返回值）。
      *
      * @param ctx   当前 IR 上下文
      * @param value 返回值寄存器
@@ -221,57 +210,5 @@ public class InstructionFactory {
      */
     public static void retVoid(IRContext ctx) {
         ctx.addInstruction(new ReturnInstruction(null));
-    }
-
-    /**
-     * 根据操作码推断运算结果类型并标注到寄存器上。
-     *
-     * @param ctx  当前 IR 上下文
-     * @param dest 目标寄存器
-     * @param op   操作码
-     */
-    private static void markResultType(IRContext ctx, IRVirtualRegister dest, IROpCode op) {
-        if (ctx == null || dest == null || op == null) return;
-        String name = op.name();
-        int idx = name.lastIndexOf('_');
-        if (idx < 0 || idx == name.length() - 1) return;
-        String suffix = name.substring(idx + 1);
-        String type = switch (suffix) {
-            case "B8" -> "byte";
-            case "S16" -> "short";
-            case "I32" -> "int";
-            case "L64" -> "long";
-            case "F32" -> "float";
-            case "D64" -> "double";
-            case "R" -> "string";
-            default -> null;
-        };
-        if (type != null) {
-            ctx.getScope().setRegisterType(dest, type);
-        }
-    }
-
-    /**
-     * 根据常量值类型标注目标寄存器类型。
-     *
-     * @param ctx   当前 IR 上下文
-     * @param dest  目标寄存器
-     * @param value 常量值对象
-     */
-    private static void markConstType(IRContext ctx, IRVirtualRegister dest, Object value) {
-        if (ctx == null || dest == null || value == null) return;
-        String type = switch (value) {
-            case Byte ignored -> "byte";
-            case Short ignored -> "short";
-            case Integer ignored -> "int";
-            case Long ignored -> "long";
-            case Float ignored -> "float";
-            case Double ignored -> "double";
-            case String ignored -> "string";
-            default -> null;
-        };
-        if (type != null) {
-            ctx.getScope().setRegisterType(dest, type);
-        }
     }
 }

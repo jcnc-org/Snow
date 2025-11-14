@@ -263,14 +263,8 @@ public final class IRBuilderScope {
         if (reg == null) return;
         if (type == null || type.isBlank() || "void".equalsIgnoreCase(type)) {
             registerTypes.remove(reg);
-            if (fn != null) {
-                fn.setRegisterType(reg, null);
-            }
         } else {
             registerTypes.put(reg, type);
-            if (fn != null) {
-                fn.setRegisterType(reg, type);
-            }
         }
     }
 
