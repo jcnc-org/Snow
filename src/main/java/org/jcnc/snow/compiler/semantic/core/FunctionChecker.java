@@ -2,6 +2,8 @@ package org.jcnc.snow.compiler.semantic.core;
 
 import org.jcnc.snow.compiler.parser.ast.DeclarationNode;
 import org.jcnc.snow.compiler.parser.ast.FunctionNode;
+import org.jcnc.snow.compiler.parser.ast.IfNode;
+import org.jcnc.snow.compiler.parser.ast.LoopNode;
 import org.jcnc.snow.compiler.parser.ast.ModuleNode;
 import org.jcnc.snow.compiler.parser.ast.ReturnNode;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
@@ -105,12 +107,48 @@ public record FunctionChecker(Context ctx) {
                 // 非 void 函数，要求必须含至少一条 return 语句
                 Type ret = ctx.parseType(fn.returnType());
                 if (ret != null && ret != BuiltinType.VOID) {
-                    boolean hasReturn = fn.body().stream().anyMatch(s -> s instanceof ReturnNode);
+                    boolean hasReturn = containsReturn(fn.body());
                     if (!hasReturn) {
                         ctx.errors().add(new SemanticError(fn, "非 void 函数必须包含至少一条 return 语句"));
                     }
                 }
             }
         }
+    }
+
+    /**
+     * 递归检查语句列表中是否存在 return 语句。
+     */
+    private boolean containsReturn(List<StatementNode> statements) {
+        if (statements == null) {
+            return false;
+        }
+        for (StatementNode statement : statements) {
+            if (containsReturn(statement)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 递归检查单个语句（以及其嵌套语句）是否存在 return。
+     */
+    private boolean containsReturn(StatementNode statement) {
+        if (statement == null) {
+            return false;
+        }
+        if (statement instanceof ReturnNode) {
+            return true;
+        }
+        if (statement instanceof IfNode ifNode) {
+            return containsReturn(ifNode.thenBranch()) || containsReturn(ifNode.elseBranch());
+        }
+        if (statement instanceof LoopNode loopNode) {
+            return containsReturn(loopNode.init())
+                    || containsReturn(loopNode.step())
+                    || containsReturn(loopNode.body());
+        }
+        return false;
     }
 }

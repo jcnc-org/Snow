@@ -22,7 +22,9 @@ public class IROpCodeUtils {
             Map.entry(IROpCode.CMP_LLT, IROpCode.CMP_LGE),
             Map.entry(IROpCode.CMP_LGE, IROpCode.CMP_LLT),
             Map.entry(IROpCode.CMP_LGT, IROpCode.CMP_LLE),
-            Map.entry(IROpCode.CMP_LLE, IROpCode.CMP_LGT)
+            Map.entry(IROpCode.CMP_LLE, IROpCode.CMP_LGT),
+            Map.entry(IROpCode.CMP_REQ, IROpCode.CMP_RNE),
+            Map.entry(IROpCode.CMP_RNE, IROpCode.CMP_REQ)
     );
 
     /**

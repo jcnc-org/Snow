@@ -1,0 +1,78 @@
+module: InheritanceSimple
+    import: std_io
+    
+    struct: Animal
+        fields:
+            declare name: int
+            declare age: int
+        
+        init:
+            params:
+                declare n: int
+                declare a: int
+            body:
+                this.name = n
+                this.age = a
+            end body
+        end init
+        
+        function: getName
+            returns: int
+            body:
+                return this.name
+            end body
+        end function
+        
+        function: getAge
+            returns: int
+            body:
+                return this.age
+            end body
+        end function
+    end struct
+    
+    struct: Dog extends Animal
+        fields:
+            declare breed: int
+        
+        init:
+            params:
+                declare n: int
+                declare a: int
+                declare b: int
+            body:
+                // 使用super调用父类构造函数
+                super(n, a)
+                this.breed = b
+            end body
+        end init
+        
+        function: getBreed
+            returns: int
+            body:
+                return this.breed
+            end body
+        end function
+        
+        function: bark
+            returns: string
+            body:
+                return "Woof! Woof!"
+            end body
+        end function
+    end struct
+    
+    function: main
+        returns: void
+        body:
+            // 创建子类实例
+            declare dog: Dog = new Dog(1, 3, 2)
+            
+            // 访问继承的字段和方法
+            std_io.println("Dog name: " + dog.getName())
+            std_io.println("Dog age: " + dog.getAge())
+            std_io.println("Dog breed: " + dog.getBreed())
+            std_io.println("Dog says: " + dog.bark())
+        end body
+    end function
+end module

@@ -7,7 +7,7 @@ import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
 /**
- * {@code GetEnvHandler} 实现 GETENV (0x1004) 系统调用，
+ * {@code GetEnvHandler} 实现 GETENV (0x1900) 系统调用，
  * 用于读取当前环境变量值（含 VM 覆盖层）。
  *
  * <p><b>Stack：</b>

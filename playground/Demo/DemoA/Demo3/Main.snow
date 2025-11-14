@@ -1,0 +1,22 @@
+module: Main
+	import: syscall.fs
+    import: syscall.fd
+    import: std_io
+
+    function: main
+        params:
+        returns: int
+        body:
+           declare n1: int =1
+           declare n2: int =2
+           declare n3: int =1
+           if n1 ==1 then
+              if n2 ==2 then
+              n3 =3
+              end if
+           end if
+           std_io.print(n3)
+        return n3
+        end body
+    end function
+end module

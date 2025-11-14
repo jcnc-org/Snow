@@ -135,6 +135,9 @@ public final class IROpCodeMapper {
         opcodeMap.put(IROpCode.CMP_DGT, "D_CG");    // 大于
         opcodeMap.put(IROpCode.CMP_DLE, "D_CLE");   // 小于等于
         opcodeMap.put(IROpCode.CMP_DGE, "D_CGE");   // 大于等于
+        // 引用类型比较运算映射
+        opcodeMap.put(IROpCode.CMP_REQ, "R_CE");     // 引用相等
+        opcodeMap.put(IROpCode.CMP_RNE, "R_CNE");    // 引用不等
 
         // 加载与存储
         opcodeMap.put(IROpCode.LOAD, "I_LOAD");     // 加载

@@ -1,0 +1,30 @@
+module: AccessControlValidation
+    import: std_io
+    
+    globals:
+        declare _secret: int = 42      // 仅模块内部可见
+        declare visible: int = 1       // 公有
+
+    function: _hidden                  // 仅模块内部可见
+        returns: int
+        body:
+            return 100
+        end body
+    end function
+
+    function: publicFunc
+        returns: int
+        body:
+            return _secret + 1         // 合法：访问私有成员
+        end body
+    end function
+
+    function: main
+        returns: void
+        body:
+            std_io.println("Public variable: " + visible)
+            std_io.println("Public function result: " + publicFunc())
+            // 注意：无法访问_secret或_hidden()，因为它们是私有的
+        end body
+    end function
+end module

@@ -1,0 +1,22 @@
+module: app
+    import: syscall.fs
+    import: syscall.fd
+    import: std_io
+
+    function: main
+        params:
+            declare args: any
+        body:
+            declare fd1: int
+            // 打开 .env 文件（只读，flags=0）
+            fd1 = fd.open(".env", 0)
+            // 读取100000
+            declare content: any
+            content = fd.read(fd1, 100000)
+            // 打印文件内容（带自动换行）
+            std_io.println(content)
+            // 关闭文件
+            fd.close(fd1)
+        end body
+    end function
+end module

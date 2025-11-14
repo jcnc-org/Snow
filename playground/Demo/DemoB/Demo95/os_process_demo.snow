@@ -1,0 +1,40 @@
+/*
+module: app
+    import: io
+    import: os_process
+
+    function: main
+        params:
+            declare args:any
+        body:
+            io.stdout_write("=== 测试 os_process 模块 ===\n")
+
+            // 1) getpid / getppid
+            declare pid:int = os_process.getpid()
+            declare ppid:int = os_process.getppid()
+            io.stdout_write("当前进程 PID = " + pid + "\n")
+            io.stdout_write("父进程 PPID = " + ppid + "\n")
+
+            // 2) fork + wait
+            io.stdout_write("\n准备 fork 子进程 (执行 java -version)...\n")
+            declare cmd:any[] = ["java", "-version"]
+            declare child:int = os_process.fork(cmd)
+            io.stdout_write("fork 返回 pid=" + child + "\n")
+
+            io.stdout_write("父进程等待子进程退出...\n")
+            declare status:int = os_process.wait(child)
+            io.stdout_write("子进程退出码 = " + status + "\n")
+
+            // 3) exec（不返回）
+            io.stdout_write("\n准备 exec 子进程 (java -version)...\n")
+            declare env:any = ""          // ⚠️ 空环境，用空字符串占位即可
+            declare argv:any[] = ["-version"]
+            declare path:string = "java"
+
+            os_process.exec(env, argv, path)
+            // 不会执行到这里
+            os_process.exit(0)
+        end body
+    end function
+end module
+*/

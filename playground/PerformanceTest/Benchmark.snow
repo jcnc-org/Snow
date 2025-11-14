@@ -1,0 +1,128 @@
+module: Benchmark
+    import: std_io
+    import: syscall.time
+
+    function: runBenchmark
+        returns: void
+        body:
+            std_io.println("Starting performance benchmark...")
+            
+            // 测试1: 简单算术运算
+            benchmarkArithmetic()
+            
+            // 测试2: 字符串操作
+            benchmarkStringOps()
+            
+            // 测试3: 循环性能
+            benchmarkLoops()
+            
+            // 测试4: 函数调用开销
+            benchmarkFunctionCalls()
+            
+            std_io.println("Benchmark completed.")
+        end body
+    end function
+
+    function: benchmarkArithmetic
+        returns: void
+        body:
+            declare startTime: long = time.mono_ms()
+            
+            declare result: int = 0
+            loop:
+                init:
+                    declare i: int = 0
+                cond:
+                    i < 1000000
+                step:
+                    i = i + 1
+                body:
+                    result = result + i * 2 - 1
+                end body
+            end loop
+            
+            declare endTime: long = time.mono_ms()
+            std_io.println("Arithmetic test: " + (endTime - startTime) + " ms, result = " + result)
+        end body
+    end function
+
+    function: benchmarkStringOps
+        returns: void
+        body:
+            declare startTime: long = time.mono_ms()
+            
+            declare str: string = ""
+            loop:
+                init:
+                    declare i: int = 0
+                cond:
+                    i < 10000
+                step:
+                    i = i + 1
+                body:
+                    str = str + "a"
+                end body
+            end loop
+            
+            declare endTime: long = time.mono_ms()
+            // 使用系统调用获取字符串长度
+            declare length: int = syscall("0x1801", str)
+            std_io.println("String operations test: " + (endTime - startTime) + " ms, length = " + length)
+        end body
+    end function
+
+    function: benchmarkLoops
+        returns: void
+        body:
+            declare startTime: long = time.mono_ms()
+            
+            declare sum: int = 0
+            loop:
+                init:
+                    declare i: int = 0
+                cond:
+                    i < 1000000
+                step:
+                    i = i + 1
+                body:
+                    sum = sum + 1
+                end body
+            end loop
+            
+            declare endTime: long = time.mono_ms()
+            std_io.println("Loop performance test: " + (endTime - startTime) + " ms, sum = " + sum)
+        end body
+    end function
+
+    function: benchmarkFunctionCalls
+        returns: void
+        body:
+            declare startTime: long = time.mono_ms()
+            
+            declare result: int = 0
+            loop:
+                init:
+                    declare i: int = 0
+                cond:
+                    i < 100000
+                step:
+                    i = i + 1
+                body:
+                    result = result + simpleFunction(i)
+                end body
+            end loop
+            
+            declare endTime: long = time.mono_ms()
+            std_io.println("Function calls test: " + (endTime - startTime) + " ms, result = " + result)
+        end body
+    end function
+
+    function: simpleFunction
+        params:
+            declare x: int
+        returns: int
+        body:
+            return x * 2 + 1
+        end body
+    end function
+end module

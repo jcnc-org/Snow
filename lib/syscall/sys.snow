@@ -1,0 +1,115 @@
+/**
+@module sys
+@summary 系统信息与环境模块，封装系统资源查询和环境变量操作。
+@syscalls
+  0x1900 GETENV       获取环境变量的值
+  0x1901 SETENV       设置/删除环境变量（仅影响子进程环境）
+  0x1902 NCPU         返回逻辑处理器（CPU）数量
+  0x1903 RANDOM_BYTES 生成随机字节数组
+  0x1904 ERRSTR       获取最近一次系统调用的错误字符串
+  0x1905 ERRNO        获取最近一次系统调用的错误码
+  0x1906 MEMINFO      获取内存与系统资源信息
+*/
+module: sys
+
+    /**
+    @function getenv
+    @summary 根据环境变量名返回其值；不存在时返回 null。
+    @param key 环境变量名
+    @returns 指定环境变量的值，不存在则为 null
+    @throws IllegalStateException 参数不足时抛出异常
+    */
+    function: getenv
+        params:
+            declare key:string
+        returns: string
+        body:
+            return syscall("0x1900", key)
+        end body
+    end function
+
+    /**
+    @function setenv
+    @summary 设置或删除（val=null）环境变量。
+    @param key 环境变量名
+    @param val 环境变量值，为 null 时删除该变量
+    @param overwrite 0 或 1，1 表示强制覆盖已存在的变量，0 表示若变量已存在则不修改
+    @returns 成功返回 0，当 overwrite==0 且变量已存在时也返回 0（未修改）
+    @throws IllegalStateException 参数缺失或 overwrite 非 0/1 时抛出异常; IllegalArgumentException 参数类型错误时抛出异常
+    */
+    function: setenv
+        params:
+            declare key:string
+            declare val:any        // 允许为 null
+            declare overwrite:int  // 0 或 1
+        returns: int
+        body:
+            return syscall("0x1901", key, val, overwrite)
+        end body
+    end function
+
+    /**
+    @function ncpu
+    @summary 返回运行时可用的逻辑处理器数。
+    @returns 可用的逻辑处理器数量
+    */
+    function: cpu_count
+        returns: int
+        body:
+            return syscall("0x1902")
+        end body
+    end function
+
+    /**
+    @function random_bytes
+    @summary 生成长度为 n 的随机字节数组。
+    @param n 要生成的随机字节数组长度
+    @returns 成功返回长度为 n 的 byte[]；当 n==0 返回空数组
+    @throws IllegalStateException 参数缺失、为 null、无法解析为整数、为负数或超过允许的最大值时抛出异常; IllegalArgumentException 参数为负数或超过允许的最大值时抛出异常
+    */
+    function: random_bytes
+        params:
+            declare n:int
+        returns: any   // 运行时为 byte[]
+        body:
+            return syscall("0x1903", n)
+        end body
+    end function
+
+    /**
+    @function last_error_message
+    @summary 返回最近一次系统调用的错误字符串；无错返回 ""。
+    @returns 最近一次系统调用的错误信息文本，无错误时返回空字符串 ""
+    */
+    function: last_error_message
+        returns: string
+        body:
+            return syscall("0x1904")
+        end body
+    end function
+
+    /**
+    @function last_error_code
+    @summary 返回最近一次系统调用的错误码；无错返回 0。
+    @returns 最近一次系统调用的错误码，无错误时返回 0
+    */
+    function: last_error_code
+        returns: int
+        body:
+            return syscall("0x1905")
+        end body
+    end function
+
+    /**
+    @function meminfo
+    @summary 收集 JVM 堆内存信息以及在可用时的操作系统物理内存等指标。
+    @returns 包含系统资源信息的 Map<String,Object>，典型键包括 heapTotal、heapFree、heapUsed、heapMax 等
+    */
+    function: memory_info
+        returns: any   // 运行时为 Map<String,Object>
+        body:
+            return syscall("0x1906")
+        end body
+    end function
+
+end module

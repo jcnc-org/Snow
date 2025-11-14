@@ -1,0 +1,104 @@
+/**
+@module os_multiplex
+@summary I/O 多路复用（select/epoll）稳定封装。
+*/
+module: os_multiplex
+
+    import: multiplex
+
+    globals:
+        declare const EPOLL_ADD:int = 1
+        declare const EPOLL_MOD:int = 2
+        declare const EPOLL_DEL:int = 3
+
+        declare const EVENT_READ:int  = 1
+        declare const EVENT_WRITE:int = 2
+        declare const EVENT_CONNECT:int = 4
+
+    /**
+    @function select
+    @summary 监听可读/可写/异常集合。
+    */
+    function: select
+        params:
+            declare read_set:any
+            declare write_set:any
+            declare except_set:any
+            declare timeout_ms:int
+        returns: any
+        body:
+            return multiplex.select(read_set, write_set, except_set, timeout_ms)
+        end body
+    end function
+
+    /**
+    @function epoll_create
+    @summary 创建 epoll 实例。
+    */
+    function: epoll_create
+        params:
+            declare flags:int
+        returns: int
+        body:
+            return multiplex.epoll_create(flags)
+        end body
+    end function
+
+    function: epoll_add
+        params:
+            declare epfd:int
+            declare fd:int
+            declare events:int
+        returns: int
+        body:
+            return multiplex.epoll_ctl(epfd, EPOLL_ADD, fd, events)
+        end body
+    end function
+
+    function: epoll_mod
+        params:
+            declare epfd:int
+            declare fd:int
+            declare events:int
+        returns: int
+        body:
+            return multiplex.epoll_ctl(epfd, EPOLL_MOD, fd, events)
+        end body
+    end function
+
+    function: epoll_del
+        params:
+            declare epfd:int
+            declare fd:int
+        returns: int
+        body:
+            return multiplex.epoll_ctl(epfd, EPOLL_DEL, fd, 0)
+        end body
+    end function
+
+    function: epoll_wait
+        params:
+            declare epfd:int
+            declare max_events:int
+            declare timeout_ms:int
+        returns: any
+        body:
+            return multiplex.epoll_wait(epfd, max_events, timeout_ms)
+        end body
+    end function
+
+    /**
+    @function io_wait
+    @summary 平台无关的多路等待。
+    */
+    function: io_wait
+        params:
+            declare fds:any
+            declare timeout_ms:int
+        returns: any
+        body:
+            return multiplex.io_wait(fds, timeout_ms)
+        end body
+    end function
+
+end module

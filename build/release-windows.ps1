@@ -111,6 +111,26 @@ try {
     Write-Host "Version    : $snowVersion"
     Write-Host "Output Dir : $outDir"
     Write-Host "Zip File   : $zipPath"
+
+    # ===== Step 5: Create VERSION file in SDK root directory =====
+    Write-Host "Step 5: Create VERSION file in SDK root directory..."
+    $versionFilePath = Join-Path $outDir "VERSION"
+    try {
+        Set-Content -Path $versionFilePath -Value $snowVersion -Force
+        # Verify the file was created and has content
+        if (Test-Path $versionFilePath) {
+            $versionContent = Get-Content -Path $versionFilePath -Raw
+            if ($versionContent.Trim() -eq $snowVersion) {
+                Write-Host ">>> Created VERSION file at $versionFilePath with content: $snowVersion"
+            } else {
+                Write-Warning "VERSION file was created but content does not match. Expected: $snowVersion, Actual: $($versionContent.Trim())"
+            }
+        } else {
+            Write-Warning "Failed to create VERSION file at $versionFilePath"
+        }
+    } catch {
+        Write-Warning "Failed to create VERSION file: $($_.Exception.Message)"
+    }
 }
 finally {
     Pop-Location

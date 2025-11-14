@@ -1,10 +1,10 @@
 module: Main
-    import: stdio
+    import: std_io
     function: main
         returns: void
         body:
             declare abc:int =1
-            stdio.println(abc)
+            std_io.println(abc)
         end body
     end function
 end module

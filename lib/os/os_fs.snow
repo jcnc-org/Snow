@@ -1,0 +1,243 @@
+/**
+@module os_fs
+@summary 文件系统与路径操作的稳定封装。
+@details
+    基于 syscall.fs 与 syscall.fd，统一常见目录/文件操作的语义。
+*/
+module: os_fs
+
+    import: fs
+    import: fd
+    import: os_fd
+
+    /**
+    @function current_dir
+    @summary 返回当前工作目录的绝对路径。
+    */
+    function: current_dir
+        returns: string
+        body:
+            return fs.getcwd()
+        end body
+    end function
+
+    /**
+    @function change_dir
+    @summary 切换当前工作目录。
+    */
+    function: change_dir
+        params:
+            declare path:any
+        returns: int
+        body:
+            return fs.chdir(path)
+        end body
+    end function
+
+    /**
+    @function make_dir
+    @summary 创建目录（默认权限由平台决定）。
+    */
+    function: make_dir
+        params:
+            declare path:any
+        returns: int
+        body:
+            // 默认使用 0o755，遵循常见目录权限约定，具体权限由平台/umask 决定
+            declare defaultMode:int = 493
+            return fs.mkdir(path, defaultMode)
+        end body
+    end function
+
+    /**
+    @function make_dir_mode
+    @summary 创建目录并指定权限（如 0o755）。
+    */
+    function: make_dir_mode
+        params:
+            declare path:any
+            declare mode:int
+        returns: int
+        body:
+            return fs.mkdir(path, mode)
+        end body
+    end function
+
+    /**
+    @function remove_dir
+    @summary 删除空目录。
+    */
+    function: remove_dir
+        params:
+            declare path:any
+        returns: int
+        body:
+            return fs.rmdir(path)
+        end body
+    end function
+
+    /**
+    @function remove_file
+    @summary 删除文件或符号链接。
+    */
+    function: remove_file
+        params:
+            declare path:any
+        returns: void
+        body:
+            fd.unlink(path)
+        end body
+    end function
+
+    /**
+    @function list_dir
+    @summary 列出目录内容（非递归）。
+    */
+    function: list_dir
+        params:
+            declare path:any
+        returns: any
+        body:
+            return fs.readdir(path)
+        end body
+    end function
+
+    /**
+    @function stat
+    @summary 返回路径的文件属性信息。
+    */
+    function: stat
+        params:
+            declare path:any
+        returns: map
+        body:
+            return fd.stat(path)
+        end body
+    end function
+
+    /**
+    @function rename
+    @summary 重命名或移动文件/目录。
+    */
+    function: rename
+        params:
+            declare source:any
+            declare target:any
+        returns: int
+        body:
+            return fd.rename(source, target)
+        end body
+    end function
+
+    /**
+    @function link
+    @summary 创建硬链接。
+    */
+    function: link
+        params:
+            declare source:any
+            declare target:any
+        returns: int
+        body:
+            return fd.link(source, target)
+        end body
+    end function
+
+    /**
+    @function symlink
+    @summary 创建符号链接。
+    */
+    function: symlink
+        params:
+            declare target:any
+            declare linkpath:any
+        returns: int
+        body:
+            return fd.symlink(target, linkpath)
+        end body
+    end function
+
+    /**
+    @function readlink
+    @summary 读取符号链接指向的目标。
+    */
+    function: readlink
+        params:
+            declare path:any
+        returns: string
+        body:
+            return fd.readlink(path)
+        end body
+    end function
+
+    /**
+    @function set_permissions
+    @summary 设置路径权限，若平台不支持则静默退化。
+    */
+    function: set_permissions
+        params:
+            declare path:any
+            declare mode:int
+        returns: int
+        body:
+            return fs.chmod(path, mode)
+        end body
+    end function
+
+    /**
+    @function set_fd_permissions
+    @summary 为已打开的 fd 设置权限，若平台不支持则静默退化。
+    */
+    function: set_fd_permissions
+        params:
+            declare handle:int
+            declare mode:int
+        returns: int
+        body:
+            return fs.fchmod(handle, mode)
+        end body
+    end function
+
+    /**
+    @function update_times
+    @summary 更新路径的 atime/mtime（毫秒 Epoch）。
+    */
+    function: update_times
+        params:
+            declare path:any
+            declare mtime:long
+            declare atime:long
+        returns: int
+        body:
+            return fs.utime(path, mtime, atime)
+        end body
+    end function
+
+    /**
+    @function truncate_path
+    @summary 将路径对应文件截断到指定长度。
+    */
+    function: truncate_path
+        params:
+            declare path:any
+            declare length:long
+        body:
+            fd.truncate(path, length)
+        end body
+    end function
+
+    /**
+    @function touch
+    @summary 确保路径存在（不存在则创建空文件）。
+    */
+    function: touch
+        params:
+            declare path:any
+        body:
+            declare handle:int = -1
+            handle = os_fd.open_write(path, true, false)
+            os_fd.close(handle)
+        end body
+    end function
+
+end module

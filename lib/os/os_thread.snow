@@ -1,0 +1,49 @@
+/**
+@module os_thread
+@summary 线程创建与同步的便捷包装。
+*/
+module: os_thread
+
+    import: thread
+
+    /**
+    @function create
+    @summary 创建新线程并执行入口函数。
+    */
+    function: create
+        params:
+            declare entry:any
+            declare arg:any
+        returns: int
+        body:
+            return thread.create(entry, arg)
+        end body
+    end function
+
+    /**
+    @function join
+    @summary 等待线程结束并返回其返回值。
+    */
+    function: join
+        params:
+            declare tid:int
+        returns: any
+        body:
+            return thread.join(tid)
+        end body
+    end function
+
+    /**
+    @function sleep
+    @summary 让当前线程休眠指定毫秒。
+    */
+    function: sleep
+        params:
+            declare ms:int
+        returns: int
+        body:
+            return thread.sleep(ms)
+        end body
+    end function
+
+end module

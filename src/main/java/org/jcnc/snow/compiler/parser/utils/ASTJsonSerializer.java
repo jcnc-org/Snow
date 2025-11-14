@@ -87,7 +87,7 @@ public class ASTJsonSerializer {
             // 模块节点
             case ModuleNode(
                     String name, List<ImportNode> imports, List<DeclarationNode> globals, List<StructNode> structs,
-                    List<FunctionNode> functions, NodeContext _
+                    List<FunctionNode> functions, NodeContext context
             ) -> {
                 Map<String, Object> map = newNodeMap("Module");
                 map.put("name", name);
@@ -119,7 +119,7 @@ public class ASTJsonSerializer {
             // Struct 节点（多构造支持）
             case StructNode(
                     String name, String parent, List<DeclarationNode> fields, List<FunctionNode> inits,
-                    List<FunctionNode> methods, NodeContext _
+                    List<FunctionNode> methods, NodeContext context
             ) -> {
                 Map<String, Object> map = newNodeMap("Struct");
                 map.put("name", name);
@@ -231,34 +231,34 @@ public class ASTJsonSerializer {
     private static Object exprToMap(ExpressionNode expr) {
         return switch (expr) {
             // 二元表达式
-            case BinaryExpressionNode(ExpressionNode left, String operator, ExpressionNode right, NodeContext _) ->
+            case BinaryExpressionNode(ExpressionNode left, String operator, ExpressionNode right, NodeContext context) ->
                     exprMap("BinaryExpression",
                             "left", exprToMap(left),
                             "operator", operator,
                             "right", exprToMap(right)
                     );
             // 一元表达式
-            case UnaryExpressionNode(String operator, ExpressionNode operand, NodeContext _) ->
+            case UnaryExpressionNode(String operator, ExpressionNode operand, NodeContext context) ->
                     exprMap("UnaryExpression",
                             "operator", operator,
                             "operand", exprToMap(operand)
                     );
             // 布尔字面量
-            case BoolLiteralNode(boolean value, NodeContext _) -> exprMap("BoolLiteral", "value", value);
+            case BoolLiteralNode(boolean value, NodeContext context) -> exprMap("BoolLiteral", "value", value);
             // 标识符
-            case IdentifierNode(String name, NodeContext _) -> exprMap("Identifier", "name", name);
+            case IdentifierNode(String name, NodeContext context) -> exprMap("Identifier", "name", name);
             // 数字字面量
-            case NumberLiteralNode(String value, NodeContext _) -> exprMap("NumberLiteral", "value", value);
+            case NumberLiteralNode(String value, NodeContext context) -> exprMap("NumberLiteral", "value", value);
             // 字符串字面量
-            case StringLiteralNode(String value, NodeContext _) -> exprMap("StringLiteral", "value", value);
+            case StringLiteralNode(String value, NodeContext context) -> exprMap("StringLiteral", "value", value);
             // 调用表达式
-            case CallExpressionNode(ExpressionNode callee, List<ExpressionNode> arguments, NodeContext _) -> {
+            case CallExpressionNode(ExpressionNode callee, List<ExpressionNode> arguments, NodeContext context) -> {
                 List<Object> args = new ArrayList<>(arguments.size());
                 for (ExpressionNode arg : arguments) args.add(exprToMap(arg));
                 yield exprMap("CallExpression", "callee", exprToMap(callee), "arguments", args);
             }
             // 成员访问表达式
-            case MemberExpressionNode(ExpressionNode object, String member, NodeContext _) ->
+            case MemberExpressionNode(ExpressionNode object, String member, NodeContext context) ->
                     exprMap("MemberExpression",
                             "object", exprToMap(object),
                             "member", member

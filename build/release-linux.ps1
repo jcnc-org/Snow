@@ -134,3 +134,23 @@ Write-Host ">>> Package ready!" -ForegroundColor Green
 Write-Host "Version    : $version"
 Write-Host "Output Dir : $outDir"
 Write-Host "Tgz File   : $tgzPath"
+
+# ===== Step 6: Create VERSION file in SDK root directory =====
+Write-Host "Step 6: Create VERSION file in SDK root directory..."
+$versionFilePath = Join-Path $outDir "VERSION"
+try {
+    Set-Content -Path $versionFilePath -Value $version -Force
+    # Verify the file was created and has content
+    if (Test-Path $versionFilePath) {
+        $versionContent = Get-Content -Path $versionFilePath -Raw
+        if ($versionContent.Trim() -eq $version) {
+            Write-Host ">>> Created VERSION file at $versionFilePath with content: $version"
+        } else {
+            Write-Warning "VERSION file was created but content does not match. Expected: $version, Actual: $($versionContent.Trim())"
+        }
+    } else {
+        Write-Warning "Failed to create VERSION file at $versionFilePath"
+    }
+} catch {
+    Write-Warning "Failed to create VERSION file: $($_.Exception.Message)"
+}

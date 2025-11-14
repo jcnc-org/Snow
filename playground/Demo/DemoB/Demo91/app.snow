@@ -1,0 +1,64 @@
+/**
+@module app
+@summary 测试 os_fd 模块的全部接口。
+*/
+module: app
+    import: os_fd
+    import: std_io
+
+    function: main
+        returns: void
+        body:
+            std_io.print("=== os_fd 模块功能测试 ===\n")
+
+            // 1️⃣ 创建并写入文件
+            declare handle:int = os_fd.open_write("test.txt", true, true)
+            std_io.print("写入文件 test.txt ...\n")
+            os_fd.write_bytes(handle, "Hello, world!\n")
+            os_fd.close(handle)
+
+            // 2️⃣ 以只读方式重新打开文件
+            handle = os_fd.open_read("test.txt")
+            declare data:any = os_fd.read_bytes(handle, 100)
+            std_io.print("文件内容: " + data + "\n")
+            os_fd.close(handle)
+
+            // 3️⃣ 以追加模式写入更多内容
+            handle = os_fd.open_append("test.txt")
+            os_fd.write_bytes(handle, "Appended line.\n")
+            os_fd.close(handle)
+
+            // 4️⃣ 读写模式重新打开并移动偏移量
+            handle = os_fd.open_readwrite("test.txt", false, false)
+            std_io.print("移动到文件开头并覆盖部分内容...\n")
+            os_fd.seek(handle, 0, os_fd.SEEK_SET)
+            os_fd.write_bytes(handle, "Replaced: ")
+            os_fd.close(handle)
+
+            // 5️⃣ 再次读取验证修改结果
+            handle = os_fd.open_read("test.txt")
+            data = os_fd.read_bytes(handle, 200)
+            std_io.print("修改后内容:\n" + data + "\n")
+            os_fd.close(handle)
+
+            // 6️⃣ 截断文件
+            handle = os_fd.open_readwrite("test.txt", false, false)
+            std_io.print("截断文件到 10 字节...\n")
+            os_fd.truncate(handle, 10)
+            os_fd.close(handle)
+
+            // 7️⃣ 再次读取验证截断结果
+            handle = os_fd.open_read("test.txt")
+            data = os_fd.read_bytes(handle, 100)
+            std_io.print("截断后内容: " + data + "\n")
+            os_fd.close(handle)
+
+            // 8️⃣ 测试 set_blocking（只是调用示范，不影响文件）
+            handle = os_fd.open_read("test.txt")
+            os_fd.set_blocking(handle, true)
+            os_fd.close(handle)
+
+            std_io.print("=== 测试完成 ===\n")
+        end body
+    end function
+end module

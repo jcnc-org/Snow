@@ -1,0 +1,28 @@
+module: VariableTypes
+    import: std_io
+    
+    function: main
+        returns: void
+        body:
+            // 测试基本数据类型
+            declare b: byte = 127b
+            declare s: short = 32767s
+            declare i: int = 2147483647
+            declare l: long = 9223372036854775807l
+            declare f: float = 3.14159f
+            declare d: double = 3.141592653589793
+            declare bool: boolean = true
+            declare str: string = "Hello Snow"
+            
+            // 输出变量值
+            std_io.println("byte: " + b)
+            std_io.println("short: " + s)
+            std_io.println("int: " + i)
+            std_io.println("long: " + l)
+            std_io.println("float: " + f)
+            std_io.println("double: " + d)
+            std_io.println("boolean: " + bool)
+            std_io.println("string: " + str)
+        end body
+    end function
+end module

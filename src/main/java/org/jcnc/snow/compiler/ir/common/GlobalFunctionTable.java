@@ -50,12 +50,13 @@ public final class GlobalFunctionTable {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("函数名不能为空或 null");
         }
-        RETURN_TYPES.put(
-                name,
-                returnType == null
-                        ? "void"
-                        : returnType.trim().toLowerCase()
-        );
+        String normalized;
+        if (returnType == null || returnType.trim().isEmpty()) {
+            normalized = "void";
+        } else {
+            normalized = returnType.trim();
+        }
+        RETURN_TYPES.put(name, normalized);
     }
 
     /**

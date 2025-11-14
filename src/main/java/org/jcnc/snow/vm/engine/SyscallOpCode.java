@@ -1,5 +1,9 @@
 package org.jcnc.snow.vm.engine;
 
+import org.jcnc.snow.vm.io.EnvRegistry;
+
+import java.io.IOException;
+
 /**
  * SyscallOpCode —— 系统调用操作码表
  */
@@ -651,22 +655,81 @@ public final class SyscallOpCode {
     public static final int EXIT = 0x1500;
 
     /**
-     * 分叉当前进程。
+     * 启动外部进程（同步版）。
      *
-     * <p><b>Stack</b>：入参 {@code (cmds:any[])} → 出参 {@code (pid:int)}</p>
-     * <p><b>语义</b>：复制当前进程上下文，生成子进程。</p>
-     * <p><b>返回</b>：在子进程中返回 {@code 0}，在父进程中返回子进程 pid。</p>
-     * <p><b>异常</b>：进程创建失败、资源不足。</p>
+     * <p><b>Stack：</b>入参 {@code (cmd:List<String>)} → 出参 {@code (pid:int)}</p>
+     *
+     * <p><b>语义：</b>
+     * <ul>
+     *   <li>以命令参数 {@code cmd} 启动一个新的系统进程，{@code cmd[0]} 通常为可执行程序路径。</li>
+     *   <li>子进程继承当前虚拟机的环境变量（{@link EnvRegistry#snapshot()}）。</li>
+     *   <li>标准输入继承父进程，标准输出和错误输出实时转发到当前控制台。</li>
+     *   <li>当前线程阻塞，直到子进程执行结束后返回。</li>
+     * </ul>
+     * </p>
+     *
+     * <p><b>返回：</b>
+     * <ul>
+     *   <li>成功时返回子进程的 PID（int），如无法获取则返回 {@code 0}。</li>
+     *   <li>启动失败时返回 {@code -1} 并抛出异常。</li>
+     * </ul>
+     * </p>
+     *
+     * <p><b>异常：</b>
+     * <ul>
+     *   <li>参数类型不符时抛出 {@link IllegalArgumentException}。</li>
+     *   <li>命令数组元素不是字符串时抛出 {@link IllegalArgumentException}。</li>
+     *   <li>I/O 错误（进程启动失败）时抛出 {@link java.io.IOException}。</li>
+     * </ul>
+     * </p>
+     *
+     * <p><b>注意事项：</b>
+     * <ul>
+     *   <li>此调用为同步版本，会阻塞直到子进程退出。</li>
+     *   <li>若需异步执行，可使用独立的 {@code spawn} 或异步 {@code fork} 版本。</li>
+     * </ul>
+     * </p>
      */
     public static final int FORK = 0x1501;
 
+
     /**
-     * 执行映像替换。
+     * 启动新进程并用其输出“接管”当前控制台，随后终结当前 VM 进程。
      *
-     * <p><b>Stack</b>：入参 {@code (path:String, argv:List, env:Map?)} → 出参 {@code (rc:int)}</p>
-     * <p><b>语义</b>：用指定的程序映像替换当前进程。</p>
-     * <p><b>返回</b>：成功返回 {@code 0}，通常不会返回（进程映像被替换）。</p>
-     * <p><b>异常</b>：路径不存在、权限不足、执行失败。</p>
+     * <p><b>Stack：</b>
+     * 入参 {@code (env:Map<String,String>, argv:List<String>, path:String)} → 无返回
+     * </p>
+     *
+     * <p><b>语义：</b>
+     * <ul>
+     *   <li>以给定可执行文件 {@code path} 及参数 {@code argv} 启动一个新进程</li>
+     *   <li>新进程环境变量 = 虚拟机当前的 {@link EnvRegistry#snapshot()}，再叠加 {@code env}</li>
+     *   <li>新进程的标准输出/错误输出会被实时转发到当前控制台</li>
+     *   <li>当前线程会阻塞等待该进程结束，然后当前 VM 会直接退出（不返回 Snow 代码）</li>
+     * </ul>
+     * </p>
+     *
+     * <p><b>返回：</b>
+     * <ul>
+     *   <li>无返回值：本系统调用不会返回到调用方。目标进程结束后，当前 VM 直接终止</li>
+     * </ul>
+     * </p>
+     *
+     * <p><b>异常：</b>
+     * <ul>
+     *   <li>path 不是 String 时抛出 {@link IllegalArgumentException}</li>
+     *   <li>进程启动失败时抛出 {@link IOException}</li>
+     *   <li>栈参数不足时抛出 {@link IllegalStateException}</li>
+     * </ul>
+     * </p>
+     *
+     * <p><b>注意事项：</b>
+     * <ul>
+     *   <li>这是“接管式”执行：Snow 进程最终会终止，不会回到调用点继续运行</li>
+     *   <li>与传统 Unix {@code execve()} 类似，但在实际实现层面我们会等待子进程退出后再终止自身，
+     *       以确保在 GraalVM native-image 下也能正确刷新/显示子进程输出</li>
+     * </ul>
+     * </p>
      */
     public static final int EXEC = 0x1502;
 

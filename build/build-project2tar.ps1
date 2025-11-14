@@ -26,12 +26,46 @@ if (-not (Get-Command $tarCommand -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-# Execute tar: change to org\jcnc directory and compress the snow folder
-try {
-    # Build the command and run it
-    $tarCommandArgs = "-cf", $tarPath, "-C", "$scriptDir\..\src\main\java\org\jcnc", "snow"
-    Write-Output "Running tar command: tar $tarCommandArgs"
+# Locate lib directory (try common locations)
+$libPathCandidate1 = Join-Path $parentDir "lib"
+$libPathCandidate2 = Join-Path $scriptDir "..\lib"
 
+$libPath = $null
+if (Test-Path $libPathCandidate1) {
+    $libPath = (Resolve-Path $libPathCandidate1).ProviderPath
+} elseif (Test-Path $libPathCandidate2) {
+    $libPath = (Resolve-Path $libPathCandidate2).ProviderPath
+}
+
+if ($libPath) {
+    Write-Output "Found lib directory at: $libPath"
+} else {
+    Write-Output "No lib directory found at $libPathCandidate1 or $libPathCandidate2 — will package only 'snow'."
+}
+
+# Prepare tar command arguments
+# We always include the 'snow' folder from: $scriptDir\..\src\main\java\org\jcnc
+$snowDirParent = Join-Path $scriptDir "..\src\main\java\org\jcnc"
+$snowDirParent = (Resolve-Path $snowDirParent -ErrorAction SilentlyContinue)
+if (-not $snowDirParent) {
+    Write-Error "❌ Cannot find source directory: $scriptDir\..\src\main\java\org\jcnc"
+    exit 1
+}
+$snowDirParent = $snowDirParent.ProviderPath
+
+$tarCommandArgs = @("-cf", $tarPath, "-C", $snowDirParent, "snow")
+
+# If lib exists, add it: change to lib's parent and add the lib directory name
+if ($libPath) {
+    $libParent = Split-Path -Parent $libPath
+    $libName = Split-Path -Leaf $libPath
+    $tarCommandArgs += ("-C", $libParent, $libName)
+}
+
+Write-Output "Running tar command: tar $($tarCommandArgs -join ' ')"
+
+# Execute tar
+try {
     & $tarCommand @tarCommandArgs
 } catch {
     Write-Error "❌ Failed to create tar package. Error: $_"

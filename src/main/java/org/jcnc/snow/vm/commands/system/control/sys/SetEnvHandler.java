@@ -7,7 +7,7 @@ import org.jcnc.snow.vm.module.OperandStack;
 import org.jcnc.snow.vm.io.EnvRegistry;
 
 /**
- * {@code SetEnvHandler} 实现 SETENV (0x1003) 系统调用，
+ * {@code SetEnvHandler} 实现 SETENV (0x1901) 系统调用，
  * 设置虚拟机运行环境变量。
  *
  * <p><b>Stack：</b> 入参 {@code (key:String, val:String, overwrite:int)} → 出参 {@code (rc:int)}</p>

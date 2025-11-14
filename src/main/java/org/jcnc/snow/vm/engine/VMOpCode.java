@@ -2556,6 +2556,52 @@ public class VMOpCode {
      * </ul>
      */
     public static final int R_ADD = 0x00E3;
+    /**
+     * R_CE Opcode: Represents an operation that compares two object references for equality using
+     * {@link java.util.Objects#equals(Object, Object)} and performs a conditional branch when they are equal.
+     * <p>This opcode is implemented by the {@link org.jcnc.snow.vm.commands.ref.control.RCECommand} class,
+     * which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pops the right operand (reference object) from the top of the operand stack.</li>
+     *     <li>Pops the left operand (reference object) from the operand stack.</li>
+     *     <li>Compares the two operands using {@code Objects.equals(left, right)}.</li>
+     *     <li>If the comparison result is {@code true}, updates the program counter (PC) to the target branch address.</li>
+     *     <li>If the comparison result is {@code false}, increments the PC to the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching based on object reference equality (e.g., {@code if (a == b)}).</li>
+     *     <li>Evaluating logical equality between object references or boxed primitive types.</li>
+     *     <li>Supporting control flow constructs such as {@code if}, {@code while}, and {@code switch} in high-level languages.</li>
+     * </ul>
+     */
+    public static final int R_CE = 0x00E4;
+    /**
+     * R_CNE Opcode: Represents an operation that compares two object references for inequality using
+     * {@link java.util.Objects#equals(Object, Object)} and performs a conditional branch when they are not equal.
+     * <p>This opcode is implemented by the {@link org.jcnc.snow.vm.commands.ref.control.RCNECommand} class,
+     * which defines its specific execution logic.</p>
+     *
+     * <p>Execution Steps:</p>
+     * <ol>
+     *     <li>Pops the right operand (reference object) from the top of the operand stack.</li>
+     *     <li>Pops the left operand (reference object) from the operand stack.</li>
+     *     <li>Compares the two operands using {@code Objects.equals(left, right)}.</li>
+     *     <li>If the comparison result is {@code false}, updates the program counter (PC) to the target branch address.</li>
+     *     <li>If the comparison result is {@code true}, increments the PC to the next sequential instruction.</li>
+     * </ol>
+     *
+     * <p>This opcode is commonly used for:</p>
+     * <ul>
+     *     <li>Conditional branching based on object reference inequality (e.g., {@code if (a != b)}).</li>
+     *     <li>Evaluating non-equality conditions between object references or boxed primitive types.</li>
+     *     <li>Supporting control flow constructs that depend on inequality checks, such as {@code if} and {@code while} statements.</li>
+     * </ul>
+     */
+    public static final int R_CNE = 0x00E5;
 
     // endregion
 

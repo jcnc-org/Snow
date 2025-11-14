@@ -3,6 +3,7 @@ package org.jcnc.snow.compiler.ir.builder.handlers;
 import org.jcnc.snow.compiler.ir.builder.core.IRBuilderScope;
 import org.jcnc.snow.compiler.ir.builder.expression.ExpressionBuilder;
 import org.jcnc.snow.compiler.ir.builder.expression.ExpressionHandler;
+import org.jcnc.snow.compiler.ir.common.GlobalFunctionTable;
 import org.jcnc.snow.compiler.ir.core.IRValue;
 import org.jcnc.snow.compiler.ir.instruction.CallInstruction;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
@@ -85,10 +86,12 @@ public class CallHandler implements ExpressionHandler<CallExpressionNode> {
                     // 追加 _N 后缀（N=总参数，包括this）
                     callee = callee + "_" + finalArgs.size();
                 } else {
-                    // 常规对象方法调用 recv.method(...)
+                    // 检查是否是模块名而不是变量
+                    // 如果recvName在当前作用域中没有对应的类型信息，很可能是一个模块名
                     String recvType = b.ctx().getScope().lookupType(recvName);
                     if (recvType == null || recvType.isEmpty()) {
-                        // 静态/未知类型方法，直接按符号名拼接
+                        // 没有类型信息，很可能是模块调用
+                        // 直接使用模块名.函数名格式
                         callee = recvName + "." + m.member();
                         finalArgs.addAll(explicitRegs);
                     } else {
@@ -110,12 +113,17 @@ public class CallHandler implements ExpressionHandler<CallExpressionNode> {
             case MemberExpressionNode m -> {
                 // 递归求值 object 部分
                 IRVirtualRegister objReg = b.build(m.object());
-                callee = m.member();
+                String recvType = b.ctx().getScope().getRegisterType(objReg);
+                if (recvType != null && !recvType.isBlank()) {
+                    callee = recvType + "." + m.member();
+                } else {
+                    callee = m.member();
+                }
                 // 第一个参数是对象寄存器
                 finalArgs.add(objReg);
                 finalArgs.addAll(explicitRegs);
 
-                // 追加 _N 后缀（N=总参数，包括this
+                // 追加 _N 后缀（N=总参数，包括this）
                 callee = callee + "_" + finalArgs.size();
             }
 
@@ -142,6 +150,10 @@ public class CallHandler implements ExpressionHandler<CallExpressionNode> {
         // 3. 分配结果寄存器并生成调用指令
         IRVirtualRegister dest = b.ctx().newRegister();
         b.ctx().addInstruction(new CallInstruction(dest, callee, finalArgs));
+        String returnType = GlobalFunctionTable.getReturnType(callee);
+        if (returnType != null) {
+            b.ctx().getScope().setRegisterType(dest, returnType);
+        }
         return dest;
     }
 }

@@ -38,6 +38,7 @@ public class NewHandler implements ExpressionHandler<NewExpressionNode> {
     public IRVirtualRegister handle(ExpressionBuilder b, NewExpressionNode node) {
         // 1. 分配一个寄存器用于存放新对象，并初始化为空列表
         IRVirtualRegister dest = b.ctx().newRegister();
+        b.ctx().getScope().setRegisterType(dest, node.typeName());
         InstructionFactory.loadConstInto(b.ctx(), dest, new IRConstant(java.util.List.of()));
 
         // 2. 遍历参数表达式，依次求值写入新对象的下标（模拟数组/结构体的字段）

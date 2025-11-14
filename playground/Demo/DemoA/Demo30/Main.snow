@@ -1,0 +1,68 @@
+module: Main
+	import: syscall.fs
+    import: syscall.fd
+    import: std_io
+    struct: Address
+        fields:
+            declare country: int
+            declare city: int
+        init:
+            params:
+                country: int
+                city: int
+            body:
+                this.country = country
+                this.city = city
+            end body
+        end init
+
+        function: getCity
+            returns: int
+            body:
+                return this.city
+            end body
+        end function
+    end struct
+
+    struct: Person
+        fields:
+            declare name: int
+            declare addr: Address
+        init:
+            params:
+                name: int
+                addr: Address
+            body:
+                this.name = name
+                this.addr = addr
+            end body
+        end init
+
+        function: getName
+            returns: int
+            body:
+                return this.name
+            end body
+        end function
+
+        function: getAddr
+            returns: Address
+            body:
+                return this.addr
+            end body
+        end function
+    end struct
+
+    function: main
+        returns: void
+        body:
+            // 初始化 Person 和 Address 的实例
+            declare p: Person = new Person(123, new Address(1, 2))
+            declare a: Person = p
+            std_io.println(a.getName())   // -> 123
+            std_io.println(a.getAddr().getCity()) // -> 2
+
+        end body
+    end function
+
+end module

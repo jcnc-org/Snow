@@ -76,6 +76,19 @@ Snow 语言受到 LLM 驱动代码生成趋势的启发,强调简单而清晰的
 
 [https://gitee.com/jcnc-org/snow/releases](https://gitee.com/jcnc-org/snow/releases)
 
+### Snow SDK 目录结构
+
+Snow SDK 包含以下目录结构：
+
+```
+SnowSDK/
+├── bin/           # 可执行文件目录
+└── lib/           # 标准库目录
+    ├── os/        # 操作系统相关库
+    ├── std/       # 标准库
+    └── syscall/   # 系统调用库
+```
+
 ### Arch Linux 安装
 
 - 通过 [AUR 仓库](https://aur.archlinux.org/packages/snow)或[自建源仓库](https://github.com/taotieren/aur-repo)安装 `snow` 发行版。
@@ -523,7 +536,7 @@ sudo pacman -Syu snow-lang-git
 
 以下是一个简单的 Snow 代码示例,演示模块定义,导入和函数声明的基本语法: 
 
-```snow
+``snow
 module: Math
     function: main
         returns: int
