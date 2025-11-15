@@ -15,6 +15,10 @@ public final class SnowConfig {
      * 当前运行模式，默认为 {@link Mode#RUN}。
      */
     public static Mode MODE = Mode.RUN;
+    /**
+     * 是否输出指令级 trace。
+     */
+    private static boolean instructionTraceEnabled = false;
 
     /**
      * 标准库路径，默认为项目根目录下的 lib 文件夹
@@ -69,6 +73,24 @@ public final class SnowConfig {
      */
     public static boolean isRun() {
         return MODE == Mode.RUN;
+    }
+
+    /**
+     * 启用或关闭指令级 trace。
+     *
+     * @param enabled true 则输出分支/跳转 trace
+     */
+    public static void setInstructionTraceEnabled(boolean enabled) {
+        instructionTraceEnabled = enabled;
+    }
+
+    /**
+     * 当前是否开启指令级 trace。
+     *
+     * @return true 则输出分支/跳转 trace
+     */
+    public static boolean isInstructionTraceEnabled() {
+        return instructionTraceEnabled;
     }
 
     /**

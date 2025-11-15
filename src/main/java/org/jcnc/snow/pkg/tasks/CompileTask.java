@@ -286,6 +286,7 @@ public record CompileTask(Project project, String[] args) implements Task {
             switch (args[i]) {
                 case "run" -> runAfterCompile = true; // run 表示编译后运行 VM
                 case "--debug" -> SnowConfig.MODE = Mode.DEBUG; // 开启 debug 模式
+                case "--trace" -> SnowConfig.setInstructionTraceEnabled(true); // 输出指令级 trace
                 case "-o" -> { // 指定输出文件名
                     if (i + 1 < args.length) outputName = args[++i];
                     else {
