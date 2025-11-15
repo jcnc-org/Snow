@@ -1,0 +1,31 @@
+/**
+@module std_integer_example
+@summary std_integer 方法演示
+*/
+module: integer_math_example
+
+    import: std_integer
+    import: std_io
+
+    function: main
+        body:
+            // === 演示 abs() 方法 ===
+            std_io.println("=== 演示 abs() 方法 ===")
+
+            declare negNum:std_integer = new std_integer(-25)
+            std_io.print("负数 -25 的绝对值: ")
+            std_io.println(negNum.abs().getValue())
+
+            // === 演示 std_integer.max/min（模块函数版本） ===
+            std_io.println("\n=== 演示 max()/min()（模块函数） ===")
+
+            std_io.print("比较 -3 和 7 的较大值(模块函数): ")
+            std_io.println(std_integer.max(-3, 7).getValue())
+
+            std_io.print("比较 -3 和 7 的较小值(模块函数): ")
+            std_io.println(std_integer.min(-3, 7).getValue())
+
+        end body
+    end function
+
+end module
