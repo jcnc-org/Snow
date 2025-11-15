@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * INegCommand Opcode: Represents the int32 negation operation in the virtual machine.
@@ -46,7 +47,7 @@ public class INegCommand implements Command {
     @Override
     public int execute(String[] parts, int currentPC, OperandStack operandStack, LocalVariableStore localVariableStore, CallStack callStack) {
         // Pop the top int32 value from the operand stack
-        int value = (int) operandStack.pop();
+        int value = NumberUtils.popInt(operandStack, "I_NEG");
 
         // Perform the negation of the value
         int negatedValue = -value;

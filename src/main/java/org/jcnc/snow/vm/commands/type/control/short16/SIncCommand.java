@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * SIncCommand Opcode: Represents the short16 increment operation for a local variable in the virtual machine.
@@ -54,7 +55,8 @@ public class SIncCommand implements Command {
         short incrementValue = Short.parseShort(parts[2]); // The value by which to increment the local variable
 
         // Get the current value of the local variable at the specified index
-        short currentValue = (short) callStack.peekFrame().getLocalVariableStore().getVariable(localVariableIndex);
+        Object raw = callStack.peekFrame().getLocalVariableStore().getVariable(localVariableIndex);
+        short currentValue = NumberUtils.toShort(raw, "S_INC");
 
         // Increment the local variable value by the specified increment
         short newValue = (short) (currentValue + incrementValue);

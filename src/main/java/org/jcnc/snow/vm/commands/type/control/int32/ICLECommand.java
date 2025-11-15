@@ -5,6 +5,7 @@ import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 import org.jcnc.snow.vm.utils.LoggingUtils;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * The ICLECommand class implements the {@link Command} interface and represents a conditional jump command in the virtual machine.
@@ -62,8 +63,8 @@ public class ICLECommand implements Command {
         int target = Integer.parseInt(parts[1]);
 
         // Pop the two operands from the stack
-        int b = (int) operandStack.pop();
-        int a = (int) operandStack.pop();
+        int b = NumberUtils.popInt(operandStack, "I_CLE");
+        int a = NumberUtils.popInt(operandStack, "I_CLE");
 
         // If the first operand is less than or equal to the second, jump to the target command
         if (a <= b) {
