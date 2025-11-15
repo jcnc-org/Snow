@@ -1,11 +1,6 @@
 /**
-@module short_math_example
-@summary std_short 数学方法演示
-@details
-    演示 std_short 结构体的数学方法:
-   - abs(): 获取绝对值
-   - std_short.max(a, b): 返回两个短整数中的较大值
-   - std_short.min(a, b): 返回两个短整数中的较小值
+@module std_short_example
+@summary std_short 方法演示
 */
 module: short_math_example
 
@@ -14,10 +9,6 @@ module: short_math_example
 
     function: main
         body:
-            std_io.println("=== std_short 演示 ===")
-            std_io.println("short 最大: " + std_short.SHORT_MAX)
-            std_io.println("short 最小: " + std_short.SHORT_MIN)
-
             // === 演示 abs() 方法 ===
             std_io.println("\n=== 演示 abs() 方法 ===")
 
@@ -27,9 +18,6 @@ module: short_math_example
 
             // === 演示 max()/min() 方法 ===
             std_io.println("\n=== 演示 max()/min() 方法 ===")
-
-            declare numA:std_short = new std_short(25s)
-            declare numB:std_short = new std_short(-40s)
 
             std_io.print("比较 -15 和 20 的较大值(模块函数): ")
             std_io.println(std_short.max(-15s, 20s).getValue())
