@@ -75,7 +75,7 @@
             <id>native-linux</id>
             <activation>
                 <os>
-                    <family>unix</family>
+                    <family>Linux</family>
                 </os>
             </activation>
 
@@ -175,7 +175,7 @@
             <id>native-mac</id>
             <activation>
                 <os>
-                    <family>unix</family>
+                    <family>Mac OS X</family>
                 </os>
             </activation>
 
