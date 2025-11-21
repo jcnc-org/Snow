@@ -1,6 +1,4 @@
-# -------------------------------
-# Docker Registry 自动真实性 + 速度 + 连接检测（兼容非标准反代）
-# -------------------------------
+# Docker Registry 检测
 
 $ErrorActionPreference = "Stop"
 
@@ -73,7 +71,6 @@ $jobs = foreach ($m in $mirrors) {
         }
 
         # ---- 2. 使用 Docker 引擎 pull 测试 ----
-        # 不再构造 mirrorHost/image，避免 EOF 错误
         try {
             $sw2 = [System.Diagnostics.Stopwatch]::StartNew()
             docker pull busybox:latest --quiet
