@@ -1,0 +1,6 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="test-docker-registry.ps1" type="PowerShellRunType" factoryName="PowerShell" scriptUrl="$PROJECT_DIR$/build/tools/test-docker-registry.ps1" executablePath="/usr/bin/pwsh">
+    <envs />
+    <method v="2" />
+  </configuration>
+</component>
