@@ -1,6 +1,17 @@
 # run-linux-snow-export.ps1
 # Build and package linux-snow-export, version read from SNOW_VERSION in .env
 
+# force to use PowerShell 7
+if ($PSVersionTable.PSEdition -ne "Core") {
+    Write-Host "Switching to PowerShell 7..."
+    $pwsh = Get-Command pwsh.exe -ErrorAction SilentlyContinue
+    if (-not $pwsh) {
+        throw "PowerShell 7 (pwsh.exe) not installed."
+    }
+    & $pwsh.Source -NoLogo -NoProfile -File $PSCommandPath @args
+    exit $LASTEXITCODE
+}
+
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
