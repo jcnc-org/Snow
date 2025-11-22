@@ -23,6 +23,9 @@ module: integer_math_example
             std_io.print("比较 -3 和 7 的较小值: ")
             std_io.println(std_integer.min(-3, 7).getValue())
 
+            std_io.println("MAX_VALUE: "+ std_integer.MAX_VALUE)
+            std_io.println("MAX_VALUE: "+ std_integer.MAX_VALUE)
+
         end body
     end function
 

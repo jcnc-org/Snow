@@ -5,8 +5,8 @@
 module: std_integer
 
     globals:
-        declare const MIN_VALUE:short = -2147483647
-        declare const MAX_VALUE:short = 2147483647
+        declare const MIN_VALUE:int = -2147483647
+        declare const MAX_VALUE:int = 2147483647
 
     /**
     @struct std_integer
