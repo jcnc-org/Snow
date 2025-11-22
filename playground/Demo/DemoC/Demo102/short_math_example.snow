@@ -9,20 +9,18 @@ module: short_math_example
 
     function: main
         body:
-            // === 演示 abs() 方法 ===
             std_io.println("\n=== 演示 abs() 方法 ===")
 
             declare negShort:std_short = new std_short(-120s)
             std_io.print("负数 -120 的绝对值: ")
             std_io.println(negShort.abs().getValue())
 
-            // === 演示 max()/min() 方法 ===
-            std_io.println("\n=== 演示 max()/min() 方法 ===")
+            std_io.println("\n=== 演示 max()/min() ===")
 
-            std_io.print("比较 -15 和 20 的较大值(模块函数): ")
+            std_io.print("比较 -15 和 20 的较大值: ")
             std_io.println(std_short.max(-15s, 20s).getValue())
 
-            std_io.print("比较 -15 和 20 的较小值(模块函数): ")
+            std_io.print("比较 -15 和 20 的较小值: ")
             std_io.println(std_short.min(-15s, 20s).getValue())
 
         end body
