@@ -13,6 +13,7 @@ import org.jcnc.snow.compiler.lexer.token.TokenType;
  *   <li>十进制整数（如 0，42，123456）</li>
  *   <li>十进制小数（如 3.14，0.5）</li>
  *   <li>单字符类型后缀（如 2.0f，255B，合法集合见 SUFFIX_CHARS）</li>
+ *   <li>科学计数法（如 1e3，-2.5E-4），指数部分可选正负号</li>
  * </ol>
  * <p>
  * 如果后续需要支持科学计数法、下划线分隔符、不同进制等，只需扩展现有状态机的转移规则。
@@ -51,7 +52,7 @@ public class NumberTokenScanner extends AbstractTokenScanner {
      * 包含: b, s, l, f, d 及其大写形式。
      * 对于多字符后缀，可扩展为 Set<String> 并在扫描尾部做贪婪匹配。
      */
-    private static final String SUFFIX_CHARS = "bslfBSLF";
+    private static final String SUFFIX_CHARS = "bslfdBSLFD";
 
     /**
      * 判断是否由该扫描器处理。
@@ -82,6 +83,7 @@ public class NumberTokenScanner extends AbstractTokenScanner {
 
         boolean lastWasUnderscore = false; // 记录前一个是否是下划线
         boolean sawDigit = false;          // 当前段落是否有数字（防止以下划线开头）
+        boolean sawExpDigit = false;       // 记录指数部分是否读到数字
 
         /* ───── 1. 主体扫描 —— 整数 / 小数 ───── */
         mainLoop:
@@ -108,6 +110,14 @@ public class NumberTokenScanner extends AbstractTokenScanner {
                         literal.append(ctx.advance());
                         // 不要重置sawDigit！
                         // sawDigit = false;  // 移除此句
+                    } else if (ch == 'e' || ch == 'E') {
+                        if (!sawDigit || lastWasUnderscore) {
+                            throw new LexicalException("指数标记前必须是合法数字", line, col);
+                        }
+                        state = State.EXP_MARK;
+                        literal.append(ctx.advance());
+                        lastWasUnderscore = false;
+                        sawExpDigit = false;
                     } else {
                         if (lastWasUnderscore)
                             throw new LexicalException("数字不能以下划线结尾", line, col);
@@ -139,9 +149,53 @@ public class NumberTokenScanner extends AbstractTokenScanner {
                             throw new LexicalException("数字中下划线不能连续出现", line, col);
                         literal.append(ctx.advance());
                         lastWasUnderscore = true;
+                    } else if (ch == 'e' || ch == 'E') {
+                        if (lastWasUnderscore)
+                            throw new LexicalException("指数标记前不能以下划线结尾", line, col);
+                        state = State.EXP_MARK;
+                        literal.append(ctx.advance());
+                        lastWasUnderscore = false;
+                        sawExpDigit = false;
                     } else {
                         if (lastWasUnderscore)
                             throw new LexicalException("数字不能以下划线结尾", line, col);
+                        state = State.END;
+                    }
+                    break;
+
+                /* 指数标记后，允许可选正负号或数字 */
+                case EXP_MARK:
+                    if (ch == '+' || ch == '-') {
+                        literal.append(ctx.advance());
+                        state = State.EXP_SIGN;
+                    } else if (Character.isDigit(ch)) {
+                        literal.append(ctx.advance());
+                        state = State.EXP_PART;
+                        sawExpDigit = true;
+                    } else {
+                        throw new LexicalException("指数标记后必须跟数字或符号", line, col);
+                    }
+                    break;
+
+                /* 指数符号后必须是数字 */
+                case EXP_SIGN:
+                    if (Character.isDigit(ch)) {
+                        literal.append(ctx.advance());
+                        state = State.EXP_PART;
+                        sawExpDigit = true;
+                    } else {
+                        throw new LexicalException("指数符号后必须跟数字", line, col);
+                    }
+                    break;
+
+                /* 指数部分，仅允许数字（为简化暂不支持下划线） */
+                case EXP_PART:
+                    if (Character.isDigit(ch)) {
+                        literal.append(ctx.advance());
+                        sawExpDigit = true;
+                    } else if (ch == '_') {
+                        throw new LexicalException("指数部分不支持下划线", line, col);
+                    } else {
                         state = State.END;
                     }
                     break;
@@ -154,6 +208,9 @@ public class NumberTokenScanner extends AbstractTokenScanner {
         // 主体结束后，下划线不能在末尾
         if (lastWasUnderscore)
             throw new LexicalException("数字不能以下划线结尾", line, col);
+        if ((state == State.EXP_MARK || state == State.EXP_SIGN || (state == State.EXP_PART && !sawExpDigit))) {
+            throw new LexicalException("指数部分缺少数字", line, col);
+        }
 
         /* ───── 2. 后缀及非法尾随字符检查 ───── */
         if (!ctx.isAtEnd()) {
@@ -209,6 +266,18 @@ public class NumberTokenScanner extends AbstractTokenScanner {
          * 小数部分
          */
         FRAC_PART,
+        /**
+         * 已读到指数标记 e/E
+         */
+        EXP_MARK,
+        /**
+         * 指数的正负号
+         */
+        EXP_SIGN,
+        /**
+         * 指数数字部分
+         */
+        EXP_PART,
         /**
          * 主体结束，准备处理后缀或交还控制权
          */
