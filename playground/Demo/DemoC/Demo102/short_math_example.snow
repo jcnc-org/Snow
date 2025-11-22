@@ -9,7 +9,7 @@ module: short_math_example
 
     function: main
         body:
-            std_io.println("\n=== 演示 abs() 方法 ===")
+            std_io.println("=== 演示 abs() 方法 ===")
 
             declare negShort:std_short = new std_short(-120s)
             std_io.print("负数 -120 的绝对值: ")
