@@ -1,0 +1,32 @@
+/**
+@module std_long_example
+@summary std_long 方法演示
+*/
+module: long_math_example
+
+    import: std_long
+    import: std_io
+
+    function: main
+        body:
+            std_io.println("=== 演示 abs() 方法 ===")
+
+            declare neglong:std_long = new std_long(-120s)
+            std_io.print("负数 -120 的绝对值: ")
+            std_io.println(neglong.abs().getValue())
+
+            std_io.println("\n=== 演示 max()/min() ===")
+
+            std_io.print("比较 -15 和 20 的较大值: ")
+            std_io.println(std_long.max(-15l, 20l).getValue())
+
+            std_io.print("比较 -15 和 20 的较小值: ")
+            std_io.println(std_long.min(-15l, 20l).getValue())
+
+            std_io.println("MAX_VALUE: "+ std_long.MAX_VALUE)
+            std_io.println("MAX_VALUE: "+ std_long.MAX_VALUE)
+
+        end body
+    end function
+
+end module

@@ -1,0 +1,117 @@
+/**
+@module std_long
+@summary std_long 结构体 - 对 long 基本数据类型的封装
+*/
+module: std_long
+
+    globals:
+        declare const MIN_VALUE:long = -32767
+        declare const MAX_VALUE:long = 32767
+
+    /**
+    @struct std_long
+    @summary 短整数值对象的包装类
+    @description
+        包装基本 long 类型，提供面向对象的短整数操作接口。
+    */
+    struct: std_long
+
+        fields:
+            declare value:long
+
+        /**
+        @init default
+        @summary 无参构造函数，创建值为 0 的 std_long
+        */
+        init:
+            body:
+                value = 0
+            end body
+        end init
+
+        /**
+        @init with_value
+        @summary 带参构造函数，根据给定值创建 std_long
+        @param val 初始短整数值
+        */
+        init:
+            params:
+                declare val:long
+            body:
+                value = val
+            end body
+        end init
+
+        /**
+        @function getValue
+        @summary 获取包装的短整数值
+        @returns 返回内部存储的 long 值
+        */
+        function: getValue
+            returns: long
+            body:
+                return value
+            end body
+        end function
+
+        /**
+        @function abs
+        @summary 计算当前短整数的绝对值
+        @returns 返回当前短整数值绝对值的 std_long 实例
+        */
+        function: abs
+            returns: std_long
+            body:
+                declare result:long = value
+                if result < 0 then
+                    result = -result
+                end if
+                return new std_long(result)
+            end body
+        end function
+
+    end struct
+
+    /**
+    @function max
+    @summary 比较两个短整数并返回较大值（std_long）
+    @param lhs 第一短整数
+    @param rhs 第二短整数
+    @returns 返回两个短整数中较大值的 std_long 实例
+    */
+    function: max
+        params:
+            declare lhs:long
+            declare rhs:long
+        returns: std_long
+        body:
+            if lhs >= rhs then
+                return new std_long(lhs)
+            else
+                return new std_long(rhs)
+            end if
+        end body
+    end function
+
+    /**
+    @function min
+    @summary 比较两个短整数并返回较小值（std_long）
+    @param lhs 第一短整数
+    @param rhs 第二短整数
+    @returns 返回两个短整数中较小值的 std_long 实例
+    */
+    function: min
+        params:
+            declare lhs:long
+            declare rhs:long
+        returns: std_long
+        body:
+            if lhs <= rhs then
+                return new std_long(lhs)
+            else
+                return new std_long(rhs)
+            end if
+        end body
+    end function
+
+end module
