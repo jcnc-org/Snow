@@ -5,8 +5,8 @@
 module: std_long
 
     globals:
-        declare const MIN_VALUE:long = -32767
-        declare const MAX_VALUE:long = 32767
+        declare const MIN_VALUE:long = -9223372036854775807L
+        declare const MAX_VALUE:long = 9223372036854775807L
 
     /**
     @struct std_long

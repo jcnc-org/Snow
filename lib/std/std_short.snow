@@ -5,8 +5,8 @@
 module: std_short
 
     globals:
-        declare const MIN_VALUE:short = -32767
-        declare const MAX_VALUE:short = 32767
+        declare const MIN_VALUE:short = -32767s
+        declare const MAX_VALUE:short = 32767s
 
     /**
     @struct std_short
