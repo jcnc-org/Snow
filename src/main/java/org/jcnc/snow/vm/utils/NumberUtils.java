@@ -53,6 +53,43 @@ public final class NumberUtils {
                 + raw.getClass().getSimpleName());
     }
 
+    /**
+     * Pops a value from the operand stack and widens it to {@code long}.
+     *
+     * @param stack  operand stack
+     * @param opcode opcode name (for diagnostics)
+     * @return widened long value
+     */
+    public static long popLong(OperandStack stack, String opcode) {
+        Object raw = stack.pop();
+        return toLong(raw, opcode);
+    }
+
+    /**
+     * Converts arbitrary numeric payloads (Long/Integer/Short/Byte/Boolean, etc.)
+     * into a {@code long}.
+     *
+     * @param raw    raw value
+     * @param opcode opcode name (for diagnostics)
+     * @return widened long value
+     */
+    public static long toLong(Object raw, String opcode) {
+        if (raw instanceof Long l) {
+            return l;
+        }
+        if (raw instanceof Number n) {
+            return n.longValue();
+        }
+        if (raw instanceof Boolean b) {
+            return b ? 1L : 0L;
+        }
+        if (raw == null) {
+            throw new IllegalStateException(opcode + " encountered null operand");
+        }
+        throw new IllegalStateException(opcode + " expects numeric operand but got "
+                + raw.getClass().getSimpleName());
+    }
+
     public static short popShort(OperandStack stack, String opcode) {
         Object raw = stack.pop();
         return toShort(raw, opcode);
