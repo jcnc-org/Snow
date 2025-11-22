@@ -111,4 +111,70 @@ public final class NumberUtils {
         throw new IllegalStateException(opcode + " expects numeric operand but got "
                 + raw.getClass().getSimpleName());
     }
+
+    /**
+     * Pops a value from the operand stack and widens it to {@code float}.
+     *
+     * @param stack  operand stack
+     * @param opcode opcode name (for diagnostics)
+     * @return widened float value
+     */
+    public static float popFloat(OperandStack stack, String opcode) {
+        Object raw = stack.pop();
+        return toFloat(raw, opcode);
+    }
+
+    /**
+     * Converts arbitrary numeric payloads (Float/Double/Number/Boolean, etc.)
+     * into a {@code float}.
+     */
+    public static float toFloat(Object raw, String opcode) {
+        if (raw instanceof Float f) {
+            return f;
+        }
+        if (raw instanceof Number n) {
+            return n.floatValue();
+        }
+        if (raw instanceof Boolean b) {
+            return b ? 1.0f : 0.0f;
+        }
+        if (raw == null) {
+            throw new IllegalStateException(opcode + " encountered null operand");
+        }
+        throw new IllegalStateException(opcode + " expects numeric operand but got "
+                + raw.getClass().getSimpleName());
+    }
+
+    /**
+     * Pops a value from the operand stack and widens it to {@code double}.
+     *
+     * @param stack  operand stack
+     * @param opcode opcode name (for diagnostics)
+     * @return widened double value
+     */
+    public static double popDouble(OperandStack stack, String opcode) {
+        Object raw = stack.pop();
+        return toDouble(raw, opcode);
+    }
+
+    /**
+     * Converts arbitrary numeric payloads (Double/Float/Number/Boolean, etc.)
+     * into a {@code double}.
+     */
+    public static double toDouble(Object raw, String opcode) {
+        if (raw instanceof Double d) {
+            return d;
+        }
+        if (raw instanceof Number n) {
+            return n.doubleValue();
+        }
+        if (raw instanceof Boolean b) {
+            return b ? 1.0d : 0.0d;
+        }
+        if (raw == null) {
+            throw new IllegalStateException(opcode + " encountered null operand");
+        }
+        throw new IllegalStateException(opcode + " expects numeric operand but got "
+                + raw.getClass().getSimpleName());
+    }
 }

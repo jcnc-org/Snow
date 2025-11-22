@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * FNegCommand Opcode: Represents the float32 negation operation in the virtual machine.
@@ -46,7 +47,7 @@ public class FNegCommand implements Command {
     @Override
     public int execute(String[] parts, int currentPC, OperandStack operandStack, LocalVariableStore localVariableStore, CallStack callStack) {
         // Pop the top float32 value from the operand stack
-        float value = (float) operandStack.pop();
+        float value = NumberUtils.popFloat(operandStack, "F_NEG");
 
         // Perform the negation of the value
         float negatedValue = -value;

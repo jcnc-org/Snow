@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * DIncCommand Opcode: Represents the double64 increment operation for a local variable in the virtual machine.
@@ -56,7 +57,9 @@ public class DIncCommand implements Command {
         double incrementValue = Double.parseDouble(parts[2]); // The value by which to increment the local variable
 
         // Get the current value of the local variable at the specified index
-        double currentValue = (double) callStack.peekFrame().getLocalVariableStore().getVariable(localVariableIndex);
+        double currentValue = NumberUtils.toDouble(
+                callStack.peekFrame().getLocalVariableStore().getVariable(localVariableIndex),
+                "D_INC");
 
         // Increment the local variable value by the specified increment
         double newValue = currentValue + incrementValue;

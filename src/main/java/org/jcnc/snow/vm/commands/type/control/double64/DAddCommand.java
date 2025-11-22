@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * DAddCommand Opcode: Represents the double64 addition operation in the virtual machine.
@@ -46,8 +47,8 @@ public class DAddCommand implements Command {
     @Override
     public int execute(String[] parts, int currentPC, OperandStack operandStack, LocalVariableStore localVariableStore, CallStack callStack) {
         // Pop the top two operands from the stack
-        double b = (double) operandStack.pop();
-        double a = (double) operandStack.pop();
+        double b = NumberUtils.popDouble(operandStack, "D_ADD");
+        double a = NumberUtils.popDouble(operandStack, "D_ADD");
 
         // Perform the addition and push the result back onto the stack
         operandStack.push(a + b);
