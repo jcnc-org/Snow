@@ -1,24 +1,18 @@
 /**
 @module std_short
 @summary std_short 结构体 - 对 short 基本数据类型的封装
-@details
-    提供 std_short 结构体及相关的短整数操作方法，包括：
-    - 值存储与访问
-    - 类型转换
-    - 面向对象风格的 abs / min / max 操作
 */
 module: std_short
 
     globals:
-        declare const SHORT_MIN:short = -32767
-        declare const SHORT_MAX:short = 32767
+        declare const MIN_VALUE:short = -32767
+        declare const MAX_VALUE:short = 32767
 
     /**
     @struct std_short
     @summary 短整数值对象的包装类
     @description
         包装基本 short 类型，提供面向对象的短整数操作接口。
-        支持构造、值访问、类型转换等操作。
     */
     struct: std_short
 

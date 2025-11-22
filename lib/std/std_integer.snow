@@ -4,6 +4,10 @@
 */
 module: std_integer
 
+    globals:
+        declare const MIN_VALUE:short = -2147483647
+        declare const MAX_VALUE:short = 2147483647
+
     /**
     @struct std_integer
     @summary 整数值对象的包装类
@@ -108,6 +112,5 @@ module: std_integer
 	        end if
 	    end body
 	end function
-
 
 end module
