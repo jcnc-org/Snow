@@ -53,12 +53,14 @@ Snow 专属 IDE — **IDEology**
 
 仓库地址：[https://gitee.com/jcnc-org/IDEology](https://gitee.com/jcnc-org/IDEology)
 
+Snow IntelliJ IDEA 插件
+
+仓库地址：[https://gitee.com/jcnc-org/snow-intelli-j](https://gitee.com/jcnc-org/snow-intelli-j)
+
+
 > 目前 IDEology 尚未提供正式发行版，开发者可通过源码自行编译获得使用体验。
 
-![IMG_IDE_1.png](docs/README/IMG/IMG_IDE_1.png)
-![IMG_IDE_2.png](docs/README/IMG/IMG_IDE_2.png)
-![IMG_IDE_3.png](docs/README/IMG/IMG_IDE_3.png)
-![IMG_IDE_4.png](docs/README/IMG/IMG_IDE_4.png)
+![IMG_IDE_5.png](docs/README/IMG/IMG_IDE_5.png)
 
 ## 背景理念
 
@@ -125,9 +127,6 @@ sudo pacman -Syu snow-lang-git
 
 [Snow-Lang GraalVM AOT 打包指南](docs/Snow-Lang-GraalVM-AOT-Native-Image-Package/Snow-Lang-GraalVM-AOT-Native-Image-Package.md)
 
-## 开发计划
-
-~~[Snow 语言现状和下一阶段开发路线图-2025-06-11-已废弃](docs/Snow-Lang-Roadmap/Snow-Lang-Roadmap-2025-06-11.md)~~
 
 ## 开发环境安装
 
@@ -536,7 +535,7 @@ sudo pacman -Syu snow-lang-git
 
 以下是一个简单的 Snow 代码示例,演示模块定义,导入和函数声明的基本语法: 
 
-``snow
+```snow
 module: Math
     function: main
         returns: int
