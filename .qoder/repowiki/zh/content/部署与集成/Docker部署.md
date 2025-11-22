@@ -88,7 +88,7 @@ D --> E["Maven缓存优化<br/>依赖预下载"]
 E --> F["复制源码<br/>编译native image"]
 G["构建参数"] --> H["MUSL_VER=1.2.5"]
 G --> I["ZLIB_VERSION=1.3.1"]
-G --> J["SNOW_VERSION=0.11.0"]
+G --> J["SNOW_VERSION=0.12.0"]
 H --> C
 I --> D
 J --> F
@@ -308,7 +308,7 @@ A --> C[目标阶段: export]
 A --> D[命令: 导出脚本]
 A --> E[卷挂载: 输出目录]
 A --> F[环境文件: .env]
-G[构建参数] --> H[SNOW_VERSION: 0.11.0]
+G[构建参数] --> H[SNOW_VERSION: 0.12.0]
 G --> I[输出路径: ./target]
 G --> J[标准库: ./lib]
 H --> D
@@ -355,21 +355,21 @@ Snow项目的版本化输出遵循标准化的目录结构，便于管理和分�
 ```
 target/
 ├── release/
-│   ├── snow-v0.11.0-linux-x64/
+│   ├── snow-v0.12.0-linux-x64/
 │   │   ├── bin/
 │   │   │   └── snow
 │   │   ├── lib/
 │   │   │   ├── os/
 │   │   │   ├── std/
 │   │   │   └── syscall/
-│   │   └── snow-v0.11.0-linux-x64.tgz
+│   │   └── snow-v0.12.0-linux-x64.tgz
 │   └── ...
 ```
 
 ### 版本命名规范
 
 - **格式**：`snow-v{VERSION}-{PLATFORM}-{ARCH}`
-- **示例**：`snow-v0.11.0-linux-x64`
+- **示例**：`snow-v0.12.0-linux-x64`
 - **变量替换**：`${SNOW_VERSION}`自动替换为实际版本号
 
 ### 文件组织
@@ -495,10 +495,10 @@ docker compose build --no-cache linux-snow-export
 ls -la target/release/
 
 # 验证可执行文件
-file target/release/snow-v0.11.0-linux-x64/bin/snow
+file target/release/snow-v0.12.0-linux-x64/bin/snow
 
 # 测试可执行文件
-target/release/snow-v0.11.0-linux-x64/bin/snow --version
+target/release/snow-v0.12.0-linux-x64/bin/snow --version
 ```
 
 ### 自定义构建配置

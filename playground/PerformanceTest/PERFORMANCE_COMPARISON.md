@@ -7,7 +7,7 @@
 ## 测试环境
 
 - 操作系统：Windows
-- Snow版本：0.11.0
+- Snow版本：0.12.0
 - Java版本：25 (Oracle GraalVM)
 - 测试目录：playground/Demo/PerformanceTest
 

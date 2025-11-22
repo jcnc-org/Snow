@@ -564,7 +564,7 @@ end
 project {
   group = org.jcnc.snow
   artifact = snow
-  version = 0.11.0
+  version = 0.12.0
 }
 
 repositories {
