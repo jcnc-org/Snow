@@ -158,12 +158,22 @@ try {
     Set-Content $versionFilePath $snowVersion
 
     # Step 5: Zip
-    New-Item $releaseRoot -ItemType Directory -Force | Out-Null
     $zipPath = Join-Path $releaseRoot "$outDirName.zip"
-
     if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
 
-    Compress-Archive -Path (Join-Path $outDir '*') -DestinationPath $zipPath -CompressionLevel Optimal
+    # Ensure parent directory exists
+    $null = New-Item -ItemType Directory -Path $releaseRoot -Force
+
+    # Use .NET to create zip — works reliably in PowerShell 7+ on all Windows systems
+    Add-Type -AssemblyName System.IO.Compression
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+    [System.IO.Compression.ZipFile]::CreateFromDirectory(
+            $outDir,
+            $zipPath,
+            [System.IO.Compression.CompressionLevel]::Optimal,
+            $false  # Do NOT include root folder name inside zip
+    )
 
 } finally {
     Pop-Location
