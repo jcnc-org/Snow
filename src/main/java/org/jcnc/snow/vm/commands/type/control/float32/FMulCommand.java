@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * FMulCommand Opcode: Represents the float32 multiplication operation in the virtual machine.
@@ -46,8 +47,8 @@ public class FMulCommand implements Command {
     @Override
     public int execute(String[] parts, int currentPC, OperandStack operandStack, LocalVariableStore localVariableStore, CallStack callStack) {
         // Pop the top two operands from the stack
-        float b = (float) operandStack.pop();
-        float a = (float) operandStack.pop();
+        float b = NumberUtils.popFloat(operandStack, "F_MUL");
+        float a = NumberUtils.popFloat(operandStack, "F_MUL");
 
         // Perform the multiplication and push the result back onto the stack
         operandStack.push(a * b);

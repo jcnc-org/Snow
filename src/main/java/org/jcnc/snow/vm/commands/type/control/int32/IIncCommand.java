@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * IIncCommand Opcode: Represents the int32 increment operation for a local variable in the virtual machine.
@@ -54,7 +55,8 @@ public class IIncCommand implements Command {
         int incrementValue = Integer.parseInt(parts[2]); // The value by which to increment the local variable
 
         // Get the current value of the local variable at the specified index
-        int currentValue = (int) callStack.peekFrame().getLocalVariableStore().getVariable(localVariableIndex);
+        Object raw = callStack.peekFrame().getLocalVariableStore().getVariable(localVariableIndex);
+        int currentValue = NumberUtils.toInt(raw, "I_INC");
 
         // Increment the local variable value by the specified increment
         int newValue = currentValue + incrementValue;

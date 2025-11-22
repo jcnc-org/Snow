@@ -1,6 +1,17 @@
 # run-linux-snow-export.ps1
 # Build and package linux-snow-export, version read from SNOW_VERSION in .env
 
+# force to use PowerShell 7
+if ($PSVersionTable.PSEdition -ne "Core") {
+    Write-Host "Switching to PowerShell 7..."
+    $pwsh = Get-Command pwsh.exe -ErrorAction SilentlyContinue
+    if (-not $pwsh) {
+        throw "PowerShell 7 (pwsh.exe) not installed."
+    }
+    & $pwsh.Source -NoLogo -NoProfile -File $PSCommandPath @args
+    exit $LASTEXITCODE
+}
+
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
@@ -75,14 +86,13 @@ function Invoke-TarGz {
     )
     $tarExe = "tar"
 
-    $isWindows = $env:OS -eq 'Windows_NT'
-
-    if ($isWindows) {
+    if ($IsWindows) {
+        # Windows 上用自带的 tar
         $psi = @{
-            FilePath    = $tarExe
-            ArgumentList= @("-C", $SourceDir, "-czf", $DestTgz, ".")
-            NoNewWindow = $true
-            Wait        = $true
+            FilePath     = $tarExe
+            ArgumentList = @("-C", $SourceDir, "-czf", $DestTgz, ".")
+            NoNewWindow  = $true
+            Wait         = $true
         }
         try {
             $p = Start-Process @psi -PassThru -ErrorAction Stop
@@ -94,24 +104,28 @@ function Invoke-TarGz {
             throw "Packaging failed (Windows tar): $($_.Exception.Message)"
         }
     } else {
+        # 非 Windows（Linux / macOS），优先尝试 gzip -9
         try {
             $psi = @{
-                FilePath    = $tarExe
-                ArgumentList= @("-C", $SourceDir, "-c", "-f", $DestTgz, "-I", "gzip -9", ".")
-                NoNewWindow = $true
-                Wait        = $true
+                FilePath     = $tarExe
+                ArgumentList = @("-C", $SourceDir, "-c", "-f", $DestTgz, "-I", "gzip -9", ".")
+                NoNewWindow  = $true
+                Wait         = $true
             }
             $p = Start-Process @psi -PassThru -ErrorAction Stop
             $p.WaitForExit()
             if ($p.ExitCode -eq 0) { return }
-        } catch { }
+        } catch {
+            # ignore, fallback below
+        }
 
+        # fallback: 普通 `-czf`
         try {
             $psi = @{
-                FilePath    = $tarExe
-                ArgumentList= @("-C", $SourceDir, "-c", "-z", "-f", $DestTgz, ".")
-                NoNewWindow = $true
-                Wait        = $true
+                FilePath     = $tarExe
+                ArgumentList = @("-C", $SourceDir, "-c", "-z", "-f", $DestTgz, ".")
+                NoNewWindow  = $true
+                Wait         = $true
             }
             $p = Start-Process @psi -PassThru -ErrorAction Stop
             $p.WaitForExit()
@@ -123,6 +137,7 @@ function Invoke-TarGz {
         }
     }
 }
+
 try {
     Invoke-TarGz -SourceDir $outDir -DestTgz $tgzPath
 } catch {

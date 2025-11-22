@@ -117,7 +117,7 @@ module: fibonacci_demo
     function: main
         returns: void
         body:
-            declare terms: int = 36
+            declare terms: int = 20
             declare iterativeStart: long = os_time.tick_ms()
             print_iterative_series(terms)
             declare iterativeElapsed: long = os_time.tick_ms() - iterativeStart
@@ -133,7 +133,7 @@ module: fibonacci_demo
             std_io.print(recursiveElapsed)
             std_io.println(" ms")
 
-            declare targetIndex: int = 35
+            declare targetIndex: int = 45
             std_io.print("\n使用迭代方式单独求解 F(")
             std_io.print(targetIndex)
             std_io.println(")")

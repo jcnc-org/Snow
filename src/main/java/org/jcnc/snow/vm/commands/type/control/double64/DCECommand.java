@@ -5,6 +5,7 @@ import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 import org.jcnc.snow.vm.utils.LoggingUtils;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * The DCECommand class implements the {@link Command} interface and represents a conditional jump command in the virtual machine.
@@ -62,8 +63,8 @@ public class DCECommand implements Command {
         int target = Integer.parseInt(parts[1]);
 
         // Pop the two operands from the stack
-        double b = (double) operandStack.pop();
-        double a = (double) operandStack.pop();
+        double b = NumberUtils.popDouble(operandStack, "D_CE");
+        double a = NumberUtils.popDouble(operandStack, "D_CE");
 
         // If the operands are equal, jump to the target command
         if (a == b) {

@@ -5,6 +5,7 @@ import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 import org.jcnc.snow.vm.utils.LoggingUtils;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * The LCECommand class implements the {@link Command} interface and represents a conditional jump command in the virtual machine.
@@ -62,8 +63,8 @@ public class LCECommand implements Command {
         int target = Integer.parseInt(parts[1]);
 
         // Pop the two operands from the stack
-        long b = (long) operandStack.pop();
-        long a = (long) operandStack.pop();
+        long b = NumberUtils.popLong(operandStack, "L_CE");
+        long a = NumberUtils.popLong(operandStack, "L_CE");
 
         // If the operands are equal, jump to the target command
         if (a == b) {

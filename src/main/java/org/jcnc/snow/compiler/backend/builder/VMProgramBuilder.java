@@ -50,6 +50,10 @@ public final class VMProgramBuilder {
      * 当前代码指针(已生成指令的数量/下一个指令的位置)
      */
     private int pc = 0;
+    /**
+     * 当前正在生成代码的函数，用于为局部标签生成唯一前缀。
+     */
+    private String currentFunction;
 
     /**
      * 提取给定名称的最后一个片段。
@@ -100,6 +104,7 @@ public final class VMProgramBuilder {
     public void beginFunction(String name) {
         // 函数粒度隔离槽位类型，避免跨函数类型污染
         slotType.clear();
+        currentFunction = name;
         addr.put(name, pc);
         patchCallFixes(name);
         patchBranchFixes(name);
@@ -109,6 +114,7 @@ public final class VMProgramBuilder {
      * 函数结束接口，目前无具体实现，便于将来扩展。
      */
     public void endFunction() {
+        currentFunction = null;
     }
 
     /**
@@ -118,9 +124,10 @@ public final class VMProgramBuilder {
      */
     public void emit(String line) {
         if (line.endsWith(":")) {
-            String label = line.substring(0, line.length() - 1);
-            addr.put(label, pc);
-            patchBranchFixes(label);
+            String rawLabel = line.substring(0, line.length() - 1);
+            String scopedLabel = scopeLabel(rawLabel);
+            addr.put(scopedLabel, pc);
+            patchBranchFixes(scopedLabel);
             return;
         }
         code.add(line);
@@ -176,12 +183,13 @@ public final class VMProgramBuilder {
      * @param label  跳转目标标签名
      */
     public void emitBranch(String opcode, String label) {
-        Integer a = resolve(label);
+        String scoped = scopeLabel(label);
+        Integer a = resolve(scoped);
         if (a != null) {
             emit(opcode + " " + a);
         } else {
             emit(opcode + " " + PLACEHOLDER);
-            branchFixes.add(new BranchFix(pc - 1, label));
+            branchFixes.add(new BranchFix(pc - 1, scoped));
         }
     }
 
@@ -221,6 +229,25 @@ public final class VMProgramBuilder {
      */
     private Integer resolve(String sym) {
         return addr.get(sym);
+    }
+
+    /**
+     * 为标签添加函数作用域前缀，避免不同函数内的同名标签互相覆盖。
+     *
+     * @param label 原始标签名
+     * @return 作用域修饰后的标签名
+     */
+    private String scopeLabel(String label) {
+        if (label == null || label.isEmpty()) {
+            return label;
+        }
+        if (label.contains("::")) {
+            return label;
+        }
+        if (currentFunction == null || currentFunction.isEmpty()) {
+            return label;
+        }
+        return currentFunction + "::" + label;
     }
 
     /**

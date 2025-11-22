@@ -1,20 +1,18 @@
 /**
 @module std_integer
 @summary std_integer 结构体 - 对 int 基本数据类型的封装
-@details
-    提供 std_integer 结构体及相关的整数操作方法，包括：
-    - 值存储与访问
-    - 类型转换
-    - 面向对象风格的 abs / min / max 操作
 */
 module: std_integer
+
+    globals:
+        declare const MIN_VALUE:int = -2147483647
+        declare const MAX_VALUE:int = 2147483647
 
     /**
     @struct std_integer
     @summary 整数值对象的包装类
     @description
         包装基本 int 类型，提供面向对象的整数操作接口。
-        支持构造、值访问、类型转换等操作。
     */
     struct: std_integer
 
@@ -57,19 +55,6 @@ module: std_integer
         end function
 
         /**
-        @function setValue
-        @summary 设置包装的整数值
-        @param val 要设置的新值
-        */
-        function: setValue
-            params:
-                declare val:int
-            body:
-                value = val
-            end body
-        end function
-
-        /**
         @function abs
         @summary 计算当前整数的绝对值
         @returns 返回当前整数值绝对值的 std_integer 实例
@@ -84,101 +69,48 @@ module: std_integer
                 return new std_integer(result)
             end body
         end function
-
-        /**
-        @function max
-        @summary 与另一个 std_integer 比较并返回较大值
-        @param other 用于比较的 std_integer
-        @returns 返回较大值的 std_integer 实例
-        */
-        function: max
-            params:
-                declare other:std_integer
-            returns: std_integer
-            body:
-                declare selfValue:int = value
-                declare otherValue:int = other.getValue()
-                if otherValue > selfValue then
-                    return new std_integer(otherValue)
-                end if
-                return new std_integer(selfValue)
-            end body
-        end function
-
-        /**
-        @function min
-        @summary 与另一个 std_integer 比较并返回较小值
-        @param other 用于比较的 std_integer
-        @returns 返回较小值的 std_integer 实例
-        */
-        function: min
-            params:
-                declare other:std_integer
-            returns: std_integer
-            body:
-                declare selfValue:int = value
-                declare otherValue:int = other.getValue()
-                if otherValue < selfValue then
-                    return new std_integer(otherValue)
-                end if
-                return new std_integer(selfValue)
-            end body
-        end function
-
     end struct
 
-    /**
-    @function abs
-    @summary 计算给定整数的绝对值
-    @param val 要计算的整数值
-    @returns 返回绝对值对应的 std_integer 实例
-    */
-    function: abs
-        params:
-            declare val:int
-        returns: std_integer
-        body:
-            declare obj:std_integer = new std_integer(val)
-            return obj.abs()
-        end body
-    end function
+	/**
+	@function max
+	@summary 比较两个整数并返回较大值（std_integer）
+	@param lhs 第一整数
+	@param rhs 第二整数
+	@returns 返回两个整数中较大值的 std_integer 实例
+	*/
+	function: max
+	    params:
+	        declare lhs:int
+	        declare rhs:int
+	    returns: std_integer
+	    body:
+	        if lhs >= rhs then
+	            return new std_integer(lhs)
+	        else
+	            return new std_integer(rhs)
+	        end if
+	    end body
+	end function
 
-    /**
-    @function max
-    @summary 比较两个整数并返回较大值（std_integer）
-    @param lhs 第一整数
-    @param rhs 第二整数
-    @returns 返回两个整数中较大值的 std_integer 实例
-    */
-    function: max
-        params:
-            declare lhs:int
-            declare rhs:int
-        returns: std_integer
-        body:
-            declare lhsObj:std_integer = new std_integer(lhs)
-            declare rhsObj:std_integer = new std_integer(rhs)
-            return lhsObj.max(rhsObj)
-        end body
-    end function
-
-    /**
-    @function min
-    @summary 比较两个整数并返回较小值（std_integer）
-    @param lhs 第一整数
-    @param rhs 第二整数
-    @returns 返回两个整数中较小值的 std_integer 实例
-    */
-    function: min
-        params:
-            declare lhs:int
-            declare rhs:int
-        returns: std_integer
-        body:
-            declare lhsObj:std_integer = new std_integer(lhs)
-            declare rhsObj:std_integer = new std_integer(rhs)
-            return lhsObj.min(rhsObj)
-        end body
-    end function
+	/**
+	@function min
+	@summary 比较两个整数并返回较小值（std_integer）
+	@param lhs 第一整数
+	@param rhs 第二整数
+	@returns 返回两个整数中较小值的 std_integer 实例
+	*/
+	function: min
+	    params:
+	        declare lhs:int
+	        declare rhs:int
+	    returns: std_integer
+	    body:
+	        if lhs <= rhs then
+	            return new std_integer(lhs)
+	        else
+	            return new std_integer(rhs)
+	        end if
+	    end body
+	end function
 
 end module

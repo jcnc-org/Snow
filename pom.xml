@@ -14,7 +14,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
-        <native.maven.plugin.version>0.10.5</native.maven.plugin.version>
+        <native.maven.plugin.version>0.11.1</native.maven.plugin.version>
     </properties>
 
     <!-- 通用编译 & 打包插件 -->
@@ -38,7 +38,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.14.0</version>
+                <version>3.14.1</version>
                 <configuration>
                     <release>25</release>
                 </configuration>
@@ -75,7 +75,7 @@
             <id>native-linux</id>
             <activation>
                 <os>
-                    <family>unix</family>
+                    <family>Linux</family>
                 </os>
             </activation>
 
@@ -95,7 +95,7 @@
                                 <buildArg>--static</buildArg>
                                 <buildArg>--libc=musl</buildArg>
                                 <buildArg>--emit=build-report</buildArg>
-                                <buildArg>-O2</buildArg>
+                                <buildArg>-O3</buildArg>
                                 <buildArg>-H:Class=org.jcnc.snow.cli.SnowCLI</buildArg>
                                 <buildArg>-H:CCompilerPath=/opt/musl/bin/musl-gcc</buildArg>
                                 <buildArg>-H:CLibraryPath=/opt/musl/lib</buildArg>
@@ -163,10 +163,8 @@
                         </executions>
                         <configuration>
                             <buildArgs>
-                                <!-- 输出构建报告 -->
                                 <buildArg>--emit build-report</buildArg>
-                                <!-- 优化级别 O2 -->
-                                <buildArg>-O2</buildArg>
+                                <buildArg>-O3</buildArg>
                             </buildArgs>
                         </configuration>
                     </plugin>
@@ -177,7 +175,7 @@
             <id>native-mac</id>
             <activation>
                 <os>
-                    <family>unix</family>
+                    <family>Mac OS X</family>
                 </os>
             </activation>
 
@@ -195,7 +193,7 @@
                             <outputDirectory>${project.build.directory}</outputDirectory>
                             <buildArgs>
                                 <buildArg>--emit=build-report</buildArg>
-                                <buildArg>-O2</buildArg>
+                                <buildArg>-O3</buildArg>
                                 <buildArg>-H:Class=org.jcnc.snow.cli.SnowCLI</buildArg>
                             </buildArgs>
                         </configuration>

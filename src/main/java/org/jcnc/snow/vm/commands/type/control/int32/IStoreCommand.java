@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * The IStoreCommand class implements the {@link Command} interface and represents a store instruction in the virtual machine.
@@ -55,7 +56,7 @@ public class IStoreCommand implements Command {
         int index = Integer.parseInt(parts[1]);
 
         // Pop the value from the operand stack
-        int value = (int) operandStack.pop();
+        int value = NumberUtils.popInt(operandStack, "I_STORE");
 
         // Store the value into the local variable store of the current method frame
         callStack.peekFrame().getLocalVariableStore().setVariable(index, value);
