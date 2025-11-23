@@ -11,7 +11,8 @@ services:
         set -e
         ver="snow-v${SNOW_VERSION}-linux-x64"
         mkdir -p "/output/release/$$ver/bin"
-        cp /export/snow "/output/release/$$ver/bin/"
+        # 覆盖旧的可执行文件，避免第二次运行时 File exists
+        cp -f /export/snow "/output/release/$$ver/bin/snow"
         if [ -d /export/lib ]; then
           mkdir -p "/output/release/$$ver/lib"
           cp -a /export/lib/. "/output/release/$$ver/lib/"

@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# 执行 PowerShell 脚本
-sudo pwsh -File "./release-linux.ps1"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+pwsh -File "${SCRIPT_DIR}/release-linux.ps1" "$@"
