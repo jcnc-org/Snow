@@ -56,11 +56,11 @@ if (-not $version) {
 }
 
 # ===== Step 4: Define output paths =====
-$targetDir = Join-Path $projectRoot "target\release"
+$targetDir = Join-Path $projectRoot "target/release"
 $outDir    = Join-Path $targetDir "snow-v$version-linux-x64"
 $tgzPath   = Join-Path $targetDir "snow-v$version-linux-x64.tgz"
 
-# ===== Step 5: Package to .tgz (no extra top-level dir, max compression) =====
+# ===== Step 5: Package to .tgz (Linux-compatible) =====
 Write-Host "Step 5: Package to .tgz..."
 
 if (-not (Test-Path -LiteralPath $outDir)) {
@@ -76,65 +76,46 @@ if (-not (Test-Path -LiteralPath $targetDir)) {
 # Remove old package if exists
 if (Test-Path -LiteralPath $tgzPath) {
     Write-Host "→ Removing existing tgz: $tgzPath"
-    Remove-Item -LiteralPath $tgzPath -Force
+    try {
+        Remove-Item -LiteralPath $tgzPath -Force
+    } catch {
+        Write-Warning "Failed to remove existing tgz: $($_.Exception.Message)"
+    }
 }
 
+# Function to invoke tar in Linux/macOS or Windows
 function Invoke-TarGz {
     param(
         [Parameter(Mandatory = $true)][string]$SourceDir,
         [Parameter(Mandatory = $true)][string]$DestTgz
     )
+
     $tarExe = "tar"
 
     if ($IsWindows) {
-        # Windows 上用自带的 tar
-        $psi = @{
-            FilePath     = $tarExe
-            ArgumentList = @("-C", $SourceDir, "-czf", $DestTgz, ".")
-            NoNewWindow  = $true
-            Wait         = $true
-        }
-        try {
-            $p = Start-Process @psi -PassThru -ErrorAction Stop
-            $p.WaitForExit()
-            if ($p.ExitCode -ne 0) {
-                throw "tar exited with code $($p.ExitCode)"
-            }
-        } catch {
-            throw "Packaging failed (Windows tar): $($_.Exception.Message)"
-        }
+        # Windows 用 tar
+        $args = @("-C", $SourceDir, "-czf", $DestTgz, ".")
     } else {
-        # 非 Windows（Linux / macOS），优先尝试 gzip -9
-        try {
-            $psi = @{
-                FilePath     = $tarExe
-                ArgumentList = @("-C", $SourceDir, "-c", "-f", $DestTgz, "-I", "gzip -9", ".")
-                NoNewWindow  = $true
-                Wait         = $true
-            }
-            $p = Start-Process @psi -PassThru -ErrorAction Stop
-            $p.WaitForExit()
-            if ($p.ExitCode -eq 0) { return }
-        } catch {
-            # ignore, fallback below
-        }
+        # Linux/macOS
+        # 使用 GNU tar + gzip -9
+        $args = @("-C", $SourceDir, "-cf", $DestTgz, "--use-compress-program=gzip", ".")
+    }
 
-        # fallback: 普通 `-czf`
-        try {
-            $psi = @{
-                FilePath     = $tarExe
-                ArgumentList = @("-C", $SourceDir, "-c", "-z", "-f", $DestTgz, ".")
-                NoNewWindow  = $true
-                Wait         = $true
-            }
-            $p = Start-Process @psi -PassThru -ErrorAction Stop
-            $p.WaitForExit()
-            if ($p.ExitCode -ne 0) {
-                throw "tar exited with code $($p.ExitCode)"
-            }
-        } catch {
-            throw "Packaging failed (Linux tar): $($_.Exception.Message)"
+    $psi = @{
+        FilePath     = $tarExe
+        ArgumentList = $args
+        NoNewWindow  = $true
+        Wait         = $true
+    }
+
+    try {
+        $p = Start-Process @psi -PassThru -ErrorAction Stop
+        $p.WaitForExit()
+        if ($p.ExitCode -ne 0) {
+            throw "tar exited with code $($p.ExitCode)"
         }
+    } catch {
+        throw "Packaging failed: $($_.Exception.Message)"
     }
 }
 
@@ -155,13 +136,12 @@ Write-Host "Step 6: Create VERSION file in SDK root directory..."
 $versionFilePath = Join-Path $outDir "VERSION"
 try {
     Set-Content -Path $versionFilePath -Value $version -Force
-    # Verify the file was created and has content
     if (Test-Path $versionFilePath) {
         $versionContent = Get-Content -Path $versionFilePath -Raw
         if ($versionContent.Trim() -eq $version) {
             Write-Host ">>> Created VERSION file at $versionFilePath with content: $version"
         } else {
-            Write-Warning "VERSION file was created but content does not match. Expected: $version, Actual: $($versionContent.Trim())"
+            Write-Warning "VERSION file content mismatch. Expected: $version, Actual: $($versionContent.Trim())"
         }
     } else {
         Write-Warning "Failed to create VERSION file at $versionFilePath"
