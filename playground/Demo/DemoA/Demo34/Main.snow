@@ -1,0 +1,15 @@
+module: main
+    import: syscall.fs
+    import: syscall.fd
+    import: std_io,Student, Person, Graduate
+
+	function: main
+	    returns: void
+	    body:
+	        declare a: Person = new Student(1)
+	        std_io.println(a.getName())
+	        declare p: Person = new Graduate(10, 2024)
+            std_io.println(p.getName())
+	    end body
+	end function
+end module

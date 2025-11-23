@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * LAddCommand Opcode: Represents the long64 addition operation in the virtual machine.
@@ -46,8 +47,8 @@ public class LAddCommand implements Command {
     @Override
     public int execute(String[] parts, int currentPC, OperandStack operandStack, LocalVariableStore localVariableStore, CallStack callStack) {
         // Pop the top two operands from the stack
-        long b = (long) operandStack.pop();
-        long a = (long) operandStack.pop();
+        long b = NumberUtils.popLong(operandStack, "L_ADD");
+        long a = NumberUtils.popLong(operandStack, "L_ADD");
 
         // Perform the addition and push the result back onto the stack
         operandStack.push(a + b);

@@ -1,0 +1,21 @@
+module: app
+    import: syscall.fs
+    import: syscall.fd
+    import: syscall.io
+    import: std_io
+
+    function: main
+        params:
+            declare args: any
+        body:
+            declare ret: int
+
+            // 向标准错误输出写一条消息
+            ret = io.stderr_write("这是错误信息！")
+            ret = io.stderr_write("\n")
+
+            // 打印返回值，正常情况下是 0
+            std_io.println("stderrWrite 返回值: " + ret)
+        end body
+    end function
+end module

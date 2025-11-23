@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * The LAndCommand class implements the {@link Command} interface and represents the long64 bitwise AND (`&`) operation command.
@@ -45,8 +46,8 @@ public class LAndCommand implements Command {
         }
 
         // Pop the top two operands from the stack
-        final long b = (long) operandStack.pop();
-        final long a = (long) operandStack.pop();
+        final long b = NumberUtils.popLong(operandStack, "L_AND");
+        final long a = NumberUtils.popLong(operandStack, "L_AND");
 
         // Perform the long64 bitwise AND operation and push the result back onto the stack
         operandStack.push(a & b);

@@ -1,0 +1,360 @@
+/**
+@module web
+@summary 套接字与网络系统调用模块，封装套接字创建、连接、数据传输等网络操作。
+@syscalls
+  0x1400 SOCKET      创建新的套接字
+  0x1401 BIND        绑定套接字到本地地址
+  0x1402 LISTEN      监听连接请求
+  0x1403 ACCEPT      接受客户端连接
+  0x1404 CONNECT     主动连接远程主机
+  0x1405 SEND        在流式套接字上发送数据
+  0x1406 RECV        在流式套接字上接收数据
+  0x1407 SENDTO      在无连接套接字上发送数据
+  0x1408 RECVFROM    在无连接套接字上接收数据
+  0x1409 SHUTDOWN    关闭套接字方向
+  0x140A SETSOCKOPT  设置套接字选项
+  0x140B GETSOCKOPT  获取套接字选项
+  0x140C GETPEERNAME 获取套接字对端地址
+  0x140D GETSOCKNAME 获取套接字本地地址
+  0x140E GETADDRINFO 解析主机名和服务名
+*/
+module: web
+
+    /**
+    @function socket
+    @summary 创建指定协议族、类型、协议的 socket，并返回文件描述符。
+    @param family 协议族
+    @param type 套接字类型
+    @param proto 协议
+    @returns 成功返回文件描述符
+    @throws Exception 协议族/类型不支持，资源不足时抛出异常
+    */
+    function: socket
+        params:
+            declare family:int
+            declare type:int
+            declare proto:int
+        returns: int
+        body:
+            return syscall("0x1400", family, type, proto)
+        end body
+    end function
+
+    /**
+    @function bind
+    @summary 将套接字与指定地址/端口绑定。
+    @param fd 文件描述符
+    @param addr 地址字符串
+    @param port 端口号
+    @returns 成功返回 0
+    @throws Exception 地址被占用、权限不足、套接字无效时抛出异常
+    */
+    function: bind
+        params:
+            declare fd:int
+            declare addr:string
+            declare port:int
+        returns: int
+        body:
+            return syscall("0x1401", fd, addr, port)
+        end body
+    end function
+
+    /**
+    @function listen
+    @summary 将绑定的套接字置为监听状态，backlog 指定队列长度。
+    @param fd 文件描述符
+    @param backlog 连接队列长度
+    @returns 成功返回 0
+    @throws Exception 套接字未绑定、类型错误时抛出异常
+    */
+    function: listen
+        params:
+            declare fd:int
+            declare backlog:int
+        returns: int
+        body:
+            return syscall("0x1402", fd, backlog)
+        end body
+    end function
+
+    /**
+    @function accept
+    @summary 在监听套接字上接受一个新的连接，返回新套接字和对端地址。
+    @param fd 文件描述符
+    @returns 新连接的文件描述符，以及对端地址和端口
+    @throws Exception 无连接可接受、I/O 失败时抛出异常
+    */
+    function: accept
+        params:
+            declare fd:int
+        returns: any
+        body:
+            return syscall("0x1403", fd)
+        end body
+    end function
+
+    /**
+    @function connect
+    @summary 将套接字连接到指定的远端主机和端口。
+    @param fd 文件描述符
+    @param addr 远端主机地址
+    @param port 远端主机端口
+    @returns 成功返回 0
+    @throws Exception 地址不可达、连接被拒绝、超时时抛出异常
+    */
+    function: connect
+        params:
+            declare fd:int
+            declare addr:string
+            declare port:int
+        returns: int
+        body:
+            return syscall("0x1404", fd, addr, port)
+        end body
+    end function
+
+    /**
+    @function send
+    @summary 向已连接的套接字写入数据。
+    @param fd 文件描述符
+    @param data 要发送的数据（byte[]或String）
+    @returns 实际写入的字节数
+    @throws Exception 套接字未连接、对端关闭、I/O 失败时抛出异常
+    */
+    function: send
+        params:
+            declare fd:int
+            declare data:any
+        returns: int
+        body:
+            return syscall("0x1405", fd, data)
+        end body
+    end function
+
+    /**
+    @function recv
+    @summary 从套接字读取至多 n 字节数据。
+    @param fd 文件描述符
+    @param n 要读取的最大字节数
+    @returns 接收的数据字节数组
+    @throws Exception 套接字未连接、对端关闭、I/O 失败时抛出异常
+    */
+    function: recv
+        params:
+            declare fd:int
+            declare n:int
+        returns: any
+        body:
+            return syscall("0x1406", fd, n)
+        end body
+    end function
+
+    /**
+    @function sendto
+    @summary 向指定地址/端口发送一个 UDP 报文。
+    @param fd 文件描述符
+    @param data 要发送的数据
+    @param addr 目标地址
+    @param port 目标端口
+    @returns 实际发送的字节数
+    @throws Exception 套接字未绑定、I/O 失败时抛出异常
+    */
+    function: sendto
+        params:
+            declare fd:int
+            declare data:any
+            declare addr:string
+            declare port:int
+        returns: int
+        body:
+            return syscall("0x1407", fd, data, addr, port)
+        end body
+    end function
+
+    /**
+    @function recvfrom
+    @summary 接收一个 UDP 报文，返回数据和来源地址。
+    @param fd 文件描述符
+    @param n 要读取的最大字节数
+    @returns 接收到的数据及对端信息，格式为 [data, addr, port]
+    @throws Exception I/O 失败时抛出异常
+    */
+	function: recvfrom
+	    params:
+	        declare fd:int
+	        declare n:int
+	    returns: int[]
+	    body:
+	        declare tup:int
+	        declare data:int
+	        declare addr:int
+	        declare port:int
+	        declare out:int[]
+
+	        tup  = syscall("0x1408", fd, n)      // VM 返回 Object[]
+	        data = syscall("0x1802", tup, 0)     // ARR_GET(tup, 0)
+	        addr = syscall("0x1802", tup, 1)
+	        port = syscall("0x1802", tup, 2)
+
+	        // 构造数组，先用常量占位，再逐个写入
+	        out = [0, 0,0]
+	        out[0] = data
+	        out[1] = addr
+	        out[2] = port
+
+	        return out
+	    end body
+	end function
+
+    /**
+    @function shutdown
+    @summary 根据 how 值关闭输入、输出或双向。
+    @param fd 文件描述符
+    @param how 关闭方式
+    @returns 成功返回 0
+    @throws Exception 套接字无效、I/O 失败时抛出异常
+    */
+    function: shutdown
+        params:
+            declare fd:int
+            declare how:int
+        returns: int
+        body:
+            return syscall("0x1409", fd, how)
+        end body
+    end function
+
+    /**
+    @function setsockopt
+    @summary 修改套接字的控制选项，如缓冲区大小、TCP_NODELAY 等。
+    @param fd 文件描述符
+    @param level 选项级别
+    @param opt 选项名
+    @param value 选项值
+    @returns 成功返回 0
+    @throws Exception 选项不支持、值非法时抛出异常
+    */
+    function: setsockopt
+        params:
+            declare fd:int
+            declare level:int
+            declare opt:int
+            declare value:any
+        returns: int
+        body:
+            return syscall("0x140A", fd, level, opt, value)
+        end body
+    end function
+
+    /**
+    @function getsockopt
+    @summary 读取套接字的控制选项值。
+    @param fd 文件描述符
+    @param level 选项级别
+    @param opt 选项名
+    @returns 选项的当前值
+    @throws Exception 选项不支持、套接字无效时抛出异常
+    */
+    function: getsockopt
+        params:
+            declare fd:int
+            declare level:int
+            declare opt:int
+        returns: any
+        body:
+            return syscall("0x140B", fd, level, opt)
+        end body
+    end function
+
+    /**
+    @function getpeername
+    @summary 返回连接的远程主机地址与端口。
+    @param fd 文件描述符
+    @returns 对端地址和端口
+    @throws Exception 套接字未连接、I/O 失败时抛出异常
+    */
+    function: getpeername
+        params:
+            declare fd:int
+        returns: any
+        body:
+            return syscall("0x140C", fd)
+        end body
+    end function
+
+    /**
+    @function getsockname
+    @summary 返回套接字绑定的本地地址与端口。
+    @param fd 文件描述符
+    @returns 本端地址和端口
+    @throws Exception 套接字未绑定、I/O 失败时抛出异常
+    */
+    function: getsockname
+        params:
+            declare fd:int
+        returns: any
+        body:
+            return syscall("0x140D", fd)
+        end body
+    end function
+
+    /**
+    @function getaddrinfo
+    @summary 执行 DNS 解析，返回可用的地址列表。
+    @param host 主机名
+    @param service 服务名
+    @param hints 提示信息
+    @returns 地址数组，每项包含 addr、port、family 等
+    @throws Exception 主机未知、服务非法、解析失败时抛出异常
+    */
+    function: getaddrinfo
+        params:
+            declare host:string
+            declare service:string
+            declare hints:any
+        returns: any[]
+        body:
+            declare tup:int
+            declare out:any[]
+            declare i:int
+            declare n:int
+
+            // VM 返回二维数组 Object[][] → Snow 层 tup
+            tup = syscall("0x140E", host, service, hints)
+
+            // 获取长度
+            n = syscall("0x1801", tup)
+
+            out = []                     // 结果数组初始化（空）
+
+            // 使用 loop 循环
+            loop:
+                init:
+                    i = 0
+                cond:
+                    i < n
+                step:
+                    i = i + 1
+                body:
+                    declare item:any = syscall("0x1802", tup, i)  // ARR_GET(tup, i)
+
+                    declare addr:any = syscall("0x1802", item, 0)
+                    declare port:any = syscall("0x1802", item, 1)
+                    declare fam:any  = syscall("0x1802", item, 2)
+
+                    declare one:any[] = [0, 0, 0]
+                    one[0] = addr
+                    one[1] = port
+                    one[2] = fam
+
+                    // 按索引写入，避免 ANY[] 与 ANY[] 的拼接
+                    declare elem:any = one
+                    out[i] = elem
+                end body
+            end loop
+            return out
+        end body
+    end function
+
+end module

@@ -43,6 +43,10 @@ public final class IRBuilderScope {
      */
     private final Map<String, Object> varConstValues = new HashMap<>();
     /**
+     * 寄存器到类型字符串的映射表，用于追踪表达式结果类型。
+     */
+    private final Map<IRVirtualRegister, String> registerTypes = new HashMap<>();
+    /**
      * 存放跨模块导入的全局常量（如 ModuleA.a）
      */
     private final Map<String, Object> externalConsts = new HashMap<>();
@@ -145,6 +149,7 @@ public final class IRBuilderScope {
         vars.put(name, reg);
         varTypes.put(name, type);
         varConstValues.remove(name);
+        setRegisterType(reg, type);
     }
 
     /**
@@ -159,6 +164,7 @@ public final class IRBuilderScope {
         vars.put(name, reg);
         varTypes.put(name, type);
         varConstValues.remove(name);
+        setRegisterType(reg, type);
     }
 
     /**
@@ -170,6 +176,7 @@ public final class IRBuilderScope {
      */
     void put(String name, IRVirtualRegister reg) {
         vars.put(name, reg);
+        setRegisterType(reg, varTypes.get(name));
     }
 
     /**
@@ -244,5 +251,30 @@ public final class IRBuilderScope {
      */
     public void importExternalConst(String qualifiedName, Object value) {
         externalConsts.put(qualifiedName, value);
+    }
+
+    /**
+     * 记录寄存器对应的类型；传入 null/空/void 将移除类型记录。
+     *
+     * @param reg  寄存器
+     * @param type 类型名
+     */
+    public void setRegisterType(IRVirtualRegister reg, String type) {
+        if (reg == null) return;
+        if (type == null || type.isBlank() || "void".equalsIgnoreCase(type)) {
+            registerTypes.remove(reg);
+        } else {
+            registerTypes.put(reg, type);
+        }
+    }
+
+    /**
+     * 获取寄存器绑定的类型。
+     *
+     * @param reg 寄存器
+     * @return 类型名或 null
+     */
+    public String getRegisterType(IRVirtualRegister reg) {
+        return reg == null ? null : registerTypes.get(reg);
     }
 }

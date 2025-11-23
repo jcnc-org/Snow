@@ -1,0 +1,32 @@
+/**
+@module std_double_example
+@summary std_double 方法演示
+*/
+module: double_math_example
+
+    import: std_double
+    import: std_io
+
+    function: main
+        body:
+            std_io.println("=== 演示 abs() 方法 ===")
+
+            declare negdouble:std_double = new std_double(-120)
+            std_io.print("负数 -120 的绝对值: ")
+            std_io.println(negdouble.abs().getValue())
+
+            std_io.println("\n=== 演示 max()/min() ===")
+
+            std_io.print("比较 -15 和 20 的较大值: ")
+            std_io.println(std_double.max(-15, 20).getValue())
+
+            std_io.print("比较 -15 和 20 的较小值: ")
+            std_io.println(std_double.min(-15, 20).getValue())
+
+            std_io.println("MAX_VALUE: "+ std_double.MAX_VALUE)
+            std_io.println("MAX_VALUE: "+ std_double.MAX_VALUE)
+
+        end body
+    end function
+
+end module

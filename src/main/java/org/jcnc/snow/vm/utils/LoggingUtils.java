@@ -1,5 +1,7 @@
 package org.jcnc.snow.vm.utils;
 
+import org.jcnc.snow.common.SnowConfig;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -52,7 +54,14 @@ public class LoggingUtils {
      * @param message The information content to be logged.
      */
     public static void logInfo(String title, String message) {
+        if (isJumpTrace(title) && !SnowConfig.isInstructionTraceEnabled()) {
+            return;
+        }
         // Output the informational message to the console
         print(title + message);
+    }
+
+    private static boolean isJumpTrace(String title) {
+        return title != null && title.startsWith("Jumping to");
     }
 }

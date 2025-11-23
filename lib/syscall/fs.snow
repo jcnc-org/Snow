@@ -1,0 +1,151 @@
+/**
+@module fs
+@summary 文件系统模块，封装基础目录与权限操作。
+@syscalls
+  0x1100 MKDIR   创建目录
+  0x1101 RMDIR   删除空目录
+  0x1102 CHDIR   改变当前工作目录
+  0x1103 GETCWD  获取当前工作目录
+  0x1104 READDIR 读取目录内容
+  0x1105 CHMOD   修改权限
+  0x1106 FCHMOD  修改 fd 权限
+  0x1107 UTIME   更新时间戳
+*/
+module: fs
+
+    /**
+    @function mkdir
+    @summary 在 path 创建目录，可选权限 mode。
+    @param path 目录路径（字符串或路径对象）
+    @param mode 可选权限位，在部分平台可能被忽略
+    @returns 0 表示成功
+    @throws EINVAL 路径非法; EEXIST 目录已存在; ENOENT 父目录不存在; EPERM 权限不足; EIO I/O错误
+    */
+    function: mkdir
+        params:
+            declare path: any
+            declare mode: int   // optional: 可传 null
+        returns: int
+        body:
+            return syscall("0x1100", path, mode)
+        end body
+    end function
+
+    /**
+    @function rmdir
+    @summary 删除空目录。
+    @param path 目录路径
+    @returns 0 表示成功
+    @throws ENOTDIR 非目录; ENOTEMPTY 目录非空; ENOENT 不存在; EPERM 权限不足; EIO I/O错误
+    */
+    function: rmdir
+        params:
+            declare path: any
+        returns: int
+        body:
+            return syscall("0x1101", path)
+        end body
+    end function
+
+    /**
+    @function chdir
+    @summary 设置当前工作目录。
+    @param path 目录路径
+    @returns 0 表示成功
+    @throws ENOENT 不存在; ENOTDIR 非目录; EPERM 权限不足; EIO I/O错误
+    */
+    function: chdir
+        params:
+            declare path: any
+        returns: int
+        body:
+            return syscall("0x1102", path)
+        end body
+    end function
+
+    /**
+    @function getcwd
+    @summary 获取当前工作目录绝对路径。
+    @returns 绝对路径
+    @throws ESTATE CWD未初始化或内部状态无效
+    */
+    function: getcwd
+        returns: string
+        body:
+            return syscall("0x1103")
+        end body
+    end function
+
+    /**
+    @function readdir
+    @summary 读取目录内容，返回直接子项列表（非递归）。
+    @param path 目录路径
+    @returns 字符串数组或条目对象数组（实现定义）
+    @throws ENOENT 不存在; ENOTDIR 非目录; EPERM 权限不足; EIO I/O错误
+    */
+    function: readdir
+        params:
+            declare path: any
+        returns: any
+        body:
+            return syscall("0x1104", path)
+        end body
+    end function
+
+    /**
+    @function chmod
+    @summary 修改 path 的权限位（在不支持 POSIX 权限的平台上可能退化）。
+    @param path 目标路径
+    @param mode 权限位（如 0o755）
+    @returns 0 表示成功
+    @throws ENOENT 路径不存在; EPERM 权限不足; EINVAL 模式非法; EIO I/O错误
+    */
+    function: chmod
+        params:
+            declare path: any
+            declare mode: int
+        returns: int
+        body:
+            return syscall("0x1105", path, mode)
+        end body
+    end function
+
+    /**
+    @function fchmod
+    @summary 修改 fd 对应对象的权限位（在不支持 POSIX 权限的平台上可能退化）。
+    @param fd 文件描述符
+    @param mode 权限位（如 0o600, 0o644, 0o755）
+    @returns 0 表示成功
+    @throws EBADF fd非法; EPERM 权限不足; EINVAL 模式非法; EIO I/O错误
+    */
+    function: fchmod
+        params:
+            declare fd: int
+            declare mode: int
+        returns: int
+        body:
+            return syscall("0x1106", fd, mode)
+        end body
+    end function
+
+    /**
+    @function utime
+    @summary 更新文件/目录的 atime 与 mtime（毫秒时间戳，自 Epoch 起；在部分平台可能仅支持修改时间）。
+    @param path 目标路径
+    @param mtime 修改时间（epoch毫秒）
+    @param atime 访问时间（epoch毫秒）
+    @returns 0 表示成功
+    @throws ENOENT 路径不存在; EPERM 权限不足; EIO I/O错误
+    */
+    function: utime
+        params:
+            declare path: any
+            declare mtime: long
+            declare atime: long
+        returns: int
+        body:
+            return syscall("0x1107", path, mtime, atime)
+        end body
+    end function
+
+end module

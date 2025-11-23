@@ -1,0 +1,60 @@
+/**
+@module io
+@summary 标准 IO / 控制台 系统调用模块，封装标准输入输出操作。
+@syscalls
+  0x1200 STDIN_READ   从标准输入读取一行文本
+  0x1201 STDOUT_WRITE 向标准输出写入字节数组/字符串
+  0x1202 STDERR_WRITE 向标准错误输出写入字符串
+*/
+module: io
+
+    /**
+    @function stdin_read
+    @summary 从标准输入读取一行文本。
+    @returns 读取到的字符串，若 EOF 或错误，返回 ""
+    @throws Exception I/O 错误时抛出异常
+    */
+    function: stdin_read
+        params:     // 无参数
+        returns: string
+        body:
+            declare result :string = syscall("0x1200")
+            return result
+        end body
+    end function
+
+    /**
+    @function stdout_write
+    @summary 向标准输出（fd=1）写入字节数组或字符串。
+    @param data 要写入的数据（byte[] 或 string 或任意对象，按 UTF-8 编码写入）
+    @returns 实际写入的字节数
+    @throws IllegalStateException 操作数栈为空; IOException I/O 错误时抛出异常
+    */
+    function: stdout_write
+        params:
+            declare data: any
+        returns: int
+        body:
+            declare written:int = syscall("0x1201", data)
+            return written
+        end body
+    end function
+
+    /**
+    @function stderr_write
+    @summary 向标准错误输出写入字符串。
+    @param data 要写入的数据（任意对象，null 输出为 "null"）
+    @returns 操作完成返回 0
+    @throws Exception 写入过程中发生 I/O 错误时抛出异常
+    */
+    function: stderr_write
+        params:
+            declare data: any
+        returns: int
+        body:
+            declare rc :int = syscall("0x1202", data)
+            return rc
+        end body
+    end function
+
+end module

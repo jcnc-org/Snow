@@ -1,0 +1,59 @@
+module: ControlStructures
+    import: std_io
+    
+    function: main
+        returns: void
+        body:
+            // 测试条件语句
+            declare n: int = 10
+            if n > 5 then
+                std_io.println("n is greater than 5")
+            else
+                std_io.println("n is not greater than 5")
+            end if
+            
+            // 测试嵌套条件语句
+            if n == 10 then
+                if n > 5 then
+                    std_io.println("n is 10 and greater than 5")
+                end if
+            end if
+            
+            // 测试循环语句
+            std_io.println("Counting from 1 to 5:")
+            loop:
+                init:
+                    declare i: int = 1
+                cond:
+                    i <= 5
+                step:
+                    i = i + 1
+                body:
+                    std_io.println("i = " + i)
+                end body
+            end loop
+            
+            // 测试break和continue
+            std_io.println("Testing break and continue:")
+            loop:
+                init:
+                    declare j: int = 0
+                cond:
+                    j < 10
+                step:
+                    j = j + 1
+                body:
+                    if j == 3 then
+                        continue
+                    end if
+                    
+                    if j == 7 then
+                        break
+                    end if
+                    
+                    std_io.println("j = " + j)
+                end body
+            end loop
+        end body
+    end function
+end module

@@ -11,7 +11,7 @@ import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermissions;
 
 /**
- * {@code MkdirHandler} 实现 MKDIR (0x1401) 系统调用，
+ * {@code MkdirHandler} 实现 MKDIR (0x1100) 系统调用，
  * 用于在虚拟机内创建新目录。
  *
  * <p><b>Stack：</b> 入参 {@code (path:String, mode:int?)} → 出参 {@code (0:int)}</p>

@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="TestAll" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="org.jcnc.snow.cli.SnowCLI" />
+    <module name="snow" />
+    <option name="PROGRAM_PARAMETERS" value="test-all --verbose --dir=playground/Demo/DemoA --dir=playground/Demo/DemoB --dir=playground/Demo/DemoC --dir=playground/Test/basic_tests --dir=playground/Test/advanced_tests --dir=playground/Test/comprehensive_tests --snow-path=auto --verbose --stop-on-failure --timeout=1500" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="org.jcnc.snow.cli.SnowCLI" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

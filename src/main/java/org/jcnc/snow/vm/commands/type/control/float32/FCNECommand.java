@@ -5,6 +5,7 @@ import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 import org.jcnc.snow.vm.utils.LoggingUtils;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * The FCNECommand class implements the {@link Command} interface and represents a conditional jump command
@@ -63,8 +64,8 @@ public class FCNECommand implements Command {
         int target = Integer.parseInt(parts[1]);
 
         // Pop the two operands from the stack
-        float b = (float) operandStack.pop();
-        float a = (float) operandStack.pop();
+        float b = NumberUtils.popFloat(operandStack, "F_CNE");
+        float a = NumberUtils.popFloat(operandStack, "F_CNE");
 
         // If the operands are not equal, jump to the target command
         if (a != b) {

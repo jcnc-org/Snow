@@ -1,0 +1,27 @@
+module: app
+    import: syscall.fs
+    import: syscall.fd
+    import: std_io
+
+    function: main
+        params:
+            declare args: any
+        body:
+            declare fd1: int
+            declare n: int
+
+            // 以只写 + 创建 + 截断模式打开/创建文件
+            // flags = O_WRONLY | O_CREAT | O_TRUNC = 1 | 64 | 512 = 577
+            fd1 = fd.open("output.txt", 577)
+
+            // 写入一行文本（UTF-8）
+            n = fd.write(fd1, "Hello, Snow VM!")
+
+            // 关闭文件
+            fd.close(fd1)
+
+            // 打印写入的字节数
+            std_io.println("字节数:" + n)
+        end body
+    end function
+end module

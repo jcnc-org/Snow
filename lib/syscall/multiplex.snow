@@ -1,0 +1,111 @@
+/**
+@module multiplex
+@summary 多路复用/事件系统调用模块，封装I/O多路复用操作。
+@syscalls
+  0x1300 SELECT       I/O 多路复用 select
+  0x1301 EPOLL_CREATE 创建 epoll 实例
+  0x1302 EPOLL_CTL    管理 epoll 监控项
+  0x1303 EPOLL_WAIT   等待 epoll 事件
+  0x1304 IO_WAIT      跨平台 I/O 多路等待
+*/
+module: multiplex
+
+    /**
+    @function select
+    @summary 等待指定文件描述符集合的 I/O 就绪事件，返回三类结果：可读、可写、异常。
+    @param readSet 可读 fd 集合
+    @param writeSet 可写 fd 集合
+    @param exceptSet 异常 fd 集合
+    @param timeout_ms 超时时间（毫秒）
+    @returns 成功时返回一个 map，包含 "read"、"write"、"except" 三个键，其值为就绪 fd 列表
+    @throws IllegalArgumentException 参数类型非法; IOException 底层 I/O 操作失败; RuntimeException 其他运行时错误
+    */
+    function: select
+        params:
+            declare readSet:any
+            declare writeSet:any
+            declare exceptSet:any
+            declare timeout_ms:int
+        returns: any
+        body:
+            return syscall("0x1300", readSet, writeSet, exceptSet, timeout_ms)
+        end body
+    end function
+
+    /**
+    @function epoll_create
+    @summary 创建一个 epoll 实例，返回新的 epfd。
+    @param flags 可选参数
+    @returns 成功时返回新的 epfd
+    @throws Exception flags 非法、资源不足或底层 I/O 错误时抛出异常
+    */
+    function: epoll_create
+        params:
+            declare flags:int   // 可选
+        returns: int
+        body:
+            return syscall("0x1301", flags)
+        end body
+    end function
+
+    /**
+    @function epoll_ctl
+    @summary 管理 epoll 实例中监控的文件描述符。
+    @param epfd epoll 实例文件描述符
+    @param op 操作类型：1=ADD，2=MOD，3=DEL
+    @param fd 要操作的文件描述符
+    @param events 事件掩码：1=READ，2=WRITE，4=CONNECT
+    @returns 成功时返回 0
+    @throws Exception epfd 无效、op 非法、fd 未注册(MOD/DEL) 或底层 I/O 错误时抛出异常
+    */
+    function: epoll_ctl
+        params:
+            declare epfd:int
+            declare op:int
+            declare fd:int
+            declare events:int
+        returns: int
+        body:
+            return syscall("0x1302", epfd, op, fd, events)
+        end body
+    end function
+
+    /**
+    @function epoll_wait
+    @summary 阻塞或超时等待 epoll 实例中就绪的 I/O 事件。
+    @param epfd epoll 实例文件描述符
+    @param max 最大返回事件数
+    @param timeout_ms 超时时间（毫秒）
+    @returns 成功时返回就绪事件数组，每个事件为 {fd:int, events:int}
+    @throws Exception epfd 无效、max 非法或底层 I/O 错误时抛出异常
+    */
+    function: epoll_wait
+        params:
+            declare epfd:int
+            declare max:int
+            declare timeout_ms:int
+        returns: any
+        body:
+            return syscall("0x1303", epfd, max, timeout_ms)
+        end body
+    end function
+
+    /**
+    @function io_wait
+    @summary 跨平台 I/O 多路等待，对指定 fd 集合监听事件。
+    @param fds 要监听的 fd 集合
+    @param timeout_ms 超时时间（毫秒）
+    @returns 成功时返回就绪事件数组，每个事件为 {fd:int, events:int}
+    @throws Exception fds 参数非法、timeout 非法或底层 I/O 错误时抛出异常
+    */
+    function: io_wait
+        params:
+            declare fds:any
+            declare timeout_ms:int
+        returns: any
+        body:
+            return syscall("0x1304", fds, timeout_ms)
+        end body
+    end function
+
+end module

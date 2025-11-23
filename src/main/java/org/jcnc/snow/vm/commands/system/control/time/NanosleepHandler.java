@@ -5,6 +5,23 @@ import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
+/**
+ * {@code NanosleepHandler} 实现 NANOSLEEP (0x1701) 系统调用，
+ * 用于按纳秒级别挂起当前线程。
+ *
+ * <p><b>Stack</b>：入参 {@code (ns:long)} → 出参 {@code (rc:int)}</p>
+ *
+ * <p><b>语义</b>：让当前线程挂起指定的纳秒数（尽量靠近请求的时长，但不保证精确到每个纳秒）。</p>
+ *
+ * <p><b>返回</b>：成功返回 {@code 0}。</p>
+ *
+ * <p><b>异常</b>：
+ * <ul>
+ *   <li>被中断时抛出 {@link InterruptedException}（或以实现定义的方式报告中断）</li>
+ *   <li>调用者应处理或恢复中断状态</li>
+ * </ul>
+ * </p>
+ */
 public class NanosleepHandler implements SyscallHandler {
     @Override
     public void handle(OperandStack stack,

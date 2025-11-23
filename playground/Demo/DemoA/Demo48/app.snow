@@ -1,0 +1,43 @@
+module: app
+    import: syscall.fs
+    import: syscall.fd
+    import: std_io.fs
+    import: syscall.fs
+    import: syscall.fd
+    import: std_io.fd
+    import: std_io
+
+
+    function: main
+        params:
+            declare args: any
+        body:
+            declare fd1: int
+            declare fd2: int
+            declare fd3: int
+
+            // 打开文件
+            fd1 = fd.open("dup2_demo.txt", 577)
+            std_io.println("fd1 = " + fd1)
+
+            // 普通 dup，得到一个新的 fd2
+            fd2 = fd.dup(fd1)
+            std_io.println("fd2 = " + fd2)
+
+            // 用 dup2 强制把 fd1 复制到指定 fd3=10
+            fd3 = fd.dup2(fd1, 10)
+            std_io.println("fd3 (dup2目标) = " + fd3)
+
+            // 三个 fd 都指向同一个文件
+            fd.write(fd1, "A")
+            fd.write(fd2, "B")
+            fd.write(fd3, "C")
+
+            fd.close(fd1)
+            fd.close(fd2)
+            fd.close(fd3)
+
+            std_io.println("完成 dup2 测试")
+        end body
+    end function
+end module

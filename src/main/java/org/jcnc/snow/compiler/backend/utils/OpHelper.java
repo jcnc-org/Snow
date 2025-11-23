@@ -171,6 +171,8 @@ public final class OpHelper {
         map.put("R_LOAD", Integer.toString(VMOpCode.R_LOAD));
         map.put("R_STORE", Integer.toString(VMOpCode.R_STORE));
         map.put("R_ADD", Integer.toString(VMOpCode.R_ADD));
+        map.put("R_CE", Integer.toString(VMOpCode.R_CE));
+        map.put("R_CNE", Integer.toString(VMOpCode.R_CNE));
         map.put("POP", Integer.toString(VMOpCode.POP));
         map.put("DUP", Integer.toString(VMOpCode.DUP));
         map.put("SWAP", Integer.toString(VMOpCode.SWAP));

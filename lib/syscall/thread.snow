@@ -1,0 +1,61 @@
+/**
+@module thread
+@summary 线程相关系统调用模块，封装线程创建、同步和休眠等操作。
+@syscalls
+  0x1506 THREAD_CREATE 创建并启动新线程
+  0x1507 THREAD_JOIN   等待线程结束并获取返回值
+  0x1508 THREAD_SLEEP  让当前线程休眠指定毫秒数
+*/
+module: thread
+
+    /**
+    @function create
+    @summary 创建一个新线程，并在线程中执行 entry。
+    @param entry 线程入口函数或指针
+    @param arg 传递给线程入口函数的参数
+    @returns 新线程的线程 ID
+    @throws Exception 线程创建失败、资源不足时抛出异常
+    */
+    function: create
+        params:
+            declare entry:any
+            declare arg:any
+        returns: int
+        body:
+            return syscall("0x1506", entry, arg)
+        end body
+    end function
+
+    /**
+    @function join
+    @summary 阻塞等待指定线程退出，并获取其返回值。
+    @param tid 线程 ID
+    @returns 线程的返回值，可能为 null
+    @throws Exception 线程不存在、已结束或 join 失败时抛出异常
+    */
+    function: join
+        params:
+            declare tid:int
+        returns: any
+        body:
+            return syscall("0x1507", tid)
+        end body
+    end function
+
+    /**
+    @function sleep
+    @summary 让当前线程挂起指定毫秒数。
+    @param ms 要休眠的毫秒数
+    @returns 成功返回 0
+    @throws Exception 被中断时可能抛出异常
+    */
+    function: sleep
+        params:
+            declare ms:int
+        returns: int
+        body:
+            return syscall("0x1508", ms)
+        end body
+    end function
+
+end module

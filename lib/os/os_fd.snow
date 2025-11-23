@@ -1,0 +1,186 @@
+/**
+@module os_fd
+@summary 文件描述符与基础 I/O 的稳定接口层。
+@details
+    在 syscall.fd 的基础上提供常用标志常量与便捷 open/close 组合，简化上层使用。
+*/
+module: os_fd
+
+    import: fd
+
+    globals:
+        // open(2) 语义常量（与 JVM OpenFlags 保持一致）
+        declare const O_RDONLY:int = 0
+        declare const O_WRONLY:int = 1
+        declare const O_RDWR:int   = 2
+        declare const O_CREAT:int  = 64
+        declare const O_EXCL:int   = 128
+        declare const O_TRUNC:int  = 512
+        declare const O_APPEND:int = 1024
+
+        // seek 语义常量
+        declare const SEEK_SET:int = 0
+        declare const SEEK_CUR:int = 1
+        declare const SEEK_END:int = 2
+
+    /**
+    @function open_read
+    @summary 以只读模式打开文件。
+    */
+    function: open_read
+        params:
+            declare path:any
+        returns: int
+        body:
+            return fd.open(path, O_RDONLY)
+        end body
+    end function
+
+    /**
+    @function open_write
+    @summary 以只写模式打开文件；默认创建并截断。
+    @param create 若为 true 则在文件不存在时创建
+    @param truncate 若为 true 则打开时截断文件
+    */
+    function: open_write
+        params:
+            declare path:any
+            declare create:boolean
+            declare truncate:boolean
+        returns: int
+        body:
+            declare flags:int = O_WRONLY
+            if create == true then
+                flags = flags + O_CREAT
+            end if
+            if truncate == true then
+                flags = flags + O_TRUNC
+            end if
+            return fd.open(path, flags)
+        end body
+    end function
+
+    /**
+    @function open_append
+    @summary 以追加模式打开文件，不存在时创建。
+    */
+    function: open_append
+        params:
+            declare path:any
+        returns: int
+        body:
+            declare flags:int = O_WRONLY + O_CREAT + O_APPEND
+            return fd.open(path, flags)
+        end body
+    end function
+
+    /**
+    @function open_readwrite
+    @summary 以读写模式打开文件，可选创建与截断。
+    */
+    function: open_readwrite
+        params:
+            declare path:any
+            declare create:boolean
+            declare truncate:boolean
+        returns: int
+        body:
+            declare flags:int = O_RDWR
+            if create == true then
+                flags = flags + O_CREAT
+            end if
+            if truncate == true then
+                flags = flags + O_TRUNC
+            end if
+            return fd.open(path, flags)
+        end body
+    end function
+
+    /**
+    @function read_bytes
+    @summary 从 fd 读取最多 n 字节。
+    */
+    function: read_bytes
+        params:
+            declare handle:int
+            declare n:int
+        returns: any
+        body:
+            return fd.read(handle, n)
+        end body
+    end function
+
+    /**
+    @function write_bytes
+    @summary 向 fd 写入数据（字符串或字节数组）。
+    */
+    function: write_bytes
+        params:
+            declare handle:int
+            declare data:any
+        returns: int
+        body:
+            return fd.write(handle, data)
+        end body
+    end function
+
+    /**
+    @function seek
+    @summary 调整文件偏移量。
+    */
+    function: seek
+        params:
+            declare handle:int
+            declare offset:long
+            declare whence:int
+        body:
+            fd.seek(handle, offset, whence)
+        end body
+    end function
+
+    /**
+    @function close
+    @summary 关闭文件描述符。
+    */
+    function: close
+        params:
+            declare handle:int
+        body:
+		     fd.close(handle)
+        end body
+    end function
+
+    /**
+    @function set_blocking
+    @summary 将 fd 设置为阻塞或非阻塞。
+    @param blocking true 表示阻塞，false 表示非阻塞
+    */
+    function: set_blocking
+        params:
+            declare handle:int
+            declare blocking:boolean
+        returns: int
+        body:
+            declare mode:int = 1
+            if blocking == true then
+                mode = 0
+            end if
+            return fd.setNonblock(handle, mode)
+        end body
+    end function
+
+    /**
+    @function truncate
+    @summary 将 fd 指向的文件截断到指定长度。
+    */
+    function: truncate
+        params:
+            declare handle:int
+            declare length:long
+        returns: int
+        body:
+            return fd.ftruncate(handle, length)
+        end body
+    end function
+
+end module

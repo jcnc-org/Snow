@@ -122,6 +122,10 @@ public enum IROpCode {
     CMP_DLE,    // 64位浮点小于等于: a <= b
     CMP_DGE,    // 64位浮点大于等于: a >= b
 
+    /* ───── 逻辑与比较运算指令（引用类型: reference/string） ───── */
+    CMP_REQ,    // 引用相等比较: a == b
+    CMP_RNE,    // 引用不等比较: a != b
+
     /* ───── 数据访问与常量操作 ───── */
     LOAD,      // 从内存加载数据至寄存器
     STORE,     // 将寄存器数据写回内存

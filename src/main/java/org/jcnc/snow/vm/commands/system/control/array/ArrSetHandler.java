@@ -8,30 +8,23 @@ import org.jcnc.snow.vm.module.OperandStack;
 import java.util.List;
 
 /**
- * <p>
- * {@code ArrSetHandler} 是一个系统调用处理器，实现对数组或列表对象的元素赋值（设置）功能。
- * 该处理器从操作数栈中弹出值、索引、数组/列表对象，根据索引将指定元素设为指定值。
- * </p>
- * <p>
- * 对于 {@link java.util.List}：
+ * {@code ArrSetHandler} 实现 ARR_SET (0x1803) 系统调用，
+ * 用于设置数组/列表在指定索引位置的元素为给定值。
+ *
+ * <p><b>Stack</b>：入参 {@code (arr:any, index:int, value:any)} → 出参 {@code ()}</p>
+ *
+ * <p><b>语义</b>：设置数组/列表在指定索引位置的元素为给定值。</p>
+ *
+ * <p><b>支持</b>：{@link java.util.List}、原生 Java 数组。</p>
+ *
+ * <p><b>限制</b>：不可变类型（如 {@link CharSequence}）不支持写操作。</p>
+ *
+ * <p><b>返回</b>：无。</p>
+ *
+ * <p><b>异常</b>：
  * <ul>
- *   <li>当目标索引等于当前长度时，会自动 append。</li>
- *   <li>若索引大于长度，会补齐 null 元素直到目标位置。</li>
- *   <li>否则调用 set 方法替换原有元素。</li>
+ *   <li>若 {@code arr} 为 {@code null}、索引越界或类型不支持写入，抛出 {@link IndexOutOfBoundsException} 或 {@link IllegalArgumentException}</li>
  * </ul>
- * </p>
- *
- * <p>
- * 操作成功后，向操作数栈压入 0 作为返回值。
- * </p>
- *
- * <p>
- * 处理流程：
- * <ol>
- *   <li>从操作数栈弹出赋值内容、索引和目标数组/列表对象</li>
- *   <li>根据容器类型写入目标位置</li>
- *   <li>操作完成后压入返回值 0</li>
- * </ol>
  * </p>
  */
 public class ArrSetHandler implements SyscallHandler {

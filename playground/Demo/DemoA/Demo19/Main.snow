@@ -1,0 +1,29 @@
+module: Main
+    import: syscall.fs
+    import: syscall.fd
+    import: std_io
+
+    function: main
+        returns: void
+        body:
+            declare n: int[][][][] = [
+                [
+                    [ [17, 18], [19, 20] ],
+                    [ [21, 22], [23, 24] ]
+                ],
+                [
+                    [ [25, 26], [27, 28] ],
+                    [ [29, 30], [31, 32] ]
+                ]
+            ]
+
+            declare i: int = 0
+            declare j: int = 1
+            declare k: int = 0
+            declare l: int = 0
+
+            declare x: int = n[i][j][k][l]
+            std_io.print(x)
+        end body
+    end function
+end module

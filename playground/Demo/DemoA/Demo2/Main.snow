@@ -1,0 +1,11 @@
+module: Main
+	import:std_io
+
+    function: main
+        params:
+        returns: void
+        body:
+            std_io.print((1+2) / 3 * 4 + 2 *2)
+        end body
+    end function
+end module

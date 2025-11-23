@@ -13,21 +13,21 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * {@code OpenHandler} 实现 OPEN (0x1001) 系统调用，
- * 用于打开文件并分配虚拟 fd。
+ * {@code OpenHandler} 实现 OPEN (0x1000) 系统调用，
+ * 用于打开文件并返回一个新的 fd。
  *
- * <p><b>Stack：</b> 入参 {@code (path:String, flags:int)} → 出参 {@code (fd:int)}</p>
+ * <p><b>Stack</b>：入参 {@code (path:String, flags:int)} → 出参 {@code (fd:int)}</p>
  *
- * <p><b>语义：</b> 按 flags 指定的模式（只读、写、追加、新建等）打开 path 文件，
- * 分配并返回新的虚拟 fd。</p>
+ * <p><b>语义</b>：依据 {@code flags}（由 {@code OpenFlags} 解析为 {@code OpenOption} 集）打开
+ * {@code path} 对应的文件，底层通过 {@code Files.newByteChannel(...)} 创建通道并注册到 {@code FDTable}。</p>
  *
- * <p><b>返回：</b> 成功时返回新分配的 fd（int）。</p>
+ * <p><b>返回</b>：成功时返回新分配的 fd（int）。</p>
  *
- * <p><b>异常：</b>
+ * <p><b>异常</b>：
  * <ul>
- *   <li>参数非法时抛出 {@link IllegalArgumentException}</li>
- *   <li>权限不足、I/O 错误、文件不存在时抛出 {@link java.io.IOException}</li>
- *   <li>flags 冲突/不支持时抛出 {@link IllegalArgumentException}</li>
+ *   <li>路径/flags 类型错误时抛出 {@link IllegalArgumentException}</li>
+ *   <li>flags 非法时抛出 {@link IllegalArgumentException}</li>
+ *   <li>文件不存在且未指定创建、权限不足或底层 I/O 失败时抛出 {@link java.io.IOException}</li>
  * </ul>
  * </p>
  */

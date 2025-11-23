@@ -1,0 +1,46 @@
+module: Functions
+    import: std_io
+    
+    function: main
+        returns: void
+        body:
+            declare result: int = add(3, 5)
+            std_io.println("3 + 5 = " + result)
+            
+            declare product: int = multiply(4, 6)
+            std_io.println("4 * 6 = " + product)
+            
+            // 测试无返回值函数
+            printMessage("Hello from function!")
+        end body
+    end function
+    
+    function: add
+        params:
+            declare a: int
+            declare b: int
+        returns: int
+        body:
+            return a + b
+        end body
+    end function
+    
+    function: multiply
+        params:
+            declare x: int
+            declare y: int
+        returns: int
+        body:
+            return x * y
+        end body
+    end function
+    
+    function: printMessage
+        params:
+            declare msg: string
+        returns: void
+        body:
+            std_io.println("Message: " + msg)
+        end body
+    end function
+end module

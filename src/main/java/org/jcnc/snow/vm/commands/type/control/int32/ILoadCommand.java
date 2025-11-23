@@ -54,13 +54,40 @@ public class ILoadCommand implements Command {
         // Parse the index of the local variable to be loaded
         int index = Integer.parseInt(parts[1]);
 
-        // Retrieve the value from the local variable store of the current method frame
-        int value = (int) callStack.peekFrame().getLocalVariableStore().getVariable(index);
+        Object raw = callStack.peekFrame()
+                .getLocalVariableStore()
+                .getVariable(index);
+        int value = coerceToInt(raw, index);
 
         // Push the loaded value onto the operand stack for subsequent operations
         operandStack.push(value);
 
         // Return the updated program counter to continue to the next instruction
         return currentPC + 1;
+    }
+
+    /**
+     * Converts any numeric slot payload to an {@code int}.
+     * <p>
+     * Some front-end passes still store {@link Short} / {@link Byte} values in slots that
+     * later get accessed through {@code I_LOAD}.  Instead of failing with a
+     * {@link ClassCastException}, we widen the value here so downstream int32 commands
+     * always observe an {@link Integer}.
+     */
+    private static int coerceToInt(Object raw, int slot) {
+        if (raw instanceof Integer i) {
+            return i;
+        }
+        if (raw instanceof Number n) {
+            return n.intValue();
+        }
+        if (raw instanceof Boolean b) {
+            return b ? 1 : 0;
+        }
+        if (raw == null) {
+            throw new IllegalStateException("I_LOAD slot " + slot + " is uninitialized (null)");
+        }
+        throw new IllegalStateException("I_LOAD slot " + slot + " expects a number but got "
+                + raw.getClass().getSimpleName());
     }
 }

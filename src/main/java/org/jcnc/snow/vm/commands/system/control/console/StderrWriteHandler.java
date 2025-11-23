@@ -6,29 +6,21 @@ import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
 /**
- * {@code StderrWriteHandler} 用于实现系统调用 STDERR_WRITE。
+ * {@code StderrWriteHandler} 实现 STDERR_WRITE (0x1202) 系统调用，
+ * 用于向标准错误输出（stderr）写入字符串。
  *
- * <p>
- * 功能：将操作数栈顶的对象以字符串形式写入标准错误输出流（{@link System#err}）。
+ * <p><b>Stack</b>：入参 {@code (data:Object)} → 出参 {@code (rc:int)}</p>
+ *
+ * <p><b>语义</b>：将对象转换为字符串（null 输出为 "null"），写入 {@code System.err}；
+ * 操作完成后返回 {@code 0}。</p>
+ *
+ * <p><b>返回</b>：成功返回 {@code 0}。</p>
+ *
+ * <p><b>异常</b>：
+ * <ul>
+ *   <li>写入过程中发生 I/O 错误时抛出 {@link Exception}</li>
+ * </ul>
  * </p>
- *
- * <p>调用约定：</p>
- * <ul>
- *   <li>入参：{@code data:Object}，待输出的数据对象</li>
- *   <li>出参：{@code 0:int}，表示操作成功</li>
- * </ul>
- *
- * <p>说明：</p>
- * <ul>
- *   <li>如果对象为 null，则输出字符串 "null"。</li>
- *   <li>输出操作完成后，始终向操作数栈压入 0 以保持栈平衡。</li>
- *   <li>本操作不会抛出异常，所有异常将由上层捕获处理。</li>
- * </ul>
- *
- * <p>异常：</p>
- * <ul>
- *   <li>执行过程中发生错误时，抛出 {@link Exception}</li>
- * </ul>
  */
 public class StderrWriteHandler implements SyscallHandler {
 

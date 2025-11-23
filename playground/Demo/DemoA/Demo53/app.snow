@@ -1,0 +1,27 @@
+module: app
+    import: syscall.fs
+    import: syscall.fd
+    import: std_io.fd
+    import: syscall.fs
+    import: syscall.fd
+    import: std_io.fs
+    import: std_io
+
+    function: main
+        params:
+            declare args: any
+        body:
+            // 先创建或截断一个旧文件 old.txt
+            fd.truncate("old.txt", 0L)
+            std_io.println("已创建 old.txt")
+
+            // 将 old.txt 重命名为 new.txt
+            fd.rename("old.txt", "new.txt")
+            std_io.println("已将 old.txt 重命名为 new.txt")
+
+            // 再次重命名
+            fd.rename("new.txt", "final.txt")
+            std_io.println("已将 new.txt 重命名为 final.txt")
+        end body
+    end function
+end module

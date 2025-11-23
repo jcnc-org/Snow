@@ -1,0 +1,14 @@
+module: app
+    import: std_io
+
+    function: main
+        returns: void
+        body:
+		 	declare a: string = std_io.read_line()
+		 	declare b: int
+			b = std_io.eprintln("eprintln: " + a)
+			std_io.println(b)
+
+        end body
+    end function
+end module

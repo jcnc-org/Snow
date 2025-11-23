@@ -1,0 +1,111 @@
+module: app
+    import: os_fs
+    import: os_fd
+    import: std_io
+
+    function: main
+        returns: void
+        body:
+            std_io.print("=== os_fs 模块功能测试 ===\n")
+
+            // 记录启动时所在目录
+            declare orig_dir:string = os_fs.current_dir()
+            std_io.print("当前工作目录: " + orig_dir + "\n")
+
+            // 1. 创建并进入 demo_dir
+            std_io.print("[1] 创建 demo_dir 目录...\n")
+            os_fs.make_dir("demo_dir")
+            std_io.print("进入 demo_dir ...\n")
+            os_fs.change_dir("demo_dir")
+            std_io.print("现在工作目录: " + os_fs.current_dir() + "\n")
+
+            // 2. touch 一个空文件 note.txt
+            std_io.print("[2] touch note.txt ...\n")
+            os_fs.touch("note.txt")
+
+            // 3. 向 note.txt 写入一些内容
+            std_io.print("[3] 向 note.txt 写入内容...\n")
+            declare fh:int = os_fd.open_write("note.txt", false, false)
+            os_fd.write_bytes(fh, "first line\nsecond line\n")
+            os_fd.close(fh)
+
+            // 4. stat 查看 note.txt 信息
+            // 注意：os_fs.stat 返回类型目前声明为 map，
+            // 但 map 在语法里未定义，所以我们仍调用它，
+            // 但不把结果保存到变量里，从而避免类型检查器抱怨。
+            std_io.print("[4] 调用 stat(note.txt)...\n")
+            os_fs.stat("note.txt")
+            std_io.print("stat() 已调用\n")
+
+            // 5. 修改权限（0644 -> 十进制 420）
+            std_io.print("[5] chmod note.txt -> 0644 ...\n")
+            os_fs.set_permissions("note.txt", 420)
+
+            // 6. 创建硬链接 hardlink.txt 指向 note.txt
+            std_io.print("[6] 创建硬链接 hardlink.txt -> note.txt ...\n")
+            os_fs.link("note.txt", "hardlink.txt")
+
+            // 7. 创建符号链接 softlink.txt -> note.txt
+            std_io.print("[7] 创建符号链接 softlink.txt -> note.txt ...\n")
+            os_fs.symlink("note.txt", "softlink.txt")
+
+            declare linkTarget:string = os_fs.readlink("softlink.txt")
+            std_io.print("softlink.txt -> " + linkTarget + "\n")
+
+            // 8. 列出当前目录内容
+            std_io.print("[8] 列出目录内容:\n")
+            declare entries:any = os_fs.list_dir(".")
+            std_io.print("entries: " + entries + "\n")
+
+            // 9. 打开 note.txt 读内容
+            std_io.print("[9] 打开并读取 note.txt 内容:\n")
+            fh = os_fd.open_read("note.txt")
+            declare data:any = os_fd.read_bytes(fh, 200)
+            std_io.print("note.txt 内容:\n" + data + "\n")
+            os_fd.close(fh)
+
+            // 10. 重命名 note.txt -> main.txt
+            std_io.print("[10] 重命名 note.txt -> main.txt ...\n")
+            os_fs.rename("note.txt", "main.txt")
+
+            // 11. 截断 main.txt 为 5 字节
+            std_io.print("[11] 截断 main.txt 到 5 字节...\n")
+            os_fs.truncate_path("main.txt", 5)
+
+            fh = os_fd.open_read("main.txt")
+            data = os_fd.read_bytes(fh, 100)
+            std_io.print("main.txt 截断后内容: " + data + "\n")
+            os_fd.close(fh)
+
+            // 12. 更新 atime / mtime
+            // 注意 long 字面量后缀 L，避免“数值字面量越界”
+            std_io.print("[12] 更新 main.txt atime/mtime ...\n")
+            os_fs.update_times("main.txt", 1234567890000L, 1234567890000L)
+            std_io.print("update_times() 调用完成\n")
+
+            // 再调一次 stat 用于验证存在性
+            os_fs.stat("main.txt")
+            std_io.print("main.txt stat() 调用完成\n")
+
+            // 13. 用 fchmod 设置 main.txt 权限 0600 (十进制 384)
+            std_io.print("[13] fchmod main.txt -> 0600 ...\n")
+            fh = os_fd.open_readwrite("main.txt", false, false)
+            os_fs.set_fd_permissions(fh, 384)
+            os_fd.close(fh)
+
+            // 14. 清理：删文件和链接
+            std_io.print("[14] 清理文件...\n")
+            os_fs.remove_file("main.txt")
+            os_fs.remove_file("hardlink.txt")
+            os_fs.remove_file("softlink.txt")
+
+            // 15. 回到原目录并删 demo_dir
+            std_io.print("[15] 返回原目录并删除 demo_dir ...\n")
+            os_fs.change_dir(orig_dir)
+            os_fs.remove_dir("demo_dir")
+
+            std_io.print("现在工作目录: " + os_fs.current_dir() + "\n")
+            std_io.print("=== 测试完成 ===\n")
+        end body
+    end function
+end module

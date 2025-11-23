@@ -327,7 +327,7 @@ Snow-Lang 支持下列**数值类型**，用于声明变量、参数、结构体
 - 没有后缀的整数字面量自动为 `int`。
 - 没有后缀的浮点字面量自动为 `double`。
 
-**示例: **
+**示例:**
 ```snow
 declare a: int = 7        // int    (默认)
 declare b: long = 9l      // long

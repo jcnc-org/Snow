@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * I2DCommand Opcode: Represents the type conversion operation from int32 to double64 in the virtual machine.
@@ -40,7 +41,7 @@ public class I2DCommand implements Command {
     @Override
     public int execute(String[] parts, int currentPC, OperandStack operandStack,
                        LocalVariableStore localVariableStore, CallStack callStack) {
-        double convertedValue = (int) operandStack.pop();
+        double convertedValue = NumberUtils.popInt(operandStack, "I2D");
         operandStack.push(convertedValue);
         return currentPC + 1;
     }

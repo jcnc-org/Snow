@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * The {@code IOrCommand} class implements the {@link Command} interface and represents the int32 bitwise OR (`|`) operation command.
@@ -45,8 +46,8 @@ public class IOrCommand implements Command {
         }
 
         // Pop the top two operands from the stack
-        final int b = (int) operandStack.pop();
-        final int a = (int) operandStack.pop();
+        final int b = NumberUtils.popInt(operandStack, "I_OR");
+        final int a = NumberUtils.popInt(operandStack, "I_OR");
 
         // Perform the int32 bitwise OR operation and push the result back onto the stack
         operandStack.push(a | b);

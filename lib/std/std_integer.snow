@@ -1,0 +1,116 @@
+/**
+@module std_integer
+@summary std_integer 结构体 - 对 int 基本数据类型的封装
+*/
+module: std_integer
+
+    globals:
+        declare const MIN_VALUE:int = -2147483647
+        declare const MAX_VALUE:int = 2147483647
+
+    /**
+    @struct std_integer
+    @summary 整数值对象的包装类
+    @description
+        包装基本 int 类型，提供面向对象的整数操作接口。
+    */
+    struct: std_integer
+
+        fields:
+            declare value:int
+
+        /**
+        @init default
+        @summary 无参构造函数，创建值为 0 的 std_integer
+        */
+        init:
+            body:
+                value = 0
+            end body
+        end init
+
+        /**
+        @init with_value
+        @summary 带参构造函数，根据给定值创建 std_integer
+        @param val 初始整数值
+        */
+        init:
+            params:
+                declare val:int
+            body:
+                value = val
+            end body
+        end init
+
+        /**
+        @function getValue
+        @summary 获取包装的整数值
+        @returns 返回内部存储的 int 值
+        */
+        function: getValue
+            returns: int
+            body:
+                return value
+            end body
+        end function
+
+        /**
+        @function abs
+        @summary 计算当前整数的绝对值
+        @returns 返回当前整数值绝对值的 std_integer 实例
+        */
+        function: abs
+            returns: std_integer
+            body:
+                declare result:int = value
+                if result < 0 then
+                    result = -result
+                end if
+                return new std_integer(result)
+            end body
+        end function
+    end struct
+
+	/**
+	@function max
+	@summary 比较两个整数并返回较大值（std_integer）
+	@param lhs 第一整数
+	@param rhs 第二整数
+	@returns 返回两个整数中较大值的 std_integer 实例
+	*/
+	function: max
+	    params:
+	        declare lhs:int
+	        declare rhs:int
+	    returns: std_integer
+	    body:
+	        if lhs >= rhs then
+	            return new std_integer(lhs)
+	        else
+	            return new std_integer(rhs)
+	        end if
+	    end body
+	end function
+
+	/**
+	@function min
+	@summary 比较两个整数并返回较小值（std_integer）
+	@param lhs 第一整数
+	@param rhs 第二整数
+	@returns 返回两个整数中较小值的 std_integer 实例
+	*/
+	function: min
+	    params:
+	        declare lhs:int
+	        declare rhs:int
+	    returns: std_integer
+	    body:
+	        if lhs <= rhs then
+	            return new std_integer(lhs)
+	        else
+	            return new std_integer(rhs)
+	        end if
+	    end body
+	end function
+
+end module

@@ -1,0 +1,27 @@
+module: Main
+	import: std_io
+
+    function: main
+        params:
+        returns: int
+        body:
+            declare b1: boolean = true
+            loop:
+                init:
+                    declare i:int = 0
+                cond:
+                    b1
+                step:
+                    i = i + 1
+                body:
+                    if i==0 then
+					std_io.println(i)
+					else
+					return 1
+					end if
+                end body
+            end loop
+            return 0
+        end body
+    end function
+end module

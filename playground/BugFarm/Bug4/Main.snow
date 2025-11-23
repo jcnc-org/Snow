@@ -1,9 +1,0 @@
-module: Main
-    import: ModuleB
-    function: main
-        returns: int
-        body:
-            return ModuleB.fun()
-        end body
-    end function
-end module

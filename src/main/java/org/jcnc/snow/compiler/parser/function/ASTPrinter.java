@@ -96,7 +96,7 @@ public class ASTPrinter {
 
             case FunctionNode(
                     String name, List<ParameterNode> parameters, String returnType, List<StatementNode> body,
-                    NodeContext _
+                    NodeContext context
             ) -> {
                 System.out.println(pad + "function " + name
                         + "(params=" + parameters + ", returns=" + returnType + ")");
@@ -111,10 +111,11 @@ public class ASTPrinter {
                         .orElse("");
                 System.out.println(pad + "declare " + d.getName() + ":" + d.getType() + init);
             }
-            case AssignmentNode(String variable, ExpressionNode value, NodeContext _) ->
+            case AssignmentNode(String variable, ExpressionNode value, NodeContext context) ->
                     System.out.println(pad + variable + " = " + value);
             case IfNode(
-                    ExpressionNode cond, List<StatementNode> thenBranch, List<StatementNode> elseBranch, NodeContext _
+                    ExpressionNode cond, List<StatementNode> thenBranch, List<StatementNode> elseBranch,
+                    NodeContext context
             ) -> {
                 System.out.println(pad + "if " + cond);
                 for (StatementNode stmt : thenBranch) {
@@ -129,7 +130,7 @@ public class ASTPrinter {
             }
             case LoopNode(
                     StatementNode init, ExpressionNode cond, StatementNode step, List<StatementNode> body,
-                    NodeContext _
+                    NodeContext context
             ) -> {
                 System.out.println(pad + "loop {");
                 print(init, indent + 1);
@@ -144,8 +145,8 @@ public class ASTPrinter {
             }
             case ReturnNode r -> System.out.println(pad + "return" +
                     r.getExpression().map(e -> " " + e).orElse(""));
-            case BreakNode _ -> System.out.println(pad + "break");
-            case ExpressionStatementNode(ExpressionNode expression, NodeContext _) ->
+            case BreakNode b -> System.out.println(pad + "break");
+            case ExpressionStatementNode(ExpressionNode expression, NodeContext context) ->
                     System.out.println(pad + expression);
             case null, default -> System.out.println(pad + n);  // 回退处理
         }

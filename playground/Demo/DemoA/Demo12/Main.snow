@@ -1,0 +1,23 @@
+module: Main
+    import: std_io
+
+	import: std_io
+
+    function: main
+        returns: void
+        body:
+            std_io.print(foo())
+        end body
+    end function
+
+    function: foo
+        returns: int
+        body:
+            if false then
+                return 1
+            end if
+
+            return 0
+        end body
+    end function
+end module

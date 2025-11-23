@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * The DLoadCommand class implements the {@link Command} interface and represents a load instruction for 64-bit double values in the virtual machine.
@@ -54,7 +55,9 @@ public class DLoadCommand implements Command {
         int index = Integer.parseInt(parts[1]);
 
         // Retrieve the double value from the local variable store of the current method frame
-        double value = (double) localVariableStore.getVariable(index);
+        double value = NumberUtils.toDouble(
+                localVariableStore.getVariable(index),
+                "D_LOAD");
 
         // Push the loaded value onto the operand stack for subsequent operations
         operandStack.push(value);

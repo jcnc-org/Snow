@@ -1,5 +1,16 @@
-# run-linux-snow-export.ps1
+# release-linux.ps1
 # Build and package linux-snow-export, version read from SNOW_VERSION in .env
+
+# force to use PowerShell 7
+if ($PSVersionTable.PSEdition -ne "Core") {
+    Write-Host "Switching to PowerShell 7..."
+    $pwsh = Get-Command pwsh.exe -ErrorAction SilentlyContinue
+    if (-not $pwsh) {
+        throw "PowerShell 7 (pwsh.exe) not installed."
+    }
+    & $pwsh.Source -NoLogo -NoProfile -File $PSCommandPath @args
+    exit $LASTEXITCODE
+}
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
@@ -11,7 +22,7 @@ Write-Host "Step 0: Generate .env..."
 try {
     & "$PSScriptRoot\tools\generate-dotenv.ps1" -ErrorAction Stop
 } catch {
-    Write-Error "Failed to generate .env: $( $_.Exception.Message )"
+    Write-Error ("Failed to generate .env: {0}" -f $_.Exception.Message)
     exit 1
 }
 
@@ -29,12 +40,36 @@ if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
-# ===== Step 3: Read version from .env =====
+# ===== Step 3: Fix target directory permissions BEFORE packaging =====
 $projectRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
+if (-not $IsWindows) {
+    $targetRoot = Join-Path $projectRoot "target"
+    Write-Host ("Step 3: Fix permissions for {0} ..." -f $targetRoot)
+    try {
+        # Use `id -un` to get the current username to avoid empty $env:USER
+        $userName = (& id -un 2>$null).Trim()
+        if (-not $userName) {
+            # Fallback: if username cannot be determined, use a default value
+            $userName = "x"
+        }
+
+        # Only set owner, do not explicitly set group to avoid unwanted ':x' parameters
+        & sudo chown -R $userName $targetRoot
+
+        Write-Host (">>> Permissions fixed for {0} (owner={1})" -f $targetRoot, $userName)
+    } catch {
+        Write-Warning ("Failed to fix permissions for {0}: {1}" -f $targetRoot, $_.Exception.Message)
+    }
+} else {
+    Write-Host "Step 3: Windows environment detected, skipping chown."
+}
+
+# ===== Step 4: Read version from .env =====
+Write-Host "Step 4: Read SNOW_VERSION from .env..."
 $dotenvPath  = Join-Path $projectRoot ".env"
 
 if (-not (Test-Path -LiteralPath $dotenvPath)) {
-    Write-Error ".env not found at: $dotenvPath"
+    Write-Error (" .env not found at: {0}" -f $dotenvPath)
     exit 1
 }
 
@@ -44,16 +79,36 @@ if (-not $version) {
     exit 1
 }
 
-# ===== Step 4: Define output paths =====
-$targetDir = Join-Path $projectRoot "target\release"
+# ===== Step 5: Define output paths =====
+Write-Host "Step 5: Define output paths..."
+$targetDir = Join-Path $projectRoot "target/release"
 $outDir    = Join-Path $targetDir "snow-v$version-linux-x64"
 $tgzPath   = Join-Path $targetDir "snow-v$version-linux-x64.tgz"
 
-# ===== Step 5: Package to .tgz (no extra top-level dir, max compression) =====
-Write-Host "Step 5: Package to .tgz..."
+# ===== Step 6: Create VERSION file in SDK root directory =====
+Write-Host "Step 6: Create VERSION file in SDK root directory..."
+$versionFilePath = Join-Path $outDir "VERSION"
+try {
+    Set-Content -Path $versionFilePath -Value $version -Force
+    if (Test-Path $versionFilePath) {
+        $versionContent = Get-Content -Path $versionFilePath -Raw
+        if ($versionContent.Trim() -eq $version) {
+            Write-Host (">>> Created VERSION file at {0} with content: {1}" -f $versionFilePath, $version)
+        } else {
+            Write-Warning ("VERSION file content mismatch. Expected: {0}, Actual: {1}" -f $version, $versionContent.Trim())
+        }
+    } else {
+        Write-Warning ("Failed to create VERSION file at {0}" -f $versionFilePath)
+    }
+} catch {
+    Write-Warning ("Failed to create VERSION file: {0}" -f $_.Exception.Message)
+}
+
+# ===== Step 7: Package to .tgz (Linux-compatible) =====
+Write-Host "Step 7: Package to .tgz..."
 
 if (-not (Test-Path -LiteralPath $outDir)) {
-    Write-Error "Output directory not found: $outDir"
+    Write-Error ("Output directory not found: {0}" -f $outDir)
     exit 1
 }
 
@@ -64,8 +119,12 @@ if (-not (Test-Path -LiteralPath $targetDir)) {
 
 # Remove old package if exists
 if (Test-Path -LiteralPath $tgzPath) {
-    Write-Host "→ Removing existing tgz: $tgzPath"
-    Remove-Item -LiteralPath $tgzPath -Force
+    Write-Host ("→ Removing existing tgz: {0}" -f $tgzPath)
+    try {
+        Remove-Item -LiteralPath $tgzPath -Force
+    } catch {
+        Write-Warning ("Failed to remove existing tgz: {0}" -f $_.Exception.Message)
+    }
 }
 
 function Invoke-TarGz {
@@ -73,56 +132,35 @@ function Invoke-TarGz {
         [Parameter(Mandatory = $true)][string]$SourceDir,
         [Parameter(Mandatory = $true)][string]$DestTgz
     )
+
     $tarExe = "tar"
 
-    $isWindows = $env:OS -eq 'Windows_NT'
-
-    if ($isWindows) {
-        $psi = @{
-            FilePath    = $tarExe
-            ArgumentList= @("-C", $SourceDir, "-czf", $DestTgz, ".")
-            NoNewWindow = $true
-            Wait        = $true
-        }
-        try {
-            $p = Start-Process @psi -PassThru -ErrorAction Stop
-            $p.WaitForExit()
-            if ($p.ExitCode -ne 0) {
-                throw "tar exited with code $($p.ExitCode)"
-            }
-        } catch {
-            throw "Packaging failed (Windows tar): $($_.Exception.Message)"
-        }
+    if ($IsWindows) {
+        # Use tar on Windows
+        $args = @("-C", $SourceDir, "-czf", $DestTgz, ".")
     } else {
-        try {
-            $psi = @{
-                FilePath    = $tarExe
-                ArgumentList= @("-C", $SourceDir, "-c", "-f", $DestTgz, "-I", "gzip -9", ".")
-                NoNewWindow = $true
-                Wait        = $true
-            }
-            $p = Start-Process @psi -PassThru -ErrorAction Stop
-            $p.WaitForExit()
-            if ($p.ExitCode -eq 0) { return }
-        } catch { }
+        # Use GNU tar + gzip -9 on Linux/macOS
+        $args = @("-C", $SourceDir, "-cf", $DestTgz, "--use-compress-program=gzip", ".")
+    }
 
-        try {
-            $psi = @{
-                FilePath    = $tarExe
-                ArgumentList= @("-C", $SourceDir, "-c", "-z", "-f", $DestTgz, ".")
-                NoNewWindow = $true
-                Wait        = $true
-            }
-            $p = Start-Process @psi -PassThru -ErrorAction Stop
-            $p.WaitForExit()
-            if ($p.ExitCode -ne 0) {
-                throw "tar exited with code $($p.ExitCode)"
-            }
-        } catch {
-            throw "Packaging failed (Linux tar): $($_.Exception.Message)"
+    $psi = @{
+        FilePath     = $tarExe
+        ArgumentList = $args
+        NoNewWindow  = $true
+        Wait         = $true
+    }
+
+    try {
+        $p = Start-Process @psi -PassThru -ErrorAction Stop
+        $p.WaitForExit()
+        if ($p.ExitCode -ne 0) {
+            throw "tar exited with code $($p.ExitCode)"
         }
+    } catch {
+        throw ("Packaging failed: {0}" -f $_.Exception.Message)
     }
 }
+
 try {
     Invoke-TarGz -SourceDir $outDir -DestTgz $tgzPath
 } catch {
@@ -131,6 +169,6 @@ try {
 }
 
 Write-Host ">>> Package ready!" -ForegroundColor Green
-Write-Host "Version    : $version"
-Write-Host "Output Dir : $outDir"
-Write-Host "Tgz File   : $tgzPath"
+Write-Host ("Version    : {0}" -f $version)
+Write-Host ("Output Dir : {0}" -f $outDir)
+Write-Host ("Tgz File   : {0}" -f $tgzPath)

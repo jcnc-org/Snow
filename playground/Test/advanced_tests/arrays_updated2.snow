@@ -1,0 +1,31 @@
+module: ArraysUpdated2
+    import: std_io
+    
+    function: main
+        returns: void
+        body:
+            // 测试一维数组，参考Demo50中的语法
+            declare arr: int[] = [1, 2, 3, 4, 5]
+            std_io.println("First element: " + arr[0])
+            std_io.println("Third element: " + arr[2])
+            
+            // 修改数组元素
+            arr[0] = 10
+            std_io.println("Modified first element: " + arr[0])
+            
+            // 遍历数组，需要手动指定长度
+            declare arrLength: int = 5
+            loop:
+                init:
+                    declare i: int = 0
+                cond:
+                    i < arrLength
+                step:
+                    i = i + 1
+                body:
+                    std_io.println("arr[" + i + "] = " + arr[i])
+                end body
+            end loop
+        end body
+    end function
+end module

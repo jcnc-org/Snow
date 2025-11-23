@@ -1,0 +1,13 @@
+{
+  "builder": {
+    "gc": {
+      "defaultKeepStorage": "20GB",
+      "enabled": true
+    }
+  },
+  "registry-mirrors": [
+    "https://docker.1ms.run",
+    "https://docker.1panel.live",
+    "https://hub.rat.dev"
+  ]
+}

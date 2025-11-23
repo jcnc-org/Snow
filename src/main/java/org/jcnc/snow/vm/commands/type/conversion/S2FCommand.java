@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * S2FCommand Opcode: Represents the type conversion operation from short16 to float32 in the virtual machine.
@@ -40,7 +41,7 @@ public class S2FCommand implements Command {
     @Override
     public int execute(String[] parts, int currentPC, OperandStack operandStack,
                        LocalVariableStore localVariableStore, CallStack callStack) {
-        float convertedValue = (short) operandStack.pop();
+        float convertedValue = NumberUtils.popShort(operandStack, "S2F");
         operandStack.push(convertedValue);
         return currentPC + 1;
     }

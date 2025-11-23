@@ -8,7 +8,22 @@ import org.jcnc.snow.vm.module.OperandStack;
 import java.security.SecureRandom;
 
 /**
- * 实现 RANDOM_BYTES (n:int) -> bytes:byte[]
+ * {@code RandomBytesHandler} 实现 RANDOM_BYTES (0x1903) 系统调用，
+ * 用于生成指定长度的随机字节数组。
+ *
+ * <p><b>Stack</b>：入参 {@code (n:int)} → 出参 {@code (bytes:byte[])}</p>
+ *
+ * <p><b>语义</b>：生成长度为 {@code n} 的随机字节数组并返回，使用安全随机数生成器（{@link java.security.SecureRandom}）。</p>
+ *
+ * <p><b>返回</b>：成功返回长度为 {@code n} 的 {@code byte[]}；当 {@code n==0} 返回空数组。</p>
+ *
+ * <p><b>异常</b>：
+ * <ul>
+ *   <li>若参数缺失、为 {@code null}、无法解析为整数、为负数、或超过允许的最大值（实现中默认上限为 10_000_000）时，抛出 {@link IllegalStateException} 或 {@link IllegalArgumentException}</li>
+ * </ul>
+ * </p>
+ *
+ * <p><b>注意</b>：为避免 OOM，调用方应避免请求过大的 {@code n}；实现可能对最大可请求字节数设定限制。</p>
  */
 public class RandomBytesHandler implements SyscallHandler {
     // 防止用户请求过大的分配导致 OOM；可根据需要调整或移除此上限

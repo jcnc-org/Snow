@@ -1,0 +1,44 @@
+module: MultidimensionalArrayValidation
+    import: std_io
+    
+    function: main
+        returns: void
+        body:
+            // 测试多维数组
+            declare matrix: int[][] = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+            
+            // 访问多维数组元素
+            std_io.println("matrix[0][0]: " + matrix[0][0])
+            std_io.println("matrix[1][2]: " + matrix[1][2])
+            std_io.println("matrix[2][1]: " + matrix[2][1])
+            
+            // 修改多维数组元素
+            matrix[0][0] = 10
+            std_io.println("Modified matrix[0][0]: " + matrix[0][0])
+            
+            // 遍历多维数组
+            loop:
+                init:
+                    declare i: int = 0
+                cond:
+                    i < 3
+                step:
+                    i = i + 1
+                body:
+                    loop:
+                        init:
+                            declare j: int = 0
+                        cond:
+                            j < 3
+                        step:
+                            j = j + 1
+                        body:
+                            std_io.print(matrix[i][j] + " ")
+                        end body
+                    end loop
+                    std_io.println("")
+                end body
+            end loop
+        end body
+    end function
+end module

@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * LDivCommand Opcode: Represents the long64 division operation in the virtual machine.
@@ -47,8 +48,8 @@ public class LDivCommand implements Command {
     @Override
     public int execute(String[] parts, int currentPC, OperandStack operandStack, LocalVariableStore localVariableStore, CallStack callStack) {
         // Pop the top two operands from the stack
-        long b = (long) operandStack.pop();
-        long a = (long) operandStack.pop();
+        long b = NumberUtils.popLong(operandStack, "L_DIV");
+        long a = NumberUtils.popLong(operandStack, "L_DIV");
 
         // Check for division by zero
         if (b == 0) {

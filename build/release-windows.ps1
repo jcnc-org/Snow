@@ -1,117 +1,185 @@
 # release-windows.ps1
 
 $ErrorActionPreference = 'Stop'
-$ProgressPreference = 'SilentlyContinue'
 Set-StrictMode -Version Latest
 
-# Import shared dotenv parser function
-. "$PSScriptRoot\tools\dotenv.ps1"
+# ---------- 0. Ensure running in PowerShell 7 ----------
+if ($PSVersionTable.PSEdition -ne 'Core') {
+    Write-Host "Detected Windows PowerShell 5.x — switching to PowerShell 7..." -ForegroundColor Yellow
 
-# ===== Utility Functions =====
+    $pwshCmd = Get-Command pwsh.exe -ErrorAction SilentlyContinue
+    if (-not $pwshCmd) {
+        throw "PowerShell 7 (pwsh) not found. Install from https://github.com/PowerShell/PowerShell"
+    }
+
+    & $pwshCmd.Source -NoLogo -NoProfile -File $PSCommandPath @args
+    exit $LASTEXITCODE
+}
+
+# ---------- 1. Detect JDK (no system env modifications) ----------
+function Detect-JDK {
+    Write-Host "🔍 Detecting JDK..."
+
+    # A. Prefixed JAVA_HOME
+    if ($env:JAVA_HOME) {
+        $javaExe = Join-Path $env:JAVA_HOME 'bin\java.exe'
+        if (Test-Path $javaExe) {
+            return $env:JAVA_HOME
+        }
+    }
+
+    # B. jabba environment
+    $jabbaScript = Join-Path $HOME '.jabba\jabba.ps1'
+    if (Test-Path $jabbaScript) {
+        . $jabbaScript
+        if ($env:JAVA_HOME) {
+            $javaExe = Join-Path $env:JAVA_HOME 'bin\java.exe'
+            if (Test-Path $javaExe) {
+                return $env:JAVA_HOME
+            }
+        }
+    }
+
+    # C. scan jabba jdk folder (pick most recently modified JDK)
+    $jdkRoot = Join-Path $HOME '.jabba\jdk'
+    if (Test-Path $jdkRoot) {
+        $jdks = Get-ChildItem $jdkRoot -Directory | Sort-Object LastWriteTime -Descending
+        foreach ($d in $jdks) {
+            $javaExe = Join-Path $d.FullName 'bin\java.exe'
+            if (Test-Path $javaExe) {
+                return $d.FullName
+            }
+        }
+    }
+
+    # D. java in PATH (compatible with PS5)
+    $javaCmd = Get-Command java.exe -ErrorAction SilentlyContinue
+    if ($javaCmd) {
+        $javaBinDir = Split-Path $javaCmd.Source
+        $javaHomeGuess = Split-Path $javaBinDir
+        return $javaHomeGuess
+    }
+
+    throw "❌ No JDK found (JAVA_HOME, jabba, PATH). Please install JDK."
+}
+
+$jdkHome = Detect-JDK
+Write-Host "✓ JDK detected at: $jdkHome"
+
+# temp JAVA_HOME (session only)
+$env:JAVA_HOME = $jdkHome
+$env:Path      = ("{0};{1}" -f (Join-Path $jdkHome 'bin'), $env:Path)
+
+# ---------- Java check ----------
+try {
+    $javaExe = Join-Path $env:JAVA_HOME 'bin\java.exe'
+    $javaVerOutput = & $javaExe -version 2>&1
+    Write-Host $javaVerOutput
+} catch {
+    throw "Failed to execute java.exe from temporary JAVA_HOME"
+}
+
+# ---------- Maven check ----------
+$mvnCmd = Get-Command mvn -ErrorAction SilentlyContinue
+if (-not $mvnCmd) {
+    throw "❌ Maven not found in PATH. Please install Maven."
+}
+
+Write-Host "Maven found: $($mvnCmd.Source)"
+Write-Host (& mvn -v)
+
+# Import dotenv
+. (Join-Path $PSScriptRoot 'tools/dotenv.ps1')
+
+# ---------- pom locator ----------
 function Find-PomUpwards([string]$startDir) {
-    $dir = Resolve-Path $startDir
+    $dir = (Resolve-Path $startDir).Path
     while ($true) {
-        $pom = Join-Path $dir "pom.xml"
-        if (Test-Path $pom) { return $pom }
-        $parent = Split-Path $dir -Parent
-        if ($parent -eq $dir -or [string]::IsNullOrEmpty($parent)) { return $null }
+        $pomPath = Join-Path $dir 'pom.xml'
+        if (Test-Path $pomPath) { return $pomPath }
+        $parent = Split-Path -Path $dir -Parent
+        if ($parent -eq $dir) { return $null }
         $dir = $parent
     }
 }
 
-# ===== Step 0: Generate .env =====
-Write-Host "Step 0: Generate .env..."
-try {
-    & "$PSScriptRoot\tools\generate-dotenv.ps1" -ErrorAction Stop
-} catch {
-    Write-Error "Failed to generate .env: $($_.Exception.Message)"
-    exit 1
-}
+# ---------- Step 0: Generate .env ----------
+Write-Host "Step 0: Generating .env..."
+& (Join-Path $PSScriptRoot 'tools/generate-dotenv.ps1')
 
-# ===== Step 1: Locate project root & build =====
-Write-Host "Step 1: Locate project root and build..."
-$pom = Find-PomUpwards -startDir $PSScriptRoot
-if (-not $pom) {
-    Write-Error "pom.xml not found. Please run this script within the project."
-    exit 1
-}
+# ---------- Step 1: Build ----------
+$pom = Find-PomUpwards $PSScriptRoot
+if (-not $pom) { throw "pom.xml not found" }
 
 $projectRoot = Split-Path $pom -Parent
 Push-Location $projectRoot
+
 try {
-    Write-Host "→ Running: mvn clean package"
-    mvn clean package
+    Write-Host "Running mvn clean package..."
+    mvn -q clean package
+
     if ($LASTEXITCODE -ne 0) {
-        Write-Error "Maven build failed, exiting script."
-        exit $LASTEXITCODE
+        throw "Maven build failed with exit code $LASTEXITCODE."
     }
 
-    # ===== Step 2: Read SNOW_VERSION =====
-    Write-Host "Step 2: Read SNOW_VERSION from .env..."
-    $dotenvPath = Join-Path $projectRoot ".env"
-    $snowVersion = Read-DotEnvValue -FilePath $dotenvPath -Key "SNOW_VERSION"
-    if (-not $snowVersion) {
-        Write-Host "SNOW_VERSION not found in .env, using placeholder 0.0.0." -ForegroundColor Yellow
-        $snowVersion = "0.0.0"
-    }
+    # Step 2: Read version
+    $envFilePath = Join-Path $projectRoot '.env'
+    $snowVersion = Read-DotEnvValue -FilePath $envFilePath -Key "SNOW_VERSION"
+    if (-not $snowVersion) { $snowVersion = "0.0.0" }
+
     Write-Host "SNOW_VERSION = $snowVersion"
 
-    # ===== Step 3: Prepare release directory structure =====
-    Write-Host "Step 3: Prepare release directory structure..."
-    $targetDir   = Join-Path $projectRoot "target"
-    $exePath     = Join-Path $targetDir "snow.exe"
+    # Step 3: Prepare release package
+    $targetDir = Join-Path $projectRoot 'target'
+    $exePath   = Join-Path $targetDir 'snow.exe'
     if (-not (Test-Path $exePath)) {
-        Write-Error "Expected build artifact not found: $exePath"
-        exit 1
+        throw "snow.exe not found."
     }
 
-    $verName     = "snow-v${snowVersion}-windows-x64"
-    $releaseRoot = Join-Path $targetDir "release"
-    $outDir      = Join-Path $releaseRoot $verName
-    $binDir      = Join-Path $outDir "bin"
-    $libDir      = Join-Path $outDir "lib"
+    $releaseRoot = Join-Path $targetDir 'release'
+    $outDirName  = "snow-v$snowVersion-windows-x64"
+    $outDir      = Join-Path $releaseRoot $outDirName
+    $binDir      = Join-Path $outDir 'bin'
+    $libDir      = Join-Path $outDir 'lib'
 
-    # Clean old directory
-    if (Test-Path $outDir) {
-        Write-Host "→ Cleaning previous output directory..."
-        Remove-Item $outDir -Recurse -Force
+    if (Test-Path $outDir) { Remove-Item $outDir -Recurse -Force }
+
+    New-Item $binDir -ItemType Directory -Force | Out-Null
+    Copy-Item $exePath (Join-Path $binDir 'snow.exe')
+
+    $projectLibDir = Join-Path $projectRoot 'lib'
+    if (Test-Path $projectLibDir) {
+        New-Item $libDir -ItemType Directory -Force | Out-Null
+        Copy-Item (Join-Path $projectLibDir '*') $libDir -Recurse -Force
     }
 
-    New-Item -ItemType Directory -Force -Path $binDir | Out-Null
-    Copy-Item -Path $exePath -Destination (Join-Path $binDir "snow.exe") -Force
-    Write-Host ">>> Collected snow.exe"
+    # Step 4: Write VERSION (before zipping so it's included)
+    $versionFilePath = Join-Path $outDir 'VERSION'
+    Set-Content $versionFilePath $snowVersion
 
-    # Optional lib
-    $projectLib = Join-Path $projectRoot "lib"
-    if (Test-Path $projectLib) {
-        New-Item -ItemType Directory -Force -Path $libDir | Out-Null
-        Copy-Item -Path (Join-Path $projectLib "*") -Destination $libDir -Recurse -Force
-        Write-Host ">>> Copied lib directory"
-    } else {
-        Write-Host ">>> lib directory not found, skipping." -ForegroundColor Yellow
-    }
+    # Step 5: Zip
+    $zipPath = Join-Path $releaseRoot "$outDirName.zip"
+    if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
 
-    # ===== Step 4: Create release zip =====
-    Write-Host "Step 4: Create release zip..."
-    New-Item -ItemType Directory -Force -Path $releaseRoot | Out-Null
-    $zipPath = Join-Path $releaseRoot ("{0}.zip" -f $verName)
-    if (Test-Path $zipPath) {
-        Write-Host "→ Removing existing zip: $zipPath"
-        Remove-Item $zipPath -Force
-    }
+    # Ensure parent directory exists
+    $null = New-Item -ItemType Directory -Path $releaseRoot -Force
 
-    try {
-        Compress-Archive -Path (Join-Path $outDir '*') -DestinationPath $zipPath -CompressionLevel Optimal -Force
-    } catch {
-        Write-Error "Failed to create zip: $($_.Exception.Message)"
-        exit 1
-    }
+    # Use .NET to create zip — works reliably in PowerShell 7+ on all Windows systems
+    Add-Type -AssemblyName System.IO.Compression
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
 
-    Write-Host ">>> Package ready!" -ForegroundColor Green
-    Write-Host "Version    : $snowVersion"
-    Write-Host "Output Dir : $outDir"
-    Write-Host "Zip File   : $zipPath"
-}
-finally {
+    [System.IO.Compression.ZipFile]::CreateFromDirectory(
+            $outDir,
+            $zipPath,
+            [System.IO.Compression.CompressionLevel]::Optimal,
+            $false  # Do NOT include root folder name inside zip
+    )
+
+} finally {
     Pop-Location
 }
+
+Write-Host ">>> Package ready!" -ForegroundColor Green
+Write-Host "Version : $snowVersion"
+Write-Host "Output  : $outDir"
+Write-Host "Zip     : $zipPath"

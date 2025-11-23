@@ -1,0 +1,125 @@
+module: app
+    import: io
+    import: os_thread
+    import: os_sync
+
+    /**
+     * 条件变量演示的子线程：
+     * 期望参数是一个 int 数组 [mid:int, cid:int, tag:int]
+     */
+    function: worker
+        params:
+            declare arg:int[]
+        returns: any
+        body:
+            // 拆出 mid/cid/tag
+            declare mid:int = arg[0]
+            declare cid:int = arg[1]
+            declare tag:int = arg[2]
+            declare tagStr:string = "T" + tag
+
+            io.stdout_write("线程 " + tagStr + " 启动，等待条件信号...\n")
+
+            os_sync.mutex_lock(mid)
+            // 无限等待，直到被 signal/broadcast 唤醒
+            os_sync.cond_wait(cid, mid, -1)
+            io.stdout_write("线程 " + tagStr + " 被唤醒。\n")
+            os_sync.mutex_unlock(mid)
+
+            return "done:" + tagStr
+        end body
+    end function
+
+    /**
+     * 信号量演示的子线程：
+     * 期望参数是信号量 ID (sid:int)
+     */
+    function: sem_waiter
+        params:
+            declare sid:int
+        returns: any
+        body:
+            io.stdout_write("信号量等待线程启动，SID=" + sid + "\n")
+            os_sync.sem_wait(sid, -1)
+            io.stdout_write("信号量获取成功，线程继续运行。\n")
+            return "sem_ok"
+        end body
+    end function
+
+    function: main
+        params:
+            declare args:any
+        body:
+            io.stdout_write("=== 测试 os_sync 模块 ===\n")
+
+            // 1) 互斥量 + 条件变量
+            declare mid:int = os_sync.mutex_new()
+            declare cid:int = os_sync.cond_new()
+            io.stdout_write("创建互斥量 ID=" + mid + "，条件变量 ID=" + cid + "\n")
+
+            // 启动两个等待线程：先用常量初始化数组，再逐项赋值
+            declare a1:int[] = [0, 0, 0]
+            a1[0] = mid
+            a1[1] = cid
+            a1[2] = 1
+
+            declare a2:int[] = [0, 0, 0]
+            a2[0] = mid
+            a2[1] = cid
+            a2[2] = 2
+
+            declare t1:int = os_thread.create("worker", a1)
+            declare t2:int = os_thread.create("worker", a2)
+
+            // 给子线程一点时间进入等待
+            os_thread.sleep(500)
+
+            // 唤醒一个
+            io.stdout_write("主线程 signal：唤醒一个等待者...\n")
+            os_sync.mutex_lock(mid)
+            os_sync.cond_signal(cid)
+            os_sync.mutex_unlock(mid)
+
+            os_thread.sleep(500)
+
+            // 广播唤醒剩余的
+            io.stdout_write("主线程 broadcast：唤醒所有剩余等待者...\n")
+            os_sync.mutex_lock(mid)
+            os_sync.cond_broadcast(cid)
+            os_sync.mutex_unlock(mid)
+
+            // 等待两个线程结束
+            declare r1:any = os_thread.join(t1)
+            declare r2:any = os_thread.join(t2)
+            io.stdout_write("子线程返回: " + r1 + ", " + r2 + "\n")
+
+            // 2) 信号量
+            io.stdout_write("\n=== 测试信号量 ===\n")
+            declare sid:int = os_sync.sem_new(0)
+            io.stdout_write("创建信号量 ID=" + sid + "\n")
+            declare t3:int = os_thread.create("sem_waiter", sid)
+            os_thread.sleep(500)
+            io.stdout_write("主线程 sem_post...\n")
+            os_sync.sem_post(sid)
+            declare r3:any = os_thread.join(t3)
+            io.stdout_write("信号量线程返回: " + r3 + "\n")
+
+            // 3) 读写锁
+            io.stdout_write("\n=== 测试读写锁 ===\n")
+            declare rwl:int = os_sync.rwlock_new()
+            io.stdout_write("创建读写锁 ID=" + rwl + "\n")
+
+            io.stdout_write("获取读锁...\n")
+            os_sync.rwlock_rlock(rwl)
+            io.stdout_write("读锁获取成功，执行只读操作。\n")
+            os_sync.rwlock_unlock(rwl)
+
+            io.stdout_write("获取写锁...\n")
+            os_sync.rwlock_wlock(rwl)
+            io.stdout_write("写锁获取成功，执行写操作。\n")
+            os_sync.rwlock_unlock(rwl)
+
+            io.stdout_write("测试完成。\n")
+        end body
+    end function
+end module

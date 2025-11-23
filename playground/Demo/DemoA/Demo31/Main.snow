@@ -1,0 +1,58 @@
+module: Main
+    import: syscall.fs
+    import: syscall.fd
+    import: std_io
+
+    // 父类 Person
+    struct: Person
+        fields:
+            declare name: int
+        init:
+            params:
+                name: int
+            body:
+                this.name = name
+            end body
+        end init
+
+        function: getName
+            returns: int
+            body:
+                return this.name
+            end body
+        end function
+    end struct
+
+    // 子类 Student 继承 Person
+    struct: Student extends Person
+        fields:
+            declare studentId: int
+        init:
+            params:
+                name: int
+                studentId: int
+            body:
+                super(name)               // 调用父类构造函数
+                this.studentId = studentId
+            end body
+        end init
+
+        function: getStudentId
+            returns: int
+            body:
+                return this.studentId
+            end body
+        end function
+    end struct
+
+    function: main
+        returns: void
+        body:
+            declare s: Student = new Student(123, 1001)
+
+            // Student 拥有父类方法
+            std_io.println(s.getName())      // 来自 Person → 123
+            std_io.println(s.getStudentId()) // 来自 Student → 1001
+        end body
+    end function
+end module

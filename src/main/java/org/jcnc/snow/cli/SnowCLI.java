@@ -37,7 +37,8 @@ public class SnowCLI {
             "build", BuildCommand::new,
             "install", InstallCommand::new,
             "publish", PublishCommand::new,
-            "clean", CleanCommand::new
+            "clean", CleanCommand::new,
+            "test-all", TestAllCommand::new
 
     );
 

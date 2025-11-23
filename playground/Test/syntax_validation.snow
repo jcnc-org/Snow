@@ -1,0 +1,93 @@
+module: SyntaxValidation
+    import: std_io
+    import: syscall.time
+    
+    struct: Animal
+        fields:
+            declare name: int
+            declare age: int
+
+        init:
+            params:
+                n: int
+                a: int
+            body:
+                this.name = n
+                this.age = a
+            end body
+        end init
+
+        function: getName
+            returns: int
+            body:
+                return this.name
+            end body
+        end function
+        
+        function: getAge
+            returns: int
+            body:
+                return this.age
+            end body
+        end function
+    end struct
+
+    struct: Dog extends Animal
+        fields:
+            declare breed: int
+        
+        init:
+            params:
+                n: int
+                a: int
+                b: int
+            body:
+                super(n, a)
+                this.breed = b
+            end body
+        end init
+
+        function: getBreed
+            returns: int
+            body:
+                return this.breed
+            end body
+        end function
+    end struct
+    
+    globals:
+        declare globalCounter: int = 0
+    
+    function: main
+        returns: void
+        body:
+            // 测试基本输出
+            std_io.println("Hello, Snow!")
+            
+            // 测试继承
+            declare dog: Dog = new Dog(1, 3, 2)
+            std_io.println("Dog name: " + dog.getName())
+            std_io.println("Dog age: " + dog.getAge())
+            std_io.println("Dog breed: " + dog.getBreed())
+            
+            // 测试数组
+            declare arr: int[] = [1, 2, 3, 4, 5]
+            declare arrLength: int = 5
+            loop:
+                init:
+                    declare i: int = 0
+                cond:
+                    i < arrLength
+                step:
+                    i = i + 1
+                body:
+                    std_io.println("arr[" + i + "] = " + arr[i])
+                end body
+            end loop
+            
+            // 测试系统调用
+            declare ms: long = time.mono_ms()
+            std_io.println("Current time: " + ms)
+        end body
+    end function
+end module

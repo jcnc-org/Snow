@@ -1,5 +1,8 @@
 package org.jcnc.snow.common;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 /**
  * 全局编译/运行配置和调试输出工具类。
  * <p>
@@ -12,6 +15,22 @@ public final class SnowConfig {
      * 当前运行模式，默认为 {@link Mode#RUN}。
      */
     public static Mode MODE = Mode.RUN;
+    /**
+     * 是否输出指令级 trace。
+     */
+    private static boolean instructionTraceEnabled = false;
+
+    /**
+     * 标准库路径，默认为项目根目录下的 lib 文件夹
+     * <p>
+     * 查找优先级：
+     * 1. 环境变量 SNOW_LIB
+     * 2. 系统属性 snow.lib
+     * 3. 项目目录下的 lib 文件夹
+     * 4. Snow SDK安装目录下的 lib 文件夹 (通过SNOW_HOME环境变量或snow.home系统属性)
+     * 5. 可执行文件所在目录推断的SDK目录
+     */
+    public static Path STDLIB_PATH = Paths.get("lib").toAbsolutePath();
 
     /**
      * 私有构造方法，防止实例化。
@@ -54,5 +73,41 @@ public final class SnowConfig {
      */
     public static boolean isRun() {
         return MODE == Mode.RUN;
+    }
+
+    /**
+     * 启用或关闭指令级 trace。
+     *
+     * @param enabled true 则输出分支/跳转 trace
+     */
+    public static void setInstructionTraceEnabled(boolean enabled) {
+        instructionTraceEnabled = enabled;
+    }
+
+    /**
+     * 当前是否开启指令级 trace。
+     *
+     * @return true 则输出分支/跳转 trace
+     */
+    public static boolean isInstructionTraceEnabled() {
+        return instructionTraceEnabled;
+    }
+
+    /**
+     * 获取标准库路径。
+     *
+     * @return 标准库路径
+     */
+    public static Path getStdlibPath() {
+        return STDLIB_PATH;
+    }
+
+    /**
+     * 设置标准库路径。
+     *
+     * @param path 标准库路径
+     */
+    public static void setStdlibPath(Path path) {
+        STDLIB_PATH = path.toAbsolutePath();
     }
 }

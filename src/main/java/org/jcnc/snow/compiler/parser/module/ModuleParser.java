@@ -81,6 +81,7 @@ public class ModuleParser implements TopLevelParser {
                             globals.add(globalsParser.parse(ctx));
                         } else if ("function".equals(innerLex)
                                 || "import".equals(innerLex)
+                                || "struct".equals(innerLex)
                                 || "end".equals(innerLex)) {
                             break;
                         } else {

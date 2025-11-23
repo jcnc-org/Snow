@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * The {@code SXorCommand} class implements the {@link Command} interface and represents the short16 bitwise XOR (`^`) operation command.
@@ -45,8 +46,8 @@ public class SXorCommand implements Command {
         }
 
         // Pop the top two operands from the stack
-        final short b = (short) operandStack.pop();
-        final short a = (short) operandStack.pop();
+        final short b = NumberUtils.popShort(operandStack, "S_XOR");
+        final short a = NumberUtils.popShort(operandStack, "S_XOR");
 
         // Perform the short16 bitwise XOR operation and push the result back onto the stack
         operandStack.push((short) (a ^ b));

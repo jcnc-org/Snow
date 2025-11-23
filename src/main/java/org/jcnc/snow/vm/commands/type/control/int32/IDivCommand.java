@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * IDivCommand Opcode: Represents the int32 division operation in the virtual machine.
@@ -47,8 +48,8 @@ public class IDivCommand implements Command {
     @Override
     public int execute(String[] parts, int currentPC, OperandStack operandStack, LocalVariableStore localVariableStore, CallStack callStack) {
         // Pop the top two operands from the stack
-        int b = (int) operandStack.pop();
-        int a = (int) operandStack.pop();
+        int b = NumberUtils.popInt(operandStack, "I_DIV");
+        int a = NumberUtils.popInt(operandStack, "I_DIV");
 
         // Check for division by zero
         if (b == 0) {

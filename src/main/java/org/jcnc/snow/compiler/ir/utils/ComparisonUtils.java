@@ -4,6 +4,7 @@ import org.jcnc.snow.compiler.ir.core.IROpCode;
 import org.jcnc.snow.compiler.ir.core.IROpCodeMappings;
 import org.jcnc.snow.compiler.parser.ast.IdentifierNode;
 import org.jcnc.snow.compiler.parser.ast.NumberLiteralNode;
+import org.jcnc.snow.compiler.parser.ast.StringLiteralNode;
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 
@@ -36,7 +37,8 @@ public final class ComparisonUtils {
      */
     public static boolean isComparisonOperator(String op) {
         // 只需查 int 类型表即可
-        return IROpCodeMappings.CMP_I32.containsKey(op);
+        return IROpCodeMappings.CMP_I32.containsKey(op) ||
+                IROpCodeMappings.CMP_R.containsKey(op);
     }
 
     /**
@@ -60,6 +62,7 @@ public final class ComparisonUtils {
             case 'I' -> 3;
             case 'S' -> 2;
             case 'B' -> 1;
+            case 'R' -> 7;
             default -> 0;
         };
     }
@@ -92,6 +95,13 @@ public final class ComparisonUtils {
         char typeLeft = analysisType(variables, left);
         char typeRight = analysisType(variables, right);
         char type = promote(typeLeft, typeRight);
+
+        if (type == 'R') {
+            if (!IROpCodeMappings.CMP_R.containsKey(op)) {
+                throw new IllegalStateException("Unsupported reference comparison operator: " + op);
+            }
+            return IROpCodeMappings.CMP_R.get(op);
+        }
 
         Map<String, IROpCode> table = switch (type) {
             case 'B' -> IROpCodeMappings.CMP_B8;
@@ -126,6 +136,9 @@ public final class ComparisonUtils {
             }
             return 'I';  // 默认 int
         }
+        if (node instanceof StringLiteralNode) {
+            return 'R';
+        }
         if (node instanceof IdentifierNode(String name, NodeContext _)) {
             final String type = variables.get(name);
             if (type != null) {
@@ -140,6 +153,8 @@ public final class ComparisonUtils {
                         return 'L';
                     case "float":
                         return 'F';
+                    case "string":
+                        return 'R';
                     case "double":
                         return 'D';
                 }

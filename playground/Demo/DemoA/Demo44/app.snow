@@ -1,0 +1,38 @@
+module: app
+    import: syscall.fs
+    import: syscall.fd
+    import: std_io
+
+    function: main
+        params:
+            declare args: any
+        body:
+            declare fd1: int
+            declare n:  int
+
+            // 打开文件，写模式 + 创建 + 截断
+            // flags = O_WRONLY | O_CREAT | O_TRUNC = 1 | 64 | 512 = 577
+            fd1 = fd.open("seek_demo.txt", 577)
+
+            // 写入一行文本
+            n = fd.write(fd1, "Hello, Snow!")
+
+            // 移动到文件开头 (SEEK_SET)
+            fd.seek(fd1, 0, 0)
+            std_io.println("指针已移动到文件开头")
+
+            // 覆盖前 5 个字符
+            n = fd.write(fd1, "World")
+
+            // 移动到文件末尾 (SEEK_END, 偏移 0)
+            fd.seek(fd1, 0, 2)
+            std_io.println("指针已移动到文件末尾")
+
+            // 在文件末尾追加写
+            n = fd.write(fd1, "\n\tAppend line")
+
+            // 关闭文件
+            fd.close(fd1)
+        end body
+    end function
+end module

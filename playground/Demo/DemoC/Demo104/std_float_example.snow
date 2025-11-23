@@ -1,0 +1,32 @@
+/**
+@module std_float_example
+@summary std_float 方法演示
+*/
+module: float_math_example
+
+    import: std_float
+    import: std_io
+
+    function: main
+        body:
+            std_io.println("=== 演示 abs() 方法 ===")
+
+            declare negfloat:std_float = new std_float(-120s)
+            std_io.print("负数 -120 的绝对值: ")
+            std_io.println(negfloat.abs().getValue())
+
+            std_io.println("\n=== 演示 max()/min() ===")
+
+            std_io.print("比较 -15 和 20 的较大值: ")
+            std_io.println(std_float.max(-15s, 20s).getValue())
+
+            std_io.print("比较 -15 和 20 的较小值: ")
+            std_io.println(std_float.min(-15s, 20s).getValue())
+
+            std_io.println("MAX_VALUE: "+ std_float.MAX_VALUE)
+            std_io.println("MAX_VALUE: "+ std_float.MAX_VALUE)
+
+        end body
+    end function
+
+end module

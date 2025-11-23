@@ -122,6 +122,13 @@ public final class IROpCodeMappings {
             "<=", IROpCode.CMP_DLE,
             ">=", IROpCode.CMP_DGE
     );
+    /**
+     * 引用类型（字符串等）比较
+     */
+    public static final Map<String, IROpCode> CMP_R = Map.of(
+            "==", IROpCode.CMP_REQ,
+            "!=", IROpCode.CMP_RNE
+    );
 
     private IROpCodeMappings() {
     } // 禁止实例化
