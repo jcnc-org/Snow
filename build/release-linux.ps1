@@ -60,8 +60,28 @@ $targetDir = Join-Path $projectRoot "target/release"
 $outDir    = Join-Path $targetDir "snow-v$version-linux-x64"
 $tgzPath   = Join-Path $targetDir "snow-v$version-linux-x64.tgz"
 
-# ===== Step 5: Package to .tgz (Linux-compatible) =====
-Write-Host "Step 5: Package to .tgz..."
+
+# ===== Step 5: Create VERSION file in SDK root directory =====
+Write-Host "Step 5: Create VERSION file in SDK root directory..."
+$versionFilePath = Join-Path $outDir "VERSION"
+try {
+    Set-Content -Path $versionFilePath -Value $version -Force
+    if (Test-Path $versionFilePath) {
+        $versionContent = Get-Content -Path $versionFilePath -Raw
+        if ($versionContent.Trim() -eq $version) {
+            Write-Host ">>> Created VERSION file at $versionFilePath with content: $version"
+        } else {
+            Write-Warning "VERSION file content mismatch. Expected: $version, Actual: $($versionContent.Trim())"
+        }
+    } else {
+        Write-Warning "Failed to create VERSION file at $versionFilePath"
+    }
+} catch {
+    Write-Warning "Failed to create VERSION file: $($_.Exception.Message)"
+}
+
+# ===== Step 6: Package to .tgz (Linux-compatible) =====
+Write-Host "Step 6: Package to .tgz..."
 
 if (-not (Test-Path -LiteralPath $outDir)) {
     Write-Error "Output directory not found: $outDir"
@@ -130,22 +150,3 @@ Write-Host ">>> Package ready!" -ForegroundColor Green
 Write-Host "Version    : $version"
 Write-Host "Output Dir : $outDir"
 Write-Host "Tgz File   : $tgzPath"
-
-# ===== Step 6: Create VERSION file in SDK root directory =====
-Write-Host "Step 6: Create VERSION file in SDK root directory..."
-$versionFilePath = Join-Path $outDir "VERSION"
-try {
-    Set-Content -Path $versionFilePath -Value $version -Force
-    if (Test-Path $versionFilePath) {
-        $versionContent = Get-Content -Path $versionFilePath -Raw
-        if ($versionContent.Trim() -eq $version) {
-            Write-Host ">>> Created VERSION file at $versionFilePath with content: $version"
-        } else {
-            Write-Warning "VERSION file content mismatch. Expected: $version, Actual: $($versionContent.Trim())"
-        }
-    } else {
-        Write-Warning "Failed to create VERSION file at $versionFilePath"
-    }
-} catch {
-    Write-Warning "Failed to create VERSION file: $($_.Exception.Message)"
-}
