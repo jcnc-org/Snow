@@ -46,14 +46,14 @@ if (-not $IsWindows) {
     $targetRoot = Join-Path $projectRoot "target"
     Write-Host ("Step 3: Fix permissions for {0} ..." -f $targetRoot)
     try {
-        # 只用 id -un 获取当前用户，避免 $env:USER 为空的问题
+        # Use `id -un` to get the current username to avoid empty $env:USER
         $userName = (& id -un 2>$null).Trim()
         if (-not $userName) {
-            # 兜底：如果拿不到用户名，就用你机器上的用户名（比如 x）
+            # Fallback: if username cannot be determined, use a default value
             $userName = "x"
         }
 
-        # 只设置 owner，不显式设置 group，避免出现多余的 ':x' 参数
+        # Only set owner, do not explicitly set group to avoid unwanted ':x' parameters
         & sudo chown -R $userName $targetRoot
 
         Write-Host (">>> Permissions fixed for {0} (owner={1})" -f $targetRoot, $userName)
@@ -136,11 +136,10 @@ function Invoke-TarGz {
     $tarExe = "tar"
 
     if ($IsWindows) {
-        # Windows 用 tar
+        # Use tar on Windows
         $args = @("-C", $SourceDir, "-czf", $DestTgz, ".")
     } else {
-        # Linux/macOS
-        # 使用 GNU tar + gzip -9
+        # Use GNU tar + gzip -9 on Linux/macOS
         $args = @("-C", $SourceDir, "-cf", $DestTgz, "--use-compress-program=gzip", ".")
     }
 
