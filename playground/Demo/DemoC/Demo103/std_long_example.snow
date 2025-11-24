@@ -2,7 +2,7 @@
 @module std_long_example
 @summary std_long 方法演示
 */
-module: long_math_example
+module: std_long_example
 
     import: std_long
     import: std_io

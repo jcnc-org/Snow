@@ -2,7 +2,7 @@
 @module std_float_example
 @summary std_float 方法演示
 */
-module: float_math_example
+module: std_float_example
 
     import: std_float
     import: std_io

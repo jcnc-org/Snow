@@ -1,55 +1,147 @@
 /**
 @module std_boolean
-@summary std_boolean 结构体 - 对 boolean 基本数据类型的封装
+@summary std_boolean 结构体 - 对 boolean 基本类型的封装
 */
 module: std_boolean
 
     /**
     @struct std_boolean
-    @summary 短整数值对象的包装类
-    @description
-        包装基本 boolean 类型，提供面向对象的短整数操作接口。
+    @summary boolean 的包装类
     */
     struct: std_boolean
 
         fields:
-            declare value:boolean
+            declare value: boolean
 
         /**
         @init default
-        @summary 无参构造函数，创建值为 0 的 std_boolean
+        @summary 无参构造，默认为 false
         */
         init:
             body:
-                value = 0
+                value = false
             end body
         end init
 
         /**
         @init with_value
-        @summary 带参构造函数，根据给定值创建 std_boolean
-        @param val 初始短整数值
+        @summary 带参构造
         */
         init:
             params:
-                declare val:boolean
+                declare val: boolean
             body:
                 value = val
             end body
         end init
 
+
         /**
-        @function getValue
-        @summary 获取包装的短整数值
-        @returns 返回内部存储的 boolean 值
+        @function booleanValue
+        @summary 返回内部 boolean 值（拆箱）
         */
-        function: getValue
+        function: booleanValue
             returns: boolean
             body:
                 return value
             end body
         end function
 
+
+        /**
+        @function equals
+        @summary 比较两个 std_boolean 是否相等
+        */
+        function: equals
+            params:
+                declare other: std_boolean
+            returns: boolean
+            body:
+                return value == other.value
+            end body
+        end function
+
     end struct
+
+    /**
+    @function parseBoolean
+    @summary 将字符串解析为 boolean
+    @description 忽略大小写，仅当 s == "true" 时返回 true
+    */
+    function: parseBoolean
+        params:
+            declare s: string
+        returns: boolean
+        body:
+            if s == "true" || s == "TRUE" || s == "True" then
+                return true
+            end if
+            return false
+        end body
+    end function
+
+    /**
+    @function valueOfBoolean
+    @summary 将 boolean 装箱为 std_boolean 对象
+    */
+    function: valueOfBoolean
+        params:
+            declare b: boolean
+        returns: std_boolean
+        body:
+            return new std_boolean(b)
+        end body
+    end function
+
+    /**
+    @function valueOfString
+    @summary 将字符串转为 std_boolean 对象
+    */
+    function: valueOfString
+        params:
+            declare s: string
+        returns: std_boolean
+        body:
+            declare b: boolean = std_boolean.parseBoolean(s)
+            return new std_boolean(b)
+        end body
+    end function
+
+    /**
+    @function toString
+    @summary 将 boolean 转为 "true" 或 "false"
+    */
+    function: toString
+        params:
+            declare b: boolean
+        returns: string
+        body:
+            if b == true then
+                return "true"
+            else
+                return "false"
+            end if
+        end body
+    end function
+
+    /**
+    @function compare
+    @summary 比较两个 boolean 值，返回 -1 / 0 / 1
+    */
+    function: compare
+        params:
+            declare x: boolean
+            declare y: boolean
+        returns: int
+        body:
+            if x == y then
+                return 0
+            end if
+            if x == true && y == false then
+                return 1
+            end if
+            return -1
+        end body
+    end function
 
 end module

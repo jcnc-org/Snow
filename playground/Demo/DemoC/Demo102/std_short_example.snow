@@ -2,7 +2,7 @@
 @module std_short_example
 @summary std_short 方法演示
 */
-module: short_math_example
+module: std_short_example
 
     import: std_short
     import: std_io

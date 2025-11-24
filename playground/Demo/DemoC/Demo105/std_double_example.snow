@@ -2,7 +2,7 @@
 @module std_double_example
 @summary std_double 方法演示
 */
-module: double_math_example
+module: std_double_example
 
     import: std_double
     import: std_io

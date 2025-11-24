@@ -2,16 +2,16 @@
 @module std_boolean_example
 @summary std_boolean 方法演示
 */
-module: boolean_math_example
+module: std_boolean_example
 
     import: std_boolean
     import: std_io
 
     function: main
         body:
-            declare boolean1:std_boolean = new std_boolean()
+            declare boolean1:std_boolean = new std_boolean(false)
 
-            std_io.print(boolean1.getValue())
+            std_io.print(boolean1.booleanValue())
 
         end body
     end function
