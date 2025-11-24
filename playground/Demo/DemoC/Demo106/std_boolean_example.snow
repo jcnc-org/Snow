@@ -12,28 +12,28 @@ module: std_boolean_example
             declare b0: std_boolean = new std_boolean()
             declare b1: std_boolean = new std_boolean(true)
 
-            std_io.println("default ctor -> " + std_boolean.toString(b0.booleanValue()))
-            std_io.println("ctor(true)   -> " + std_boolean.toString(b1.booleanValue()))
+            std_io.println("default ctor            -> " + std_boolean.toString(b0.booleanValue()))
+            std_io.println("ctor(true)              -> " + std_boolean.toString(b1.booleanValue()))
 
-            std_io.println("equals false vs true -> " + std_boolean.toString(b0.equals(b1)))
-            std_io.println("equals true vs true  -> " + std_boolean.toString(b1.equals(new std_boolean(true))))
+            std_io.println("equals false vs true    -> " + std_boolean.toString(b0.equals(b1)))
+            std_io.println("equals true vs true     -> " + std_boolean.toString(b1.equals(new std_boolean(true))))
 
             declare parsedTrue: boolean = std_boolean.parseBoolean("True")
             declare parsedFalse: boolean = std_boolean.parseBoolean("anything")
-            std_io.println("parse \"True\"      -> " + std_boolean.toString(parsedTrue))
-            std_io.println("parse \"anything\" -> " + std_boolean.toString(parsedFalse))
+            std_io.println("parse \"True\"            -> " + std_boolean.toString(parsedTrue))
+            std_io.println("parse \"anything\"        -> " + std_boolean.toString(parsedFalse))
 
             declare boxedFalse: std_boolean = std_boolean.valueOfBoolean(false)
             declare boxedFromString: std_boolean = std_boolean.valueOfString("TRUE")
-            std_io.println("valueOfBoolean(false)  -> " + std_boolean.toString(boxedFalse.booleanValue()))
-            std_io.println("valueOfString(\"TRUE\") -> " + std_boolean.toString(boxedFromString.booleanValue()))
+            std_io.println("valueOfBoolean(false)   -> " + std_boolean.toString(boxedFalse.booleanValue()))
+            std_io.println("valueOfString(\"TRUE\")   -> " + std_boolean.toString(boxedFromString.booleanValue()))
 
-            std_io.println("toString(true)  -> " + std_boolean.toString(true))
-            std_io.println("toString(false) -> " + std_boolean.toString(false))
+            std_io.println("toString(true)          -> " + std_boolean.toString(true))
+            std_io.println("toString(false)         -> " + std_boolean.toString(false))
 
-            std_io.println("compare(true, true)   -> " + std_boolean.compare(true, true))
-            std_io.println("compare(true, false)  -> " + std_boolean.compare(true, false))
-            std_io.println("compare(false, true)  -> " + std_boolean.compare(false, true))
+            std_io.println("compare(true, true)     -> " + std_boolean.compare(true, true))
+            std_io.println("compare(true, false)    -> " + std_boolean.compare(true, false))
+            std_io.println("compare(false, true)    -> " + std_boolean.compare(false, true))
         end body
     end function
 
