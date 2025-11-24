@@ -69,7 +69,11 @@ public class MemberHandler implements ExpressionHandler<MemberExpressionNode> {
         // 3. 计算字段下标
         Integer fieldIndex = resolveFieldIndex(ownerType, mem.member());
         if (fieldIndex == null) {
-            throw new IllegalStateException("类型 " + ownerType + " 不存在字段: " + mem.member());
+            var ctx = mem.context();
+            String loc = (ctx == null || ctx.file() == null) ? "" :
+                    " @" + ctx.file() + ":" + ctx.line() + ":" + ctx.column();
+            throw new IllegalStateException("类型 " + ownerType + " 不存在字段: " + mem.member()
+                    + " (object=" + mem.object() + ")" + loc);
         }
 
         // 4. 生成 __index_r(obj, idx) 指令

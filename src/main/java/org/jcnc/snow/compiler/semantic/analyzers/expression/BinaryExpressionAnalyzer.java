@@ -62,6 +62,12 @@ public class BinaryExpressionAnalyzer implements ExpressionAnalyzer<BinaryExpres
                 right == BuiltinType.STRING) {
             return BuiltinType.BOOLEAN;
         }
+        /* ----------- 情况 1.7: 布尔逻辑运算 ----------- */
+        if (("&&".equals(op) || "||".equals(op)) &&
+                left == BuiltinType.BOOLEAN &&
+                right == BuiltinType.BOOLEAN) {
+            return BuiltinType.BOOLEAN;
+        }
 
         /* ----------- 情况 2: 数值运算 / 比较 ----------- */
         if ("+-*/%".contains(op) || ("<<=>>===!=").contains(op)) {

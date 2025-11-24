@@ -6,6 +6,7 @@ import org.jcnc.snow.compiler.ir.builder.expression.ExpressionHandler;
 import org.jcnc.snow.compiler.ir.core.IROpCode;
 import org.jcnc.snow.compiler.ir.utils.ComparisonUtils;
 import org.jcnc.snow.compiler.ir.utils.ExpressionUtils;
+import org.jcnc.snow.compiler.ir.value.IRConstant;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 import org.jcnc.snow.compiler.parser.ast.BinaryExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.StringLiteralNode;
@@ -30,8 +31,15 @@ public class BinaryHandler implements ExpressionHandler<BinaryExpressionNode> {
     public IRVirtualRegister handle(ExpressionBuilder b, BinaryExpressionNode bin) {
         // 1. 分别构建左右子表达式，得到对应的结果寄存器
         IRVirtualRegister a = b.build(bin.left());
-        IRVirtualRegister c = b.build(bin.right());
         String op = bin.operator();
+
+        // 1.1 短路布尔逻辑运算
+        if (isLogicalOp(op)) {
+            return emitLogical(b, bin, a, null);
+        }
+
+        // 重新构建右值以保持短路语义（逻辑分支已提前返回）
+        IRVirtualRegister c = b.build(bin.right());
 
         // 2. 判断是否为字符串拼接（+ 且任意一边是字符串字面量/类型）
         if ("+".equals(op) &&
@@ -69,8 +77,15 @@ public class BinaryHandler implements ExpressionHandler<BinaryExpressionNode> {
     public void handleInto(ExpressionBuilder b, BinaryExpressionNode bin, IRVirtualRegister dest) {
         // 1. 分别构建左右子表达式
         IRVirtualRegister a = b.build(bin.left());
-        IRVirtualRegister c = b.build(bin.right());
         String op = bin.operator();
+
+        // 1.1 布尔逻辑短路
+        if (isLogicalOp(op)) {
+            emitLogical(b, bin, a, dest);
+            return;
+        }
+
+        IRVirtualRegister c = b.build(bin.right());
 
         // 2. 字符串拼接直接写入目标寄存器
         if ("+".equals(op) &&
@@ -95,5 +110,46 @@ public class BinaryHandler implements ExpressionHandler<BinaryExpressionNode> {
             }
             InstructionFactory.binOpInto(b.ctx(), code, a, c, dest);
         }
+    }
+
+    private boolean isLogicalOp(String op) {
+        return "&&".equals(op) || "||".equals(op);
+    }
+
+    /**
+     * 生成布尔逻辑运算（支持短路），保证结果寄存器保存 1/0。
+     */
+    private IRVirtualRegister emitLogical(ExpressionBuilder b,
+                                          BinaryExpressionNode bin,
+                                          IRVirtualRegister left,
+                                          IRVirtualRegister dest) {
+        boolean isOr = "||".equals(bin.operator());
+        var ctx = b.ctx();
+        IRVirtualRegister zero = InstructionFactory.loadConst(ctx, 0);
+        IRVirtualRegister out = dest != null ? dest : ctx.newRegister();
+
+        String shortCircuit = ctx.newLabel();
+        String end = ctx.newLabel();
+
+        if (isOr) {
+            // left 为真则直接短路为 true
+            InstructionFactory.cmpJump(ctx, IROpCode.CMP_INE, left, zero, shortCircuit);
+            IRVirtualRegister right = b.build(bin.right());
+            InstructionFactory.cmpJump(ctx, IROpCode.CMP_INE, right, zero, shortCircuit);
+            InstructionFactory.loadConstInto(ctx, out, new IRConstant(0));
+        } else { // &&
+            // left 为假则直接短路为 false
+            InstructionFactory.cmpJump(ctx, IROpCode.CMP_IEQ, left, zero, shortCircuit);
+            IRVirtualRegister right = b.build(bin.right());
+            InstructionFactory.cmpJump(ctx, IROpCode.CMP_IEQ, right, zero, shortCircuit);
+            InstructionFactory.loadConstInto(ctx, out, new IRConstant(1));
+        }
+        InstructionFactory.jmp(ctx, end);
+
+        InstructionFactory.label(ctx, shortCircuit);
+        InstructionFactory.loadConstInto(ctx, out, new IRConstant(isOr ? 1 : 0));
+        InstructionFactory.label(ctx, end);
+
+        return out;
     }
 }
