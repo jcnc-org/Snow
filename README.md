@@ -132,7 +132,7 @@ sudo pacman -Syu snow-lang-git
 
 1. **开发环境准备**: 
     1. 安装集成开发环境 [IntelliJ IDEA](https://www.jetbrains.com/idea/download)
-    2. 安装 Java 开发工具 [Graalvm-jdk-24](https://www.graalvm.org/downloads/)
+    2. 安装 Java 开发工具 [Graalvm-jdk-25](https://www.graalvm.org/downloads/)
 
 2. **获取源码**: 
    将项目源码下载或克隆到本地目录。
