@@ -1,0 +1,19 @@
+/**
+@module std_boolean_example
+@summary std_boolean 方法演示
+*/
+module: boolean_math_example
+
+    import: std_boolean
+    import: std_io
+
+    function: main
+        body:
+            declare boolean1:std_boolean = new std_boolean()
+
+            std_io.print(boolean1.getValue())
+
+        end body
+    end function
+
+end module

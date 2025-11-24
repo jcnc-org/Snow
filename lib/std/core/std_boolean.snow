@@ -1,0 +1,55 @@
+/**
+@module std_boolean
+@summary std_boolean 结构体 - 对 boolean 基本数据类型的封装
+*/
+module: std_boolean
+
+    /**
+    @struct std_boolean
+    @summary 短整数值对象的包装类
+    @description
+        包装基本 boolean 类型，提供面向对象的短整数操作接口。
+    */
+    struct: std_boolean
+
+        fields:
+            declare value:boolean
+
+        /**
+        @init default
+        @summary 无参构造函数，创建值为 0 的 std_boolean
+        */
+        init:
+            body:
+                value = 0
+            end body
+        end init
+
+        /**
+        @init with_value
+        @summary 带参构造函数，根据给定值创建 std_boolean
+        @param val 初始短整数值
+        */
+        init:
+            params:
+                declare val:boolean
+            body:
+                value = val
+            end body
+        end init
+
+        /**
+        @function getValue
+        @summary 获取包装的短整数值
+        @returns 返回内部存储的 boolean 值
+        */
+        function: getValue
+            returns: boolean
+            body:
+                return value
+            end body
+        end function
+
+    end struct
+
+end module
