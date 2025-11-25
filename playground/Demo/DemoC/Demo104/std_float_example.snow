@@ -9,22 +9,28 @@ module: std_float_example
 
     function: main
         body:
-            std_io.println("=== 演示 abs() 方法 ===")
+            std_io.println("=== std_float API 演示 ===")
 
-            declare negfloat:std_float = new std_float(-120s)
-            std_io.print("负数 -120 的绝对值: ")
-            std_io.println(negfloat.abs().getValue())
+            declare defaultFloat: std_float = new std_float()
+            std_io.println("默认值: " + defaultFloat.floatValue())
 
-            std_io.println("\n=== 演示 max()/min() ===")
+            declare negfloat: std_float = new std_float(-120.5f)
+            std_io.println("负数 -120.5 的绝对值: " + negfloat.abs().floatValue())
 
-            std_io.print("比较 -15 和 20 的较大值: ")
-            std_io.println(std_float.max(-15s, 20s).getValue())
+            declare literalValue: std_float = std_float.valueOf(42.75f)
+            declare parsedValue: std_float = std_float.valueOfString("15.625")
+            std_io.println("valueOf(42.75) -> " + literalValue.toString())
+            std_io.println("valueOfString(15.625) -> " + parsedValue.toString())
 
-            std_io.print("比较 -15 和 20 的较小值: ")
-            std_io.println(std_float.min(-15s, 20s).getValue())
+            std_io.println("两值是否相等: " + literalValue.equals(parsedValue))
 
-            std_io.println("MAX_VALUE: "+ std_float.MAX_VALUE)
-            std_io.println("MAX_VALUE: "+ std_float.MAX_VALUE)
+            declare bigger: std_float = std_float.max(literalValue.floatValue(), parsedValue.floatValue())
+            declare smaller: std_float = std_float.min(literalValue.floatValue(), parsedValue.floatValue())
+            std_io.println("max(literal, parsed) -> " + bigger.toString())
+            std_io.println("min(literal, parsed) -> " + smaller.toString())
+
+            std_io.println("MIN_VALUE: " + std_float.MIN_VALUE)
+            std_io.println("MAX_VALUE: " + std_float.MAX_VALUE)
 
         end body
     end function
