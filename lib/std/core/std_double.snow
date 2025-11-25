@@ -3,6 +3,7 @@
 @summary std_double 结构体 - 对 double 基本数据类型的封装
 */
 module: std_double
+    import: os_fd
 
     globals:
         declare const MIN_VALUE:double = 4.9E-324
@@ -192,26 +193,20 @@ module: std_double
             declare s: string
         returns: double
         body:
-            declare slen:int = syscall("0x1801", s)     // 字符串长度
-            if slen == 0 then
+            declare pair:int[] = os_fd.pipe()
+            declare rfd:int = pair[0]
+            declare wfd:int = pair[1]
+
+            declare len:int = os_fd.write_bytes(wfd, s) // 写入字符串，返回写入字节数
+            os_fd.close(wfd)
+
+            if len <= 0 then
+                os_fd.close(rfd)
                 return 0
             end if
 
-            // 将字符串写入管道，再读出为 byte[]，以便使用 ARR_GET 解析
-            declare pair:any = syscall("0x100A")         // PIPE → [rfd, wfd]
-            declare rfd:int = syscall("0x1802", pair, 0)
-            declare wfd:int = syscall("0x1802", pair, 1)
-
-            syscall("0x1002", wfd, s)                    // WRITE
-            syscall("0x1004", wfd)                       // CLOSE write end
-
-            declare data:any = syscall("0x1001", rfd, slen) // READ → byte[]
-            syscall("0x1004", rfd)                          // CLOSE read end
-
-            declare len:int = syscall("0x1801", data)    // byte 数
-            if len == 0 then
-                return 0
-            end if
+            declare data:any = os_fd.read_bytes(rfd, len) // 读回刚写入的字节
+            os_fd.close(rfd)
 
             declare idx:int = 0
 
@@ -282,7 +277,7 @@ module: std_double
                         step:
                             idx = idx + 1
                         body:
-                            declare cur:int = syscall("0x1802", data, idx)
+                            declare cur:int = syscall("0x1802   ", data, idx)
                             declare digit:int = std_double._digitValue(cur)
                             if digit == -1 then
                                 break
