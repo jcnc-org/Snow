@@ -167,6 +167,23 @@ module: std_double
     end function
 
     /**
+    @function _digitValue
+    @summary 将单字符字符串转为对应的数字，非数字返回 -1
+    */
+    function: _digitValue
+        params:
+            declare ch: any
+        returns: int
+        body:
+            declare code:int = ch   // 期待为字符的 ASCII/UTF-16 码点
+            if code >= 48 && code <= 57 then   // '0'..'9'
+                return code - 48
+            end if
+            return -1
+        end body
+    end function
+
+    /**
     @function parseDouble
     @summary 将字符串解析为 double（基础实现）
     @description
@@ -177,7 +194,118 @@ module: std_double
             declare s: string
         returns: double
         body:
-            return 0 //TODO
+            declare slen:int = syscall("0x1801", s)     // 字符串长度
+            if slen == 0 then
+                return 0
+            end if
+
+            // 将字符串写入管道，再读出为 byte[]，以便使用 ARR_GET 解析
+            declare pair:any = syscall("0x100A")         // PIPE → [rfd, wfd]
+            declare rfd:int = syscall("0x1802", pair, 0)
+            declare wfd:int = syscall("0x1802", pair, 1)
+
+            syscall("0x1002", wfd, s)                    // WRITE
+            syscall("0x1004", wfd)                       // CLOSE write end
+
+            declare data:any = syscall("0x1001", rfd, slen) // READ → byte[]
+            syscall("0x1004", rfd)                          // CLOSE read end
+
+            declare len:int = syscall("0x1801", data)    // byte 数
+            if len == 0 then
+                return 0
+            end if
+
+            declare idx:int = 0
+
+            // 跳过前导空白
+            loop:
+                init:
+                    idx = idx
+                cond:
+                    idx < len
+                step:
+                    idx = idx + 1
+                body:
+                    declare b:int = syscall("0x1802", data, idx)
+                    if b != 32 && b != 9 && b != 10 && b != 13 then   // space, tab, \n, \r
+                        break
+                    end if
+                end body
+            end loop
+
+            if idx >= len then
+                return 0
+            end if
+
+            declare negative:boolean = false
+            declare first:int = syscall("0x1802", data, idx) // 字节值
+            if first == 45 then         // '-'
+                negative = true
+                idx = idx + 1
+            else
+                if first == 43 then     // '+'
+                    idx = idx + 1
+                end if
+            end if
+
+            declare hasDigit:boolean = false
+            declare intPart:double = 0.0
+
+            loop:
+                init:
+                    idx = idx
+                cond:
+                    idx < len
+                step:
+                    idx = idx + 1
+                body:
+                    declare cur:int = syscall("0x1802", data, idx)
+                    declare digit:int = std_double._digitValue(cur)
+                    if digit == -1 then
+                        break
+                    end if
+                    hasDigit = true
+                    intPart = intPart * 10.0 + digit
+                end body
+            end loop
+
+            declare fracPart:double = 0.0
+            declare fracBase:double = 0.1
+
+            if idx < len then
+                declare dot:int = syscall("0x1802", data, idx)
+                if dot == 46 then        // '.'
+                    idx = idx + 1
+                    loop:
+                        init:
+                            idx = idx
+                        cond:
+                            idx < len
+                        step:
+                            idx = idx + 1
+                        body:
+                            declare cur:int = syscall("0x1802", data, idx)
+                            declare digit:int = std_double._digitValue(cur)
+                            if digit == -1 then
+                                break
+                            end if
+                            hasDigit = true
+                            fracPart = fracPart + (digit * fracBase)
+                            fracBase = fracBase * 0.1
+                        end body
+                    end loop
+                end if
+            end if
+
+            if hasDigit == false then
+                return 0
+            end if
+
+            declare result:double = intPart + fracPart
+            if negative then
+                result = -result
+            end if
+            return result
         end body
     end function
 
