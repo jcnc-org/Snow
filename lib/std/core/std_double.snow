@@ -185,9 +185,7 @@ module: std_double
 
     /**
     @function parseDouble
-    @summary 将字符串解析为 double（基础实现）
-    @description
-        为 Snow 运行时预留。若无解析能力，则返回 0。
+    @summary 将字符串解析为 double
     */
     function: parseDouble
         params:
