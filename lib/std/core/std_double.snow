@@ -1,9 +1,9 @@
 /**
 @module std_double
-@summary std_double 结构体 - 对 double 基本数据类型的封装
+@summary std_double 结构体 - 对 double 基本数据类型的轻量封装
 */
 module: std_double
-    import: os_fd
+    import: std_parse
 
     globals:
         declare const MIN_VALUE:double = 4.9E-324
@@ -94,10 +94,10 @@ module: std_double
     end struct
 
     /**
-    @function valueOfDouble
+    @function valueOf
     @summary 将 double 装箱为 std_double
     */
-    function: valueOfDouble
+    function: valueOf
         params:
             declare d: double
         returns: std_double
@@ -115,14 +115,14 @@ module: std_double
             declare s: string
         returns: std_double
         body:
-            declare d: double = std_double.parseDouble(s)
+            declare d: double = std_parse.parseDouble(s)
             return new std_double(d)
         end body
     end function
 
     /**
     @function toString
-    @summary 将 double 转换为字符串（简单实现）
+    @summary 将 double 转换为字符串
     */
     function: toString
         params:
@@ -130,211 +130,6 @@ module: std_double
         returns: string
         body:
             return "" + d   // Snow 使用 + 转换为字符串
-        end body
-    end function
-
-    /**
-    @function compare
-    @summary 比较两个 double 值，返回 -1 / 0 / 1
-    */
-    function: compare
-        params:
-            declare lhs: double
-            declare rhs: double
-        returns: int
-        body:
-            if lhs == rhs then
-                return 0
-            end if
-            if lhs > rhs then
-                return 1
-            end if
-            return -1
-        end body
-    end function
-
-    /**
-    @function equals
-    @summary 比较两个 double 是否相等
-    */
-    function: equals
-        params:
-            declare lhs: double
-            declare rhs: double
-        returns: boolean
-        body:
-            return lhs == rhs
-        end body
-    end function
-
-    /**
-    @function _digitValue
-    @summary 将单字符字符串转为对应的数字，非数字返回 -1
-    */
-    function: _digitValue
-        params:
-            declare ch: any
-        returns: int
-        body:
-            declare code:int = ch   // 期待为字符的 ASCII/UTF-16 码点
-            if code >= 48 && code <= 57 then   // '0'..'9'
-                return code - 48
-            end if
-            return -1
-        end body
-    end function
-
-    /**
-    @function parseDouble
-    @summary 将字符串解析为 double
-    */
-    function: parseDouble
-        params:
-            declare s: string
-        returns: double
-        body:
-            declare pair:int[] = os_fd.pipe()
-            declare rfd:int = pair[0]
-            declare wfd:int = pair[1]
-
-            declare len:int = os_fd.write_bytes(wfd, s) // 写入字符串，返回写入字节数
-            os_fd.close(wfd)
-
-            if len <= 0 then
-                os_fd.close(rfd)
-                return 0
-            end if
-
-            declare data:any = os_fd.read_bytes(rfd, len) // 读回刚写入的字节
-            os_fd.close(rfd)
-
-            declare idx:int = 0
-
-            // 跳过前导空白
-            loop:
-                init:
-                    idx = idx
-                cond:
-                    idx < len
-                step:
-                    idx = idx + 1
-                body:
-                    declare b:int = syscall("0x1802", data, idx)
-                    if b != 32 && b != 9 && b != 10 && b != 13 then   // space, tab, \n, \r
-                        break
-                    end if
-                end body
-            end loop
-
-            if idx >= len then
-                return 0
-            end if
-
-            declare negative:boolean = false
-            declare first:int = syscall("0x1802", data, idx) // 字节值
-            if first == 45 then         // '-'
-                negative = true
-                idx = idx + 1
-            else
-                if first == 43 then     // '+'
-                    idx = idx + 1
-                end if
-            end if
-
-            declare hasDigit:boolean = false
-            declare intPart:double = 0.0
-
-            loop:
-                init:
-                    idx = idx
-                cond:
-                    idx < len
-                step:
-                    idx = idx + 1
-                body:
-                    declare cur:int = syscall("0x1802", data, idx)
-                    declare digit:int = std_double._digitValue(cur)
-                    if digit == -1 then
-                        break
-                    end if
-                    hasDigit = true
-                    intPart = intPart * 10.0 + digit
-                end body
-            end loop
-
-            declare fracPart:double = 0.0
-            declare fracBase:double = 0.1
-
-            if idx < len then
-                declare dot:int = syscall("0x1802", data, idx)
-                if dot == 46 then        // '.'
-                    idx = idx + 1
-                    loop:
-                        init:
-                            idx = idx
-                        cond:
-                            idx < len
-                        step:
-                            idx = idx + 1
-                        body:
-                            declare cur:int = syscall("0x1802   ", data, idx)
-                            declare digit:int = std_double._digitValue(cur)
-                            if digit == -1 then
-                                break
-                            end if
-                            hasDigit = true
-                            fracPart = fracPart + (digit * fracBase)
-                            fracBase = fracBase * 0.1
-                        end body
-                    end loop
-                end if
-            end if
-
-            if hasDigit == false then
-                return 0
-            end if
-
-            declare result:double = intPart + fracPart
-            if negative then
-                result = -result
-            end if
-            return result
-        end body
-    end function
-
-    /**
-    @function max
-    @summary 比较两个 double 并返回较大值（std_double）
-    */
-    function: max
-        params:
-            declare lhs: double
-            declare rhs: double
-        returns: std_double
-        body:
-            if lhs >= rhs then
-                return new std_double(lhs)
-            else
-                return new std_double(rhs)
-            end if
-        end body
-    end function
-
-    /**
-    @function min
-    @summary 比较两个 double 并返回较小值（std_double）
-    */
-    function: min
-        params:
-            declare lhs: double
-            declare rhs: double
-        returns: std_double
-        body:
-            if lhs <= rhs then
-                return new std_double(lhs)
-            else
-                return new std_double(rhs)
-            end if
         end body
     end function
 

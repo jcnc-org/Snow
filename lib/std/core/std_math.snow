@@ -1,0 +1,63 @@
+/**
+@module std_math
+@summary 基础数学工具库（double 相关）
+*/
+module: std_math
+
+    /**
+    @function compareDouble
+    @summary 比较两个 double 值，返回 -1 / 0 / 1
+    */
+    function: compareDouble
+        params:
+            declare lhs: double
+            declare rhs: double
+        returns: int
+        body:
+            if lhs == rhs then
+                return 0
+            end if
+            if lhs > rhs then
+                return 1
+            end if
+            return -1
+        end body
+    end function
+
+    /**
+    @function maxDouble
+    @summary 返回两个 double 中较大的值
+    */
+    function: maxDouble
+        params:
+            declare lhs: double
+            declare rhs: double
+        returns: double
+        body:
+            if lhs >= rhs then
+                return lhs
+            else
+                return rhs
+            end if
+        end body
+    end function
+
+    /**
+    @function minDouble
+    @summary 返回两个 double 中较小的值
+    */
+    function: minDouble
+        params:
+            declare lhs: double
+            declare rhs: double
+        returns: double
+        body:
+            if lhs <= rhs then
+                return lhs
+            else
+                return rhs
+            end if
+        end body
+    end function
+
+end module

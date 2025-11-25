@@ -1,0 +1,155 @@
+/**
+@module std_parse
+@summary 字符串解析工具集，提供基础的类型转换能力。
+*/
+module: std_parse
+    import: os_fd
+
+    /**
+    @function _digitValue
+    @summary 将单字符转为对应的数字，非数字返回 -1
+    */
+    function: _digitValue
+        params:
+            declare ch: int
+        returns: int
+        body:
+            if ch >= 48 && ch <= 57 then   // '0'..'9'
+                return ch - 48
+            end if
+            return -1
+        end body
+    end function
+
+
+    /**
+    @function parseDouble
+    @summary 将字符串解析为 double
+    @description 使用管道转为字节数组，支持前导空白、可选符号与小数部分。
+    */
+    function: parseDouble
+        params:
+            declare s: string
+        returns: double
+        body:
+            declare pair:int[] = os_fd.pipe()
+            declare rfd:int = pair[0]
+            declare wfd:int = pair[1]
+
+            declare len:int = os_fd.write_bytes(wfd, s) // 写入字符串，返回写入字节数
+            os_fd.close(wfd)
+
+            if len <= 0 then
+                os_fd.close(rfd)
+                return 0
+            end if
+
+            declare data:any = os_fd.read_bytes(rfd, len) // 读回刚写入的字节
+            os_fd.close(rfd)
+
+            declare idx:int = 0
+
+            // 跳过前导空白（手动推进索引，避免 step 语义干扰）
+            loop:
+                init:
+                    idx = idx
+                cond:
+                    idx < len
+                step:
+                    idx = idx
+                body:
+                    declare b:int = syscall("0x1802", data, idx)
+                    if b != 32 && b != 9 && b != 10 && b != 13 then   // space, tab, \n, \r
+                        break
+                    end if
+                    idx = idx + 1
+                end body
+            end loop
+
+            if idx >= len then
+                return 0
+            end if
+
+            declare negative:boolean = false
+            declare first:int = syscall("0x1802", data, idx) // 字节值
+            if first == 45 then         // '-'
+                negative = true
+                idx = idx + 1
+            else
+                if first == 43 then     // '+'
+                    idx = idx + 1
+                end if
+            end if
+
+            declare hasDigit:boolean = false
+            declare intPart:double = 0.0
+
+            // 整数部分（显式推进 pos）
+            declare pos:int = idx
+            loop:
+                init:
+                    pos = pos
+                cond:
+                    pos < len
+                step:
+                    pos = pos
+                body:
+                    declare cur:int = syscall("0x1802", data, pos)
+                    declare digit:int = std_parse._digitValue(cur)
+                    if digit == -1 then
+                        break
+                    end if
+                    hasDigit = true
+                    intPart = intPart * 10.0 + digit
+                    pos = pos + 1
+                end body
+            end loop
+            idx = pos
+
+            declare fracPart:double = 0.0
+            declare fracBase:double = 0.1
+
+            if idx < len then
+                declare dot:int = syscall("0x1802", data, idx)
+                if dot == 46 then        // '.'
+                    idx = idx + 1
+                    declare fpos:int = idx
+                    loop:
+                        init:
+                            fpos = fpos
+                        cond:
+                            fpos < len
+                        step:
+                            fpos = fpos
+                        body:
+                            declare cur:int = syscall("0x1802", data, fpos)
+                            declare digit:int = std_parse._digitValue(cur)
+                            if digit == -1 then
+                                break
+                            end if
+                            hasDigit = true
+                            fracPart = fracPart + (digit * fracBase)
+                            fracBase = fracBase * 0.1
+                            fpos = fpos + 1
+                        end body
+                    end loop
+                    idx = fpos
+                end if
+            end if
+
+            if hasDigit == false then
+                return 0
+            end if
+
+            declare result:double
+            if negative then
+                result = -intPart
+                result = result - fracPart
+            else
+                result = intPart + fracPart
+            end if
+            return result
+        end body
+    end function
+
+end module
