@@ -1,6 +1,6 @@
 /**
 @module std_double
-@summary std_double 结构体 - 对 double 基本数据类型的轻量封装
+@summary std_double 结构体 - 对 double 基本数据类型的封装
 */
 module: std_double
     import: std_parse
