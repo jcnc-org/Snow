@@ -77,13 +77,23 @@ public final class ExpressionUtils {
      * @return 对应类型的 IRConstant 常量
      */
     public static IRConstant buildNumberConstant(IRContext ctx, String value) {
+        return buildNumberConstant(ctx, value, null);
+    }
+
+    /**
+     * 构建数字常量（带位置信息，用于格式化错误输出）。
+     */
+    public static IRConstant buildNumberConstant(IRContext ctx, String value, NodeContext nodeCtx) {
         if (value == null || value.isEmpty()) {
             return new IRConstant(0);
         }
 
-        char suffix = Character.toLowerCase(value.charAt(value.length() - 1));
+        char last = value.charAt(value.length() - 1);
+        boolean hasLetterSuffix = Character.isLetter(last);
+        char suffix = hasLetterSuffix ? Character.toLowerCase(last) : '\0';
         boolean explicitSuffix = suffix == 'l' || suffix == 'f' || suffix == 'd';
-        String digits = normalizeDigits(value, explicitSuffix);
+
+        String digits = normalizeDigits(value, explicitSuffix || hasLetterSuffix);
 
         if (!explicitSuffix && ctx.getVarType() != null) {
             String t = ctx.getVarType();
@@ -106,13 +116,14 @@ public final class ExpressionUtils {
             return switch (suffix) {
                 case 'b' -> new IRConstant(Byte.parseByte(digits));
                 case 's' -> new IRConstant(Short.parseShort(digits));
+                case 'i' -> new IRConstant(Integer.parseInt(digits));
                 case 'l' -> new IRConstant(Long.parseLong(digits));
                 case 'f' -> new IRConstant(Float.parseFloat(digits));
                 case 'd' -> new IRConstant(Double.parseDouble(digits));
                 default -> new IRConstant(Integer.parseInt(digits));
             };
         } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException("非法数字字面量: " + value, ex);
+            throw literalFormatError(value, nodeCtx);
         }
     }
 
@@ -264,6 +275,21 @@ public final class ExpressionUtils {
             }
         }
         return t;
+    }
+
+    /**
+     * 按 Snow 语法错误格式包装数字字面量错误。
+     */
+    private static RuntimeException literalFormatError(String value, NodeContext ctx) {
+        String loc;
+        if (ctx != null && ctx.file() != null && !ctx.file().isBlank()) {
+            loc = "file:///" + ctx.file() + ":" + ctx.line() + ":" + ctx.column();
+        } else {
+            loc = "file:///?:0:0";
+        }
+        String msg = "语法错误: 解析过程中检测到 1 处错误:\n"
+                + " - " + loc + ": 非法数字字面量: " + value;
+        return new IllegalStateException(msg);
     }
 
     // ───────────── 字符串辅助工具 ─────────────
