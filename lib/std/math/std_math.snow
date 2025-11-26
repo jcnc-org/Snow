@@ -1,6 +1,6 @@
 /**
 @module std_math
-@summary 基础数学工具库（double 相关）
+@summary 基础数学工具库（double / float 相关）
 */
 module: std_math
 
@@ -12,6 +12,26 @@ module: std_math
         params:
             declare lhs: double
             declare rhs: double
+        returns: int
+        body:
+            if lhs == rhs then
+                return 0
+            end if
+            if lhs > rhs then
+                return 1
+            end if
+            return -1
+        end body
+    end function
+
+    /**
+    @function comparefloat
+    @summary 比较两个 float 值，返回 -1 / 0 / 1
+    */
+    function: comparefloat
+        params:
+            declare lhs: float
+            declare rhs: float
         returns: int
         body:
             if lhs == rhs then
@@ -43,6 +63,24 @@ module: std_math
     end function
 
     /**
+    @function maxfloat
+    @summary 返回两个 float 中较大的值
+    */
+    function: maxfloat
+        params:
+            declare lhs: float
+            declare rhs: float
+        returns: float
+        body:
+            if lhs >= rhs then
+                return lhs
+            else
+                return rhs
+            end if
+        end body
+    end function
+
+    /**
     @function minDouble
     @summary 返回两个 double 中较小的值
     */
@@ -51,6 +89,24 @@ module: std_math
             declare lhs: double
             declare rhs: double
         returns: double
+        body:
+            if lhs <= rhs then
+                return lhs
+            else
+                return rhs
+            end if
+        end body
+    end function
+
+    /**
+    @function minfloat
+    @summary 返回两个 float 中较小的值
+    */
+    function: minfloat
+        params:
+            declare lhs: float
+            declare rhs: float
+        returns: float
         body:
             if lhs <= rhs then
                 return lhs

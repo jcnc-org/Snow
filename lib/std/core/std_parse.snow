@@ -280,4 +280,17 @@ module: std_parse
         end body
     end function
 
+    /**
+    @function parsefloat
+    @summary parseFloat 的别名，便于与示例保持一致
+    */
+    function: parsefloat
+        params:
+            declare s: string
+        returns: float
+        body:
+            return std_parse.parseFloat(s)
+        end body
+    end function
+
 end module
