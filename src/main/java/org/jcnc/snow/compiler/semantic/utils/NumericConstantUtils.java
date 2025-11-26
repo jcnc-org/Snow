@@ -89,6 +89,17 @@ public final class NumericConstantUtils {
 
     }
 
+    /**
+     * 运行期允许的整型窄化：目标为 byte/short，源为不宽于 int 的整型表达式。
+     * 用于允许 parseShort 等场景的计算式写法，同时避免 long/float/double 的静默截断。
+     */
+    public static boolean allowIntegralNarrowing(Type target, Type actual) {
+        if (!(target instanceof BuiltinType t)) return false;
+        if (t != BuiltinType.BYTE && t != BuiltinType.SHORT) return false;
+        if (!(actual instanceof BuiltinType a)) return false;
+        return a == BuiltinType.INT || a == BuiltinType.SHORT || a == BuiltinType.BYTE;
+    }
+
     // ────────── 内部工具 ──────────
 
     private static boolean fitsRange(BigInteger v, long min, long max) {

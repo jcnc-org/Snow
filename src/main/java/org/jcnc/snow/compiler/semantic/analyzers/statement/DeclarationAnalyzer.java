@@ -86,8 +86,9 @@ public class DeclarationAnalyzer implements StatementAnalyzer<DeclarationNode> {
                     && initType.isNumeric()
                     && Type.widen(initType, finalVarType) == finalVarType;
             boolean narrowingConst = NumericConstantUtils.canNarrowToIntegral(finalVarType, initType, initExpr);
+            boolean narrowingNumeric = NumericConstantUtils.allowIntegralNarrowing(finalVarType, initType);
 
-            if (!compatible && !widenOK && !narrowingConst) {
+            if (!compatible && !widenOK && !narrowingConst && !narrowingNumeric) {
                 ctx.getErrors().add(new SemanticError(decl,
                         "初始化类型不匹配: 期望 " + finalVarType + ", 实际 " + initType));
                 ctx.log("错误: 初始化类型不匹配 " + decl.getName());

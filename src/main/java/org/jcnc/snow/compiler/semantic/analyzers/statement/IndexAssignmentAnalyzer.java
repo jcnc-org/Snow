@@ -70,8 +70,9 @@ public class IndexAssignmentAnalyzer implements StatementAnalyzer<IndexAssignmen
                 && rhsT.isNumeric()
                 && Type.widen(rhsT, elementType) == elementType;
         boolean narrowingConst = NumericConstantUtils.canNarrowToIntegral(elementType, rhsT, node.value());
+        boolean narrowingNumeric = NumericConstantUtils.allowIntegralNarrowing(elementType, rhsT);
 
-        if (!compatible && !widenOK && !narrowingConst) {
+        if (!compatible && !widenOK && !narrowingConst && !narrowingNumeric) {
             ctx.getErrors().add(new SemanticError(node,
                     "数组元素赋值类型不匹配: 期望 " + elementType.name() + "，实际 " + rhsT.name()));
         }

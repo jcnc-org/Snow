@@ -55,6 +55,7 @@ public class ReturnAnalyzer implements StatementAnalyzer<ReturnNode> {
             Type actual = exprAnalyzer.analyze(ctx, mi, fn, locals, exp);
 
             boolean ok = expected.returnType().isCompatible(actual)
+                    || NumericConstantUtils.allowIntegralNarrowing(expected.returnType(), actual)
                     || NumericConstantUtils.canNarrowToIntegral(expected.returnType(), actual, exp);
 
             if (!ok) {
