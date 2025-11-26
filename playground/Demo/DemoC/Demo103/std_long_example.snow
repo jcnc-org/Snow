@@ -5,26 +5,45 @@
 module: std_long_example
 
     import: std_long
+    import: std_math
     import: std_io
+    import: std_parse
 
     function: main
         body:
-            std_io.println("=== 演示 abs() 方法 ===")
+            std_io.println("=== 构造与拆箱 longValue() ===")
+            declare defaultlong: std_long = new std_long()
+            declare pilong: std_long = new std_long(3)
+            std_io.println("默认构造 -> " + defaultlong.longValue())
+            std_io.println("带参构造(3) -> " + pilong.longValue())
 
-            declare neglong:std_long = new std_long(-120L)
-            std_io.print("负数 -120 的绝对值: ")
-            std_io.println(neglong.abs().getValue())
+            std_io.println("\n=== valueOf* 与静态 toString() ===")
+            declare boxedFromlong: std_long = std_long.valueOf(42L)
+            declare boxedFromString: std_long = std_long.valueOfString("12")
+            std_io.println("valueOf(42) -> " + boxedFromlong.longValue())
+            std_io.println("valueOfString(\"12\") -> " + boxedFromString.longValue())
+            std_io.println("std_long.toString(7) -> " + std_long.toString(7L))
 
-            std_io.println("\n=== 演示 max()/min() ===")
+            std_io.println("\n=== 实例方法 abs()/equals()/toString() ===")
+            declare neglong: std_long = new std_long(-120L)
+            declare eqA: std_long = new std_long(10L)
+            declare eqB: std_long = new std_long(10L)
+            declare eqC: std_long = new std_long(8L)
+            std_io.println("abs(-120) -> " + neglong.abs().longValue())
+            std_io.println("equals(10,10) -> " + eqA.equals(eqB))
+            std_io.println("equals(10,8) -> " + eqA.equals(eqC))
+            std_io.println("toString() on 10 -> " + eqA.toString())
 
-            std_io.print("比较 -15 和 20 的较大值: ")
-            std_io.println(std_long.max(-15L, 20L).getValue())
+            std_io.println("\n=== 数学/解析工具 ===")
+            std_io.println("std_parse.parselong(\"-7\") -> " + std_parse.parselong("-7L"))
+            std_io.println("std_math.comparelong(1, 5) -> " + std_math.compareLong(1L, 5L))
+            std_io.println("std_math.comparelong(7, 2) -> " + std_math.compareLong(7L, 2L))
+            std_io.println("std_math.maxlong(-15, 20) -> " + std_math.maxLong(-15L, 20L))
+            std_io.println("std_math.minlong(-15, 20) -> " + std_math.minLong(-15L, 20L))
 
-            std_io.print("比较 -15 和 20 的较小值: ")
-            std_io.println(std_long.min(-15L, 20L).getValue())
-
-            std_io.println("MAX_VALUE: "+ std_long.MAX_VALUE)
-            std_io.println("MAX_VALUE: "+ std_long.MAX_VALUE)
+            std_io.println("\n=== 常量 MIN_VALUE / MAX_VALUE ===")
+            std_io.println("MIN_VALUE: " + std_long.MIN_VALUE)
+            std_io.println("MAX_VALUE: " + std_long.MAX_VALUE)
 
         end body
     end function

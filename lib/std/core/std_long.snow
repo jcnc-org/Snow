@@ -3,6 +3,7 @@
 @summary std_long 结构体 - 对 long 基本数据类型的封装
 */
 module: std_long
+    import: std_parse
 
     globals:
         declare const MIN_VALUE:long = -9223372036854775807L
@@ -10,18 +11,16 @@ module: std_long
 
     /**
     @struct std_long
-    @summary 短整数值对象的包装类
-    @description
-        包装基本 long 类型，提供面向对象的短整数操作接口。
+    @summary long 的包装类
     */
     struct: std_long
 
         fields:
-            declare value:long
+            declare value: long
 
         /**
         @init default
-        @summary 无参构造函数，创建值为 0 的 std_long
+        @summary 无参构造函数，默认创建值为 0 的 std_long
         */
         init:
             body:
@@ -32,22 +31,21 @@ module: std_long
         /**
         @init with_value
         @summary 带参构造函数，根据给定值创建 std_long
-        @param val 初始短整数值
+        @param val 初始 long 值
         */
         init:
             params:
-                declare val:long
+                declare val: long
             body:
                 value = val
             end body
         end init
 
         /**
-        @function getValue
-        @summary 获取包装的短整数值
-        @returns 返回内部存储的 long 值
+        @function longValue
+        @summary 获取包装的 long 值（拆箱）
         */
-        function: getValue
+        function: longValue
             returns: long
             body:
                 return value
@@ -56,13 +54,12 @@ module: std_long
 
         /**
         @function abs
-        @summary 计算当前短整数的绝对值
-        @returns 返回当前短整数值绝对值的 std_long 实例
+        @summary 返回当前 long 绝对值的 std_long 实例
         */
         function: abs
             returns: std_long
             body:
-                declare result:long = value
+                declare result: long = value
                 if result < 0 then
                     result = -result
                 end if
@@ -70,47 +67,69 @@ module: std_long
             end body
         end function
 
+        /**
+        @function equals
+        @summary 比较两个 std_long 是否相等
+        */
+        function: equals
+            params:
+                declare other: std_long
+            returns: boolean
+            body:
+                return value == other.value
+            end body
+        end function
+
+        /**
+        @function toString
+        @summary 将当前 long 值转为字符串
+        */
+        function: toString
+            returns: string
+            body:
+                return std_long.toString(value)
+            end body
+        end function
+
     end struct
 
     /**
-    @function max
-    @summary 比较两个短整数并返回较大值（std_long）
-    @param lhs 第一短整数
-    @param rhs 第二短整数
-    @returns 返回两个短整数中较大值的 std_long 实例
+    @function valueOf
+    @summary 将 long 装箱为 std_long
     */
-    function: max
+    function: valueOf
         params:
-            declare lhs:long
-            declare rhs:long
+            declare d: long
         returns: std_long
         body:
-            if lhs >= rhs then
-                return new std_long(lhs)
-            else
-                return new std_long(rhs)
-            end if
+            return new std_long(d)
         end body
     end function
 
     /**
-    @function min
-    @summary 比较两个短整数并返回较小值（std_long）
-    @param lhs 第一短整数
-    @param rhs 第二短整数
-    @returns 返回两个短整数中较小值的 std_long 实例
+    @function valueOfString
+    @summary 将字符串解析并包装为 std_long
     */
-    function: min
+    function: valueOfString
         params:
-            declare lhs:long
-            declare rhs:long
+            declare s: string
         returns: std_long
         body:
-            if lhs <= rhs then
-                return new std_long(lhs)
-            else
-                return new std_long(rhs)
-            end if
+            declare d: long = std_parse.parselong(s)
+            return new std_long(d)
+        end body
+    end function
+
+    /**
+    @function toString
+    @summary 将 long 转换为字符串
+    */
+    function: toString
+        params:
+            declare d: long
+        returns: string
+        body:
+            return "" + d   // Snow 使用 + 转换为字符串
         end body
     end function
 
