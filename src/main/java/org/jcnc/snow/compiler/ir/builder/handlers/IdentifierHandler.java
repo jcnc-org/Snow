@@ -5,6 +5,7 @@ import org.jcnc.snow.compiler.ir.builder.expression.ExpressionHandler;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 import org.jcnc.snow.compiler.parser.ast.IdentifierNode;
 import org.jcnc.snow.compiler.parser.ast.MemberExpressionNode;
+import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 
 /**
  * 标识符表达式处理器。
@@ -40,6 +41,18 @@ public class IdentifierHandler implements ExpressionHandler<IdentifierNode> {
         }
 
         // 3. 未找到则抛出异常
-        throw new IllegalStateException("未定义标识符: " + id.name());
+        throw new IllegalStateException(formatUndefinedIdentifier(id));
+    }
+
+    /**
+     * 按 Snow 语法错误格式包装“未定义标识符”错误，附带文件/行/列信息。
+     */
+    private String formatUndefinedIdentifier(IdentifierNode id) {
+        NodeContext ctx = id.context();
+        String loc = "未知位置";
+        if (ctx != null && ctx.file() != null && !ctx.file().isBlank()) {
+            loc = "file:///" + ctx.file() + ":" + ctx.line() + ":" + ctx.column();
+        }
+        return "语义错误: 解析过程中检测到 1 处错误:\n - " + loc + ": 未定义标识符: " + id.name();
     }
 }
