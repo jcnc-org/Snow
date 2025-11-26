@@ -3,6 +3,7 @@
 @summary std_short 结构体 - 对 short 基本数据类型的封装
 */
 module: std_short
+    import: std_parse
 
     globals:
         declare const MIN_VALUE:short = -32767s
@@ -10,18 +11,16 @@ module: std_short
 
     /**
     @struct std_short
-    @summary 短整数值对象的包装类
-    @description
-        包装基本 short 类型，提供面向对象的短整数操作接口。
+    @summary short 的包装类
     */
     struct: std_short
 
         fields:
-            declare value:short
+            declare value: short
 
         /**
         @init default
-        @summary 无参构造函数，创建值为 0 的 std_short
+        @summary 无参构造函数，默认创建值为 0 的 std_short
         */
         init:
             body:
@@ -32,22 +31,21 @@ module: std_short
         /**
         @init with_value
         @summary 带参构造函数，根据给定值创建 std_short
-        @param val 初始短整数值
+        @param val 初始 short 值
         */
         init:
             params:
-                declare val:short
+                declare val: short
             body:
                 value = val
             end body
         end init
 
         /**
-        @function getValue
-        @summary 获取包装的短整数值
-        @returns 返回内部存储的 short 值
+        @function shortValue
+        @summary 获取包装的 short 值（拆箱）
         */
-        function: getValue
+        function: shortValue
             returns: short
             body:
                 return value
@@ -56,13 +54,12 @@ module: std_short
 
         /**
         @function abs
-        @summary 计算当前短整数的绝对值
-        @returns 返回当前短整数值绝对值的 std_short 实例
+        @summary 返回当前 short 绝对值的 std_short 实例
         */
         function: abs
             returns: std_short
             body:
-                declare result:short = value
+                declare result: short = value
                 if result < 0 then
                     result = -result
                 end if
@@ -70,47 +67,69 @@ module: std_short
             end body
         end function
 
+        /**
+        @function equals
+        @summary 比较两个 std_short 是否相等
+        */
+        function: equals
+            params:
+                declare other: std_short
+            returns: boolean
+            body:
+                return value == other.value
+            end body
+        end function
+
+        /**
+        @function toString
+        @summary 将当前 short 值转为字符串
+        */
+        function: toString
+            returns: string
+            body:
+                return std_short.toString(value)
+            end body
+        end function
+
     end struct
 
     /**
-    @function max
-    @summary 比较两个短整数并返回较大值（std_short）
-    @param lhs 第一短整数
-    @param rhs 第二短整数
-    @returns 返回两个短整数中较大值的 std_short 实例
+    @function valueOf
+    @summary 将 short 装箱为 std_short
     */
-    function: max
+    function: valueOf
         params:
-            declare lhs:short
-            declare rhs:short
+            declare d: short
         returns: std_short
         body:
-            if lhs >= rhs then
-                return new std_short(lhs)
-            else
-                return new std_short(rhs)
-            end if
+            return new std_short(d)
         end body
     end function
 
     /**
-    @function min
-    @summary 比较两个短整数并返回较小值（std_short）
-    @param lhs 第一短整数
-    @param rhs 第二短整数
-    @returns 返回两个短整数中较小值的 std_short 实例
+    @function valueOfString
+    @summary 将字符串解析并包装为 std_short
     */
-    function: min
+    function: valueOfString
         params:
-            declare lhs:short
-            declare rhs:short
+            declare s: string
         returns: std_short
         body:
-            if lhs <= rhs then
-                return new std_short(lhs)
-            else
-                return new std_short(rhs)
-            end if
+            declare d: short = std_parse.parseShort(s)
+            return new std_short(d)
+        end body
+    end function
+
+    /**
+    @function toString
+    @summary 将 short 转换为字符串
+    */
+    function: toString
+        params:
+            declare d: short
+        returns: string
+        body:
+            return "" + d   // Snow 使用 + 转换为字符串
         end body
     end function
 

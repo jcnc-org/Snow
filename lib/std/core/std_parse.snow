@@ -374,5 +374,100 @@ module: std_parse
 	    end body
 	end function
 
+	///
+	/// @function parseShort
+	/// @summary 将字符串解析为 short
+	/// @description 与 parseLong 的逻辑一致，只处理整数部分并输出 short。
+	///
+	function: parseShort
+	    params:
+	        declare s: string
+	    returns: short
+	    body:
+	        declare pair:int[] = os_fd.pipe()
+	        declare rfd:int = pair[0]
+	        declare wfd:int = pair[1]
+
+	        declare len:int = os_fd.write_bytes(wfd, s)
+	        os_fd.close(wfd)
+
+	        if len <= 0 then
+	            os_fd.close(rfd)
+	            return 0s
+	        end if
+
+	        declare data:any = os_fd.read_bytes(rfd, len)
+	        os_fd.close(rfd)
+
+	        declare idx:int = 0
+
+	        // 跳过前导空白
+	        loop:
+	            init:
+	                idx = idx
+	            cond:
+	                idx < len
+	            step:
+	                idx = idx
+	            body:
+	                declare b:int = syscall("0x1802", data, idx)
+	                if b != 32 && b != 9 && b != 10 && b != 13 then
+	                    break
+	                end if
+	                idx = idx + 1
+	            end body
+	        end loop
+
+	        if idx >= len then
+	            return 0s
+	        end if
+
+	        declare negative:boolean = false
+	        declare first:int = syscall("0x1802", data, idx)
+	        if first == 45s then          // '-'
+	            negative = true
+	            idx = idx + 1s
+	        else
+	            if first == 43s then      // '+'
+	                idx = idx + 1s
+	            end if
+	        end if
+
+	        declare hasDigit:boolean = false
+	        declare value:short = 0s
+
+	        declare pos:int = idx
+	        loop:
+	            init:
+	                pos = pos
+	            cond:
+	                pos < len
+	            step:
+	                pos = pos
+	            body:
+	                declare cur:int = syscall("0x1802", data, pos)
+	                declare digit:int = std_parse._digitValue(cur)
+	                if digit == -1 then
+	                    break
+	                end if
+	                hasDigit = true
+	                // 这里直接用普通整型算式，交给编译器做类型收缩
+	                value = value * 10s + digit
+	                pos = pos + 1s
+	            end body
+	        end loop
+
+	        if hasDigit == false then
+	            return 0s
+	        end if
+
+	        if negative then
+	            value = -value
+	        end if
+
+	        return value
+	    end body
+	end function
+
 
 end module
