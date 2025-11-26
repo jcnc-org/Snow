@@ -10,6 +10,7 @@ import org.jcnc.snow.compiler.semantic.symbol.SymbolTable;
 import org.jcnc.snow.compiler.semantic.type.BuiltinType;
 import org.jcnc.snow.compiler.semantic.type.FunctionType;
 import org.jcnc.snow.compiler.semantic.type.Type;
+import org.jcnc.snow.compiler.semantic.utils.NumericConstantUtils;
 
 /**
  * {@code ReturnAnalyzer} 是用于分析 {@link ReturnNode} 返回语句的语义分析器。
@@ -53,7 +54,10 @@ public class ReturnAnalyzer implements StatementAnalyzer<ReturnNode> {
             var exprAnalyzer = ctx.getRegistry().getExpressionAnalyzer(exp);
             Type actual = exprAnalyzer.analyze(ctx, mi, fn, locals, exp);
 
-            if (!expected.returnType().isCompatible(actual)) {
+            boolean ok = expected.returnType().isCompatible(actual)
+                    || NumericConstantUtils.canNarrowToIntegral(expected.returnType(), actual, exp);
+
+            if (!ok) {
                 ctx.getErrors().add(new SemanticError(
                         ret,
                         "return 类型不匹配: 期望 "

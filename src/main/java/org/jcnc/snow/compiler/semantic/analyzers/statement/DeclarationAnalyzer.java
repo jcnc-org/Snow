@@ -11,6 +11,7 @@ import org.jcnc.snow.compiler.semantic.symbol.SymbolKind;
 import org.jcnc.snow.compiler.semantic.symbol.SymbolTable;
 import org.jcnc.snow.compiler.semantic.type.BuiltinType;
 import org.jcnc.snow.compiler.semantic.type.Type;
+import org.jcnc.snow.compiler.semantic.utils.NumericConstantUtils;
 
 /**
  * {@code DeclarationAnalyzer} 是变量声明语句的语义分析器。
@@ -84,8 +85,9 @@ public class DeclarationAnalyzer implements StatementAnalyzer<DeclarationNode> {
             boolean widenOK = finalVarType.isNumeric()
                     && initType.isNumeric()
                     && Type.widen(initType, finalVarType) == finalVarType;
+            boolean narrowingConst = NumericConstantUtils.canNarrowToIntegral(finalVarType, initType, initExpr);
 
-            if (!compatible && !widenOK) {
+            if (!compatible && !widenOK && !narrowingConst) {
                 ctx.getErrors().add(new SemanticError(decl,
                         "初始化类型不匹配: 期望 " + finalVarType + ", 实际 " + initType));
                 ctx.log("错误: 初始化类型不匹配 " + decl.getName());

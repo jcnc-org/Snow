@@ -70,18 +70,19 @@ public class BinaryExpressionAnalyzer implements ExpressionAnalyzer<BinaryExpres
         }
 
         /* ----------- 情况 2: 数值运算 / 比较 ----------- */
-        if ("+-*/%".contains(op) || ("<<=>>===!=").contains(op)) {
-            if (left.isNumeric() && right.isNumeric()) {
-                // 自动数值宽化（如 int + float → float）
-                Type wide = Type.widen(left, right);
-                if (wide == null) wide = BuiltinType.INT;   // 容错降级
+        boolean isComparison = op.equals("<") || op.equals("<=")
+                || op.equals(">") || op.equals(">=")
+                || op.equals("==") || op.equals("!=");
+        boolean isNumericOp = "+-*/%".contains(op) || op.equals("<<") || op.equals(">>") || isComparison;
+        if (isNumericOp && left.isNumeric() && right.isNumeric()) {
+            Type wide = promoteNumeric(left, right);
+            if (wide == null) wide = BuiltinType.INT;   // 容错降级
 
-                // 比较运算统一返回 boolean
-                if ("< <= > >= == !=".contains(op)) {
-                    return BuiltinType.BOOLEAN;
-                }
-                return wide;
+            // 比较运算统一返回 boolean
+            if (isComparison) {
+                return BuiltinType.BOOLEAN;
             }
+            return wide;
         }
 
         /* ----------- 情况 3: 不支持的类型组合 ----------- */
@@ -92,6 +93,18 @@ public class BinaryExpressionAnalyzer implements ExpressionAnalyzer<BinaryExpres
         ctx.log("错误: 运算符 '" + op + "' 不支持类型: " + left + ", " + right);
 
         // 回退类型
+        return BuiltinType.INT;
+    }
+
+    /**
+     * 二元数值运算的结果类型推断：
+     * double > float > long > int（byte/short 会先提升为 int）。
+     */
+    private static Type promoteNumeric(Type left, Type right) {
+        if (!(left.isNumeric() && right.isNumeric())) return null;
+        if (left == BuiltinType.DOUBLE || right == BuiltinType.DOUBLE) return BuiltinType.DOUBLE;
+        if (left == BuiltinType.FLOAT || right == BuiltinType.FLOAT) return BuiltinType.FLOAT;
+        if (left == BuiltinType.LONG || right == BuiltinType.LONG) return BuiltinType.LONG;
         return BuiltinType.INT;
     }
 }

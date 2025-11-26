@@ -63,13 +63,11 @@ public class FunctionBuilder {
         String rtLower = (rt == null || rt.trim().isEmpty()) ? "void" : rt.trim().toLowerCase();
 
         // 根据返回类型决定默认字面量后缀
-        // 仅在浮点/整型长短类型上设置；其它/void 情况不设置（使用 '\0' 表示不设置）
+        // 仅在浮点/long 上设置；其它/void 情况不设置（使用 '\0' 表示不设置）
         char defaultSuffix = switch (rtLower) {
             case "double" -> 'd';
             case "float" -> 'f';
             case "long" -> 'l';
-            case "short" -> 's';
-            case "byte" -> 'b';
             default -> '\0';
         };
         ExpressionUtils.setDefaultSuffix(defaultSuffix);

@@ -19,9 +19,9 @@ import java.util.Map;
  * <p>
  * 类型判定支持:
  * <ul>
- *     <li>字面量后缀: 支持 B/S/I/L/F/D（大小写均可）</li>
+ *     <li>字面量后缀: 识别 L/F/D（整数字面量默认 int）</li>
  *     <li>浮点数支持: 如无后缀但有小数点，视为 double</li>
- *     <li>变量类型: 根据传入变量表推断类型，未识别则默认 int</li>
+ *     <li>变量类型: 根据变量表推断，byte/short 视为 int，未识别则默认 int</li>
  * </ul>
  */
 public final class ComparisonUtils {
@@ -59,9 +59,7 @@ public final class ComparisonUtils {
             case 'D' -> 6;
             case 'F' -> 5;
             case 'L' -> 4;
-            case 'I' -> 3;
-            case 'S' -> 2;
-            case 'B' -> 1;
+            case 'I', 'S', 'B' -> 3; // byte/short 按 int 处理
             case 'R' -> 7;
             default -> 0;
         };
@@ -128,13 +126,10 @@ public final class ComparisonUtils {
     private static char analysisType(Map<String, String> variables, ExpressionNode node) {
         if (node instanceof NumberLiteralNode(String value, NodeContext _)) {
             char suffix = Character.toUpperCase(value.charAt(value.length() - 1));
-            if ("BSILFD".indexOf(suffix) != -1) {
-                return suffix;
-            }
-            if (value.indexOf('.') != -1) {
-                return 'D';
-            }
-            return 'I';  // 默认 int
+            return switch (suffix) {
+                case 'L', 'F', 'D' -> suffix;
+                default -> (value.indexOf('.') != -1 ? 'D' : 'I'); // 默认 int
+            };
         }
         if (node instanceof StringLiteralNode) {
             return 'R';
@@ -144,9 +139,7 @@ public final class ComparisonUtils {
             if (type != null) {
                 switch (type) {
                     case "byte":
-                        return 'B';
                     case "short":
-                        return 'S';
                     case "int":
                         return 'I';
                     case "long":

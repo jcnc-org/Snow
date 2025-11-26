@@ -36,7 +36,7 @@ public final class ExpressionUtils {
     /**
      * 设置当前线程的默认类型后缀。
      *
-     * @param suffix 类型后缀字符（b/s/i/l/f/d），'\0'表示无
+     * @param suffix 类型后缀字符（i/l/f/d），'\0'表示无
      */
     public static void setDefaultSuffix(char suffix) {
         DEFAULT_SUFFIX.set(suffix);
@@ -52,62 +52,68 @@ public final class ExpressionUtils {
     // ───────────── 字面量常量解析 ─────────────
 
     /**
-     * 安全解析整数字面量字符串，自动去除单字符类型后缀（b/s/l/f/d，大小写均可），并转换为 int。
+     * 安全解析整数字面量字符串，自动去除单字符类型后缀（如 L/F/D，大小写均可）与下划线，并转换为 int。
      *
      * @param literal 字面量字符串
      * @return 字面量对应的 int 数值
      * @throws NumberFormatException 如果字面量无法转换为整数
      */
     public static int parseIntSafely(String literal) {
-        String digits = literal.replaceAll("[bslfdBSDLF]$", "");
+        String digits = literal
+                .replace("_", "")
+                .replaceAll("[bslfdBSDLF]$", "");
         return Integer.parseInt(digits);
     }
 
     /**
      * 根据数字字面量字符串推断类型并生成对应的 IRConstant 常量值。
      * <p>
-     * 支持的字面量后缀有 b/s/l/f/d（大小写均可）。
-     * 无后缀时，优先参考 IRContext 当前变量类型，否则根据字面量格式（含'.'或'e'等）判断为 double，否则为 int。
+     * 支持的显式字面量后缀有 l/f/d（大小写均可）。
+     * 无后缀时，优先参考 IRContext 当前变量类型（可推断 byte/short），
+     * 否则根据字面量格式（含'.'或'e'等）判断为 double，否则为 int。
      *
      * @param ctx   IRContext，允许参考变量声明类型
      * @param value 数字字面量字符串
      * @return 对应类型的 IRConstant 常量
      */
     public static IRConstant buildNumberConstant(IRContext ctx, String value) {
-        char suffix = value.isEmpty() ? '\0'
-                : Character.toLowerCase(value.charAt(value.length() - 1));
+        if (value == null || value.isEmpty()) {
+            return new IRConstant(0);
+        }
 
-        String digits = switch (suffix) {
-            case 'b', 's', 'l', 'f', 'd' -> value.substring(0, value.length() - 1);
-            default -> {
-                // 无后缀，优先参考变量类型
-                if (ctx.getVarType() != null) {
-                    String t = ctx.getVarType();
-                    suffix = switch (t) {
-                        case "byte" -> 'b';
-                        case "short" -> 's';
-                        case "int" -> 'i';
-                        case "long" -> 'l';
-                        case "float" -> 'f';
-                        case "double" -> 'd';
-                        default -> '\0';
-                    };
-                }
-                yield value;
-            }
-        };
+        char suffix = Character.toLowerCase(value.charAt(value.length() - 1));
+        boolean explicitSuffix = suffix == 'l' || suffix == 'f' || suffix == 'd';
+        String digits = normalizeDigits(value, explicitSuffix);
 
-        // 生成常量对象
-        return switch (suffix) {
-            case 'b' -> new IRConstant(Byte.parseByte(digits));
-            case 's' -> new IRConstant(Short.parseShort(digits));
-            case 'l' -> new IRConstant(Long.parseLong(digits));
-            case 'f' -> new IRConstant(Float.parseFloat(digits));
-            case 'd' -> new IRConstant(Double.parseDouble(digits));
-            default -> looksLikeFloat(digits)
-                    ? new IRConstant(Double.parseDouble(digits))
-                    : new IRConstant(Integer.parseInt(digits));
-        };
+        if (!explicitSuffix && ctx.getVarType() != null) {
+            String t = ctx.getVarType();
+            suffix = switch (t) {
+                case "byte" -> 'b';
+                case "short" -> 's';
+                case "int" -> 'i';
+                case "long" -> 'l';
+                case "float" -> 'f';
+                case "double" -> 'd';
+                default -> '\0';
+            };
+        }
+
+        if (!explicitSuffix && suffix == '\0') {
+            suffix = looksLikeFloat(digits) ? 'd' : 'i';
+        }
+
+        try {
+            return switch (suffix) {
+                case 'b' -> new IRConstant(Byte.parseByte(digits));
+                case 's' -> new IRConstant(Short.parseShort(digits));
+                case 'l' -> new IRConstant(Long.parseLong(digits));
+                case 'f' -> new IRConstant(Float.parseFloat(digits));
+                case 'd' -> new IRConstant(Double.parseDouble(digits));
+                default -> new IRConstant(Integer.parseInt(digits));
+            };
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException("非法数字字面量: " + value, ex);
+        }
     }
 
     // ───────────── 一元运算指令匹配 ─────────────
@@ -121,8 +127,6 @@ public final class ExpressionUtils {
     public static IROpCode negOp(ExpressionNode operand) {
         char t = typeChar(operand);
         return switch (t) {
-            case 'b' -> IROpCode.NEG_B8;
-            case 's' -> IROpCode.NEG_S16;
             case 'l' -> IROpCode.NEG_L64;
             case 'f' -> IROpCode.NEG_F32;
             case 'd' -> IROpCode.NEG_D64;
@@ -168,7 +172,8 @@ public final class ExpressionUtils {
     // ───────────── 类型推断与算术操作码匹配 ─────────────
 
     /**
-     * 递归推断表达式节点的类型后缀（b/s/i/l/f/d）。
+     * 递归推断表达式节点的类型后缀（i/l/f/d）。
+     * byte/short 视为 int 参与运算。
      * 优先从字面量和二元表达式合并类型，变量节点暂不处理，返回 '\0'。
      *
      * @param node 表达式节点
@@ -178,8 +183,8 @@ public final class ExpressionUtils {
         if (node instanceof NumberLiteralNode(String value, NodeContext _)) {
             char last = Character.toLowerCase(value.charAt(value.length() - 1));
             return switch (last) {
-                case 'b', 's', 'i', 'l', 'f', 'd' -> last;
-                default -> looksLikeFloat(value) ? 'd' : '\0';
+                case 'l', 'f', 'd' -> last;
+                default -> looksLikeFloat(value) ? 'd' : 'i';
             };
         }
         if (node instanceof BinaryExpressionNode bin) {
@@ -208,13 +213,17 @@ public final class ExpressionUtils {
      * @return 最宽类型后缀
      */
     private static char maxTypeChar(char l, char r) {
+        l = normalizeIntegralSuffix(l);
+        r = normalizeIntegralSuffix(r);
         if (l == 'd' || r == 'd') return 'd';
         if (l == 'f' || r == 'f') return 'f';
         if (l == 'l' || r == 'l') return 'l';
         if (l == 'i' || r == 'i') return 'i';
-        if (l == 's' || r == 's') return 's';
-        if (l == 'b' || r == 'b') return 'b';
         return '\0';
+    }
+
+    private static char normalizeIntegralSuffix(char c) {
+        return (c == 'b' || c == 's' || c == 'i') ? 'i' : c;
     }
 
     /**
@@ -234,16 +243,27 @@ public final class ExpressionUtils {
         char suffix = resolveSuffix(left, right);
         // 2. 推断失败则使用线程默认类型
         if (suffix == '\0') suffix = DEFAULT_SUFFIX.get();
+        suffix = normalizeIntegralSuffix(suffix);
         // 3. 仍失败则默认为 int32
         Map<String, IROpCode> table = switch (suffix) {
-            case 'b' -> IROpCodeMappings.OP_B8;
-            case 's' -> IROpCodeMappings.OP_S16;
             case 'l' -> IROpCodeMappings.OP_L64;
             case 'f' -> IROpCodeMappings.OP_F32;
             case 'd' -> IROpCodeMappings.OP_D64;
+            case 'i' -> IROpCodeMappings.OP_I32;
             default -> IROpCodeMappings.OP_I32;
         };
         return table.get(op);
+    }
+
+    private static String normalizeDigits(String value, boolean stripSuffix) {
+        String t = value.trim().replace("_", "");
+        if (stripSuffix && t.length() > 1) {
+            char last = t.charAt(t.length() - 1);
+            if (Character.isLetter(last)) {
+                t = t.substring(0, t.length() - 1);
+            }
+        }
+        return t;
     }
 
     // ───────────── 字符串辅助工具 ─────────────

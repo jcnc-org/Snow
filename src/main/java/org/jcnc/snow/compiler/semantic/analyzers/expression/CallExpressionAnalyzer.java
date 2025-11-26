@@ -12,6 +12,7 @@ import org.jcnc.snow.compiler.semantic.error.SemanticError;
 import org.jcnc.snow.compiler.semantic.symbol.Symbol;
 import org.jcnc.snow.compiler.semantic.symbol.SymbolTable;
 import org.jcnc.snow.compiler.semantic.type.*;
+import org.jcnc.snow.compiler.semantic.utils.NumericConstantUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -211,7 +212,8 @@ public class CallExpressionAnalyzer implements ExpressionAnalyzer {
                 Type actual0 = args.getFirst();
                 boolean ok0 = expected0.isCompatible(actual0)
                         || (expected0.isNumeric() && actual0.isNumeric()
-                        && Type.widen(actual0, expected0) == expected0);
+                        && Type.widen(actual0, expected0) == expected0)
+                        || NumericConstantUtils.canNarrowToIntegral(expected0, actual0, call.arguments().getFirst());
                 if (!ok0 && expected0 == BuiltinType.STRING && actual0.isNumeric()) {
                     ok0 = true; // 支持数字自动转字符串
                 }
@@ -236,6 +238,7 @@ public class CallExpressionAnalyzer implements ExpressionAnalyzer {
                 boolean ok = expected.isCompatible(actual)
                         || (expected.isNumeric() && actual.isNumeric()
                         && Type.widen(actual, expected) == expected)
+                        || NumericConstantUtils.canNarrowToIntegral(expected, actual, call.arguments().get(i))
                         || (expected == BuiltinType.STRING && actual.isNumeric());
 
                 if (!ok) {
