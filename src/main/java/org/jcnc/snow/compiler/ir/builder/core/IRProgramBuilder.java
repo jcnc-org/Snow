@@ -280,6 +280,19 @@ public final class IRProgramBuilder {
             }
             case StringLiteralNode str -> str.value(); // 字符串字面量直接返回
             case BoolLiteralNode b -> b.getValue() ? 1 : 0; // 布尔常量转为 1/0
+            case UnaryExpressionNode un -> {
+                // 仅处理前缀负号的一元表达式，如 -123 / -1.5f / -1L / -1s
+                if ("-".equals(un.operator())) {
+                    Object inner = evalLiteral(un.operand());
+                    if (inner instanceof Integer i) yield -i;
+                    if (inner instanceof Long l) yield -l;
+                    if (inner instanceof Short s) yield (short) -s;
+                    if (inner instanceof Byte by) yield (byte) -by;
+                    if (inner instanceof Double d) yield -d;
+                    if (inner instanceof Float f) yield -f;
+                }
+                yield null;
+            }
             default -> null; // 其他情况不支持常量折叠
         };
     }
