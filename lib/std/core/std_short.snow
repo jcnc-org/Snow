@@ -6,8 +6,8 @@ module: std_short
     import: std_parse
 
     globals:
-        declare const MIN_VALUE:short = -32767s
-        declare const MAX_VALUE:short = 32767s
+        declare const MIN_VALUE:short = -32767
+        declare const MAX_VALUE:short = 32767
 
     /**
     @struct std_short
