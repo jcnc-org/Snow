@@ -281,11 +281,11 @@ module: std_parse
     end function
 
 	///
-	/// @function parselong
+	/// @function parseLong
 	/// @summary 将字符串解析为 long
 	/// @description 与 parseDouble 的逻辑一致，但只处理整数部分并输出 long。
 	///
-	function: parselong
+	function: parseLong
 	    params:
 	        declare s: string
 	    returns: long

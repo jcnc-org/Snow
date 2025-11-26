@@ -115,7 +115,7 @@ module: std_long
             declare s: string
         returns: std_long
         body:
-            declare d: long = std_parse.parselong(s)
+            declare d: long = std_parse.parseLong(s)
             return new std_long(d)
         end body
     end function
