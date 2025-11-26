@@ -129,43 +129,7 @@ module: std_float
             declare f: float
         returns: string
         body:
-            return "" + f
-        end body
-    end function
-
-    /**
-    @function max
-    @summary 比较两个 float 并返回较大值（std_float）
-    */
-    function: max
-        params:
-            declare lhs: float
-            declare rhs: float
-        returns: std_float
-        body:
-            if lhs >= rhs then
-                return new std_float(lhs)
-            else
-                return new std_float(rhs)
-            end if
-        end body
-    end function
-
-    /**
-    @function min
-    @summary 比较两个 float 并返回较小值（std_float）
-    */
-    function: min
-        params:
-            declare lhs: float
-            declare rhs: float
-        returns: std_float
-        body:
-            if lhs <= rhs then
-                return new std_float(lhs)
-            else
-                return new std_float(rhs)
-            end if
+            return "" + f   // Snow 使用 + 转换为字符串
         end body
     end function
 

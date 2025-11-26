@@ -20,7 +20,7 @@ module: std_double
 
         /**
         @init default
-        @summary 无参构造函数，默认创建值为 0 的 std_double
+        @summary 无参构造函数，创建值为 0 的 的 std_double
         */
         init:
             body:
