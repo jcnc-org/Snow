@@ -9,6 +9,7 @@ import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 import org.jcnc.snow.compiler.parser.ast.FunctionNode;
 import org.jcnc.snow.compiler.parser.ast.ParameterNode;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
+import java.util.List;
 
 /**
  * IR 函数构建器。
@@ -47,7 +48,12 @@ public class FunctionBuilder {
      */
     public IRFunction build(FunctionNode functionNode) {
         // 1) 在全局函数表登记：名称 + 返回类型（返回类型可能为 null，例如构造函数 init）
-        GlobalFunctionTable.register(functionNode.name(), functionNode.returnType());
+        List<String> paramTypes = functionNode.parameters() == null
+                ? List.of()
+                : functionNode.parameters().stream()
+                .map(ParameterNode::type)
+                .toList();
+        GlobalFunctionTable.register(functionNode.name(), functionNode.returnType(), paramTypes);
 
         // 2) 初始化 IR 容器与上下文
         IRFunction irFunction = new IRFunction(functionNode.name());
