@@ -1,30 +1,49 @@
 /**
-@module std_integer_example
-@summary std_integer 方法演示
+@module std_int_example
+@summary std_int 方法演示
 */
-module: integer_math_example
+module: std_int_example
 
-    import: std_integer
+    import: std_int
+    import: std_math
     import: std_io
+    import: std_parse
 
     function: main
         body:
-            std_io.println("=== 演示 abs() 方法 ===")
+            std_io.println("=== 构造与拆箱 intValue() ===")
+            declare defaultint: std_int = new std_int()
+            declare piint: std_int = new std_int(3)
+            std_io.println("默认构造 -> " + defaultint.intValue())
+            std_io.println("带参构造(3) -> " + piint.intValue())
 
-            declare negInt:std_integer = new std_integer(-25)
-            std_io.print("负数 -25 的绝对值: ")
-            std_io.println(negInt.abs().getValue())
+            std_io.println("\n=== valueOf* 与静态 toString() ===")
+            declare boxedFromint: std_int = std_int.valueOf(42)
+            declare boxedFromString: std_int = std_int.valueOfString("3276600")
+            std_io.println("valueOf(42) -> " + boxedFromint.intValue())
+            std_io.println("valueOfString(\"12\") -> " + boxedFromString.intValue())
+            std_io.println("std_int.toString(7) -> " + std_int.toString(7))
 
-            std_io.println("\n=== 演示 max()/min() ===")
+            std_io.println("\n=== 实例方法 abs()/equals()/toString() ===")
+            declare negint: std_int = new std_int(-120)
+            declare eqA: std_int = new std_int(10)
+            declare eqB: std_int = new std_int(10)
+            declare eqC: std_int = new std_int(8)
+            std_io.println("abs(-120) -> " + negint.abs().intValue())
+            std_io.println("equals(10,10) -> " + eqA.equals(eqB))
+            std_io.println("equals(10,8) -> " + eqA.equals(eqC))
+            std_io.println("toString() on 10 -> " + eqA.toString())
 
-            std_io.print("比较 -3 和 7 的较大值: ")
-            std_io.println(std_integer.max(-3, 7).getValue())
+            std_io.println("\n=== 数学/解析工具 ===")
+            std_io.println("std_parse.parseInt(\"-7\") -> " + std_parse.parseInt("-7"))
+            std_io.println("std_math.compareInt(1, 5) -> " + std_math.compareInt(1, 5))
+            std_io.println("std_math.compareInt(7, 2) -> " + std_math.compareInt(7, 2))
+            std_io.println("std_math.maxInt(-15, 20) -> " + std_math.maxInt(-15, 20))
+            std_io.println("std_math.minInt(-15, 20) -> " + std_math.minInt(-15, 20))
 
-            std_io.print("比较 -3 和 7 的较小值: ")
-            std_io.println(std_integer.min(-3, 7).getValue())
-
-            std_io.println("MAX_VALUE: "+ std_integer.MAX_VALUE)
-            std_io.println("MAX_VALUE: "+ std_integer.MAX_VALUE)
+            std_io.println("\n=== 常量 MIN_VALUE / MAX_VALUE ===")
+            std_io.println("MIN_VALUE: " + std_int.MIN_VALUE)
+            std_io.println("MAX_VALUE: " + std_int.MAX_VALUE)
 
         end body
     end function
