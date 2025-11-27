@@ -124,10 +124,10 @@ module: FinalComprehensiveTestFixed
         returns: void
         body:
             std_io.println("--- Testing Basic Types ---")
-            declare b: byte = 127b
-            declare s: short = 32767s
+            declare b: byte = 127
+            declare s: short = 32767
             declare i: int = 2147483647
-            declare l: long = 9223372036854775807l
+            declare l: long = 9223372036854775807L
             declare f: float = 3.14159f
             declare d: double = 3.141592653589793
             declare bool: boolean = true
