@@ -155,7 +155,7 @@ module: std_parse
     /**
     @function parseFloat
     @summary 将字符串解析为 float
-    @description 与 parseDouble 同步逻辑，但使用 float 精度。
+    @description 使用管道转为字节数组。
     */
     function: parseFloat
         params:
@@ -280,11 +280,11 @@ module: std_parse
         end body
     end function
 
-	///
-	/// @function parseLong
-	/// @summary 将字符串解析为 long
-	/// @description 与 parseDouble 的逻辑一致，但只处理整数部分并输出 long。
-	///
+	/**
+	@function parseLong
+	@summary 将字符串解析为 long
+    @description 使用管道转为字节数组。
+	*/
 	function: parseLong
 	    params:
 	        declare s: string
@@ -374,11 +374,11 @@ module: std_parse
 	    end body
 	end function
 
-	///
-	/// @function parseShort
-	/// @summary 将字符串解析为 short
-	/// @description 与 parseLong 的逻辑一致，只处理整数部分并输出 short。
-	///
+	/**
+	@function parseShort
+	@summary 将字符串解析为 short
+    @description 使用管道转为字节数组。
+	*/
 	function: parseShort
 	    params:
 	        declare s: string
@@ -468,6 +468,100 @@ module: std_parse
 	        return value
 	    end body
 	end function
+
+	/**
+    @function parseInt
+    @summary 将字符串解析为 int
+    @description 使用管道转为字节数组。
+    */
+    function: parseInt
+        params:
+            declare s: string
+        returns: int
+        body:
+            declare pair:int[] = os_fd.pipe()
+            declare rfd:int = pair[0]
+            declare wfd:int = pair[1]
+
+            declare len:int = os_fd.write_bytes(wfd, s)
+            os_fd.close(wfd)
+
+            if len <= 0 then
+                os_fd.close(rfd)
+                return 0
+            end if
+
+            declare data:any = os_fd.read_bytes(rfd, len)
+            os_fd.close(rfd)
+
+            declare idx:int = 0
+
+            // 跳过前导空白
+            loop:
+                init:
+                    idx = idx
+                cond:
+                    idx < len
+                step:
+                    idx = idx
+                body:
+                    declare b:int = syscall("0x1802", data, idx)
+                    if b != 32 && b != 9 && b != 10 && b != 13 then
+                        break
+                    end if
+                    idx = idx + 1
+                end body
+            end loop
+
+            if idx >= len then
+                return 0
+            end if
+
+            declare negative:boolean = false
+            declare first:int = syscall("0x1802", data, idx)
+            if first == 45 then          // '-'
+                negative = true
+                idx = idx + 1
+            else
+                if first == 43 then      // '+'
+                    idx = idx + 1
+                end if
+            end if
+
+            declare hasDigit:boolean = false
+            declare value:int = 0
+
+            declare pos:int = idx
+            loop:
+                init:
+                    pos = pos
+                cond:
+                    pos < len
+                step:
+                    pos = pos
+                body:
+                    declare cur:int = syscall("0x1802", data, pos)
+                    declare digit:int = std_parse._digitValue(cur)
+                    if digit == -1 then
+                        break
+                    end if
+                    hasDigit = true
+                    value = value * 10 + digit
+                    pos = pos + 1
+                end body
+            end loop
+
+            if hasDigit == false then
+                return 0
+            end if
+
+            if negative then
+                value = -value
+            end if
+
+            return value
+        end body
+    end function
 
 
 end module
