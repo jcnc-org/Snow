@@ -454,13 +454,13 @@ sudo pacman -Syu snow-lang-git
     * **单个文件编译:**
 
       ```bash
-      snow complete [SnowCode].snow
+      snow compile [SnowCode].snow
       ```
 
     * **多个文件编译:**
 
       ```bash
-      snow complete [SnowCode1].snow [SnowCode2].snow [SnowCode3].snow -o [Name]
+      snow compile [SnowCode1].snow [SnowCode2].snow [SnowCode3].snow -o [Name]
       ```
 
     * **目录递归编译:**
