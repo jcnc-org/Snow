@@ -108,6 +108,7 @@ public final class IRProgramBuilder {
             for (StructNode s : mod.structs()) {
                 List<DeclarationNode> fields = s.fields();
                 Map<String, Integer> layout = new LinkedHashMap<>();
+                Map<String, String> fieldTypes = new LinkedHashMap<>();
                 int idx = 0;
 
                 // 1. 若有父类，先复制父类布局，并将索引起点置为父类字段数
@@ -120,6 +121,10 @@ public final class IRProgramBuilder {
                     if (parentLayout != null && !parentLayout.isEmpty()) {
                         layout.putAll(parentLayout);
                         idx = parentLayout.size();
+                        Map<String, String> parentTypes = IRBuilderScope.getStructFieldTypes(parentName);
+                        if (parentTypes != null) {
+                            fieldTypes.putAll(parentTypes);
+                        }
                     }
                 }
 
@@ -130,11 +135,15 @@ public final class IRProgramBuilder {
                         if (!layout.containsKey(name)) {
                             layout.put(name, idx++);
                         }
+                        if (!fieldTypes.containsKey(name)) {
+                            fieldTypes.put(name, d.getType());
+                        }
                     }
                 }
 
                 // 3. 注册最终布局
                 IRBuilderScope.registerStructLayout(s.name(), layout);
+                IRBuilderScope.registerStructFieldTypes(s.name(), fieldTypes);
             }
         }
     }
