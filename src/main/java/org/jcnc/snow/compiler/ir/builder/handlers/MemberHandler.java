@@ -76,17 +76,36 @@ public class MemberHandler implements ExpressionHandler<MemberExpressionNode> {
                     + " (object=" + mem.object() + ")" + loc);
         }
 
-        // 4. 生成 __index_r(obj, idx) 指令
+        // 4. 生成类型匹配的 __index_* 调用
         IRVirtualRegister idxReg = b.ctx().newRegister();
         b.ctx().addInstruction(new LoadConstInstruction(
                 idxReg, IRConstant.fromNumber(Integer.toString(fieldIndex))));
 
         IRVirtualRegister out = b.ctx().newRegister();
+        String fieldType = IRBuilderScope.getStructFieldType(ownerType, mem.member());
+        String indexFn = selectIndexFunc(fieldType);
         List<IRValue> args = new ArrayList<>();
         args.add(objReg);
         args.add(idxReg);
-        b.ctx().addInstruction(new CallInstruction(out, "__index_r", args));
+        b.ctx().addInstruction(new CallInstruction(out, indexFn, args));
         return out;
+    }
+
+    /**
+     * 根据字段类型选择对应的 __index_* 通道。
+     */
+    private String selectIndexFunc(String fieldType) {
+        if (fieldType == null || fieldType.isBlank()) return "__index_r";
+        return switch (fieldType.toLowerCase(Locale.ROOT)) {
+            case "byte" -> "__index_b";
+            case "short" -> "__index_s";
+            case "int", "integer", "bool", "boolean" -> "__index_i";
+            case "long" -> "__index_l";
+            case "float" -> "__index_f";
+            case "double" -> "__index_d";
+            case "string" -> "__index_r";
+            default -> "__index_r";
+        };
     }
 
     /**
