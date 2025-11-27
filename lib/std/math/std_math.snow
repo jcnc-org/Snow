@@ -280,4 +280,61 @@ module: std_math
         end body
     end function
 
+        /**
+        @function compareByte
+        @summary 比较两个 byte 值，返回 -1 / 0 / 1
+        */
+        function: compareByte
+            params:
+                declare lhs: byte
+                declare rhs: byte
+            returns: int
+            body:
+                if lhs == rhs then
+                    return 0
+                end if
+                if lhs > rhs then
+                    return 1
+                end if
+                return -1
+            end body
+        end function
+
+        /**
+        @function maxByte
+        @summary 返回两个 byte 中较大的值
+        */
+        function: maxByte
+            params:
+                declare lhs: byte
+                declare rhs: byte
+            returns: byte
+            body:
+                if lhs >= rhs then
+                    return lhs
+                else
+                    return rhs
+                end if
+            end body
+        end function
+
+        /**
+        @function minByte
+        @summary 返回两个 byte 中较小的值
+        */
+        function: minByte
+            params:
+                declare lhs: byte
+                declare rhs: byte
+            returns: byte
+            body:
+                if lhs <= rhs then
+                    return lhs
+                else
+                    return rhs
+                end if
+            end body
+        end function
+
+
 end module
