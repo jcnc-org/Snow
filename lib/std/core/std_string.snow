@@ -151,6 +151,17 @@ module: std_string
         end function
 
         /**
+        @function toBytes
+        @summary 返回字符串的字节数组
+        */
+        function: toBytes
+            returns: byte[]
+            body:
+                return std_string.toBytes(value)
+            end body
+        end function
+
+        /**
         @function startsWith
         @summary 判断字符串是否以指定前缀开头
         @param prefix 前缀字符串
@@ -563,6 +574,67 @@ module: std_string
             end loop
             
             return result
+        end body
+    end function
+
+    /**
+    @function toBytes
+    @summary 将字符串转换为字节数组
+    */
+    function: toBytes
+        params:
+            declare str: string
+        returns: byte[]
+        body:
+            declare pair: int[] = fd.pipe()
+            declare len: int = fd.write(pair[1], str)
+            fd.close(pair[1])
+            declare data: any = fd.read(pair[0], len)
+            fd.close(pair[0])
+
+            declare res: byte[] = []
+            loop:
+                init:
+                    // XXX: 此处利用 snow 内部机制，先对最后一个下标赋值，可直接扩容至 len 长度
+                    declare i: int = len - 1
+                cond:
+                    i >= 0
+                step:
+                    i = i - 1
+                body:
+                    res[i] = syscall("0x1802", data, i)
+                end body
+            end loop
+
+            return res
+        end body
+    end function
+
+    /**
+    @function fromBytes
+    @summary 将字节数组转换为字符串
+    */
+    function: fromBytes
+        params:
+            declare bytes: byte[]
+        returns: string
+        body:
+            declare len: int = syscall("0x1801", bytes)
+            declare str: string = ""
+            loop:
+                init:
+                    declare i: int = 0
+                cond:
+                    i < len
+                step:
+                    i = i + 1
+                body:
+                    declare ch: int = syscall("0x1802", bytes, i)
+                    str = str + std_string._charToString(ch)
+                end body
+            end loop
+
+            return str
         end body
     end function
 
