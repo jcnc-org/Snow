@@ -1,0 +1,761 @@
+/**
+@module std_string
+@summary std_string 结构体 - 对 string 基本数据类型的封装
+@description 提供常用字符串操作方法，如 length、substring、indexOf、trim 等
+*/
+module: std_string
+    import: os_fd
+    import: fd
+
+    /**
+    @struct std_string
+    @summary string 的包装类
+    */
+    struct: std_string
+
+        fields:
+            declare value: string
+
+        /**
+        @init default
+        @summary 无参构造函数，默认创建值为空字符串的 std_string
+        */
+        init:
+            body:
+                value = ""
+            end body
+        end init
+
+        /**
+        @init with_value
+        @summary 带参构造函数，根据给定值创建 std_string
+        @param val 初始 string 值
+        */
+        init:
+            params:
+                declare val: string
+            body:
+                value = val
+            end body
+        end init
+
+        /**
+        @function stringValue
+        @summary 获取包装的 string 值（拆箱）
+        */
+        function: stringValue
+            returns: string
+            body:
+                return value
+            end body
+        end function
+
+        /**
+        @function length
+        @summary 返回字符串长度
+        */
+        function: length
+            returns: int
+            body:
+                return std_string.length(value)
+            end body
+        end function
+
+        /**
+        @function isEmpty
+        @summary 判断字符串是否为空
+        */
+        function: isEmpty
+            returns: boolean
+            body:
+                return std_string.isEmpty(value)
+            end body
+        end function
+
+        /**
+        @function substring
+        @summary 截取子字符串 [start, endIdx)
+        @param start 起始索引（包含）
+        @param endIdx 结束索引（不包含）
+        */
+        function: substring
+            params:
+                declare start: int
+                declare endIdx: int
+            returns: string
+            body:
+                return std_string.substring(value, start, endIdx)
+            end body
+        end function
+
+        /**
+        @function indexOf
+        @summary 查找子字符串首次出现的位置
+        @param substr 要查找的子字符串
+        @return 位置索引，未找到返回 -1
+        */
+        function: indexOf
+            params:
+                declare substr: string
+            returns: int
+            body:
+                return std_string.indexOf(value, substr)
+            end body
+        end function
+
+        /**
+        @function contains
+        @summary 判断是否包含指定子字符串
+        @param substr 要查找的子字符串
+        */
+        function: contains
+            params:
+                declare substr: string
+            returns: boolean
+            body:
+                return std_string.contains(value, substr)
+            end body
+        end function
+
+        /**
+        @function trim
+        @summary 去除字符串首尾的空白字符
+        */
+        function: trim
+            returns: string
+            body:
+                return std_string.trim(value)
+            end body
+        end function
+
+        /**
+        @function toUpperCase
+        @summary 将字符串转为大写
+        */
+        function: toUpperCase
+            returns: string
+            body:
+                return std_string.toUpperCase(value)
+            end body
+        end function
+
+        /**
+        @function toLowerCase
+        @summary 将字符串转为小写
+        */
+        function: toLowerCase
+            returns: string
+            body:
+                return std_string.toLowerCase(value)
+            end body
+        end function
+
+        /**
+        @function startsWith
+        @summary 判断字符串是否以指定前缀开头
+        @param prefix 前缀字符串
+        */
+        function: startsWith
+            params:
+                declare prefix: string
+            returns: boolean
+            body:
+                return std_string.startsWith(value, prefix)
+            end body
+        end function
+
+        /**
+        @function endsWith
+        @summary 判断字符串是否以指定后缀结尾
+        @param suffix 后缀字符串
+        */
+        function: endsWith
+            params:
+                declare suffix: string
+            returns: boolean
+            body:
+                return std_string.endsWith(value, suffix)
+            end body
+        end function
+
+        /**
+        @function equals
+        @summary 比较两个 std_string 是否相等
+        */
+        function: equals
+            params:
+                declare other: std_string
+            returns: boolean
+            body:
+                declare val1: string = value
+                declare val2: string = other.value
+                return val1 == val2
+            end body
+        end function
+
+        /**
+        @function toString
+        @summary 返回字符串本身
+        */
+        function: toString
+            returns: string
+            body:
+                return value
+            end body
+        end function
+
+    end struct
+
+    /**
+    @function valueOf
+    @summary 将 string 装箱为 std_string
+    */
+    function: valueOf
+        params:
+            declare s: string
+        returns: std_string
+        body:
+            return new std_string(s)
+        end body
+    end function
+
+    /**
+    @function length
+    @summary 获取字符串长度
+    @param str 目标字符串
+    */
+    function: length
+        params:
+            declare str: string
+        returns: int
+        body:
+            return syscall("0x1801", str)
+        end body
+    end function
+
+    /**
+    @function isEmpty
+    @summary 判断字符串是否为空
+    @param str 目标字符串
+    */
+    function: isEmpty
+        params:
+            declare str: string
+        returns: boolean
+        body:
+            declare len: int = syscall("0x1801", str)
+            return len == 0
+        end body
+    end function
+
+    /**
+    @function substring
+    @summary 截取子字符串 [start, endIdx)
+    @param str 源字符串
+    @param start 起始索引（包含）
+    @param endIdx 结束索引（不包含）
+    */
+    function: substring
+        params:
+            declare str: string
+            declare start: int
+            declare endIdx: int
+        returns: string
+        body:
+            declare len: int = syscall("0x1801", str)
+            
+            // 边界检查
+            if start < 0 then
+                start = 0
+            end if
+            if endIdx > len then
+                endIdx = len
+            end if
+            if start >= endIdx then
+                return ""
+            end if
+
+            // 使用管道转换字符串为字节数组
+            declare pair: int[] = fd.pipe()
+            declare rfd: int = pair[0]
+            declare wfd: int = pair[1]
+            
+            fd.write(wfd, str)
+            fd.close(wfd)
+            
+            declare data: any = fd.read(rfd, len)
+            fd.close(rfd)
+            
+            // 构建子字符串
+            declare result: string = ""
+            declare i: int = start
+            loop:
+                init:
+                    i = i
+                cond:
+                    i < endIdx
+                step:
+                    i = i + 1
+                body:
+                    declare ch: int = syscall("0x1802", data, i)
+                    result = result + std_string._charToString(ch)
+                end body
+            end loop
+            
+            return result
+        end body
+    end function
+
+    /**
+    @function indexOf
+    @summary 查找子字符串首次出现的位置
+    @param str 源字符串
+    @param substr 要查找的子字符串
+    @return 位置索引，未找到返回 -1
+    */
+    function: indexOf
+        params:
+            declare str: string
+            declare substr: string
+        returns: int
+        body:
+            declare strLen: int = syscall("0x1801", str)
+            declare subLen: int = syscall("0x1801", substr)
+            
+            if subLen == 0 then
+                return 0
+            end if
+            if subLen > strLen then
+                return -1
+            end if
+            
+            // 转换为字节数组进行比较
+            declare pair1: int[] = fd.pipe()
+            fd.write(pair1[1], str)
+            fd.close(pair1[1])
+            declare strData: any = fd.read(pair1[0], strLen)
+            fd.close(pair1[0])
+            
+            declare pair2: int[] = fd.pipe()
+            fd.write(pair2[1], substr)
+            fd.close(pair2[1])
+            declare subData: any = fd.read(pair2[0], subLen)
+            fd.close(pair2[0])
+            
+            // 遍历查找
+            declare i: int = 0
+            loop:
+                init:
+                    i = i
+                cond:
+                    i <= strLen - subLen
+                step:
+                    i = i + 1
+                body:
+                    declare match: boolean = true
+                    declare j: int = 0
+                    loop:
+                        init:
+                            j = j
+                        cond:
+                            j < subLen
+                        step:
+                            j = j + 1
+                        body:
+                            declare ch1: int = syscall("0x1802", strData, i + j)
+                            declare ch2: int = syscall("0x1802", subData, j)
+                            if ch1 != ch2 then
+                                match = false
+                                break
+                            end if
+                        end body
+                    end loop
+                    
+                    if match == true then
+                        return i
+                    end if
+                end body
+            end loop
+            
+            return -1
+        end body
+    end function
+
+    /**
+    @function contains
+    @summary 判断是否包含指定子字符串
+    @param str 源字符串
+    @param substr 要查找的子字符串
+    */
+    function: contains
+        params:
+            declare str: string
+            declare substr: string
+        returns: boolean
+        body:
+            return std_string.indexOf(str, substr) != -1
+        end body
+    end function
+
+    /**
+    @function trim
+    @summary 去除字符串首尾的空白字符（空格、制表符、换行、回车）
+    @param str 源字符串
+    */
+    function: trim
+        params:
+            declare str: string
+        returns: string
+        body:
+            declare len: int = syscall("0x1801", str)
+            if len == 0 then
+                return ""
+            end if
+            
+            // 转为字节数组
+            declare pair: int[] = fd.pipe()
+            fd.write(pair[1], str)
+            fd.close(pair[1])
+            declare data: any = fd.read(pair[0], len)
+            fd.close(pair[0])
+            
+            // 找到首个非空白字符
+            declare start: int = 0
+            loop:
+                init:
+                    start = start
+                cond:
+                    start < len
+                step:
+                    start = start + 1
+                body:
+                    declare ch: int = syscall("0x1802", data, start)
+                    if std_string._isWhitespace(ch) == false then
+                        break
+                    end if
+                end body
+            end loop
+            
+            if start == len then
+                return ""
+            end if
+            
+            // 找到最后一个非空白字符
+            declare endIdx: int = 0
+            declare tempLen: int = len
+            declare counter: int = 1
+            endIdx = tempLen
+            loop:
+                init:
+                    counter = counter
+                cond:
+                    counter > 0
+                step:
+                    counter = counter - 1
+                body:
+                    endIdx = endIdx - 1
+                end body
+            end loop
+            loop:
+                init:
+                    endIdx = endIdx
+                cond:
+                    endIdx >= start
+                step:
+                    endIdx = endIdx - 1
+                body:
+                    declare ch: int = syscall("0x1802", data, endIdx)
+                    if std_string._isWhitespace(ch) == false then
+                        break
+                    end if
+                end body
+            end loop
+            
+            // 构建结果
+            declare result: string = ""
+            declare i: int = start
+            loop:
+                init:
+                    i = i
+                cond:
+                    i <= endIdx
+                step:
+                    i = i + 1
+                body:
+                    declare ch: int = syscall("0x1802", data, i)
+                    result = result + std_string._charToString(ch)
+                end body
+            end loop
+            
+            return result
+        end body
+    end function
+
+    /**
+    @function toUpperCase
+    @summary 将字符串转为大写
+    @param str 源字符串
+    */
+    function: toUpperCase
+        params:
+            declare str: string
+        returns: string
+        body:
+            declare len: int = syscall("0x1801", str)
+            if len == 0 then
+                return ""
+            end if
+            
+            declare pair: int[] = fd.pipe()
+            fd.write(pair[1], str)
+            fd.close(pair[1])
+            declare data: any = fd.read(pair[0], len)
+            fd.close(pair[0])
+            
+            declare result: string = ""
+            declare i: int = 0
+            loop:
+                init:
+                    i = i
+                cond:
+                    i < len
+                step:
+                    i = i + 1
+                body:
+                    declare ch: int = syscall("0x1802", data, i)
+                    // 'a'(97) - 'z'(122) 转为 'A'(65) - 'Z'(90)
+                    if ch >= 97 && ch <= 122 then
+                        ch = ch - 32
+                    end if
+                    result = result + std_string._charToString(ch)
+                end body
+            end loop
+            
+            return result
+        end body
+    end function
+
+    /**
+    @function toLowerCase
+    @summary 将字符串转为小写
+    @param str 源字符串
+    */
+    function: toLowerCase
+        params:
+            declare str: string
+        returns: string
+        body:
+            declare len: int = syscall("0x1801", str)
+            if len == 0 then
+                return ""
+            end if
+            
+            declare pair: int[] = fd.pipe()
+            fd.write(pair[1], str)
+            fd.close(pair[1])
+            declare data: any = fd.read(pair[0], len)
+            fd.close(pair[0])
+            
+            declare result: string = ""
+            declare i: int = 0
+            loop:
+                init:
+                    i = i
+                cond:
+                    i < len
+                step:
+                    i = i + 1
+                body:
+                    declare ch: int = syscall("0x1802", data, i)
+                    // 'A'(65) - 'Z'(90) 转为 'a'(97) - 'z'(122)
+                    if ch >= 65 && ch <= 90 then
+                        ch = ch + 32
+                    end if
+                    result = result + std_string._charToString(ch)
+                end body
+            end loop
+            
+            return result
+        end body
+    end function
+
+    /**
+    @function startsWith
+    @summary 判断字符串是否以指定前缀开头
+    @param str 源字符串
+    @param prefix 前缀字符串
+    */
+    function: startsWith
+        params:
+            declare str: string
+            declare prefix: string
+        returns: boolean
+        body:
+            declare strLen: int = syscall("0x1801", str)
+            declare prefixLen: int = syscall("0x1801", prefix)
+            
+            if prefixLen > strLen then
+                return false
+            end if
+            if prefixLen == 0 then
+                return true
+            end if
+            
+            declare pair1: int[] = fd.pipe()
+            fd.write(pair1[1], str)
+            fd.close(pair1[1])
+            declare strData: any = fd.read(pair1[0], strLen)
+            fd.close(pair1[0])
+            
+            declare pair2: int[] = fd.pipe()
+            fd.write(pair2[1], prefix)
+            fd.close(pair2[1])
+            declare prefixData: any = fd.read(pair2[0], prefixLen)
+            fd.close(pair2[0])
+            
+            declare i: int = 0
+            loop:
+                init:
+                    i = i
+                cond:
+                    i < prefixLen
+                step:
+                    i = i + 1
+                body:
+                    declare ch1: int = syscall("0x1802", strData, i)
+                    declare ch2: int = syscall("0x1802", prefixData, i)
+                    if ch1 != ch2 then
+                        return false
+                    end if
+                end body
+            end loop
+            
+            return true
+        end body
+    end function
+
+    /**
+    @function endsWith
+    @summary 判断字符串是否以指定后缀结尾
+    @param str 源字符串
+    @param suffix 后缀字符串
+    */
+    function: endsWith
+        params:
+            declare str: string
+            declare suffix: string
+        returns: boolean
+        body:
+            declare strLen: int = syscall("0x1801", str)
+            declare suffixLen: int = syscall("0x1801", suffix)
+            
+            if suffixLen > strLen then
+                return false
+            end if
+            if suffixLen == 0 then
+                return true
+            end if
+            
+            declare pair1: int[] = fd.pipe()
+            fd.write(pair1[1], str)
+            fd.close(pair1[1])
+            declare strData: any = fd.read(pair1[0], strLen)
+            fd.close(pair1[0])
+            
+            declare pair2: int[] = fd.pipe()
+            fd.write(pair2[1], suffix)
+            fd.close(pair2[1])
+            declare suffixData: any = fd.read(pair2[0], suffixLen)
+            fd.close(pair2[0])
+            
+            declare offset: int = 0
+            declare tempLen: int = strLen
+            declare tempSuffixLen: int = suffixLen
+            offset = tempLen
+            loop:
+                init:
+                    tempSuffixLen = tempSuffixLen
+                cond:
+                    tempSuffixLen > 0
+                step:
+                    tempSuffixLen = tempSuffixLen - 1
+                body:
+                    offset = offset - 1
+                end body
+            end loop
+            declare i: int = 0
+            loop:
+                init:
+                    i = i
+                cond:
+                    i < suffixLen
+                step:
+                    i = i + 1
+                body:
+                    declare ch1: int = syscall("0x1802", strData, offset + i)
+                    declare ch2: int = syscall("0x1802", suffixData, i)
+                    if ch1 != ch2 then
+                        return false
+                    end if
+                end body
+            end loop
+            
+            return true
+        end body
+    end function
+
+    /**
+    @function _isWhitespace
+    @summary 判断字符是否为空白字符（内部辅助函数）
+    @param ch 字符的字节值
+    */
+    function: _isWhitespace
+        params:
+            declare ch: int
+        returns: boolean
+        body:
+            // 空格(32), 制表符(9), 换行(10), 回车(13)
+            if ch == 32 then
+                return true
+            end if
+            if ch == 9 then
+                return true
+            end if
+            if ch == 10 then
+                return true
+            end if
+            if ch == 13 then
+                return true
+            end if
+            return false
+        end body
+    end function
+
+    /**
+    @function _charToString
+    @summary 将字节值转为单字符字符串（内部辅助函数）
+    @param ch 字符的字节值
+    */
+    function: _charToString
+        params:
+            declare ch: int
+        returns: string
+        body:
+            // 使用管道将单个字节转为字符串
+            declare pair: int[] = fd.pipe()
+            declare wfd: int = pair[1]
+            declare rfd: int = pair[0]
+            
+            // 将字节值直接写入管道（syscall 会处理 int 到字节的转换）
+            syscall("0x1002", wfd, ch)
+            fd.close(wfd)
+            
+            declare result: any = fd.read(rfd, 1)
+            fd.close(rfd)
+            
+            // 转为字符串并返回
+            return "" + result
+        end body
+    end function
+
+end module
