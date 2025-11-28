@@ -6,6 +6,7 @@
 module: std_string
     import: os_fd
     import: fd
+    import: std_parse
 
     /**
     @struct std_string
@@ -741,20 +742,11 @@ module: std_string
             declare ch: int
         returns: string
         body:
-            // 使用管道将单个字节转为字符串
-            declare pair: int[] = fd.pipe()
-            declare wfd: int = pair[1]
-            declare rfd: int = pair[0]
-            
-            // 将字节值直接写入管道（syscall 会处理 int 到字节的转换）
-            syscall("0x1002", wfd, ch)
-            fd.close(wfd)
-            
-            declare result: any = fd.read(rfd, 1)
-            fd.close(rfd)
-            
-            // 转为字符串并返回
-            return "" + result
+            // 将 int 转为单字节数组再解码为字符串，避免写入 int 时被 toString() 成数字字符
+            declare b: byte = std_parse.parseByte("" + ch)  // 显式收缩为 byte，避免以 Integer 形式写入
+            declare buf: any = syscall("0x1903", 1)  // RANDOM_BYTES(1) → byte[]
+            declare _rc: int = syscall("0x1803", buf, 0, b)  // ARR_SET(buf,0,b)，返回值仅为平衡栈
+            return "" + buf
         end body
     end function
 
