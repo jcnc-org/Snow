@@ -4,6 +4,7 @@
 */
 module: std_parse
     import: os_fd
+    import: std_string
 
     /**
     @function _digitValue
@@ -32,22 +33,9 @@ module: std_parse
             declare s: string
         returns: double
         body:
-            declare pair:int[] = os_fd.pipe()
-            declare rfd:int = pair[0]
-            declare wfd:int = pair[1]
-
-            declare len:int = os_fd.write_bytes(wfd, s) // 写入字符串，返回写入字节数
-            os_fd.close(wfd)
-
-            if len <= 0 then
-                os_fd.close(rfd)
-                return 0
-            end if
-
-            declare data:any = os_fd.read_bytes(rfd, len) // 读回刚写入的字节
-            os_fd.close(rfd)
-
-            declare idx:int = 0
+            declare data: byte[] = std_string.toBytes(s)
+            declare len: int = syscall("0x1801", data)
+            declare idx: int = 0
 
             // 跳过前导空白（手动推进索引，避免 step 语义干扰）
             loop:
@@ -58,7 +46,7 @@ module: std_parse
                 step:
                     idx = idx
                 body:
-                    declare b:int = syscall("0x1802", data, idx)
+                    declare b: int = data[idx]
                     if b != 32 && b != 9 && b != 10 && b != 13 then   // space, tab, \n, \r
                         break
                     end if
@@ -70,8 +58,8 @@ module: std_parse
                 return 0
             end if
 
-            declare negative:boolean = false
-            declare first:int = syscall("0x1802", data, idx) // 字节值
+            declare negative: boolean = false
+            declare first: int = data[idx] // 字节值
             if first == 45 then         // '-'
                 negative = true
                 idx = idx + 1
@@ -81,11 +69,11 @@ module: std_parse
                 end if
             end if
 
-            declare hasDigit:boolean = false
-            declare intPart:double = 0.0
+            declare hasDigit: boolean = false
+            declare intPart: double = 0.0
 
             // 整数部分（显式推进 pos）
-            declare pos:int = idx
+            declare pos: int = idx
             loop:
                 init:
                     pos = pos
@@ -94,8 +82,8 @@ module: std_parse
                 step:
                     pos = pos
                 body:
-                    declare cur:int = syscall("0x1802", data, pos)
-                    declare digit:int = std_parse._digitValue(cur)
+                    declare cur: int = data[pos]
+                    declare digit: int = std_parse._digitValue(cur)
                     if digit == -1 then
                         break
                     end if
@@ -106,14 +94,14 @@ module: std_parse
             end loop
             idx = pos
 
-            declare fracPart:double = 0.0
-            declare fracBase:double = 0.1
+            declare fracPart: double = 0.0
+            declare fracBase: double = 0.1
 
             if idx < len then
-                declare dot:int = syscall("0x1802", data, idx)
+                declare dot: int = data[idx]
                 if dot == 46 then        // '.'
                     idx = idx + 1
-                    declare fpos:int = idx
+                    declare fpos: int = idx
                     loop:
                         init:
                             fpos = fpos
@@ -122,8 +110,8 @@ module: std_parse
                         step:
                             fpos = fpos
                         body:
-                            declare cur:int = syscall("0x1802", data, fpos)
-                            declare digit:int = std_parse._digitValue(cur)
+                            declare cur: int = data[fpos]
+                            declare digit: int = std_parse._digitValue(cur)
                             if digit == -1 then
                                 break
                             end if
