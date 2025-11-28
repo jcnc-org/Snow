@@ -35,7 +35,7 @@ module: std_int_example
             std_io.println("toString() on 10 -> " + eqA.toString())
 
             std_io.println("\n=== 数学/解析工具 ===")
-            std_io.println("std_parse.parseInt(\"-7\") -> " + std_parse.parseInt("-7"))
+            std_io.println("std_parse.parseInt(\"-71\") -> " + std_parse.parseInt("-71"))
             std_io.println("std_math.compareInt(1, 5) -> " + std_math.compareInt(1, 5))
             std_io.println("std_math.compareInt(7, 2) -> " + std_math.compareInt(7, 2))
             std_io.println("std_math.maxInt(-15, 20) -> " + std_math.maxInt(-15, 20))

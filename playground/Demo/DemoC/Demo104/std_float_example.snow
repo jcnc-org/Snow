@@ -35,7 +35,7 @@ module: std_float_example
             std_io.println("toString() on 10 -> " + eqA.toString())
 
             std_io.println("\n=== 数学/解析工具 ===")
-            std_io.println("std_parse.parseFloat(\"-7.25\") -> " + std_parse.parseFloat("-7.25"))
+            std_io.println("std_parse.parseFloat(\"-71.25\") -> " + std_parse.parseFloat("-71.25"))
             std_io.println("std_math.compareFloat(1.2, 5.0) -> " + std_math.compareFloat(1.2f, 5.0f))
             std_io.println("std_math.compareFloat(7.0, 2.0) -> " + std_math.compareFloat(7.0f, 2.0f))
             std_io.println("std_math.maxFloat(-15, 20) -> " + std_math.maxFloat(-15f, 20f))
