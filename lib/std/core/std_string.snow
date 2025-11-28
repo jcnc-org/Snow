@@ -397,99 +397,86 @@ module: std_string
         end body
     end function
 
-    /**
-    @function trim
-    @summary 去除字符串首尾的空白字符（空格、制表符、换行、回车）
-    @param str 源字符串
-    */
-    function: trim
-        params:
-            declare str: string
-        returns: string
-        body:
-            declare len: int = syscall("0x1801", str)
-            if len == 0 then
-                return ""
-            end if
-            
-            // 转为字节数组
-            declare pair: int[] = fd.pipe()
-            fd.write(pair[1], str)
-            fd.close(pair[1])
-            declare data: any = fd.read(pair[0], len)
-            fd.close(pair[0])
-            
-            // 找到首个非空白字符
-            declare start: int = 0
-            loop:
-                init:
-                    start = start
-                cond:
-                    start < len
-                step:
-                    start = start + 1
-                body:
-                    declare ch: int = syscall("0x1802", data, start)
-                    if std_string._isWhitespace(ch) == false then
-                        break
-                    end if
-                end body
-            end loop
-            
-            if start == len then
-                return ""
-            end if
-            
-            // 找到最后一个非空白字符
-            declare endIdx: int = 0
-            declare tempLen: int = len
-            declare counter: int = 1
-            endIdx = tempLen
-            loop:
-                init:
-                    counter = counter
-                cond:
-                    counter > 0
-                step:
-                    counter = counter - 1
-                body:
-                    endIdx = endIdx - 1
-                end body
-            end loop
-            loop:
-                init:
-                    endIdx = endIdx
-                cond:
-                    endIdx >= start
-                step:
-                    endIdx = endIdx - 1
-                body:
-                    declare ch: int = syscall("0x1802", data, endIdx)
-                    if std_string._isWhitespace(ch) == false then
-                        break
-                    end if
-                end body
-            end loop
-            
-            // 构建结果
-            declare result: string = ""
-            declare i: int = start
-            loop:
-                init:
-                    i = i
-                cond:
-                    i <= endIdx
-                step:
-                    i = i + 1
-                body:
-                    declare ch: int = syscall("0x1802", data, i)
-                    result = result + std_string._charToString(ch)
-                end body
-            end loop
-            
-            return result
-        end body
-    end function
+     /**
+     @function trim
+     @summary 去除字符串首尾的空白字符（空格、制表符、换行、回车）
+     @param str 源字符串
+     */
+     function: trim
+         params:
+             declare str: string
+         returns: string
+         body:
+             declare len: int = syscall("0x1801", str)
+             if len == 0 then
+                 return ""
+             end if
+
+             // 转为字节数组
+             declare pair: int[] = fd.pipe()
+             fd.write(pair[1], str)
+             fd.close(pair[1])
+             declare data: any = fd.read(pair[0], len)
+             fd.close(pair[0])
+
+             // 找到首个非空白字符
+             declare start: int = 0
+             loop:
+                 init:
+                     start = start
+                 cond:
+                     start < len
+                 step:
+                     start = start + 1
+                 body:
+                     declare ch: int = syscall("0x1802", data, start)
+                     if std_string._isWhitespace(ch) == false then
+                         break
+                     end if
+                 end body
+             end loop
+
+             // 整个字符串都是空白
+             if start == len then
+                 return ""
+             end if
+
+             // 找到末尾非空白字符
+             declare endIdx: int = len - 1
+             loop:
+                 init:
+                     endIdx = endIdx
+                 cond:
+                     endIdx >= start
+                 step:
+                     endIdx = endIdx - 1
+                 body:
+                     declare ch: int = syscall("0x1802", data, endIdx)
+                     if std_string._isWhitespace(ch) == false then
+                         break
+                     end if
+                 end body
+             end loop
+
+             // 构建结果字符串
+             declare result: string = ""
+             declare i: int = start
+             loop:
+                 init:
+                     i = i
+                 cond:
+                     i <= endIdx
+                 step:
+                     i = i + 1
+                 body:
+                     declare ch: int = syscall("0x1802", data, i)
+                     result = result + std_string._charToString(ch)
+                 end body
+             end loop
+
+             return result
+         end body
+     end function
 
     /**
     @function toUpperCase
