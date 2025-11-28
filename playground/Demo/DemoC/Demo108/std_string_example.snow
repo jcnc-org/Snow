@@ -1,0 +1,19 @@
+/**
+@module std_string_example
+@summary std_string 方法演示
+*/
+module: std_string_example
+
+    import: std_string
+
+    import: std_io
+
+
+    function: main
+        body:
+
+
+        end body
+    end function
+
+end module
