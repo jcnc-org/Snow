@@ -129,7 +129,7 @@ module: std_parse
                 return 0
             end if
 
-            declare result:double
+            declare result: double
             if negative then
                 result = -intPart
                 result = result - fracPart
@@ -244,7 +244,7 @@ module: std_parse
                 return 0f
             end if
 
-            declare result:float
+            declare result: float
             if negative then
                 result = -intPart
                 result = result - fracPart
@@ -265,11 +265,11 @@ module: std_parse
 	        declare s: string
 	    returns: long
 	    body:
-	        declare pair:int[] = os_fd.pipe()
-	        declare rfd:int = pair[0]
-	        declare wfd:int = pair[1]
+	        declare pair: int[] = os_fd.pipe()
+	        declare rfd: int = pair[0]
+	        declare wfd: int = pair[1]
 
-	        declare len:int = os_fd.write_bytes(wfd, s)
+	        declare len: int = os_fd.write_bytes(wfd, s)
 	        os_fd.close(wfd)
 
 	        if len <= 0 then
@@ -277,10 +277,10 @@ module: std_parse
 	            return 0L
 	        end if
 
-	        declare data:any = os_fd.read_bytes(rfd, len)
+	        declare data: any = os_fd.read_bytes(rfd, len)
 	        os_fd.close(rfd)
 
-	        declare idx:int = 0
+	        declare idx: int = 0
 
 	        // 跳过前导空白
 	        loop:
@@ -291,7 +291,7 @@ module: std_parse
 	            step:
 	                idx = idx
 	            body:
-	                declare b:int = syscall("0x1802", data, idx)
+	                declare b: int = syscall("0x1802", data, idx)
 	                if b != 32 && b != 9 && b != 10 && b != 13 then
 	                    break
 	                end if
@@ -303,8 +303,8 @@ module: std_parse
 	            return 0L
 	        end if
 
-	        declare negative:boolean = false
-	        declare first:int = syscall("0x1802", data, idx)
+	        declare negative: boolean = false
+	        declare first: int = syscall("0x1802", data, idx)
 	        if first == 45 then          // '-'
 	            negative = true
 	            idx = idx + 1
@@ -314,10 +314,10 @@ module: std_parse
 	            end if
 	        end if
 
-	        declare hasDigit:boolean = false
-	        declare value:long = 0L
+	        declare hasDigit: boolean = false
+	        declare value: long = 0L
 
-	        declare pos:int = idx
+	        declare pos: int = idx
 	        loop:
 	            init:
 	                pos = pos
@@ -326,8 +326,8 @@ module: std_parse
 	            step:
 	                pos = pos
 	            body:
-	                declare cur:int = syscall("0x1802", data, pos)
-	                declare digit:int = std_parse._digitValue(cur)
+	                declare cur: int = syscall("0x1802", data, pos)
+	                declare digit: int = std_parse._digitValue(cur)
 	                if digit == -1 then
 	                    break
 	                end if
@@ -359,11 +359,11 @@ module: std_parse
 	        declare s: string
 	    returns: short
 	    body:
-	        declare pair:int[] = os_fd.pipe()
-	        declare rfd:int = pair[0]
-	        declare wfd:int = pair[1]
+	        declare pair: int[] = os_fd.pipe()
+	        declare rfd: int = pair[0]
+	        declare wfd: int = pair[1]
 
-	        declare len:int = os_fd.write_bytes(wfd, s)
+	        declare len: int = os_fd.write_bytes(wfd, s)
 	        os_fd.close(wfd)
 
 	        if len <= 0 then
@@ -371,10 +371,10 @@ module: std_parse
 	            return 0
 	        end if
 
-	        declare data:any = os_fd.read_bytes(rfd, len)
+	        declare data: any = os_fd.read_bytes(rfd, len)
 	        os_fd.close(rfd)
 
-	        declare idx:int = 0
+	        declare idx: int = 0
 
 	        // 跳过前导空白
 	        loop:
@@ -385,7 +385,7 @@ module: std_parse
 	            step:
 	                idx = idx
 	            body:
-	                declare b:int = syscall("0x1802", data, idx)
+	                declare b: int = syscall("0x1802", data, idx)
 	                if b != 32 && b != 9 && b != 10 && b != 13 then
 	                    break
 	                end if
@@ -397,8 +397,8 @@ module: std_parse
 	            return 0
 	        end if
 
-	        declare negative:boolean = false
-	        declare first:int = syscall("0x1802", data, idx)
+	        declare negative: boolean = false
+	        declare first: int = syscall("0x1802", data, idx)
 	        if first == 45 then          // '-'
 	            negative = true
 	            idx = idx + 1
@@ -408,10 +408,10 @@ module: std_parse
 	            end if
 	        end if
 
-	        declare hasDigit:boolean = false
-	        declare value:short = 0
+	        declare hasDigit: boolean = false
+	        declare value: short = 0
 
-	        declare pos:int = idx
+	        declare pos: int = idx
 	        loop:
 	            init:
 	                pos = pos
@@ -420,8 +420,8 @@ module: std_parse
 	            step:
 	                pos = pos
 	            body:
-	                declare cur:int = syscall("0x1802", data, pos)
-	                declare digit:int = std_parse._digitValue(cur)
+	                declare cur: int = syscall("0x1802", data, pos)
+	                declare digit: int = std_parse._digitValue(cur)
 	                if digit == -1 then
 	                    break
 	                end if
@@ -454,11 +454,11 @@ module: std_parse
             declare s: string
         returns: int
         body:
-            declare pair:int[] = os_fd.pipe()
-            declare rfd:int = pair[0]
-            declare wfd:int = pair[1]
+            declare pair: int[] = os_fd.pipe()
+            declare rfd: int = pair[0]
+            declare wfd: int = pair[1]
 
-            declare len:int = os_fd.write_bytes(wfd, s)
+            declare len: int = os_fd.write_bytes(wfd, s)
             os_fd.close(wfd)
 
             if len <= 0 then
@@ -466,10 +466,10 @@ module: std_parse
                 return 0
             end if
 
-            declare data:any = os_fd.read_bytes(rfd, len)
+            declare data: any = os_fd.read_bytes(rfd, len)
             os_fd.close(rfd)
 
-            declare idx:int = 0
+            declare idx: int = 0
 
             // 跳过前导空白
             loop:
@@ -480,7 +480,7 @@ module: std_parse
                 step:
                     idx = idx
                 body:
-                    declare b:int = syscall("0x1802", data, idx)
+                    declare b: int = syscall("0x1802", data, idx)
                     if b != 32 && b != 9 && b != 10 && b != 13 then
                         break
                     end if
@@ -492,8 +492,8 @@ module: std_parse
                 return 0
             end if
 
-            declare negative:boolean = false
-            declare first:int = syscall("0x1802", data, idx)
+            declare negative: boolean = false
+            declare first: int = syscall("0x1802", data, idx)
             if first == 45 then          // '-'
                 negative = true
                 idx = idx + 1
@@ -503,10 +503,10 @@ module: std_parse
                 end if
             end if
 
-            declare hasDigit:boolean = false
-            declare value:int = 0
+            declare hasDigit: boolean = false
+            declare value: int = 0
 
-            declare pos:int = idx
+            declare pos: int = idx
             loop:
                 init:
                     pos = pos
@@ -515,8 +515,8 @@ module: std_parse
                 step:
                     pos = pos
                 body:
-                    declare cur:int = syscall("0x1802", data, pos)
-                    declare digit:int = std_parse._digitValue(cur)
+                    declare cur: int = syscall("0x1802", data, pos)
+                    declare digit: int = std_parse._digitValue(cur)
                     if digit == -1 then
                         break
                     end if
@@ -548,11 +548,11 @@ module: std_parse
                 declare s: string
             returns: byte
             body:
-                declare pair:int[] = os_fd.pipe()
-                declare rfd:int = pair[0]
-                declare wfd:int = pair[1]
+                declare pair: int[] = os_fd.pipe()
+                declare rfd: int = pair[0]
+                declare wfd: int = pair[1]
 
-                declare len:int = os_fd.write_bytes(wfd, s)
+                declare len: int = os_fd.write_bytes(wfd, s)
                 os_fd.close(wfd)
 
                 if len <= 0 then
@@ -560,10 +560,10 @@ module: std_parse
                     return 0
                 end if
 
-                declare data:any = os_fd.read_bytes(rfd, len)
+                declare data: any = os_fd.read_bytes(rfd, len)
                 os_fd.close(rfd)
 
-                declare idx:int = 0
+                declare idx: int = 0
 
                 // 跳过前导空白
                 loop:
@@ -574,7 +574,7 @@ module: std_parse
                     step:
                         idx = idx
                     body:
-                        declare b:int = syscall("0x1802", data, idx)
+                        declare b: int = syscall("0x1802", data, idx)
                         if b != 32 && b != 9 && b != 10 && b != 13 then
                             break
                         end if
@@ -586,8 +586,8 @@ module: std_parse
                     return 0
                 end if
 
-                declare negative:boolean = false
-                declare first:int = syscall("0x1802", data, idx)
+                declare negative: boolean = false
+                declare first: int = syscall("0x1802", data, idx)
                 if first == 45 then          // '-'
                     negative = true
                     idx = idx + 1
@@ -597,8 +597,8 @@ module: std_parse
                     end if
                 end if
 
-                declare hasDigit:boolean = false
-                declare value:int = 0        // 用 int 计算，最后收缩为 byte
+                declare hasDigit: boolean = false
+                declare value: int = 0        // 用 int 计算，最后收缩为 byte
 
                 declare pos:int = idx
                 loop:
@@ -609,8 +609,8 @@ module: std_parse
                     step:
                         pos = pos
                     body:
-                        declare cur:int = syscall("0x1802", data, pos)
-                        declare digit:int = std_parse._digitValue(cur)
+                        declare cur: int = syscall("0x1802", data, pos)
+                        declare digit: int = std_parse._digitValue(cur)
                         if digit == -1 then
                             break
                         end if
@@ -629,7 +629,7 @@ module: std_parse
                 end if
 
                 // 最终收缩成 byte
-                declare result:byte = value
+                declare result: byte = value
                 return result
             end body
         end function
