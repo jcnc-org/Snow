@@ -50,8 +50,8 @@ module: os_array
 
     /**
     @function push
-    @summary 在列表/数组末尾追加一个值（仅对 List 有效）。
-    @returns 修改后列表长度
+    @summary 在列表末尾追加一个值，并返回追加后的长度。
+    @description 等价于 Java List 的 add()；仅支持可变列表。
     */
     function: push
         params:
@@ -59,59 +59,93 @@ module: os_array
             declare value:any
         returns: int
         body:
-            declare len:int = array.length(arr)
-            array.set(arr, len, value)
-            return len + 1
+            return array.push(arr, value)
         end body
     end function
 
     /**
     @function pop
-    @summary 移除列表/数组末尾元素并返回它；若空列表则返回空字符串。
-    @returns 被弹出的值
-    */
-    /**
-    @function pop
-    @summary 移除数组末尾元素并返回它；若空数组则返回 ""。
-    @returns 被弹出的值
+    @summary 移除并返回列表/数组的末尾元素。
+    @returns 若列表为空，则返回 ""（空字符串）。
     */
     function: pop
         params:
             declare arr:any
         returns: any
         body:
-            declare len:int = array.length(arr)
-            if len <= 0 then
-                return ""
-            end if
-
-            declare lastIndex:int = len - 1
-
-            // 取最后一个值
-            declare val:any = array.get(arr, lastIndex)
-
-            // 创建新数组，长度少一
-            declare newArr:any[] = []
-
-            // 复制前 len-1 个元素
-            loop:
-                init:
-                    declare i:int = 0
-                cond:
-                    i < lastIndex
-                step:
-                    i = i + 1
-                body:
-                    array.set(newArr, i, array.get(arr, i))
-                end body
-            end loop
-
-            // 将 arr 指向新数组
-            arr = newArr
-
-            return val
+            return array.pop(arr)
         end body
     end function
 
+    /**
+    @function insert
+    @summary 在指定索引位置插入一个元素。
+    @description
+        原位置及之后的元素向后移动一位；
+        若 index 不在 [0, length] 范围内，将抛出异常。
+    @returns 插入后的新长度。
+    */
+    function: insert
+        params:
+            declare arr:any
+            declare index:int
+            declare value:any
+        returns: int
+        body:
+            return array.insert(arr, index, value)
+        end body
+    end function
+
+    /**
+    @function remove
+    @summary 删除指定索引位置的元素。
+    @description
+        删除后数组长度减少 1，后续元素向前移动；
+        若 index 越界或 arr 非列表，将抛出异常。
+    @returns 被删除的元素。
+    */
+    function: remove
+        params:
+            declare arr:any
+            declare index:int
+        returns: any
+        body:
+            return array.remove(arr, index)
+        end body
+    end function
+
+    /**
+    @function resize
+    @summary 调整列表长度为 newLen。
+    @description
+        - 若 newLen < 原长度，则删除末尾多余元素；
+        - 若 newLen > 原长度，则末尾补 null；
+        - newLen 不能为负值，否则抛出异常。
+    @returns 调整后的长度（即 newLen）。
+    */
+    function: resize
+        params:
+            declare arr:any
+            declare newLen:int
+        returns: int
+        body:
+            return array.resize(arr, newLen)
+        end body
+    end function
+
+    /**
+    @function clear
+    @summary 清空列表，使其长度变为 0。
+    @description 非列表类型将抛出异常。
+    @returns 始终返回 0。
+    */
+    function: clear
+        params:
+            declare arr:any
+        returns: int
+        body:
+            return array.clear(arr)
+        end body
+    end function
 
 end module
