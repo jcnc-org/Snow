@@ -2,6 +2,7 @@ package org.jcnc.snow.compiler.ir.utils;
 
 import org.jcnc.snow.compiler.ir.core.IROpCode;
 import org.jcnc.snow.compiler.ir.core.IROpCodeMappings;
+import org.jcnc.snow.compiler.parser.ast.BinaryExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.IdentifierNode;
 import org.jcnc.snow.compiler.parser.ast.NumberLiteralNode;
 import org.jcnc.snow.compiler.parser.ast.StringLiteralNode;
@@ -124,6 +125,12 @@ public final class ComparisonUtils {
      * @return 类型标记字符（B/S/I/L/F/D），未知时返回 I
      */
     private static char analysisType(Map<String, String> variables, ExpressionNode node) {
+        if (node instanceof BinaryExpressionNode bin) {
+            if ("+".equals(bin.operator()) &&
+                    (bin.left() instanceof StringLiteralNode || bin.right() instanceof StringLiteralNode)) {
+                return 'R';
+            }
+        }
         if (node instanceof NumberLiteralNode(String value, NodeContext _)) {
             char suffix = Character.toUpperCase(value.charAt(value.length() - 1));
             return switch (suffix) {
