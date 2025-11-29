@@ -54,7 +54,7 @@ module: std_array
         function: length
             returns: int
             body:
-                declare len: int = syscall("ARR_LEN", data)
+                declare len: int = syscall("0x1801", data)
                 return len
             end body
         end function
@@ -70,7 +70,7 @@ module: std_array
                 declare index: int
             returns: any
             body:
-                declare elem: any = syscall("ARR_GET", data, index)
+                declare elem: any = syscall("0x1802", data, index)
                 return elem
             end body
         end function
@@ -87,7 +87,7 @@ module: std_array
                 declare value: any
             returns: void
             body:
-                syscall("ARR_SET", data, index, value)
+                syscall("0x1803", data, index, value)
             end body
         end function
 
