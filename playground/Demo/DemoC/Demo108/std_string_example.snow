@@ -72,8 +72,22 @@ module: std_string_example
             std_io.println("toUpperCase() -> [" + caseStr.toUpperCase() + "]")
             std_io.println("toLowerCase() -> [" + caseStr.toLowerCase() + "]")
 
-            // 9. startsWith 和 endsWith
-            std_io.println("\n=== 9. startsWith() 和 endsWith() 前后缀判断 ===")
+            // 9. toBytes 和 fromBytes
+            std_io.println("\n=== 9. toBytes() 和 fromBytes() 字符串与字节数组转换 ===")
+            declare rawStr: std_string = new std_string("Hello World")
+            declare bytes: byte[] = rawStr.toBytes()
+            std_io.println("原字符串: [" + rawStr.stringValue() + "]")
+            std_io.println("toBytes() -> " + bytes)
+            std_io.println("fromBytes() -> [" + std_string.fromBytes(bytes) + "]")
+            syscall("0x1803", bytes, 6, 66)   // B
+            syscall("0x1803", bytes, 7, 121)  // y
+            syscall("0x1803", bytes, 8, 116)  // t
+            syscall("0x1803", bytes, 9, 101)  // e
+            syscall("0x1803", bytes, 10, 115) // s
+            std_io.println("修改后 fromBytes() -> [" + std_string.fromBytes(bytes) + "]")
+
+            // 10. startsWith 和 endsWith
+            std_io.println("\n=== 10. startsWith() 和 endsWith() 前后缀判断 ===")
             declare prefixStr: std_string = new std_string("Hello Snow Language")
             std_io.println("原字符串: [" + prefixStr.stringValue() + "]")
             std_io.println("startsWith(\"Hello\") -> " + prefixStr.startsWith("Hello"))
@@ -81,16 +95,16 @@ module: std_string_example
             std_io.println("endsWith(\"Language\") -> " + prefixStr.endsWith("Language"))
             std_io.println("endsWith(\"Snow\") -> " + prefixStr.endsWith("Snow"))
 
-            // 10. equals 相等判断
-            std_io.println("\n=== 10. equals() 相等判断 ===")
+            // 11. equals 相等判断
+            std_io.println("\n=== 11. equals() 相等判断 ===")
             declare str1: std_string = new std_string("Snow")
             declare str2: std_string = new std_string("Snow")
             declare str3: std_string = new std_string("Java")
             std_io.println("\"Snow\" equals \"Snow\" -> " + str1.equals(str2))
             std_io.println("\"Snow\" equals \"Java\" -> " + str1.equals(str3))
 
-            // 11. 静态方法调用
-            std_io.println("\n=== 11. 静态方法直接调用 ===")
+            // 12. 静态方法调用
+            std_io.println("\n=== 12. 静态方法直接调用 ===")
             declare directTest: string = "  Test Direct Call  "
             std_io.println("原字符串: [" + directTest + "]")
             std_io.println("std_string.length() -> " + std_string.length(directTest))
@@ -98,8 +112,8 @@ module: std_string_example
             std_io.println("std_string.toUpperCase() -> [" + std_string.toUpperCase(directTest) + "]")
             std_io.println("std_string.isEmpty() -> " + std_string.isEmpty(directTest))
 
-            // 12. 组合使用示例
-            std_io.println("\n=== 12. 组合使用示例 ===")
+            // 13. 组合使用示例
+            std_io.println("\n=== 13. 组合使用示例 ===")
             declare rawInput: string = "   Snow Programming Language   "
             std_io.println("原始输入: [" + rawInput + "]")
             
