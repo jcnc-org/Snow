@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -167,15 +168,18 @@ public record CompileTask(Project project, String[] args) implements Task {
         // 3. 尝试从可执行文件路径推断SDK目录
         try {
             // 获取当前JAR文件或类文件的路径
-            String classPath = CompileTask.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+            Path classPath = Paths.get(CompileTask.class
+                    .getProtectionDomain()
+                    .getCodeSource()
+                    .getLocation()
+                    .toURI());
 
             // 向上查找可能的SDK目录结构
-            Path current = Path.of(classPath).toAbsolutePath().getParent();
+            Path current = classPath.toAbsolutePath().getParent();
             while (current != null) {
-                // 检查是否存在bin和lib目录
-                Path binDir = current.resolve("bin");
+                // 检查是否存在lib目录
                 Path libDir = current.resolve("lib");
-                if (Files.isDirectory(binDir) && Files.isDirectory(libDir)) {
+                if (Files.isDirectory(libDir)) {
                     return libDir;
                 }
                 current = current.getParent();
