@@ -1,6 +1,6 @@
 /**
 @module os_io
-@summary I/O 的过程式稳定层：统一少量约定，便于上层复用。
+@summary I/O 的过程式稳定层。
 */
 module: os_io
 

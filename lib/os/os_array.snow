@@ -1,0 +1,93 @@
+/**
+@module os_array
+@summary 数组操作的过程式稳定层。
+*/
+module: os_array
+
+    import: array
+
+    /**
+    @function length
+    @summary 获取数组、列表或字符串的长度；null 返回 0。
+    */
+    function: length
+        params:
+            declare arr:any
+        returns: int
+        body:
+            return array.length(arr)
+        end body
+    end function
+
+    /**
+    @function get
+    @summary 获取数组/列表在指定索引的元素；索引非法时抛出异常。
+    */
+    function: get
+        params:
+            declare arr:any
+            declare index:int
+        returns: any
+        body:
+            return array.get(arr, index)
+        end body
+    end function
+
+    /**
+    @function set
+    @summary 设置数组/列表在指定索引的元素为给定值；不可变类型将抛出异常。
+    */
+    function: set
+        params:
+            declare arr:any
+            declare index:int
+            declare value:any
+        returns: int
+        body:
+            return array.set(arr, index, value)
+        end body
+    end function
+
+    /**
+    @function push
+    @summary 在列表/数组末尾追加一个值（仅对 List 有效）。
+    @returns 修改后列表长度
+    */
+    function: push
+        params:
+            declare arr:any
+            declare value:any
+        returns: int
+        body:
+            declare len:int = array.length(arr)
+            array.set(arr, len, value)
+            return len + 1
+        end body
+    end function
+
+    /**
+    @function pop
+    @summary 移除列表/数组末尾元素并返回它；若空列表则返回 null。
+    @returns 被弹出的值
+    */
+    function: pop
+        params:
+            declare arr:any
+        returns: any
+        body:
+            declare len:int = array.length(arr)
+            if len <= 0 then
+                return null
+            end if
+
+            declare lastIndex:int = len - 1
+            declare val:any = array.get(arr, lastIndex)
+
+            // 将最后一个位置设为 null
+            array.set(arr, lastIndex, null)
+
+            return val
+        end body
+    end function
+
+end module
