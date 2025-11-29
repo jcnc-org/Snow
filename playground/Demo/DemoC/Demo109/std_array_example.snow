@@ -150,7 +150,7 @@ module: std_array_example
             std_io.println("[12] 获取内部原始数组")
             declare internal: any[] = wrapped.toRawArray()
             std_io.println("提取原始数组成功")
-            std_io.println("原始数组长度: " + syscall("ARR_LEN", internal))
+            std_io.println("原始数组长度: " + syscall("0x1801", internal))
             std_io.println("")
 
             std_io.println("=== 演示完成 ===")
