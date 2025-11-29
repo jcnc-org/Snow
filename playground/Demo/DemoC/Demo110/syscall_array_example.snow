@@ -1,0 +1,18 @@
+/**
+@module syscall_array_example
+@summary syscall_array 方法演示
+@description 演示 syscall_array 提供的常用数组操作方法
+*/
+module: syscall_array
+
+    import: array
+    import: std_io
+
+    function: main
+        returns: void
+        body:
+
+        end body
+    end function
+
+end module
