@@ -1,0 +1,160 @@
+/**
+@module std_array_example
+@summary std_array 方法演示
+@description 演示 std_array 标准库提供的常用数组操作方法
+*/
+module: std_array_example
+
+    import: std_array
+    import: std_io
+
+    function: main
+        returns: void
+        body:
+            std_io.println("=== std_array 标准库演示 ===")
+            std_io.println("")
+
+            // 演示 1: 创建和初始化
+            std_io.println("[1] 创建数组并添加元素")
+            declare arr: std_array = std_array.newArray()
+            arr.append(10)
+            arr.append(20)
+            arr.append(30)
+            arr.append(40)
+            arr.append(50)
+            std_io.println("创建数组: [10, 20, 30, 40, 50]")
+            std_io.println("数组长度: " + arr.length())
+            std_io.println("")
+
+            // 演示 2: 访问元素
+            std_io.println("[2] 访问数组元素")
+            std_io.println("第一个元素: " + arr.getFirst())
+            std_io.println("第二个元素: " + arr.get(1))
+            std_io.println("最后一个元素: " + arr.getLast())
+            std_io.println("")
+
+            // 演示 3: 修改元素
+            std_io.println("[3] 修改数组元素")
+            std_io.println("原值: arr[2] = " + arr.get(2))
+            arr.set(2, 35)
+            std_io.println("修改后: arr[2] = " + arr.get(2))
+            std_io.println("")
+
+            // 演示 4: 查找元素
+            std_io.println("[4] 查找元素")
+            declare idx: int = arr.indexOf(40)
+            std_io.println("元素 40 的索引: " + idx)
+            std_io.println("数组是否包含 50: " + arr.contains(50))
+            std_io.println("数组是否包含 100: " + arr.contains(100))
+            std_io.println("")
+
+            // 演示 5: 空数组检查
+            std_io.println("[5] 空数组检查")
+            declare empty_arr: std_array = std_array.newArray()
+            std_io.println("新数组是否为空: " + empty_arr.isEmpty())
+            std_io.println("原数组是否为空: " + arr.isEmpty())
+            std_io.println("")
+
+            // 演示 6: 打印数组内容（正向）
+            std_io.println("[6] 遍历数组（正向）")
+            std_io.print("数组内容: [")
+            loop:
+                init:
+                    declare i: int = 0
+                cond:
+                    i < arr.length()
+                step:
+                    i = i + 1
+                body:
+                    if i > 0 then
+                        std_io.print(", ")
+                    end if
+                    std_io.print(arr.get(i))
+                end body
+            end loop
+            std_io.println("]")
+            std_io.println("")
+
+            // 演示 7: 反转数组
+            std_io.println("[7] 反转数组")
+            arr.reverse()
+            std_io.print("反转后的数组: [")
+            loop:
+                init:
+                    declare i: int = 0
+                cond:
+                    i < arr.length()
+                step:
+                    i = i + 1
+                body:
+                    if i > 0 then
+                        std_io.print(", ")
+                    end if
+                    std_io.print(arr.get(i))
+                end body
+            end loop
+            std_io.println("]")
+            std_io.println("")
+
+            // 演示 8: 追加新元素
+            std_io.println("[8] 追加新元素")
+            std_io.println("原长度: " + arr.length())
+            arr.append(60)
+            arr.append(70)
+            std_io.println("追加 60, 70 后长度: " + arr.length())
+            std_io.println("新增的最后一个元素: " + arr.getLast())
+            std_io.println("")
+
+            // 演示 9: 插入元素
+            std_io.println("[9] 插入元素（通过 set）")
+            declare pos: int = 2
+            declare old_val: any = arr.get(pos)
+            arr.set(pos, 999)
+            std_io.println("在位置 " + pos + " 将 " + old_val + " 改为 999")
+            std_io.print("修改后的数组前 5 个元素: [")
+            loop:
+                init:
+                    declare i: int = 0
+                cond:
+                    i < 5
+                step:
+                    i = i + 1
+                body:
+                    if i > 0 then
+                        std_io.print(", ")
+                    end if
+                    std_io.print(arr.get(i))
+                end body
+            end loop
+            std_io.println("]")
+            std_io.println("")
+
+            // 演示 10: 清空数组
+            std_io.println("[10] 清空数组")
+            std_io.println("清空前长度: " + arr.length())
+            arr.clear()
+            std_io.println("清空后长度: " + arr.length())
+            std_io.println("清空后是否为空: " + arr.isEmpty())
+            std_io.println("")
+
+            // 演示 11: 从原始数组创建
+            std_io.println("[11] 从原始 any[] 创建 std_array")
+            declare raw_arr: any[] = [100, 200, 300]
+            declare wrapped: std_array = std_array.fromRawArray(raw_arr)
+            std_io.println("从 [100, 200, 300] 创建")
+            std_io.println("长度: " + wrapped.length())
+            std_io.println("第一个元素: " + wrapped.getFirst())
+            std_io.println("")
+
+            // 演示 12: 获取内部原始数组
+            std_io.println("[12] 获取内部原始数组")
+            declare internal: any[] = wrapped.toRawArray()
+            std_io.println("提取原始数组成功")
+            std_io.println("原始数组长度: " + syscall("ARR_LEN", internal))
+            std_io.println("")
+
+            std_io.println("=== 演示完成 ===")
+        end body
+    end function
+
+end module

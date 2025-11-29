@@ -1,0 +1,326 @@
+/**
+@module std_array
+@summary std_array 结构体 - Snow 原生的通用数组实现
+@description 提供动态数组功能，支持创建、访问、修改、获取长度等操作
+*/
+module: std_array
+
+    /**
+    @struct std_array
+    @summary Snow 原生通用数组实现
+    @description
+        使用 Java 底层的 ArrayList 作为存储，但通过 Snow 结构体接口封装。
+        支持任意类型的元素（any[] 类型）。
+    */
+    struct: std_array
+
+        fields:
+            /**
+            @field data
+            @summary 数组内部数据存储
+            */
+            declare data: any[]
+
+        /**
+        @init default
+        @summary 无参构造函数，创建空数组
+        */
+        init:
+            body:
+                // 使用 syscall 创建空数组
+                declare tmp: any[] = []
+                data = tmp
+            end body
+        end init
+
+        /**
+        @init with_initial_array
+        @summary 从 any[] 创建 std_array
+        @param initial_data 初始数组数据
+        */
+        init:
+            params:
+                declare initial_data: any
+            body:
+                data = initial_data
+            end body
+        end init
+
+        /**
+        @function length
+        @summary 获取数组长度
+        @returns 数组中的元素个数
+        */
+        function: length
+            returns: int
+            body:
+                declare len: int = syscall("ARR_LEN", data)
+                return len
+            end body
+        end function
+
+        /**
+        @function get
+        @summary 获取指定索引处的元素
+        @param index 数组索引（从 0 开始）
+        @returns 指定索引处的元素
+        */
+        function: get
+            params:
+                declare index: int
+            returns: any
+            body:
+                declare elem: any = syscall("ARR_GET", data, index)
+                return elem
+            end body
+        end function
+
+        /**
+        @function set
+        @summary 设置指定索引处的元素值
+        @param index 数组索引（从 0 开始）
+        @param value 要设置的元素值
+        */
+        function: set
+            params:
+                declare index: int
+                declare value: any
+            returns: void
+            body:
+                syscall("ARR_SET", data, index, value)
+            end body
+        end function
+
+        /**
+        @function isEmpty
+        @summary 检查数组是否为空
+        @returns true 若长度为 0，否则 false
+        */
+        function: isEmpty
+            returns: boolean
+            body:
+                declare len: int = length()
+                return len == 0
+            end body
+        end function
+
+        /**
+        @function clear
+        @summary 清空数组
+        @returns void
+        */
+        function: clear
+            returns: void
+            body:
+                declare tmp: any[] = []
+                data = tmp
+            end body
+        end function
+
+        /**
+        @function contains
+        @summary 检查数组是否包含指定值
+        @param value 要查找的值
+        @returns true 若找到，否则 false
+        */
+        function: contains
+            params:
+                declare value: any
+            returns: boolean
+            body:
+                declare len: int = length()
+                declare found: boolean = 0
+                loop:
+                    init:
+                        declare i: int = 0
+                    cond:
+                        i < len
+                    step:
+                        i = i + 1
+                    body:
+                        declare elem: any = get(i)
+                        if "" + elem == "" + value then
+                            found = 1
+                        end if
+                    end body
+                end loop
+                return found
+            end body
+        end function
+
+        /**
+        @function indexOf
+        @summary 查找指定值首次出现的索引
+        @param value 要查找的值
+        @returns 元素索引，若不存在返回 -1
+        */
+        function: indexOf
+            params:
+                declare value: any
+            returns: int
+            body:
+                declare len: int = length()
+                declare idx: int = -1
+                loop:
+                    init:
+                        declare i: int = 0
+                    cond:
+                        i < len
+                    step:
+                        i = i + 1
+                    body:
+                        declare elem: any = get(i)
+                        if "" + elem == "" + value then
+                            idx = i
+                        end if
+                    end body
+                end loop
+                return idx
+            end body
+        end function
+
+        /**
+        @function append
+        @summary 在数组末尾追加元素
+        @param value 要追加的元素
+        */
+        function: append
+            params:
+                declare value: any
+            returns: void
+            body:
+                declare len: int = length()
+                set(len, value)
+            end body
+        end function
+
+        /**
+        @function insert
+        @summary 在指定索引处插入元素
+        @param index 插入位置
+        @param value 要插入的值
+        */
+        function: insert
+            params:
+                declare index: int
+                declare value: any
+            returns: void
+            body:
+                declare len: int = length()
+                set(index, value)
+            end body
+        end function
+
+        /**
+        @function reverse
+        @summary 反转数组内容
+        @returns void
+        */
+        function: reverse
+            returns: void
+            body:
+                declare len: int = length()
+                declare left: int = 0
+                declare right: int = len - 1
+                
+                loop:
+                    init:
+                        declare i: int = 0
+                    cond:
+                        left < right
+                    step:
+                        i = i + 1
+                    body:
+                        declare temp: any = get(left)
+                        declare right_val: any = get(right)
+                        set(left, right_val)
+                        set(right, temp)
+                        left = left + 1
+                        right = right - 1
+                    end body
+                end loop
+            end body
+        end function
+
+        /**
+        @function getFirst
+        @summary 获取第一个元素
+        @returns 数组首元素
+        */
+        function: getFirst
+            returns: any
+            body:
+                return get(0)
+            end body
+        end function
+
+        /**
+        @function getLast
+        @summary 获取最后一个元素
+        @returns 数组末元素
+        */
+        function: getLast
+            returns: any
+            body:
+                declare len: int = length()
+                return get(len - 1)
+            end body
+        end function
+
+        /**
+        @function toRawArray
+        @summary 获取内部的原始 any[] 数组
+        @returns 原始数组引用
+        */
+        function: toRawArray
+            returns: any[]
+            body:
+                return data
+            end body
+        end function
+
+    end struct
+
+    /**
+    @function newArray
+    @summary 创建空 std_array
+    @returns 新的 std_array 实例
+    */
+    function: newArray
+        returns: std_array
+        body:
+            return new std_array()
+        end body
+    end function
+
+    /**
+    @function newArrayWithCapacity
+    @summary 创建指定初始容量的 std_array
+    @param capacity 初始容量建议值
+    @returns 新的 std_array 实例
+    */
+    function: newArrayWithCapacity
+        params:
+            declare capacity: int
+        returns: std_array
+        body:
+            return new std_array()
+        end body
+    end function
+
+    /**
+    @function fromRawArray
+    @summary 从 any[] 创建 std_array
+    @param raw 原始数组
+    @returns 包装后的 std_array
+    */
+    function: fromRawArray
+        params:
+            declare raw: any
+        returns: std_array
+        body:
+            return new std_array(raw)
+        end body
+    end function
+
+end module
