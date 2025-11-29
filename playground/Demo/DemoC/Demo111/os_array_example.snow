@@ -1,0 +1,21 @@
+/**
+@module os_array_example
+@summary os_array 方法演示
+@description 演示 os_array 提供的常用数组操作方法
+*/
+module: os_array_example
+
+    import: array
+    import: std_io
+
+    function: main
+        returns: void
+        body:
+            std_io.println("=== os_array 系统调用演示 ===")
+
+
+            std_io.println("=== os_array 演示完成 ===")
+        end body
+    end function
+
+end module
