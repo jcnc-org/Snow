@@ -31,7 +31,6 @@ module: array
         end body
     end function
 
-
     /**
     @function get
     @summary 获取数组/列表在指定索引位置的元素。
@@ -50,7 +49,6 @@ module: array
             return elem
         end body
     end function
-
 
     /**
     @function set
@@ -92,7 +90,6 @@ module: array
         end body
     end function
 
-
     /**
     @function pop
     @summary 移除列表末尾元素并返回该元素。
@@ -110,7 +107,6 @@ module: array
             return elem
         end body
     end function
-
 
     /**
     @function insert
@@ -133,7 +129,6 @@ module: array
         end body
     end function
 
-
     /**
     @function remove
     @summary 删除并返回指定索引的元素。
@@ -153,7 +148,6 @@ module: array
         end body
     end function
 
-
     /**
     @function resize
     @summary 调整列表长度。
@@ -172,7 +166,6 @@ module: array
             return rc
         end body
     end function
-
 
     /**
     @function clear
