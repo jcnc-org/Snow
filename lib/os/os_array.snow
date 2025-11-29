@@ -67,7 +67,7 @@ module: os_array
 
     /**
     @function pop
-    @summary 移除列表/数组末尾元素并返回它；若空列表则返回 null。
+    @summary 移除列表/数组末尾元素并返回它；若空列表则返回空字符串。
     @returns 被弹出的值
     */
     function: pop
@@ -77,14 +77,14 @@ module: os_array
         body:
             declare len:int = array.length(arr)
             if len <= 0 then
-                return null
+                return ""
             end if
 
             declare lastIndex:int = len - 1
             declare val:any = array.get(arr, lastIndex)
 
-            // 将最后一个位置设为 null
-            array.set(arr, lastIndex, null)
+            // 将最后一个位置设为空字符串
+            array.set(arr, lastIndex, "")
 
             return val
         end body
