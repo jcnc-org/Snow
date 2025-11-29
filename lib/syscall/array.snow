@@ -1,0 +1,70 @@
+/**
+@module array
+@summary 数组操作封装模块，对应 ARR_LEN / ARR_GET / ARR_SET 系统调用。
+@syscalls
+  0x1801 ARR_LEN  获取数组 / 列表 / 字符串长度
+  0x1802 ARR_GET  获取数组 / 列表在指定索引的元素
+  0x1803 ARR_SET  设置数组 / 列表在指定索引的元素
+*/
+module: array
+
+    /**
+    @function length
+    @summary 获取数组、列表或字符串的长度。
+    @param arr 目标数组/列表/字符串
+    @returns 长度值（int），若 arr 为 null 则返回 0
+    @throws IllegalArgumentException 非法类型时抛出
+    */
+    function: length
+        params:
+            declare arr: any
+        returns: int
+        body:
+            declare len:int = syscall("0x1801", arr)
+            return len
+        end body
+    end function
+
+
+    /**
+    @function get
+    @summary 获取数组/列表在指定索引位置的元素。
+    @param arr 目标数组/列表
+    @param index 索引（int）
+    @returns 元素值（any）
+    @throws Exception 索引越界或类型非法时抛出
+    */
+    function: get
+        params:
+            declare arr: any
+            declare index: int
+        returns: any
+        body:
+            declare elem:any = syscall("0x1802", arr, index)
+            return elem
+        end body
+    end function
+
+
+    /**
+    @function set
+    @summary 设置数组/列表在指定索引位置的元素为给定值。
+    @param arr 目标数组/列表
+    @param index 索引（int）
+    @param value 将要写入的值
+    @returns 0 操作完成
+    @throws Exception 索引越界或类型非法时抛出
+    */
+    function: set
+        params:
+            declare arr: any
+            declare index: int
+            declare value: any
+        returns: int
+        body:
+            declare rc:int = syscall("0x1803", arr, index, value)
+            return rc
+        end body
+    end function
+
+end module
