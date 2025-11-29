@@ -14,43 +14,42 @@ module: os_array_example
             std_io.println("=== os_array 过程式稳定层演示 ===")
             std_io.println("")
 
-            // 演示 1: length - 获取数组长度
+            // 1. length
             std_io.println("[1] length() - 获取数组长度")
-            declare int_arr: int[] = [10, 20, 30, 40, 50]
-            declare len: int = os_array.length(int_arr)
-            std_io.println("数组 [10, 20, 30, 40, 50] 的长度: " + len)
+            declare int_arr:int[] = [10, 20, 30, 40, 50]
+            declare len:int = os_array.length(int_arr)
+            std_io.println("长度 = " + len)
             std_io.println("")
 
-            // 演示 2: length - 获取字符串长度
-            std_io.println("[2] length() - 获取字符串长度")
-            declare str: string = "Hello Snow Language"
-            declare str_len: int = os_array.length(str)
-            std_io.println("字符串 \"" + str + "\" 的长度: " + str_len)
+            // 2. 字符串
+            std_io.println("[2] length() - 字符串")
+            declare str:string = "Hello Snow Language"
+            std_io.println("长度 = " + os_array.length(str))
             std_io.println("")
 
-            // 演示 3: length - 空数组
+            // 3. 空数组
             std_io.println("[3] length() - 空数组")
-            declare empty_arr: any[] = []
-            declare empty_len: int = os_array.length(empty_arr)
-            std_io.println("空数组的长度: " + empty_len)
+            declare empty_arr:any[] = []
+            std_io.println("空数组长度 = " + os_array.length(empty_arr))
             std_io.println("")
 
-            // 演示 4: get - 获取数组元素
+            // 4. get
             std_io.println("[4] get() - 获取数组元素")
-            declare test_arr: any[] = [100, 200, 300, 400, 500]
-            std_io.println("数组: [100, 200, 300, 400, 500]")
-            std_io.println("get(0) -> " + os_array.get(test_arr, 0))
-            std_io.println("get(2) -> " + os_array.get(test_arr, 2))
-            std_io.println("get(4) -> " + os_array.get(test_arr, 4))
+            declare test_arr:any[] = [100, 200, 300, 400, 500]
+            std_io.println("test_arr[0] = " + os_array.get(test_arr, 0))
+            std_io.println("test_arr[2] = " + os_array.get(test_arr, 2))
+            std_io.println("test_arr[4] = " + os_array.get(test_arr, 4))
             std_io.println("")
 
-            // 演示 5: set - 设置数组元素
-            std_io.println("[5] set() - 设置数组元素")
-            declare numbers: int[] = [1, 2, 3, 4, 5]
+            // 5. set
+            std_io.println("[5] set() - 修改数组元素")
+            declare numbers:int[] = [1, 2, 3, 4, 5]
+
             std_io.print("修改前: [")
+
             loop:
                 init:
-                    declare i: int = 0
+                    declare i:int = 0
                 cond:
                     i < os_array.length(numbers)
                 step:
@@ -62,14 +61,16 @@ module: os_array_example
                     std_io.print(os_array.get(numbers, i))
                 end body
             end loop
+
             std_io.println("]")
-            
-            // 修改索引 2 的元素
+
             os_array.set(numbers, 2, 99)
-            std_io.print("修改后 (set(2, 99)): [")
+
+            std_io.print("修改后: [")
+
             loop:
                 init:
-                    declare i: int = 0
+                    declare i:int = 0
                 cond:
                     i < os_array.length(numbers)
                 step:
@@ -81,17 +82,22 @@ module: os_array_example
                     std_io.print(os_array.get(numbers, i))
                 end body
             end loop
+
             std_io.println("]")
             std_io.println("")
 
-            // 演示 6: push - 追加元素到数组末尾
-            std_io.println("[6] push() - 追加元素到数组末尾")
-            declare list: any[] = [1, 2, 3]
-            std_io.println("初始数组长度: " + os_array.length(list))
-            std_io.print("初始数组: [")
+            // 6. push
+            std_io.println("[6] push() - 追加元素")
+            declare list:any[] = [1, 2, 3]
+
+            os_array.push(list, 4)
+            os_array.push(list, 5)
+
+            std_io.print("push 后: [")
+
             loop:
                 init:
-                    declare i: int = 0
+                    declare i:int = 0
                 cond:
                     i < os_array.length(list)
                 step:
@@ -103,39 +109,25 @@ module: os_array_example
                     std_io.print(os_array.get(list, i))
                 end body
             end loop
-            std_io.println("]")
-            
-            declare new_len: int = os_array.push(list, 4)
-            std_io.println("push(4) 后长度: " + new_len)
-            new_len = os_array.push(list, 5)
-            std_io.println("push(5) 后长度: " + new_len)
-            
-            std_io.print("push 后的数组: [")
-            loop:
-                init:
-                    declare i: int = 0
-                cond:
-                    i < os_array.length(list)
-                step:
-                    i = i + 1
-                body:
-                    if i > 0 then
-                        std_io.print(", ")
-                    end if
-                    std_io.print(os_array.get(list, i))
-                end body
-            end loop
+
             std_io.println("]")
             std_io.println("")
 
-            // 演示 7: pop - 弹出数组末尾元素
-            std_io.println("[7] pop() - 弹出数组末尾元素")
-            declare stack: any[] = [10, 20, 30, 40, 50]
-            std_io.println("初始数组长度: " + os_array.length(stack))
-            std_io.print("初始数组: [")
+            // 7. pop
+            std_io.println("[7] pop() - 弹出元素")
+            declare stack:any[] = [10, 20, 30, 40, 50]
+
+            declare p1:any = os_array.pop(stack)
+            std_io.println("pop -> " + p1)
+
+            declare p2:any = os_array.pop(stack)
+            std_io.println("pop -> " + p2)
+
+            std_io.print("剩余数组: [")
+
             loop:
                 init:
-                    declare i: int = 0
+                    declare i:int = 0
                 cond:
                     i < os_array.length(stack)
                 step:
@@ -147,84 +139,45 @@ module: os_array_example
                     std_io.print(os_array.get(stack, i))
                 end body
             end loop
-            std_io.println("]")
-            
-            declare popped1: any = os_array.pop(stack)
-            std_io.println("pop() 返回值: " + popped1)
-            std_io.println("pop() 后长度: " + os_array.length(stack))
-            
-            declare popped2: any = os_array.pop(stack)
-            std_io.println("pop() 返回值: " + popped2)
-            std_io.println("pop() 后长度: " + os_array.length(stack))
-            
-            std_io.print("pop 后的数组: [")
-            loop:
-                init:
-                    declare i: int = 0
-                cond:
-                    i < os_array.length(stack)
-                step:
-                    i = i + 1
-                body:
-                    if i > 0 then
-                        std_io.print(", ")
-                    end if
-                    std_io.print(os_array.get(stack, i))
-                end body
-            end loop
+
             std_io.println("]")
             std_io.println("")
 
-            // 演示 8: push 和 pop 组合使用 - 栈操作
-            std_io.println("[8] push() 和 pop() 组合使用 - 栈操作")
-            declare stack2: any[] = []
-            std_io.println("创建空栈")
-            
+            // 8. push + pop 栈示例
+            std_io.println("[8] push + pop - 栈示例")
+            declare stack2:any[] = []
+
             os_array.push(stack2, "first")
             os_array.push(stack2, "second")
             os_array.push(stack2, "third")
-            std_io.println("依次 push: \"first\", \"second\", \"third\"")
-            std_io.println("当前栈长度: " + os_array.length(stack2))
-            
-            declare top1: any = os_array.pop(stack2)
-            std_io.println("pop() -> \"" + top1 + "\"")
-            declare top2: any = os_array.pop(stack2)
-            std_io.println("pop() -> \"" + top2 + "\"")
-            declare top3: any = os_array.pop(stack2)
-            std_io.println("pop() -> \"" + top3 + "\"")
-            std_io.println("最终栈长度: " + os_array.length(stack2))
+
+            std_io.println("依次 push: first, second, third")
+            std_io.println("pop -> " + os_array.pop(stack2))
+            std_io.println("pop -> " + os_array.pop(stack2))
+            std_io.println("pop -> " + os_array.pop(stack2))
+
+            std_io.println("最终长度 = " + os_array.length(stack2))
             std_io.println("")
 
-            // 演示 9: 字符串数组操作
-            std_io.println("[9] 字符串数组操作")
-            declare words: string[] = ["Snow", "Language", "Programming"]
-            std_io.println("字符串数组长度: " + os_array.length(words))
-            std_io.println("words[0] = \"" + os_array.get(words, 0) + "\"")
-            std_io.println("words[1] = \"" + os_array.get(words, 1) + "\"")
-            std_io.println("words[2] = \"" + os_array.get(words, 2) + "\"")
-            
+            // 9. 字符串数组
+            std_io.println("[9] 字符串数组")
+            declare words:string[] = ["Snow", "Language", "Programming"]
+
             os_array.set(words, 1, "Lang")
-            std_io.println("修改 words[1] 为 \"Lang\" 后: \"" + os_array.get(words, 1) + "\"")
+            std_io.println("修改后 words[1] = " + os_array.get(words, 1))
             std_io.println("")
 
-            // 演示 10: 综合示例 - 使用 push 和 pop 实现队列操作
-            std_io.println("[10] 综合示例 - 使用 push 和 pop 模拟队列")
-            declare queue: any[] = []
-            std_io.println("创建空队列")
-            
-            // 入队
+            // 10. push + pop 队列示例
+            std_io.println("[10] push + pop 模拟队列")
+            declare queue:any[] = []
+
             os_array.push(queue, "任务1")
             os_array.push(queue, "任务2")
             os_array.push(queue, "任务3")
-            std_io.println("入队: \"任务1\", \"任务2\", \"任务3\"")
-            std_io.println("队列长度: " + os_array.length(queue))
-            
-            // 出队（从末尾弹出，模拟队列）
-            declare task1: any = os_array.pop(queue)
-            std_io.println("出队: \"" + task1 + "\"")
-            declare task2: any = os_array.pop(queue)
-            std_io.println("出队: \"" + task2 + "\"")
-            std_io.println("剩余队列长度: " + os_array.length(queue))
+
+            std_io.println("出队 -> " + os_array.pop(queue))
+            std_io.println("出队 -> " + os_array.pop(queue))
+            std_io.println("剩余长度 = " + os_array.length(queue))
             std_io.println("")
 
             std_io.println("=== os_array 演示完成 ===")
