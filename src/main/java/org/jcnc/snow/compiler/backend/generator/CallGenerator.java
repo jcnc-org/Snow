@@ -244,6 +244,8 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
         return switch (s) {
             // 返回引用（字符串/字节数组/Map/数组等）
             case "0X1802", "ARR_GET",
+                 "0X1811", "ARR_POP",
+                 "0X1813", "ARR_REMOVE",
                  "0X1001", "READ",
                  "0X1005", "STAT",
                  "0X1006", "FSTAT",
