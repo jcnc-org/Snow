@@ -79,7 +79,7 @@ module: std_array_example
             // 演示 7: 使用迭代器遍历
             std_io.println("[7] 遍历数组（使用迭代器）")
             declare it: std_array_iterator = arr.iterator()
-            declare first: boolean = true      // ✅ 用 boolean 真实值
+            declare first: boolean = true
             std_io.print("数组内容: [")
             loop:
                 init:
