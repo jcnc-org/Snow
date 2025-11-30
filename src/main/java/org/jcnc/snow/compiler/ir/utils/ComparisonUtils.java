@@ -1,5 +1,6 @@
 package org.jcnc.snow.compiler.ir.utils;
 
+import org.jcnc.snow.compiler.common.NumberLiteralHelper;
 import org.jcnc.snow.compiler.ir.core.IROpCode;
 import org.jcnc.snow.compiler.ir.core.IROpCodeMappings;
 import org.jcnc.snow.compiler.parser.ast.BinaryExpressionNode;
@@ -132,10 +133,12 @@ public final class ComparisonUtils {
             }
         }
         if (node instanceof NumberLiteralNode(String value, NodeContext _)) {
-            char suffix = Character.toUpperCase(value.charAt(value.length() - 1));
+            char suffix = NumberLiteralHelper.extractTypeSuffix(value);
             return switch (suffix) {
-                case 'L', 'F', 'D' -> suffix;
-                default -> (value.indexOf('.') != -1 ? 'D' : 'I'); // 默认 int
+                case 'l' -> 'L';
+                case 'f' -> 'F';
+                case 'd' -> 'D';
+                default -> (NumberLiteralHelper.looksLikeFloat(value) ? 'D' : 'I'); // 默认 int
             };
         }
         if (node instanceof StringLiteralNode) {
