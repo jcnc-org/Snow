@@ -46,6 +46,7 @@ module: std_array_example
             std_io.println("元素 40 的索引: " + idx)
             std_io.println("数组是否包含 50: " + arr.contains(50))
             std_io.println("数组是否包含 100: " + arr.contains(100))
+            std_io.println("最后一个 50 的索引: " + arr.lastIndexOf(50))
             std_io.println("")
 
             // 演示 5: 空数组检查
@@ -55,8 +56,8 @@ module: std_array_example
             std_io.println("原数组是否为空: " + arr.isEmpty())
             std_io.println("")
 
-            // 演示 6: 打印数组内容（正向）
-            std_io.println("[6] 遍历数组（正向）")
+            // 演示 6: 遍历数组（使用下标）
+            std_io.println("[6] 遍历数组（使用下标）")
             std_io.print("数组内容: [")
             loop:
                 init:
@@ -75,8 +76,32 @@ module: std_array_example
             std_io.println("]")
             std_io.println("")
 
-            // 演示 7: 反转数组
-            std_io.println("[7] 反转数组")
+            // 演示 7: 使用迭代器遍历
+            std_io.println("[7] 遍历数组（使用迭代器）")
+            declare it: std_array_iterator = arr.iterator()
+            declare first: boolean = 1
+            std_io.print("数组内容: [")
+            loop:
+                init:
+                    declare dummy: int = 0   // 仅为满足语法需求，不使用
+                cond:
+                    it.hasNext()
+                step:
+                    dummy = dummy           // 空操作
+                body:
+                    if first == 0 then
+                        std_io.print(", ")
+                    else
+                        first = 0
+                    end if
+                    std_io.print(it.next())
+                end body
+            end loop
+            std_io.println("]")
+            std_io.println("")
+
+            // 演示 8: 反转数组
+            std_io.println("[8] 反转数组")
             arr.reverse()
             std_io.print("反转后的数组: [")
             loop:
@@ -96,61 +121,60 @@ module: std_array_example
             std_io.println("]")
             std_io.println("")
 
-            // 演示 8: 追加新元素
-            std_io.println("[8] 追加新元素")
-            std_io.println("原长度: " + arr.length())
+            // 演示 9: 追加和插入元素
+            std_io.println("[9] 追加和插入元素")
+            std_io.println("当前长度: " + arr.length())
             arr.append(60)
             arr.append(70)
             std_io.println("追加 60, 70 后长度: " + arr.length())
-            std_io.println("新增的最后一个元素: " + arr.getLast())
-            std_io.println("")
+            std_io.println("当前数组: " + arr.toString())
 
-            // 演示 9: 插入元素
-            std_io.println("[9] 插入元素（通过 set）")
             declare pos: int = 2
-            declare old_val: any = arr.get(pos)
-            arr.set(pos, 999)
-            std_io.println("在位置 " + pos + " 将 " + old_val + " 改为 999")
-            std_io.print("修改后的数组前 5 个元素: [")
-            loop:
-                init:
-                    declare i: int = 0
-                cond:
-                    i < 5
-                step:
-                    i = i + 1
-                body:
-                    if i > 0 then
-                        std_io.print(", ")
-                    end if
-                    std_io.print(arr.get(i))
-                end body
-            end loop
-            std_io.println("]")
+            std_io.println("在索引 " + pos + " 插入 999（使用 insert）")
+            arr.insert(pos, 999)
+            std_io.println("插入后数组: " + arr.toString())
             std_io.println("")
 
-            // 演示 10: 清空数组
-            std_io.println("[10] 清空数组")
+            // 演示 10: clone / copy / equals
+            std_io.println("[10] clone / copy / equals 示例")
+            declare cloned: std_array = arr.clone()
+            std_io.println("克隆出的 cloned: " + cloned.toString())
+            std_io.println("arr.equals(cloned): " + arr.equals(cloned))
+
+            // 使用 copy（语义等同于 clone）
+            declare copied: std_array = arr.copy()
+            std_io.println("复制出的 copied: " + copied.toString())
+            std_io.println("arr.equals(copied): " + arr.equals(copied))
+
+            // 修改 cloned，验证不会影响原始 arr
+            cloned.set(0, -1)
+            std_io.println("修改 cloned[0] = -1 之后:")
+            std_io.println("arr:     " + arr.toString())
+            std_io.println("cloned:  " + cloned.toString())
+            std_io.println("arr.equals(cloned): " + arr.equals(cloned))
+            std_io.println("")
+
+            // 演示 11: 清空数组
+            std_io.println("[11] 清空数组")
             std_io.println("清空前长度: " + arr.length())
             arr.clear()
             std_io.println("清空后长度: " + arr.length())
             std_io.println("清空后是否为空: " + arr.isEmpty())
             std_io.println("")
 
-            // 演示 11: 从原始数组创建
-            std_io.println("[11] 从原始 any[] 创建 std_array")
+            // 演示 12: 从原始数组创建 & 访问内部原始数组
+            std_io.println("[12] 从原始 any[] 创建 std_array，并访问内部原始数组")
             declare raw_arr: any[] = [100, 200, 300]
             declare wrapped: std_array = std_array.fromRawArray(raw_arr)
-            std_io.println("从 [100, 200, 300] 创建")
-            std_io.println("长度: " + wrapped.length())
-            std_io.println("第一个元素: " + wrapped.getFirst())
-            std_io.println("")
+            std_io.println("从 [100, 200, 300] 创建 wrapped")
+            std_io.println("wrapped.length(): " + wrapped.length())
+            std_io.println("wrapped 第一个元素: " + wrapped.getFirst())
 
-            // 演示 12: 获取内部原始数组
-            std_io.println("[12] 获取内部原始数组")
-            declare internal: any[] = wrapped.toRawArray()
-            std_io.println("提取原始数组成功")
-            std_io.println("原始数组长度: " + syscall("0x1801", internal))
+            declare internal: any = wrapped.toRawArray()
+            std_io.println("通过 toRawArray() 提取内部原始数组引用")
+            // 再包一层，使用 std_array 的 length 计算长度
+            declare internal_wrapped: std_array = std_array.fromRawArray(internal)
+            std_io.println("原始数组长度: " + internal_wrapped.length())
             std_io.println("")
 
             std_io.println("=== 演示完成 ===")
