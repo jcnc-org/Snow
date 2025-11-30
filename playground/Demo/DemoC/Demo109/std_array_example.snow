@@ -79,20 +79,21 @@ module: std_array_example
             // 演示 7: 使用迭代器遍历
             std_io.println("[7] 遍历数组（使用迭代器）")
             declare it: std_array_iterator = arr.iterator()
-            declare first: boolean = 1
+            declare first: boolean = true      // ✅ 用 boolean 真实值
             std_io.print("数组内容: [")
             loop:
                 init:
-                    declare dummy: int = 0   // 仅为满足语法需求，不使用
+                    declare dummy: int = 0     // 仅为满足语法需求，不使用
                 cond:
                     it.hasNext()
                 step:
-                    dummy = dummy           // 空操作
+                    dummy = dummy             // 空操作
                 body:
-                    if first == 0 then
-                        std_io.print(", ")
+                    // 第一次不打印逗号，之后每次先打印逗号
+                    if first then
+                        first = false
                     else
-                        first = 0
+                        std_io.print(", ")
                     end if
                     std_io.print(it.next())
                 end body
