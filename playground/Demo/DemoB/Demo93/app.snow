@@ -85,6 +85,7 @@ module: app
             // 回到上层目录再删目录
             os_fs.change_dir(orig_dir)
             os_fs.remove_dir("mux_demo")
+            os_fs.remove_file("mux_test.txt")
 
             std_io.print("回到目录: " + os_fs.current_dir() + "\n")
 

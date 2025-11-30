@@ -4,6 +4,7 @@
 */
 module: app
     import: os_fd
+    import: os_fs
     import: std_io
 
     function: main
@@ -59,6 +60,7 @@ module: app
             os_fd.close(handle)
 
             std_io.print("=== 测试完成 ===\n")
+            os_fs.remove_file("test.txt")
         end body
     end function
 end module
