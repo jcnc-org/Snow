@@ -1,6 +1,6 @@
 /**
 @module std_array
-@summary Snow 通用动态数组结构体封装（基于 os_array 稳定过程层）。
+@summary Snow 通用动态数组结构体封装。
 @description
     对外提供结构体风格的数组操作接口；
     底层通过 os_array 调用实际的数组/列表实现。
@@ -279,7 +279,6 @@ module: std_array
             returns: boolean
             body:
                 declare len: int = length()
-                declare found: boolean = 0
 
                 loop:
                     init:
@@ -289,18 +288,14 @@ module: std_array
                     step:
                         i = i + 1
                     body:
-                        // 已经找到则不必再比较（没有 break，只做逻辑短路）
-                        if found == 0 then
-                            declare elem: any = get(i)
-                            // 通过拼接空字符串做宽松等价比较
-                            if "" + elem == "" + value then
-                                found = 1
-                            end if
+                        declare elem: any = get(i)
+                        if "" + elem == "" + value then
+                            return 1
                         end if
                     end body
                 end loop
 
-                return found
+                return 0
             end body
         end function
 
@@ -316,7 +311,6 @@ module: std_array
             returns: int
             body:
                 declare len: int = length()
-                declare idx: int = -1
 
                 loop:
                     init:
@@ -326,16 +320,14 @@ module: std_array
                     step:
                         i = i + 1
                     body:
-                        if idx == -1 then
-                            declare elem: any = get(i)
-                            if "" + elem == "" + value then
-                                idx = i
-                            end if
+                        declare elem: any = get(i)
+                        if "" + elem == "" + value then
+                            return i
                         end if
                     end body
                 end loop
 
-                return idx
+                return -1
             end body
         end function
 
@@ -351,24 +343,24 @@ module: std_array
             returns: int
             body:
                 declare len: int = length()
-                declare idx: int = -1
 
+                // 从最后一个元素开始向前查找
                 loop:
                     init:
-                        declare i: int = 0
+                        declare i: int = len - 1
                     cond:
-                        i < len
+                        i >= 0
                     step:
-                        i = i + 1
+                        i = i - 1
                     body:
                         declare elem: any = get(i)
                         if "" + elem == "" + value then
-                            idx = i
+                            return i
                         end if
                     end body
                 end loop
 
-                return idx
+                return -1
             end body
         end function
 
@@ -503,8 +495,6 @@ module: std_array
                     return 0
                 end if
 
-                declare eq: boolean = 1
-
                 loop:
                     init:
                         declare i: int = 0
@@ -513,17 +503,15 @@ module: std_array
                     step:
                         i = i + 1
                     body:
-                        if eq == 1 then
-                            declare a: any = get(i)
-                            declare b: any = other.get(i)
-                            if "" + a != "" + b then
-                                eq = 0
-                            end if
+                        declare a: any = get(i)
+                        declare b: any = other.get(i)
+                        if "" + a != "" + b then
+                            return 0
                         end if
                     end body
                 end loop
 
-                return eq
+                return 1
             end body
         end function
 
