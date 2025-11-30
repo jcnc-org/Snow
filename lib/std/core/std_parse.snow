@@ -1,0 +1,586 @@
+/**
+@module std_parse
+@summary 字符串解析工具集，提供基础的类型转换能力。
+*/
+module: std_parse
+    import: os_fd
+    import: std_string
+
+    /**
+    @function _digitValue
+    @summary 将单字符转为对应的数字，非数字返回 -1
+    */
+    function: _digitValue
+        params:
+            declare ch: int
+        returns: int
+        body:
+            if ch >= 48 && ch <= 57 then   // '0'..'9'
+                return ch - 48
+            end if
+            return -1
+        end body
+    end function
+
+
+    /**
+    @function parseDouble
+    @summary 将字符串解析为 double
+    @description 使用管道转为字节数组，支持前导空白、可选符号与小数部分。
+    */
+    function: parseDouble
+        params:
+            declare s: string
+        returns: double
+        body:
+            declare data: byte[] = std_string.toBytes(s)
+            declare len: int = syscall("0x1801", data)
+            declare idx: int = 0
+
+            // 跳过前导空白（手动推进索引，避免 step 语义干扰）
+            loop:
+                init:
+                    idx = idx
+                cond:
+                    idx < len
+                step:
+                    idx = idx
+                body:
+                    declare b: int = data[idx]
+                    if b != 32 && b != 9 && b != 10 && b != 13 then   // space, tab, \n, \r
+                        break
+                    end if
+                    idx = idx + 1
+                end body
+            end loop
+
+            if idx >= len then
+                return 0
+            end if
+
+            declare negative: boolean = false
+            declare first: int = data[idx] // 字节值
+            if first == 45 then         // '-'
+                negative = true
+                idx = idx + 1
+            else
+                if first == 43 then     // '+'
+                    idx = idx + 1
+                end if
+            end if
+
+            declare hasDigit: boolean = false
+            declare intPart: double = 0.0
+
+            // 整数部分（显式推进 pos）
+            declare pos: int = idx
+            loop:
+                init:
+                    pos = pos
+                cond:
+                    pos < len
+                step:
+                    pos = pos
+                body:
+                    declare cur: int = data[pos]
+                    declare digit: int = std_parse._digitValue(cur)
+                    if digit == -1 then
+                        break
+                    end if
+                    hasDigit = true
+                    intPart = intPart * 10.0 + digit
+                    pos = pos + 1
+                end body
+            end loop
+            idx = pos
+
+            declare fracPart: double = 0.0
+            declare fracBase: double = 0.1
+
+            if idx < len then
+                declare dot: int = data[idx]
+                if dot == 46 then        // '.'
+                    idx = idx + 1
+                    declare fpos: int = idx
+                    loop:
+                        init:
+                            fpos = fpos
+                        cond:
+                            fpos < len
+                        step:
+                            fpos = fpos
+                        body:
+                            declare cur: int = data[fpos]
+                            declare digit: int = std_parse._digitValue(cur)
+                            if digit == -1 then
+                                break
+                            end if
+                            hasDigit = true
+                            fracPart = fracPart + (digit * fracBase)
+                            fracBase = fracBase * 0.1
+                            fpos = fpos + 1
+                        end body
+                    end loop
+                    idx = fpos
+                end if
+            end if
+
+            if hasDigit == false then
+                return 0
+            end if
+
+            declare result: double
+            if negative then
+                result = -intPart
+                result = result - fracPart
+            else
+                result = intPart + fracPart
+            end if
+            return result
+        end body
+    end function
+
+    /**
+    @function parseFloat
+    @summary 将字符串解析为 float
+    @description 使用管道转为字节数组。
+    */
+    function: parseFloat
+        params:
+            declare s: string
+        returns: float
+        body:
+            declare data: byte[] = std_string.toBytes(s)
+            declare len: int = syscall("0x1801", data)
+            declare idx: int = 0
+
+            loop:
+                init:
+                    idx = idx
+                cond:
+                    idx < len
+                step:
+                    idx = idx
+                body:
+                    declare b: int = data[idx]
+                    if b != 32 && b != 9 && b != 10 && b != 13 then
+                        break
+                    end if
+                    idx = idx + 1
+                end body
+            end loop
+
+            if idx >= len then
+                return 0f
+            end if
+
+            declare negative: boolean = false
+            declare first: int = data[idx]
+            if first == 45 then
+                negative = true
+                idx = idx + 1
+            else
+                if first == 43 then
+                    idx = idx + 1
+                end if
+            end if
+
+            declare hasDigit: boolean = false
+            declare intPart: float = 0.0f
+
+            declare pos: int = idx
+            loop:
+                init:
+                    pos = pos
+                cond:
+                    pos < len
+                step:
+                    pos = pos
+                body:
+                    declare cur: int = data[pos]
+                    declare digit: int = std_parse._digitValue(cur)
+                    if digit == -1 then
+                        break
+                    end if
+                    hasDigit = true
+                    intPart = intPart * 10.0f + (digit * 1.0f)
+                    pos = pos + 1
+                end body
+            end loop
+            idx = pos
+
+            declare fracPart: float = 0.0f
+            declare fracBase: float = 0.1f
+
+            if idx < len then
+                declare dot: int = data[idx]
+                if dot == 46 then
+                    idx = idx + 1
+                    declare fpos: int = idx
+                    loop:
+                        init:
+                            fpos = fpos
+                        cond:
+                            fpos < len
+                        step:
+                            fpos = fpos
+                        body:
+                            declare cur: int = data[fpos]
+                            declare digit: int = std_parse._digitValue(cur)
+                            if digit == -1 then
+                                break
+                            end if
+                            hasDigit = true
+                            fracPart = fracPart + (digit * fracBase)
+                            fracBase = fracBase * 0.1f
+                            fpos = fpos + 1
+                        end body
+                    end loop
+                    idx = fpos
+                end if
+            end if
+
+            if hasDigit == false then
+                return 0f
+            end if
+
+            declare result: float
+            if negative then
+                result = -intPart
+                result = result - fracPart
+            else
+                result = intPart + fracPart
+            end if
+            return result
+        end body
+    end function
+
+	/**
+	@function parseLong
+	@summary 将字符串解析为 long
+    @description 使用管道转为字节数组。
+	*/
+	function: parseLong
+	    params:
+	        declare s: string
+	    returns: long
+	    body:
+	        declare data: byte[] = std_string.toBytes(s)
+            declare len: int = syscall("0x1801", data)
+            declare idx: int = 0
+
+	        // 跳过前导空白
+	        loop:
+	            init:
+	                idx = idx
+	            cond:
+	                idx < len
+	            step:
+	                idx = idx
+	            body:
+	                declare b: int = data[idx]
+	                if b != 32 && b != 9 && b != 10 && b != 13 then
+	                    break
+	                end if
+	                idx = idx + 1
+	            end body
+	        end loop
+
+	        if idx >= len then
+	            return 0L
+	        end if
+
+	        declare negative: boolean = false
+	        declare first: int = data[idx]
+	        if first == 45 then          // '-'
+	            negative = true
+	            idx = idx + 1
+	        else
+	            if first == 43 then      // '+'
+	                idx = idx + 1
+	            end if
+	        end if
+
+	        declare hasDigit: boolean = false
+	        declare value: long = 0L
+
+	        declare pos: int = idx
+	        loop:
+	            init:
+	                pos = pos
+	            cond:
+	                pos < len
+	            step:
+	                pos = pos
+	            body:
+	                declare cur: int = data[pos]
+	                declare digit: int = std_parse._digitValue(cur)
+	                if digit == -1 then
+	                    break
+	                end if
+	                hasDigit = true
+	                value = value * 10L + (digit * 1L)
+	                pos = pos + 1
+	            end body
+	        end loop
+
+	        if hasDigit == false then
+	            return 0L
+	        end if
+
+	        if negative then
+	            return -value
+	        end if
+
+	        return value
+	    end body
+	end function
+
+	/**
+	@function parseShort
+	@summary 将字符串解析为 short
+    @description 使用管道转为字节数组。
+	*/
+	function: parseShort
+	    params:
+	        declare s: string
+	    returns: short
+	    body:
+	        declare data: byte[] = std_string.toBytes(s)
+            declare len: int = syscall("0x1801", data)
+            declare idx: int = 0
+
+	        // 跳过前导空白
+	        loop:
+	            init:
+	                idx = idx
+	            cond:
+	                idx < len
+	            step:
+	                idx = idx
+	            body:
+	                declare b: int = data[idx]
+	                if b != 32 && b != 9 && b != 10 && b != 13 then
+	                    break
+	                end if
+	                idx = idx + 1
+	            end body
+	        end loop
+
+	        if idx >= len then
+	            return 0
+	        end if
+
+	        declare negative: boolean = false
+	        declare first: int = data[idx]
+	        if first == 45 then          // '-'
+	            negative = true
+	            idx = idx + 1
+	        else
+	            if first == 43 then      // '+'
+	                idx = idx + 1
+	            end if
+	        end if
+
+	        declare hasDigit: boolean = false
+	        declare value: short = 0
+
+	        declare pos: int = idx
+	        loop:
+	            init:
+	                pos = pos
+	            cond:
+	                pos < len
+	            step:
+	                pos = pos
+	            body:
+	                declare cur: int = data[pos]
+	                declare digit: int = std_parse._digitValue(cur)
+	                if digit == -1 then
+	                    break
+	                end if
+	                hasDigit = true
+	                // 这里直接用普通整型算式，交给编译器做类型收缩
+	                value = value * 10 + digit
+	                pos = pos + 1
+	            end body
+	        end loop
+
+	        if hasDigit == false then
+	            return 0
+	        end if
+
+	        if negative then
+	            value = -value
+	        end if
+
+	        return value
+	    end body
+	end function
+
+	/**
+    @function parseInt
+    @summary 将字符串解析为 int
+    @description 使用管道转为字节数组。
+    */
+    function: parseInt
+        params:
+            declare s: string
+        returns: int
+        body:
+            declare data: byte[] = std_string.toBytes(s)
+            declare len: int = syscall("0x1801", data)
+            declare idx: int = 0
+
+            // 跳过前导空白
+            loop:
+                init:
+                    idx = idx
+                cond:
+                    idx < len
+                step:
+                    idx = idx
+                body:
+                    declare b: int = data[idx]
+                    if b != 32 && b != 9 && b != 10 && b != 13 then
+                        break
+                    end if
+                    idx = idx + 1
+                end body
+            end loop
+
+            if idx >= len then
+                return 0
+            end if
+
+            declare negative: boolean = false
+            declare first: int = data[idx]
+            if first == 45 then          // '-'
+                negative = true
+                idx = idx + 1
+            else
+                if first == 43 then      // '+'
+                    idx = idx + 1
+                end if
+            end if
+
+            declare hasDigit: boolean = false
+            declare value: int = 0
+
+            declare pos: int = idx
+            loop:
+                init:
+                    pos = pos
+                cond:
+                    pos < len
+                step:
+                    pos = pos
+                body:
+                    declare cur: int = data[pos]
+                    declare digit: int = std_parse._digitValue(cur)
+                    if digit == -1 then
+                        break
+                    end if
+                    hasDigit = true
+                    value = value * 10 + digit
+                    pos = pos + 1
+                end body
+            end loop
+
+            if hasDigit == false then
+                return 0
+            end if
+
+            if negative then
+                value = -value
+            end if
+
+            return value
+        end body
+    end function
+
+        /**
+        @function parseByte
+        @summary 将字符串解析为 byte
+        @description 使用管道转为字节数组。
+        */
+        function: parseByte
+            params:
+                declare s: string
+            returns: byte
+            body:
+                declare data: byte[] = std_string.toBytes(s)
+                declare len: int = syscall("0x1801", data)
+                declare idx: int = 0
+
+                // 跳过前导空白
+                loop:
+                    init:
+                        idx = idx
+                    cond:
+                        idx < len
+                    step:
+                        idx = idx
+                    body:
+                        declare b: int = data[idx]
+                        if b != 32 && b != 9 && b != 10 && b != 13 then
+                            break
+                        end if
+                        idx = idx + 1
+                    end body
+                end loop
+
+                if idx >= len then
+                    return 0
+                end if
+
+                declare negative: boolean = false
+                declare first: int = data[idx]
+                if first == 45 then          // '-'
+                    negative = true
+                    idx = idx + 1
+                else
+                    if first == 43 then      // '+'
+                        idx = idx + 1
+                    end if
+                end if
+
+                declare hasDigit: boolean = false
+                declare value: int = 0        // 用 int 计算，最后收缩为 byte
+
+                declare pos:int = idx
+                loop:
+                    init:
+                        pos = pos
+                    cond:
+                        pos < len
+                    step:
+                        pos = pos
+                    body:
+                        declare cur: int = data[pos]
+                        declare digit: int = std_parse._digitValue(cur)
+                        if digit == -1 then
+                            break
+                        end if
+                        hasDigit = true
+                        value = value * 10 + digit
+                        pos = pos + 1
+                    end body
+                end loop
+
+                if hasDigit == false then
+                    return 0
+                end if
+
+                if negative then
+                    value = -value
+                end if
+
+                // 最终收缩成 byte
+                declare result: byte = value
+                return result
+            end body
+        end function
+
+
+end module

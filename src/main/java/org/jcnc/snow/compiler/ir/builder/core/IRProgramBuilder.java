@@ -2,6 +2,7 @@ package org.jcnc.snow.compiler.ir.builder.core;
 
 import org.jcnc.snow.compiler.ir.builder.statement.FunctionBuilder;
 import org.jcnc.snow.compiler.ir.common.GlobalConstTable;
+import org.jcnc.snow.compiler.ir.common.GlobalFunctionTable;
 import org.jcnc.snow.compiler.ir.core.IRFunction;
 import org.jcnc.snow.compiler.ir.core.IRProgram;
 import org.jcnc.snow.compiler.parser.ast.*;
@@ -51,20 +52,22 @@ public final class IRProgramBuilder {
         preloadGlobals(roots);
         // 2. 注册所有结构体的字段布局（为成员访问做准备）
         preloadStructLayouts(roots);
+        // 3. 预注册所有 struct 的构造与方法签名，便于函数内互调时查找
+        preloadStructCallables(roots);
 
         // 创建 IR 程序对象
         IRProgram irProgram = new IRProgram();
-        // 3. 遍历并处理所有顶层节点
+        // 4. 遍历并处理所有顶层节点
         for (Node node : roots) {
             switch (node) {
                 case ModuleNode moduleNode -> {
-                    // 3.1 先降级并注册本模块所有 struct 的构造/方法（struct 方法降级）
+                    // 4.1 先降级并注册本模块所有 struct 的构造/方法（struct 方法降级）
                     if (moduleNode.structs() != null) {
                         for (StructNode structNode : moduleNode.structs()) {
                             lowerAndRegisterStruct(structNode, irProgram);
                         }
                     }
-                    // 3.2 再处理模块里的普通函数，模块内函数名全限定，注入全局声明
+                    // 4.2 再处理模块里的普通函数，模块内函数名全限定，注入全局声明
                     if (moduleNode.functions() != null) {
                         for (FunctionNode f : moduleNode.functions()) {
                             irProgram.add(buildFunctionWithGlobals(moduleNode, f));
@@ -72,13 +75,13 @@ public final class IRProgramBuilder {
                     }
                 }
                 case FunctionNode functionNode ->
-                    // 3.3 处理顶层函数节点：直接构建为 IRFunction 并加入
+                    // 4.3 处理顶层函数节点：直接构建为 IRFunction 并加入
                         irProgram.add(buildFunction(functionNode));
                 case StatementNode statementNode ->
-                    // 3.4 处理脚本式顶层语句：封装成 "_start" 函数后构建并添加
+                    // 4.4 处理脚本式顶层语句：封装成 "_start" 函数后构建并添加
                         irProgram.add(buildFunction(wrapTopLevel(statementNode)));
                 default ->
-                    // 3.5 遇到未知类型节点，抛出异常
+                    // 4.5 遇到未知类型节点，抛出异常
                         throw new IllegalStateException("Unsupported top-level node: " + node);
             }
         }
@@ -108,6 +111,7 @@ public final class IRProgramBuilder {
             for (StructNode s : mod.structs()) {
                 List<DeclarationNode> fields = s.fields();
                 Map<String, Integer> layout = new LinkedHashMap<>();
+                Map<String, String> fieldTypes = new LinkedHashMap<>();
                 int idx = 0;
 
                 // 1. 若有父类，先复制父类布局，并将索引起点置为父类字段数
@@ -120,6 +124,10 @@ public final class IRProgramBuilder {
                     if (parentLayout != null && !parentLayout.isEmpty()) {
                         layout.putAll(parentLayout);
                         idx = parentLayout.size();
+                        Map<String, String> parentTypes = IRBuilderScope.getStructFieldTypes(parentName);
+                        if (parentTypes != null) {
+                            fieldTypes.putAll(parentTypes);
+                        }
                     }
                 }
 
@@ -130,11 +138,51 @@ public final class IRProgramBuilder {
                         if (!layout.containsKey(name)) {
                             layout.put(name, idx++);
                         }
+                        if (!fieldTypes.containsKey(name)) {
+                            fieldTypes.put(name, d.getType());
+                        }
                     }
                 }
 
                 // 3. 注册最终布局
                 IRBuilderScope.registerStructLayout(s.name(), layout);
+                IRBuilderScope.registerStructFieldTypes(s.name(), fieldTypes);
+            }
+        }
+    }
+
+    /**
+     * 预注册所有 struct 的构造函数和方法签名，
+     * 保证在构建函数体时即可查询到同结构体内其他方法的返回值与参数信息。
+     *
+     * @param roots AST 顶层节点列表
+     */
+    private void preloadStructCallables(List<Node> roots) {
+        for (Node n : roots) {
+            if (!(n instanceof ModuleNode mod) || mod.structs() == null) continue;
+
+            for (StructNode s : mod.structs()) {
+                // 构造函数：Struct.__init__N(this, ...)
+                if (s.inits() != null) {
+                    for (FunctionNode init : s.inits()) {
+                        List<String> paramTypes = new ArrayList<>(init.parameters().size() + 1);
+                        paramTypes.add(s.name());
+                        init.parameters().forEach(p -> paramTypes.add(p.type()));
+                        String loweredName = s.name() + ".__init__" + init.parameters().size();
+                        GlobalFunctionTable.register(loweredName, init.returnType(), paramTypes);
+                    }
+                }
+                // 普通方法：Struct.method_M(this, ...)，M = 参数总数（含 this）
+                if (s.methods() != null) {
+                    for (FunctionNode m : s.methods()) {
+                        List<String> paramTypes = new ArrayList<>(m.parameters().size() + 1);
+                        paramTypes.add(s.name());
+                        m.parameters().forEach(p -> paramTypes.add(p.type()));
+                        int argc = m.parameters().size() + 1;
+                        String loweredName = s.name() + "." + m.name() + "_" + argc;
+                        GlobalFunctionTable.register(loweredName, m.returnType(), paramTypes);
+                    }
+                }
             }
         }
     }
@@ -280,6 +328,19 @@ public final class IRProgramBuilder {
             }
             case StringLiteralNode str -> str.value(); // 字符串字面量直接返回
             case BoolLiteralNode b -> b.getValue() ? 1 : 0; // 布尔常量转为 1/0
+            case UnaryExpressionNode un -> {
+                // 仅处理前缀负号的一元表达式，如 -123 / -1.5f / -1L / -1s
+                if ("-".equals(un.operator())) {
+                    Object inner = evalLiteral(un.operand());
+                    if (inner instanceof Integer i) yield -i;
+                    if (inner instanceof Long l) yield -l;
+                    if (inner instanceof Short s) yield (short) -s;
+                    if (inner instanceof Byte by) yield (byte) -by;
+                    if (inner instanceof Double d) yield -d;
+                    if (inner instanceof Float f) yield -f;
+                }
+                yield null;
+            }
             default -> null; // 其他情况不支持常量折叠
         };
     }

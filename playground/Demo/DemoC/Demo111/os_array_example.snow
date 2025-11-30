@@ -1,0 +1,224 @@
+/**
+@module os_array_example
+@summary os_array 方法演示
+@description 演示 os_array 模块提供的各种数组操作能力。
+*/
+module: os_array_example
+
+    import: os_array
+    import: std_io
+
+    function: main
+        returns: void
+        body:
+            std_io.println("=== os_array 稳定层数组操作演示 ===")
+            std_io.println("")
+
+            // 1. length()
+            std_io.println("[1] length() - 获取数组长度")
+            declare nums:int[] = [10, 20, 30, 40]
+            std_io.print("长度 = ")
+            std_io.println(os_array.length(nums))
+            std_io.println("")
+
+            std_io.println("[2] length() - 获取字符串长度")
+            declare s:string = "Hello OS Array"
+            std_io.print("长度 = ")
+            std_io.println(os_array.length(s))
+            std_io.println("")
+
+            std_io.println("[3] length() - 空数组")
+            declare empty:any[] = []
+            std_io.print("空数组长度 = ")
+            std_io.println(os_array.length(empty))
+            std_io.println("")
+
+            // 2. get()
+            std_io.println("[4] get() - 获取元素")
+            declare arr:any[] = ["A", "B", "C"]
+
+            std_io.print("arr[0] = ")
+            std_io.println(os_array.get(arr, 0))
+
+            std_io.print("arr[1] = ")
+            std_io.println(os_array.get(arr, 1))
+
+            std_io.print("arr[2] = ")
+            std_io.println(os_array.get(arr, 2))
+            std_io.println("")
+
+            // 3. set()
+            std_io.println("[5] set() - 设置元素")
+            declare set_arr:int[] = [1, 2, 3, 4]
+
+            std_io.print("修改前: [")
+            loop:
+                init:
+                    declare i:int = 0
+                cond:
+                    i < os_array.length(set_arr)
+                step:
+                    i = i + 1
+                body:
+                    if i > 0 then
+                        std_io.print(", ")
+                    end if
+                    std_io.print(os_array.get(set_arr, i))
+                end body
+            end loop
+            std_io.println("]")
+
+            declare _set_result:int = os_array.set(set_arr, 2, 99)
+
+            std_io.print("修改后: [")
+            loop:
+                init:
+                    declare i:int = 0
+                cond:
+                    i < os_array.length(set_arr)
+                step:
+                    i = i + 1
+                body:
+                    if i > 0 then
+                        std_io.print(", ")
+                    end if
+                    std_io.print(os_array.get(set_arr, i))
+                end body
+            end loop
+            std_io.println("]")
+            std_io.println("")
+
+            // 4. push()
+            std_io.println("[6] push() - 追加元素")
+            declare lst:any[] = [1, 2, 3]
+
+            declare _push1_result:int = os_array.push(lst, 4)
+            declare _push2_result:int = os_array.push(lst, 5)
+
+            std_io.print("push 后: [")
+            loop:
+                init:
+                    declare i:int = 0
+                cond:
+                    i < os_array.length(lst)
+                step:
+                    i = i + 1
+                body:
+                    if i > 0 then
+                        std_io.print(", ")
+                    end if
+                    std_io.print(os_array.get(lst, i))
+                end body
+            end loop
+            std_io.println("]")
+            std_io.println("")
+
+            // 5. pop()
+            std_io.println("[7] pop() - 弹出末尾元素")
+            declare pop_arr:any[] = ["X", "Y", "Z"]
+
+            declare v1:any = os_array.pop(pop_arr)
+            std_io.print("pop -> ")
+            std_io.println(v1)
+
+            declare v2:any = os_array.pop(pop_arr)
+            std_io.print("pop -> ")
+            std_io.println(v2)
+
+            std_io.print("剩余数组: [")
+            loop:
+                init:
+                    declare i:int = 0
+                cond:
+                    i < os_array.length(pop_arr)
+                step:
+                    i = i + 1
+                body:
+                    if i > 0 then
+                        std_io.print(", ")
+                    end if
+                    std_io.print(os_array.get(pop_arr, i))
+                end body
+            end loop
+            std_io.println("]")
+            std_io.println("")
+
+            // 6. insert()
+            std_io.println("[8] insert() - 插入元素")
+            declare ins:any[] = ["A", "C"]
+
+            declare _insert_result:int = os_array.insert(ins, 1, "B")
+
+            std_io.print("插入后: [")
+            loop:
+                init:
+                    declare i:int = 0
+                cond:
+                    i < os_array.length(ins)
+                step:
+                    i = i + 1
+                body:
+                    if i > 0 then
+                        std_io.print(", ")
+                    end if
+                    std_io.print("\"")
+                    std_io.print(os_array.get(ins, i))
+                    std_io.print("\"")
+                end body
+            end loop
+            std_io.println("]")
+            std_io.println("")
+
+            // 7. remove()
+            std_io.println("[9] remove() - 删除指定索引")
+            declare rm:any[] = [100, 200, 300]
+
+            std_io.print("remove(1) -> ")
+            std_io.println(os_array.remove(rm, 1))
+
+            std_io.print("删除后: [")
+            loop:
+                init:
+                    declare i:int = 0
+                cond:
+                    i < os_array.length(rm)
+                step:
+                    i = i + 1
+                body:
+                    if i > 0 then
+                        std_io.print(", ")
+                    end if
+                    std_io.print(os_array.get(rm, i))
+                end body
+            end loop
+            std_io.println("]")
+            std_io.println("")
+
+            // 8. resize()
+            std_io.println("[10] resize() - 调整长度")
+            declare rs:any[] = [1, 2, 3]
+
+            declare _resize1_result:int = os_array.resize(rs, 5)
+            std_io.print("扩展后长度 = ")
+            std_io.println(os_array.length(rs))
+
+            declare _resize2_result:int = os_array.resize(rs, 2)
+            std_io.print("缩小后长度 = ")
+            std_io.println(os_array.length(rs))
+            std_io.println("")
+
+            // 9. clear()
+            std_io.println("[11] clear() - 清空数组")
+            declare cl:any[] = [9, 8, 7]
+
+            declare _clear_result:int = os_array.clear(cl)
+
+            std_io.print("清空后长度 = ")
+            std_io.println(os_array.length(cl))
+            std_io.println("")
+
+            std_io.println("=== os_array 示例演示完成 ===")
+        end body
+    end function
+
+end module

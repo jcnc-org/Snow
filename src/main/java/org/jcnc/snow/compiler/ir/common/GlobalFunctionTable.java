@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>
  * 使用说明
  * <ul>
- *   <li>在函数 IR 构建阶段，调用 {@link #register(String, String)} 方法登记函数名与返回类型。</li>
+ *   <li>在函数 IR 构建阶段，调用 {@link #register(String, String, java.util.List)} 方法登记函数名与返回类型。</li>
  *   <li>在生成调用指令阶段，通过 {@link #getReturnType(String)} 查询函数的返回类型。</li>
  *   <li>返回类型统一为小写；若调用 {@code register} 时传入的返回类型为 {@code null}，则登记为 {@code "void"}。</li>
  * </ul>
@@ -27,6 +27,11 @@ public final class GlobalFunctionTable {
      * </ul>
      */
     private static final Map<String, String> RETURN_TYPES = new ConcurrentHashMap<>();
+    /**
+     * 函数参数类型映射表。
+     * Key: 函数名，Value: 参数类型列表（按声明顺序）
+     */
+    private static final Map<String, java.util.List<String>> PARAM_TYPES = new ConcurrentHashMap<>();
 
     /**
      * 私有构造函数，防止实例化。
@@ -46,7 +51,7 @@ public final class GlobalFunctionTable {
      *                   如果为 {@code null}，则登记类型为 {@code "void"}。
      * @throws IllegalArgumentException 如果 {@code name} 为空或 {@code null}
      */
-    public static void register(String name, String returnType) {
+    public static void register(String name, String returnType, java.util.List<String> paramTypes) {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("函数名不能为空或 null");
         }
@@ -57,6 +62,11 @@ public final class GlobalFunctionTable {
             normalized = returnType.trim();
         }
         RETURN_TYPES.put(name, normalized);
+        if (paramTypes != null) {
+            PARAM_TYPES.put(name, java.util.List.copyOf(paramTypes));
+        } else {
+            PARAM_TYPES.remove(name);
+        }
     }
 
     /**
@@ -73,5 +83,18 @@ public final class GlobalFunctionTable {
             throw new IllegalArgumentException("函数名不能为空或 null");
         }
         return RETURN_TYPES.get(name);
+    }
+
+    /**
+     * 查询指定函数的参数类型列表。
+     *
+     * @param name 函数名
+     * @return 参数类型列表，未登记时返回 null
+     */
+    public static java.util.List<String> getParamTypes(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("函数名不能为空或 null");
+        }
+        return PARAM_TYPES.get(name);
     }
 }

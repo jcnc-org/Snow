@@ -2,29 +2,48 @@
 @module std_float_example
 @summary std_float 方法演示
 */
-module: float_math_example
+module: std_float_example
 
     import: std_float
+    import: std_math
     import: std_io
+    import: std_parse
 
     function: main
         body:
-            std_io.println("=== 演示 abs() 方法 ===")
+            std_io.println("=== 构造与拆箱 floatValue() ===")
+            declare defaultfloat: std_float = new std_float()
+            declare pifloat: std_float = new std_float(3.14f)
+            std_io.println("默认构造 -> " + defaultfloat.floatValue())
+            std_io.println("带参构造(3.14) -> " + pifloat.floatValue())
 
-            declare negfloat:std_float = new std_float(-120s)
-            std_io.print("负数 -120 的绝对值: ")
-            std_io.println(negfloat.abs().getValue())
+            std_io.println("\n=== valueOf* 与静态 toString() ===")
+            declare boxedFromfloat: std_float = std_float.valueOf(42.5f)
+            declare boxedFromString: std_float = std_float.valueOfString("12.34")
+            std_io.println("valueOf(42.5) -> " + boxedFromfloat.floatValue())
+            std_io.println("valueOfString(\"12.34\") -> " + boxedFromString.floatValue())
+            std_io.println("std_float.toString(7.5) -> " + std_float.toString(7.5f))
 
-            std_io.println("\n=== 演示 max()/min() ===")
+            std_io.println("\n=== 实例方法 abs()/equals()/toString() ===")
+            declare negfloat: std_float = new std_float(-120f)
+            declare eqA: std_float = new std_float(10f)
+            declare eqB: std_float = new std_float(10f)
+            declare eqC: std_float = new std_float(8f)
+            std_io.println("abs(-120) -> " + negfloat.abs().floatValue())
+            std_io.println("equals(10,10) -> " + eqA.equals(eqB))
+            std_io.println("equals(10,8) -> " + eqA.equals(eqC))
+            std_io.println("toString() on 10 -> " + eqA.toString())
 
-            std_io.print("比较 -15 和 20 的较大值: ")
-            std_io.println(std_float.max(-15s, 20s).getValue())
+            std_io.println("\n=== 数学/解析工具 ===")
+            std_io.println("std_parse.parseFloat(\"-71.25\") -> " + std_parse.parseFloat("-71.25"))
+            std_io.println("std_math.compareFloat(1.2, 5.0) -> " + std_math.compareFloat(1.2f, 5.0f))
+            std_io.println("std_math.compareFloat(7.0, 2.0) -> " + std_math.compareFloat(7.0f, 2.0f))
+            std_io.println("std_math.maxFloat(-15, 20) -> " + std_math.maxFloat(-15f, 20f))
+            std_io.println("std_math.minFloat(-15, 20) -> " + std_math.minFloat(-15f, 20f))
 
-            std_io.print("比较 -15 和 20 的较小值: ")
-            std_io.println(std_float.min(-15s, 20s).getValue())
-
-            std_io.println("MAX_VALUE: "+ std_float.MAX_VALUE)
-            std_io.println("MAX_VALUE: "+ std_float.MAX_VALUE)
+            std_io.println("\n=== 常量 MIN_VALUE / MAX_VALUE ===")
+            std_io.println("MIN_VALUE: " + std_float.MIN_VALUE)
+            std_io.println("MAX_VALUE: " + std_float.MAX_VALUE)
 
         end body
     end function

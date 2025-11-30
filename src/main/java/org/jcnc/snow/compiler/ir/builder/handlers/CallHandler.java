@@ -129,16 +129,31 @@ public class CallHandler implements ExpressionHandler<CallExpressionNode> {
 
             // 普通函数调用/本地方法调用 foo(...)
             case IdentifierNode id -> {
-                // 支持当前作用域内的方法局部重写（如 A.foo -> foo）
-                String current = b.ctx().getFunction().name();
-                int dot = current.lastIndexOf('.');
-                if (dot >= 0 && !id.name().contains(".")) {
-                    // 自动补齐作用域前缀
-                    callee = current.substring(0, dot) + "." + id.name();
-                } else {
-                    callee = id.name();
+                IRBuilderScope scope = b.ctx().getScope();
+                IRVirtualRegister thisReg = scope.lookup("this");
+                String thisType = scope.lookupType("this");
+                String implicitMember = null;
+                if (thisReg != null && thisType != null && !thisType.isBlank()) {
+                    implicitMember = thisType + "." + id.name() + "_" + (explicitRegs.size() + 1);
                 }
-                finalArgs.addAll(explicitRegs);
+
+                // 优先解析为“当前结构体的隐式 this 方法调用”（如 length() → this.length_1）
+                if (implicitMember != null && GlobalFunctionTable.getReturnType(implicitMember) != null) {
+                    callee = implicitMember;
+                    finalArgs.add(thisReg);
+                    finalArgs.addAll(explicitRegs);
+                } else {
+                    // 支持当前作用域内的方法局部重写（如 A.foo -> foo）
+                    String current = b.ctx().getFunction().name();
+                    int dot = current.lastIndexOf('.');
+                    if (dot >= 0 && !id.name().contains(".")) {
+                        // 自动补齐作用域前缀
+                        callee = current.substring(0, dot) + "." + id.name();
+                    } else {
+                        callee = id.name();
+                    }
+                    finalArgs.addAll(explicitRegs);
+                }
                 // 普通函数无需追加 _N
             }
 

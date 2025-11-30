@@ -24,15 +24,9 @@ import static org.jcnc.snow.compiler.semantic.type.BuiltinType.*;
  *
  * <p>类型推断规则：</p>
  * <ol>
- *   <li>若字面量以类型后缀(b/s/l/f，大小写均可)结尾，则按后缀直接推断目标类型：</li>
- *   <ul>
- *     <li>b → byte</li>
- *     <li>s → short</li>
- *     <li>l → long</li>
- *     <li>f → float</li>
- *   </ul>
- *   <li>若无后缀，且文本包含小数点或科学计数法('.' 或 'e/E')，则推断为 double(浮点默认 double，不支持 d/D 后缀)；</li>
- *   <li>否则推断为 int。</li>
+ *   <li>显式后缀仅保留 l/L（long）与 f/F（float）；不支持 b/s/d 后缀；</li>
+ *   <li>无后缀且文本包含小数点或 e/E → 默认 double；</li>
+ *   <li>其他整数字面量默认 int；若超出 int 范围则要求显式添加 L。</li>
  * </ol>
  *
  * <p>智能错误提示策略：</p>
@@ -56,17 +50,15 @@ public class NumberLiteralAnalyzer implements ExpressionAnalyzer<NumberLiteralNo
     /**
      * 根据字面量后缀和文本内容推断类型。
      *
-     * @param hasSuffix 是否存在类型后缀(仅 b/s/l/f 有效)
-     * @param suffix    后缀字符(已转小写)
+     * @param hasSuffix 是否存在受支持的类型后缀(仅 l/f)
+     * @param suffix    后缀字符(已转小写，仅在 hasSuffix 为 true 时使用)
      * @param digits    去掉下划线与后缀后的数字主体(可能含 . 或 e/E)
-     * @return 推断类型(byte / short / int / long / float / double 之一)
+     * @return 推断类型(int / long / float / double 之一)
      */
     private static Type inferType(boolean hasSuffix, char suffix, String digits) {
         if (hasSuffix) {
-            // 仅支持 b/s/l/f；不支持 d/D(浮点默认 double)
+            // 仅支持 l/f；不支持 d/D(浮点默认 double)
             return switch (suffix) {
-                case 'b' -> BYTE;
-                case 's' -> SHORT;
                 case 'l' -> BuiltinType.LONG;
                 case 'f' -> BuiltinType.FLOAT;
                 default -> INT; // 其他后缀当作无效，按 int 处理(如需严格，可改为抛/报“非法后缀”)
@@ -93,13 +85,7 @@ public class NumberLiteralAnalyzer implements ExpressionAnalyzer<NumberLiteralNo
                                       String digits) {
         try {
             // —— 整数类型：不允许出现浮点形式 —— //
-            if (inferred == BYTE) {
-                if (looksLikeFloat(digits)) throw new NumberFormatException(digits);
-                Byte.parseByte(digits);
-            } else if (inferred == SHORT) {
-                if (looksLikeFloat(digits)) throw new NumberFormatException(digits);
-                Short.parseShort(digits);
-            } else if (inferred == INT) {
+            if (inferred == INT) {
                 if (looksLikeFloat(digits)) throw new NumberFormatException(digits);
                 Integer.parseInt(digits);
             } else if (inferred == BuiltinType.LONG) {
@@ -110,12 +96,12 @@ public class NumberLiteralAnalyzer implements ExpressionAnalyzer<NumberLiteralNo
             else if (inferred == BuiltinType.FLOAT) {
                 float v = Float.parseFloat(digits);
                 // 上溢：Infinity；下溢：解析为 0.0 但文本并非“全零”
-                if (Float.isInfinite(v) || (v == 0.0f && isTextualZero(digits))) {
+                if (Float.isInfinite(v) || (v == 0.0f && isTextualNonZero(digits))) {
                     throw new NumberFormatException("float overflow/underflow: " + digits);
                 }
             } else if (inferred == BuiltinType.DOUBLE) {
                 double v = Double.parseDouble(digits);
-                if (Double.isInfinite(v) || (v == 0.0 && isTextualZero(digits))) {
+                if (Double.isInfinite(v) || (v == 0.0 && isTextualNonZero(digits))) {
                     throw new NumberFormatException("double overflow/underflow: " + digits);
                 }
             }
@@ -147,57 +133,20 @@ public class NumberLiteralAnalyzer implements ExpressionAnalyzer<NumberLiteralNo
         String suggestion;
 
         switch (inferred) {
-            case BYTE -> {
-                long v;
-                try {
-                    v = Long.parseLong(digits);
-                } catch (NumberFormatException e) {
-                    // 连 long 都放不下：智能
-                    header = composeHeader(digits, "超出 byte/short/int/long 可表示范围。");
-                    return header;
-                }
-                if (v >= Short.MIN_VALUE && v <= Short.MAX_VALUE) {
-                    header = composeHeader(digits, "超出 byte 可表示范围。");
-                    suggestion = "建议将变量类型声明为 short，并在数字末尾添加 's'(如 " + digits + "s)。";
-                } else if (v >= Integer.MIN_VALUE && v <= Integer.MAX_VALUE) {
-                    header = composeHeader(digits, "超出 byte 可表示范围。");
-                    suggestion = "建议将变量类型声明为 int(如 " + digits + ")。";
-                } else {
-                    header = composeHeader(digits, "超出 byte 可表示范围。");
-                    suggestion = "建议将变量类型声明为 long，并在数字末尾添加 'L'(如 " + digits + "L)。";
-                }
-                return appendSuggestion(header, suggestion);
-            }
-            case SHORT -> {
-                long v;
-                try {
-                    v = Long.parseLong(digits);
-                } catch (NumberFormatException e) {
-                    header = composeHeader(digits, "超出 short/int/long 可表示范围。");
-                    return header;
-                }
-                if (v >= Integer.MIN_VALUE && v <= Integer.MAX_VALUE) {
-                    header = composeHeader(digits, "超出 short 可表示范围。");
-                    suggestion = "建议将变量类型声明为 int(如 " + digits + ")。";
-                } else {
-                    header = composeHeader(digits, "超出 short 可表示范围。");
-                    suggestion = "建议将变量类型声明为 long，并在数字末尾添加 'L'(如 " + digits + "L)。";
-                }
-                return appendSuggestion(header, suggestion);
-            }
             case INT -> {
+                boolean fitsLong;
                 try {
-                    // 尝试解析为 long：若成功，说明“能进 long”
                     Long.parseLong(digits);
+                    fitsLong = true;
                 } catch (NumberFormatException e) {
-                    // 连 long 都放不下：智能
-                    header = composeHeader(digits, "超出 int/long 可表示范围。");
-                    return header;
+                    fitsLong = false;
                 }
-                // 能进 long：直接建议 long
-                header = composeHeader(digits, "超出 int 可表示范围。");
-                suggestion = "建议将变量类型声明为 long，并在数字末尾添加 'L'(如 " + digits + "L)。";
-                return appendSuggestion(header, suggestion);
+                if (fitsLong) {
+                    header = composeHeader(digits, "超出 int 可表示范围。");
+                    suggestion = "请在数字末尾添加 'L' 或将变量声明为 long（如 " + digits + "L）。";
+                    return appendSuggestion(header, suggestion);
+                }
+                return composeHeader(digits, "超出 int/long 可表示范围。");
             }
             case LONG -> {
                 // 已明确处于 long 分支且越界：智能
@@ -209,7 +158,7 @@ public class NumberLiteralAnalyzer implements ExpressionAnalyzer<NumberLiteralNo
                 boolean fitsDouble = fitsDouble(digits);
                 if (fitsDouble) {
                     header = composeHeader(digits, "超出 float 可表示范围。");
-                    suggestion = "建议将变量类型声明为 double(如 " + digits + ")。"; // double 默认，无需 d 后缀
+                    suggestion = "建议将变量类型声明为 double（默认双精度无需后缀，如 " + digits + "）。";
                     return appendSuggestion(header, suggestion);
                 } else {
                     header = composeHeader(digits, "超出 float/double 可表示范围。");
@@ -256,17 +205,17 @@ public class NumberLiteralAnalyzer implements ExpressionAnalyzer<NumberLiteralNo
     }
 
     /**
-     * 文本判断“是否为零”(不解析，纯文本)：
-     * 在遇到 e/E 之前，若出现任意 '1'..'9'，视为非零；否则视为零。
-     * 用于识别“文本非零但解析结果为 0.0”的下溢场景。
+     * 文本判断“是否包含非零数字”(不解析，纯文本)：
+     * 在遇到 e/E 之前，若出现任意 '1'..'9'，视为非零；用于识别
+     * “文本非零但解析结果为 0.0”的下溢场景。
      * <p>
      * 例：
-     * "0.0"         → true
-     * "000"         → true
-     * "1e-9999"     → false(e 前有 '1'；若解析为 0.0 则视为下溢)
-     * "0e-9999"     → true
+     * "0.0"         → false
+     * "000"         → false
+     * "1e-9999"     → true (e 前有 '1'；若解析为 0.0 则视为下溢)
+     * "0e-9999"     → false
      */
-    private static boolean isTextualZero(String s) {
+    private static boolean isTextualNonZero(String s) {
         if (s == null || s.isEmpty()) return false;
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
@@ -284,7 +233,7 @@ public class NumberLiteralAnalyzer implements ExpressionAnalyzer<NumberLiteralNo
     private static boolean fitsDouble(String digits) {
         try {
             double d = Double.parseDouble(digits);
-            return !Double.isInfinite(d) && !(d == 0.0 && isTextualZero(digits));
+            return !Double.isInfinite(d) && !(d == 0.0 && isTextualNonZero(digits));
         } catch (NumberFormatException e) {
             return false;
         }
@@ -292,22 +241,24 @@ public class NumberLiteralAnalyzer implements ExpressionAnalyzer<NumberLiteralNo
 
     /**
      * 规整数字串：
-     * 仅移除末尾的类型后缀(仅 b/s/l/f，大小写均可，不含 d/D)。
+     * 可选移除末尾单字符类型后缀，并清除下划线分隔符。
      *
      * @param s 原始字面量字符串
+     * @param stripSuffix 是否移除末尾单字符后缀
      * @return 规整后的数字主体
      */
-    private static String normalizeDigits(String s) {
+    private static String normalizeDigits(String s, boolean stripSuffix) {
         if (s == null) return "";
         String t = s.trim();
         if (t.isEmpty()) return t;
 
-        // 仅移除末尾的类型后缀(b/s/l/f，大小写均可)
-        char last = t.charAt(t.length() - 1);
-        if ("bBsSfFlL".indexOf(last) >= 0) {
-            t = t.substring(0, t.length() - 1).trim();
+        if (stripSuffix && t.length() > 1) {
+            char last = t.charAt(t.length() - 1);
+            if (Character.isLetter(last)) {
+                t = t.substring(0, t.length() - 1).trim();
+            }
         }
-        return t;
+        return t.replace("_", "");
     }
 
 
@@ -337,16 +288,23 @@ public class NumberLiteralAnalyzer implements ExpressionAnalyzer<NumberLiteralNo
             return INT; // 空文本回退为 int(按需可改为错误)
         }
 
-        // 2) 是否带后缀(仅 b/s/l/f；不支持 d/D)
+        // 2) 识别后缀（仅 l/f 有效）；b/s/d 视为不再支持
         char lastChar = raw.charAt(raw.length() - 1);
         char suffix = Character.toLowerCase(lastChar);
-        boolean hasSuffix = switch (suffix) {
-            case 'b', 's', 'l', 'f' -> true;
-            default -> false;
-        };
+        boolean hasSuffix = suffix == 'l' || suffix == 'f';
+        boolean legacySuffix = suffix == 'b' || suffix == 's';
+        boolean unsupportedSuffix = legacySuffix || suffix == 'd';
+
+        if (unsupportedSuffix) {
+            String msg = legacySuffix
+                    ? "byte/short 字面量不再通过后缀声明，请去掉尾部 '" + lastChar + "'。"
+                    : "不支持的数字后缀 '" + lastChar + "'（浮点默认 double）。";
+            ctx.getErrors().add(new SemanticError(expr, msg));
+            ctx.log("错误: " + msg);
+        }
 
         // 3) 规整数字主体
-        String digitsNormalized = normalizeDigits(raw);
+        String digitsNormalized = normalizeDigits(raw, hasSuffix || unsupportedSuffix);
 
         // 4) 推断类型
         Type inferred = inferType(hasSuffix, suffix, digitsNormalized);

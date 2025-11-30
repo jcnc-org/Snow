@@ -97,6 +97,17 @@ module: os_fd
     end function
 
     /**
+    @function pipe
+    @summary 创建匿名管道，返回 [readfd, writefd]。
+    */
+    function: pipe
+        returns: int[]
+        body:
+            return fd.pipe()
+        end body
+    end function
+
+    /**
     @function read_bytes
     @summary 从 fd 读取最多 n 字节。
     */

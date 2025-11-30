@@ -213,10 +213,10 @@ public final class VMProgramBuilder {
 
         if (!callFixes.isEmpty() || !branchFixes.isEmpty()) {
             throw new IllegalStateException("""
-                    Unresolved symbols while building:
-                      calls   = %s
-                      branches= %s
-                    """.formatted(callFixes, branchFixes));
+            构建过程中存在未解析的符号：
+              调用修复（calls）   = %s
+              分支修复（branches）= %s
+            """.formatted(callFixes, branchFixes));
         }
         return List.copyOf(code);
     }

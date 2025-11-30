@@ -1,0 +1,136 @@
+/**
+@module std_string_example
+@summary std_string 方法演示
+@description 演示 std_string 标准库提供的常用字符串操作方法
+*/
+module: std_string_example
+
+    import: std_string
+    import: std_io
+
+    function: main
+        body:
+            std_io.println("=== std_string 标准库演示 ===\n")
+
+            // 1. 构造与拆箱
+            std_io.println("=== 1. 构造与拆箱 stringValue() ===")
+            declare defaultStr: std_string = new std_string()
+            declare helloStr: std_string = new std_string("Hello World")
+            std_io.println("默认构造 -> [" + defaultStr.stringValue() + "]")
+            std_io.println("带参构造(\"Hello World\") -> [" + helloStr.stringValue() + "]")
+
+            // 2. valueOf 装箱
+            std_io.println("\n=== 2. valueOf 装箱 ===")
+            declare boxedStr: std_string = std_string.valueOf("Snow Language")
+            std_io.println("valueOf(\"Snow Language\") -> [" + boxedStr.stringValue() + "]")
+
+            // 3. length 和 isEmpty
+            std_io.println("\n=== 3. length() 和 isEmpty() ===")
+            declare emptyStr: std_string = new std_string("")
+            declare testStr: std_string = new std_string("Test String")
+            std_io.println("空字符串 length -> " + emptyStr.length())
+            std_io.println("空字符串 isEmpty -> " + emptyStr.isEmpty())
+            std_io.println("\"Test String\" length -> " + testStr.length())
+            std_io.println("\"Test String\" isEmpty -> " + testStr.isEmpty())
+
+            // 4. substring 截取
+            std_io.println("\n=== 4. substring(start, end) 截取子串 ===")
+            declare originalStr: std_string = new std_string("Hello Snow Language")
+            std_io.println("原字符串: [" + originalStr.stringValue() + "]")
+            std_io.println("substring(0, 5) -> [" + originalStr.substring(0, 5) + "]")
+            std_io.println("substring(6, 10) -> [" + originalStr.substring(6, 10) + "]")
+            std_io.println("substring(11, 19) -> [" + originalStr.substring(11, 19) + "]")
+
+            // 5. indexOf 查找
+            std_io.println("\n=== 5. indexOf(substr) 查找子串位置 ===")
+            declare searchStr: std_string = new std_string("Snow is a programming language")
+            std_io.println("原字符串: [" + searchStr.stringValue() + "]")
+            std_io.println("indexOf(\"Snow\") -> " + searchStr.indexOf("Snow"))
+            std_io.println("indexOf(\"programming\") -> " + searchStr.indexOf("programming"))
+            std_io.println("indexOf(\"Java\") -> " + searchStr.indexOf("Java"))
+
+            // 6. contains 包含判断
+            std_io.println("\n=== 6. contains(substr) 包含判断 ===")
+            declare contentStr: std_string = new std_string("The quick brown fox")
+            std_io.println("原字符串: [" + contentStr.stringValue() + "]")
+            std_io.println("contains(\"quick\") -> " + contentStr.contains("quick"))
+            std_io.println("contains(\"lazy\") -> " + contentStr.contains("lazy"))
+            std_io.println("contains(\"fox\") -> " + contentStr.contains("fox"))
+
+            // 7. trim 去空白
+            std_io.println("\n=== 7. trim() 去除首尾空白 ===")
+            declare spacedStr: std_string = new std_string("   Hello   ")
+            declare tabbedStr: std_string = new std_string("\tWorld\t")
+            std_io.println("原字符串 [   Hello   ] length -> " + spacedStr.length())
+            std_io.println("trim() 后 [" + spacedStr.trim() + "] length -> " + std_string.length(spacedStr.trim()))
+            std_io.println("原字符串 [\\tWorld\\t] trim() -> [" + tabbedStr.trim() + "]")
+
+            // 8. toUpperCase 和 toLowerCase
+            std_io.println("\n=== 8. toUpperCase() 和 toLowerCase() 大小写转换 ===")
+            declare caseStr: std_string = new std_string("Hello World")
+            std_io.println("原字符串: [" + caseStr.stringValue() + "]")
+            std_io.println("toUpperCase() -> [" + caseStr.toUpperCase() + "]")
+            std_io.println("toLowerCase() -> [" + caseStr.toLowerCase() + "]")
+
+            // 9. toBytes 和 fromBytes
+            std_io.println("\n=== 9. toBytes() 和 fromBytes() 字符串与字节数组转换 ===")
+            declare rawStr: std_string = new std_string("Hello World")
+            declare bytes: byte[] = rawStr.toBytes()
+            std_io.println("原字符串: [" + rawStr.stringValue() + "]")
+            std_io.println("toBytes() -> " + bytes)
+            std_io.println("fromBytes() -> [" + std_string.fromBytes(bytes) + "]")
+            syscall("0x1803", bytes, 6, 66)   // B
+            syscall("0x1803", bytes, 7, 121)  // y
+            syscall("0x1803", bytes, 8, 116)  // t
+            syscall("0x1803", bytes, 9, 101)  // e
+            syscall("0x1803", bytes, 10, 115) // s
+            std_io.println("修改后 fromBytes() -> [" + std_string.fromBytes(bytes) + "]")
+
+            // 10. startsWith 和 endsWith
+            std_io.println("\n=== 10. startsWith() 和 endsWith() 前后缀判断 ===")
+            declare prefixStr: std_string = new std_string("Hello Snow Language")
+            std_io.println("原字符串: [" + prefixStr.stringValue() + "]")
+            std_io.println("startsWith(\"Hello\") -> " + prefixStr.startsWith("Hello"))
+            std_io.println("startsWith(\"Snow\") -> " + prefixStr.startsWith("Snow"))
+            std_io.println("endsWith(\"Language\") -> " + prefixStr.endsWith("Language"))
+            std_io.println("endsWith(\"Snow\") -> " + prefixStr.endsWith("Snow"))
+
+            // 11. equals 相等判断
+            std_io.println("\n=== 11. equals() 相等判断 ===")
+            declare str1: std_string = new std_string("Snow")
+            declare str2: std_string = new std_string("Snow")
+            declare str3: std_string = new std_string("Java")
+            std_io.println("\"Snow\" equals \"Snow\" -> " + str1.equals(str2))
+            std_io.println("\"Snow\" equals \"Java\" -> " + str1.equals(str3))
+
+            // 12. 静态方法调用
+            std_io.println("\n=== 12. 静态方法直接调用 ===")
+            declare directTest: string = "  Test Direct Call  "
+            std_io.println("原字符串: [" + directTest + "]")
+            std_io.println("std_string.length() -> " + std_string.length(directTest))
+            std_io.println("std_string.trim() -> [" + std_string.trim(directTest) + "]")
+            std_io.println("std_string.toUpperCase() -> [" + std_string.toUpperCase(directTest) + "]")
+            std_io.println("std_string.isEmpty() -> " + std_string.isEmpty(directTest))
+
+            // 13. 组合使用示例
+            std_io.println("\n=== 13. 组合使用示例 ===")
+            declare rawInput: string = "   Snow Programming Language   "
+            std_io.println("原始输入: [" + rawInput + "]")
+            
+            declare trimmed: string = std_string.trim(rawInput)
+            std_io.println("1. trim() -> [" + trimmed + "]")
+            
+            declare upper: string = std_string.toUpperCase(trimmed)
+            std_io.println("2. toUpperCase() -> [" + upper + "]")
+            
+            declare hasSnow: boolean = std_string.contains(upper, "SNOW")
+            std_io.println("3. contains(\"SNOW\") -> " + hasSnow)
+            
+            declare firstWord: string = std_string.substring(trimmed, 0, 4)
+            std_io.println("4. substring(0, 4) -> [" + firstWord + "]")
+
+            std_io.println("\n=== std_string 演示完成 ===")
+        end body
+    end function
+
+end module

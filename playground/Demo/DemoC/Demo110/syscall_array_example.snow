@@ -1,0 +1,390 @@
+/**
+@module syscall_array_example
+@summary syscall_array 方法演示
+@description 演示 array 模块提供的数组系统调用（0x1801–0x1815）
+*/
+module: syscall_array_example
+
+    import: array
+    import: std_io
+
+    function: main
+        returns: void
+        body:
+            std_io.println("=== syscall_array 系统调用演示 ===")
+            std_io.println("")
+
+            // ---------------------------------------------------------
+            // 基础操作：length / get / set
+            // ---------------------------------------------------------
+
+            // 演示 1
+            std_io.println("[1] length() - 获取数组长度")
+            declare int_arr: int[] = [10, 20, 30, 40, 50]
+            declare len: int = array.length(int_arr)
+            std_io.print("长度 = ")
+            std_io.println(len)
+            std_io.println("")
+
+            // 演示 2
+            std_io.println("[2] length() - 获取字符串长度")
+            declare str: string = "Hello Snow Language"
+            declare str_len: int = array.length(str)
+            std_io.print("长度 = ")
+            std_io.println(str_len)
+            std_io.println("")
+
+            // 演示 3
+            std_io.println("[3] length() - 空数组")
+            declare empty_arr: any[] = []
+            declare empty_len: int = array.length(empty_arr)
+            std_io.print("空数组长度 = ")
+            std_io.println(empty_len)
+            std_io.println("")
+
+            // 演示 4: get
+            std_io.println("[4] get() - 获取数组元素")
+            declare test_arr: any[] = [100, 200, 300, 400, 500]
+
+            std_io.print("test_arr[0] = ")
+            std_io.println(array.get(test_arr, 0))
+
+            std_io.print("test_arr[2] = ")
+            std_io.println(array.get(test_arr, 2))
+
+            std_io.print("test_arr[4] = ")
+            std_io.println(array.get(test_arr, 4))
+
+            std_io.println("")
+
+            // 演示 5: 遍历
+            std_io.println("[5] get() - 遍历数组")
+            declare fruits: any[] = ["Apple", "Banana", "Cherry", "Date"]
+            std_io.print("水果数组: [")
+
+            loop:
+                init:
+                    declare i: int = 0
+                cond:
+                    i < array.length(fruits)
+                step:
+                    i = i + 1
+                body:
+                    if i > 0 then
+                        std_io.print(", ")
+                    end if
+
+                    std_io.print("\"")
+                    std_io.print(array.get(fruits, i))
+                    std_io.print("\"")
+                end body
+            end loop
+
+            std_io.println("]")
+            std_io.println("")
+
+            // 演示 6: set
+            std_io.println("[6] set() - 设置数组元素")
+            declare numbers: int[] = [1, 2, 3, 4, 5]
+
+            std_io.print("修改前: [")
+            loop:
+                init:
+                    declare i:int = 0
+                cond:
+                    i < array.length(numbers)
+                step:
+                    i = i + 1
+                body:
+                    if i > 0 then
+                        std_io.print(", ")
+                    end if
+                    std_io.print(array.get(numbers, i))
+                end body
+            end loop
+            std_io.println("]")
+
+            array.set(numbers, 2, 99)
+
+            std_io.print("修改后: [")
+            loop:
+                init:
+                    declare i:int = 0
+                cond:
+                    i < array.length(numbers)
+                step:
+                    i = i + 1
+                body:
+                    if i > 0 then
+                        std_io.print(", ")
+                    end if
+                    std_io.print(array.get(numbers, i))
+                end body
+            end loop
+            std_io.println("]")
+            std_io.println("")
+
+            // 演示 7: 批量修改
+            std_io.println("[7] set() - 批量修改数组元素")
+            declare data: any[] = [0, 0, 0, 0, 0]
+
+            array.set(data, 0, 10)
+            array.set(data, 1, 20)
+            array.set(data, 2, 30)
+            array.set(data, 3, 40)
+            array.set(data, 4, 50)
+
+            std_io.print("批量修改后: [")
+            loop:
+                init:
+                    declare i:int = 0
+                cond:
+                    i < array.length(data)
+                step:
+                    i = i + 1
+                body:
+                    if i > 0 then
+                        std_io.print(", ")
+                    end if
+                    std_io.print(array.get(data, i))
+                end body
+            end loop
+            std_io.println("]")
+            std_io.println("")
+
+            // 演示 8: 混合数组
+            std_io.println("[8] 混合类型数组")
+            declare mixed: any[] = [0, 0, 0, 0]
+
+            array.set(mixed, 0, 1)
+            array.set(mixed, 1, "two")
+            array.set(mixed, 2, 3.0)
+            array.set(mixed, 3, true)
+
+            std_io.print("mixed[0] = ")
+            std_io.println(array.get(mixed, 0))
+
+            std_io.print("mixed[1] = ")
+            std_io.println(array.get(mixed, 1))
+
+            std_io.print("mixed[2] = ")
+            std_io.println(array.get(mixed, 2))
+
+            std_io.print("mixed[3] = ")
+            std_io.println(array.get(mixed, 3))
+
+            std_io.println("")
+
+            // 演示 9: 字符串数组
+            std_io.println("[9] 字符串数组操作")
+            declare words: string[] = ["Snow", "Language", "Programming"]
+
+            std_io.print("words[0] = ")
+            std_io.println(array.get(words, 0))
+
+            std_io.print("words[1] = ")
+            std_io.println(array.get(words, 1))
+
+            std_io.print("words[2] = ")
+            std_io.println(array.get(words, 2))
+
+            array.set(words, 1, "Lang")
+
+            std_io.print("修改后 words[1] = ")
+            std_io.println(array.get(words, 1))
+
+            std_io.println("")
+
+            // 演示 10: 数组反转
+            std_io.println("[10] 数组反转")
+            declare original: int[] = [1, 2, 3, 4, 5]
+
+            std_io.print("原数组: [")
+            loop:
+                init:
+                    declare i:int = 0
+                cond:
+                    i < array.length(original)
+                step:
+                    i = i + 1
+                body:
+                    if i > 0 then
+                        std_io.print(", ")
+                    end if
+                    std_io.print(array.get(original, i))
+                end body
+            end loop
+            std_io.println("]")
+
+            declare size:int = array.length(original)
+
+            loop:
+                init:
+                    declare i:int = 0
+                cond:
+                    i < size / 2
+                step:
+                    i = i + 1
+                body:
+                    declare tmp:any = array.get(original, i)
+                    declare j:int = size - 1 - i
+                    array.set(original, i, array.get(original, j))
+                    array.set(original, j, tmp)
+                end body
+            end loop
+
+            std_io.print("反转后: [")
+            loop:
+                init:
+                    declare i:int = 0
+                cond:
+                    i < array.length(original)
+                step:
+                    i = i + 1
+                body:
+                    if i > 0 then
+                        std_io.print(", ")
+                    end if
+                    std_io.print(array.get(original, i))
+                end body
+            end loop
+            std_io.println("]")
+            std_io.println("")
+
+            // ---------------------------------------------------------
+            // 扩展系统调用
+            // ---------------------------------------------------------
+
+            // 演示 11: push
+            std_io.println("[11] push() - 追加元素")
+            declare lst:any[] = [1, 2, 3]
+
+            array.push(lst, 4)
+            array.push(lst, 5)
+
+            std_io.print("push 后: [")
+            loop:
+                init:
+                    declare i:int = 0
+                cond:
+                    i < array.length(lst)
+                step:
+                    i = i + 1
+                body:
+                    if i > 0 then
+                        std_io.print(", ")
+                    end if
+                    std_io.print(array.get(lst, i))
+                end body
+            end loop
+            std_io.println("]")
+            std_io.println("")
+
+            // 演示 12: pop
+            std_io.println("[12] pop() - 移除最后元素")
+            declare pop_arr:any[] = [10, 20, 30]
+
+            std_io.print("pop -> ")
+            std_io.println(array.pop(pop_arr))
+
+            std_io.print("pop -> ")
+            std_io.println(array.pop(pop_arr))
+
+            std_io.print("剩余数组: [")
+            loop:
+                init:
+                    declare i:int = 0
+                cond:
+                    i < array.length(pop_arr)
+                step:
+                    i = i + 1
+                body:
+                    if i > 0 then
+                        std_io.print(", ")
+                    end if
+                    std_io.print(array.get(pop_arr, i))
+                end body
+            end loop
+            std_io.println("]")
+            std_io.println("")
+
+            // 演示 13: insert
+            std_io.println("[13] insert() - 插入元素")
+            declare ins:any[] = ["A", "B", "D"]
+
+            array.insert(ins, 2, "C")
+
+            std_io.print("插入后: [")
+            loop:
+                init:
+                    declare i:int = 0
+                cond:
+                    i < array.length(ins)
+                step:
+                    i = i + 1
+                body:
+                    if i > 0 then
+                        std_io.print(", ")
+                    end if
+
+                    std_io.print("\"")
+                    std_io.print(array.get(ins, i))
+                    std_io.print("\"")
+                end body
+            end loop
+            std_io.println("]")
+            std_io.println("")
+
+            // 演示 14: remove
+            std_io.println("[14] remove() - 删除指定元素")
+            declare rm:any[] = [100, 200, 300, 400]
+
+            std_io.print("remove(1) -> ")
+            std_io.println(array.remove(rm, 1))
+
+            std_io.print("删除后: [")
+            loop:
+                init:
+                    declare i:int = 0
+                cond:
+                    i < array.length(rm)
+                step:
+                    i = i + 1
+                body:
+                    if i > 0 then
+                        std_io.print(", ")
+                    end if
+                    std_io.print(array.get(rm, i))
+                end body
+            end loop
+            std_io.println("]")
+            std_io.println("")
+
+            // 演示 15: resize
+            std_io.println("[15] resize() - 调整长度")
+            declare rs:any[] = [1, 2, 3]
+
+            array.resize(rs, 5)
+            std_io.print("扩展后长度 = ")
+            std_io.println(array.length(rs))
+
+            array.resize(rs, 2)
+            std_io.print("缩小后长度 = ")
+            std_io.println(array.length(rs))
+            std_io.println("")
+
+            // 演示 16: clear
+            std_io.println("[16] clear() - 清空列表")
+            declare cl:any[] = [9, 8, 7]
+
+            array.clear(cl)
+
+            std_io.print("清空后长度: ")
+            std_io.println(array.length(cl))
+            std_io.println("")
+
+            std_io.println("=== syscall_array 演示完成 ===")
+        end body
+    end function
+
+end module

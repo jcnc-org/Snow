@@ -55,8 +55,16 @@ public class UnaryOpGenerator implements InstructionGenerator<UnaryOperationInst
                 " " + srcSlot);
 
         // 2-B. 执行具体一元运算（NEG、NOT…）
-        out.emit(OpHelper.opcode(
-                IROpCodeMapper.toVMOp(ins.op())));
+        String vmOp = IROpCodeMapper.toVMOp(ins.op());
+        if ("I_NEG".equals(vmOp)) {
+            // 对 byte/short 使用对应窄类型指令，避免产生 int 结果导致后续 B_STORE/S_STORE 崩溃。
+            if (prefix == 'B') {
+                vmOp = "B_NEG";
+            } else if (prefix == 'S') {
+                vmOp = "S_NEG";
+            }
+        }
+        out.emit(OpHelper.opcode(vmOp));
 
         // 2-C. 存结果到目标槽
         int destSlot = slotMap.get(ins.dest());

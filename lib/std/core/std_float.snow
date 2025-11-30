@@ -1,0 +1,136 @@
+/**
+@module std_float
+@summary std_float 结构体 - 对 float 基本数据类型的封装
+*/
+module: std_float
+    import: std_parse
+
+    globals:
+        declare const MIN_VALUE:float = 1.4E-45
+        declare const MAX_VALUE:float = 3.4028235E38
+
+    /**
+    @struct std_float
+    @summary float 的包装类
+    */
+    struct: std_float
+
+        fields:
+            declare value: float
+
+        /**
+        @init default
+        @summary 无参构造函数，默认创建值为 0 的 std_float
+        */
+        init:
+            body:
+                value = 0
+            end body
+        end init
+
+        /**
+        @init with_value
+        @summary 带参构造函数，根据给定值创建 std_float
+        @param val 初始 float 值
+        */
+        init:
+            params:
+                declare val: float
+            body:
+                value = val
+            end body
+        end init
+
+        /**
+        @function floatValue
+        @summary 获取包装的 float 值（拆箱）
+        */
+        function: floatValue
+            returns: float
+            body:
+                return value
+            end body
+        end function
+
+        /**
+        @function abs
+        @summary 返回当前 float 绝对值的 std_float 实例
+        */
+        function: abs
+            returns: std_float
+            body:
+                declare result: float = value
+                if result < 0 then
+                    result = -result
+                end if
+                return new std_float(result)
+            end body
+        end function
+
+        /**
+        @function equals
+        @summary 比较两个 std_float 是否相等
+        */
+        function: equals
+            params:
+                declare other: std_float
+            returns: boolean
+            body:
+                return value == other.value
+            end body
+        end function
+
+        /**
+        @function toString
+        @summary 将当前 float 值转为字符串
+        */
+        function: toString
+            returns: string
+            body:
+                return std_float.toString(value)
+            end body
+        end function
+
+    end struct
+
+    /**
+    @function valueOf
+    @summary 将 float 装箱为 std_float
+    */
+    function: valueOf
+        params:
+            declare f: float
+        returns: std_float
+        body:
+            return new std_float(f)
+        end body
+    end function
+
+    /**
+    @function valueOfString
+    @summary 将字符串解析并包装为 std_float
+    */
+    function: valueOfString
+        params:
+            declare s: string
+        returns: std_float
+        body:
+            declare parsed: float = std_parse.parseFloat(s)
+            return new std_float(parsed)
+        end body
+    end function
+
+    /**
+    @function toString
+    @summary 将 float 转换为字符串
+    */
+    function: toString
+        params:
+            declare f: float
+        returns: string
+        body:
+            return "" + f   // Snow 使用 + 转换为字符串
+        end body
+    end function
+
+end module

@@ -33,4 +33,4 @@ https://gitee.com/jcnc-org/snow/blob/main/doc/Git-Management/Git-Management.md
 
 - [ ] 已阅读并遵守项目规范
 - [ ] 本地通过所有测试
-- [ ] 文档已更新（如有必要）  
+- [ ] 文档已更新

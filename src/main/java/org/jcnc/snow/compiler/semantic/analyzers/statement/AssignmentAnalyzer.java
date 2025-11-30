@@ -10,6 +10,7 @@ import org.jcnc.snow.compiler.semantic.symbol.Symbol;
 import org.jcnc.snow.compiler.semantic.symbol.SymbolKind;
 import org.jcnc.snow.compiler.semantic.symbol.SymbolTable;
 import org.jcnc.snow.compiler.semantic.type.Type;
+import org.jcnc.snow.compiler.semantic.utils.NumericConstantUtils;
 
 /**
  * {@code AssignmentAnalyzer} 负责对赋值语句进行语义校验。
@@ -74,8 +75,10 @@ public class AssignmentAnalyzer implements StatementAnalyzer<AssignmentNode> {
         boolean widenOK = sym.type().isNumeric()
                 && rhsType.isNumeric()
                 && Type.widen(rhsType, sym.type()) == sym.type();
+        boolean narrowingConst = NumericConstantUtils.canNarrowToIntegral(sym.type(), rhsType, asg.value());
+        boolean narrowingNumeric = NumericConstantUtils.allowIntegralNarrowing(sym.type(), rhsType);
 
-        if (!compatible && !widenOK) {
+        if (!compatible && !widenOK && !narrowingConst && !narrowingNumeric) {
             ctx.getErrors().add(new SemanticError(asg,
                     ERR_PREFIX + "类型不匹配: 期望 "
                             + sym.type() + ", 实际 " + rhsType));
