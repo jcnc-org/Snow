@@ -21,7 +21,6 @@ import java.util.List;
  *   <li>build/              —— 编译输出目录</li>
  *   <li>dist/               —— 打包输出目录</li>
  *   <li>src/{group}/main.snow —— 示例入口模块</li>
- *   <li>src/{group}/OS.snow   —— 系统库模块</li>
  * </ul>
  * 已存在的目录或文件不会覆盖。
  */
@@ -40,7 +39,7 @@ public record GenerateTask(Project project) implements Task {
      * <ul>
      *   <li>如相关目录不存在则自动创建</li>
      *   <li>如设置 group，则在 src 下建立包路径</li>
-     *   <li>生成 main.snow、OS.snow 示例文件</li>
+     *   <li>生成 main.snow 示例文件</li>
      *   <li>过程输出进度提示</li>
      * </ul>
      *
@@ -76,12 +75,6 @@ public record GenerateTask(Project project) implements Task {
         if (Files.notExists(mainSnow)) {
             Files.writeString(mainSnow, SnowExample.getMainModule());
             System.out.println("[generate] created " + root.relativize(mainSnow));
-        }
-
-        Path osSnow = packageDir.resolve("OS.snow");
-        if (Files.notExists(osSnow)) {
-            Files.writeString(osSnow, SnowExample.getOsModule());
-            System.out.println("[generate] created " + root.relativize(osSnow));
         }
 
         System.out.println("[generate] project scaffold is ready.");
