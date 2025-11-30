@@ -119,21 +119,45 @@ public record CompileTask(Project project, String[] args) implements Task {
 
     // 1. 从项目根/源码目录向上找最近 lib
     private static Path findNearestLibDir(Path start) {
+        // 1. SNOW_LIB 环境变量
         String env = System.getenv("SNOW_LIB");
-        if (env == null) env = System.getProperty("snow.lib");
         if (env != null) {
-            Path p = Path.of(env);
-            if (Files.isDirectory(p)) return p;
-        }
-        if (start == null) return null;
-        Path cur = start.toAbsolutePath();
-        while (cur != null) {
-            Path lib = cur.resolve("lib");
-            if (Files.isDirectory(lib)) return lib;
-            cur = cur.getParent();
+            Path path = Path.of(env);
+            if (Files.isDirectory(path)) {
+                return path;
+            }
         }
 
-        // 如果在项目目录中找不到lib，则尝试查找Snow SDK目录
+        // 2. system property snow.lib
+        String prop = System.getProperty("snow.lib");
+        if (prop != null) {
+            Path path = Path.of(prop);
+            if (Files.isDirectory(path)) {
+                return path;
+            }
+        }
+
+        // 3. 向上查找最多 8 层，避免跑到根目录
+        Path cur = start.toAbsolutePath();
+        int depth = 0;
+
+        while (cur != null && depth < 8) {
+            Path lib = cur.resolve("lib");
+
+            if (Files.isDirectory(lib)) {
+                String p = lib.toAbsolutePath().toString();
+                // 跳过 Linux 系统级库目录
+                if (!p.equals("/lib") &&
+                        !p.startsWith("/usr/lib")) {
+                    return lib;
+                }
+            }
+
+            cur = cur.getParent();
+            depth++;
+        }
+
+        // 4. 最后手段，查找 Snow SDK lib
         return findSnowSdkLibDir();
     }
 
