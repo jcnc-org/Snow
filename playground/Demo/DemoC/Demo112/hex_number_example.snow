@@ -1,0 +1,194 @@
+module: hex_number_example
+    import: std_io
+    import: std_byte
+    import: std_short
+    import: std_int
+    import: std_long
+    import: os_process
+
+    globals:
+        declare const OK: string = "\u001B[32m"
+        declare const ERROR: string = "\u001B[31m"
+        declare const RESET: string = "\u001B[0m"
+        declare hasError: boolean = false
+
+    function: main
+        returns: void
+        body:
+            std_io.println("=== hex number 十六进制数值演示 ===")
+            std_io.println("")
+
+            // 1. byte
+            std_io.println("1. 测试 16 进制 byte")
+            expectByte(0x0, 0)
+            expectByte(0x1, 1)
+            expectByte(0x00, 0)
+            expectByte(0x01, 1)
+            expectByte(0x7f, 127)
+            expectByte(0x7f + 1, -128)
+            expectByte(0xff, -1)
+            expectByte(0XFF, -1)
+
+            expectByte(- 0x0, 0)
+            expectByte(- 0x1, -1)
+            expectByte(- 0x00, 0)
+            expectByte(- 0x01, -1)
+            expectByte(- 0x7f, -127)
+            expectByte(- 0x7f + 1, -126)
+            expectByte(-(0x7f + 1), -128)
+            expectByte(- 0xff, 1)
+            expectByte(- 0XFF, 1)
+
+            expectByte(std_byte.MIN_VALUE, -127 - 1)
+            expectByte(std_byte.MAX_VALUE, 127)
+            std_io.println("")
+
+            // 2. short
+            std_io.println("2. 测试 16 进制 short")
+            expectShort(0x0, 0)
+            expectShort(0x1, 1)
+            expectShort(0x0000, 0)
+            expectShort(0x0001, 1)
+            expectShort(0x7fff, 32767)
+            expectShort(0x7fff + 1, -32768)
+            expectShort(0xffff, -1)
+            expectShort(0XFFFF, -1)
+
+            expectShort(- 0x0, 0)
+            expectShort(- 0x1, -1)
+            expectShort(- 0x0000, 0)
+            expectShort(- 0x0001, -1)
+            expectShort(- 0x7fff, -32767)
+            expectShort(- 0x7fff + 1, -32766)
+            expectShort(-(0x7fff + 1), -32768)
+            expectShort(- 0xffff, 1)
+            expectShort(- 0XFFFF, 1)
+
+            expectShort(std_short.MIN_VALUE, -32767 - 1)
+            expectShort(std_short.MAX_VALUE, 32767)
+            std_io.println("")
+
+            // 3. int
+            std_io.println("3. 测试 16 进制 int")
+            expectInt(0x0, 0)
+            expectInt(0x1, 1)
+            expectInt(0x00000000, 0)
+            expectInt(0x00000001, 1)
+            expectInt(0x7fffffff, 2147483647)
+            expectInt(0x7fffffff + 1, (-2147483647 - 1 /* -2147483648 */))
+            expectInt(0xffffffff, -1)
+            expectInt(0XFFFFFFFF, -1)
+
+            expectInt(- 0x0, 0)
+            expectInt(- 0x1, -1)
+            expectInt(- 0x00000000, 0)
+            expectInt(- 0x00000001, -1)
+            expectInt(- 0x7fffffff, -2147483647)
+            expectInt(- 0x7fffffff + 1, -2147483646)
+            expectInt(-(0x7fffffff + 1), (-2147483647 - 1 /* -2147483648 */))
+            expectInt(- 0xffffffff, 1)
+            expectInt(- 0XFFFFFFFF, 1)
+
+            expectInt(std_int.MIN_VALUE, -2147483647 - 1)
+            expectInt(std_int.MAX_VALUE, 2147483647)
+            std_io.println("")
+
+            // 4. long
+            std_io.println("4. 测试 16 进制 long")
+            expectLong(0x0L, 0L)
+            expectLong(0x1L, 1L)
+            expectLong(0x00000000_00000000L, 0L)
+            expectLong(0x00000000_00000001L, 1L)
+            expectLong(0x7fffffff_ffffffffL, 9223372036854775807L)
+            expectLong(0x7fffffff_ffffffffL + 1, (-9223372036854775807L - 1L /* -9223372036854775808 */))
+            expectLong(0xffffffff_ffffffffL, -1)
+            expectLong(0XFFFFFFFF_FFFFFFFFL, -1)
+
+            expectLong(- 0x0L, 0)
+            expectLong(- 0x1L, -1)
+            expectLong(- 0x00000000_00000000L, 0)
+            expectLong(- 0x00000000_00000001L, -1)
+            expectLong(- 0x7fffffff_ffffffffL, -9223372036854775807L)
+            expectLong(- 0x7fffffff_ffffffffL + 1, -9223372036854775806L)
+            expectLong(-(0x7fffffff_ffffffffL + 1), (-9223372036854775807L - 1L /* -9223372036854775808 */))
+            expectLong(- 0xffffffff_ffffffffL, 1)
+            expectLong(- 0XFFFFFFFF_FFFFFFFFL, 1)
+
+            expectLong(std_long.MIN_VALUE, -9223372036854775807L - 1L)
+            expectLong(std_long.MAX_VALUE, 9223372036854775807L)
+            std_io.println("")
+
+            if hasError then
+                std_io.println("=== hex number 演示有错误，请检查 ===")
+                os_process.exit(1)
+            end if
+
+            std_io.println("=== hex number 演示完成（没有输出 ERROR 就是对的） ===")
+        end body
+    end function
+
+    function: expectByte
+        params:
+            declare actual: byte
+            declare expected: byte
+        returns: void
+        body:
+            if actual != expected then
+                reportError("expected " + expected + " but got " + actual)
+            end if
+        end body
+    end function
+
+    function: expectShort
+        params:
+            declare actual: short
+            declare expected: short
+        returns: void
+        body:
+            if actual != expected then
+                reportError("expected " + expected + " but got " + actual)
+            end if
+        end body
+    end function
+
+    function: expectInt
+        params:
+            declare actual: int
+            declare expected: int
+        returns: void
+        body:
+            if actual != expected then
+                reportError("expected " + expected + " but got " + actual)
+            end if
+        end body
+    end function
+
+    function: expectLong
+        params:
+            declare actual: long
+            declare expected: long
+        returns: void
+        body:
+            if actual != expected then
+                reportError("expected " + expected + " but got " + actual)
+            end if
+        end body
+    end function
+
+    function: reportError
+        params:
+            declare message: string
+        returns: void
+        body:
+            hasError = true
+            std_io.println(ERROR + "ERROR" + RESET + ": " + message)
+        end body
+    end function
+
+    function: reportOK
+        returns: void
+        body:
+            std_io.println(OK + "OK" + RESET)
+        end body
+    end function
+end module

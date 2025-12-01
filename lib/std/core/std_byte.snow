@@ -6,8 +6,8 @@ module: std_byte
     import: std_parse
 
     globals:
-        declare const MIN_VALUE:byte = -127
-        declare const MAX_VALUE:byte = 127
+        declare const MIN_VALUE:byte = 0x80
+        declare const MAX_VALUE:byte = 0x7f
 
     /**
     @struct std_byte

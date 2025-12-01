@@ -1,5 +1,6 @@
 package org.jcnc.snow.compiler.ir.builder.core;
 
+import org.jcnc.snow.compiler.common.NumberLiteralHelper;
 import org.jcnc.snow.compiler.ir.builder.statement.FunctionBuilder;
 import org.jcnc.snow.compiler.ir.common.GlobalConstTable;
 import org.jcnc.snow.compiler.ir.common.GlobalFunctionTable;
@@ -303,20 +304,17 @@ public final class IRProgramBuilder {
             case NumberLiteralNode num -> {
                 // 数字字面量：支持下划线、类型后缀（如 123_456L）
                 String raw = num.value();
-                String s = raw.replace("_", "");
-                char last = Character.toLowerCase(s.charAt(s.length() - 1));
-                // 处理类型后缀：如 123l/123d/123f
-                String core = switch (last) {
-                    case 'b', 's', 'l', 'f', 'd' -> s.substring(0, s.length() - 1);
-                    default -> s;
-                };
+                NumberLiteralHelper.NormalizedLiteral normalized = NumberLiteralHelper.normalize(raw, true);
+                String digits = normalized.text();
+                String core = normalized.digits();
+                char suffix = NumberLiteralHelper.extractTypeSuffix(raw);
                 try {
                     // 支持浮点数、科学计数法
-                    if (core.contains(".") || core.contains("e") || core.contains("E")) {
-                        yield Double.parseDouble(core);
+                    if (NumberLiteralHelper.looksLikeFloat(digits)) {
+                        yield Double.parseDouble(digits);
                     }
-                    long lv = Long.parseLong(core);
-                    yield switch (last) {
+                    long lv = NumberLiteralHelper.parseLongLiteral(core, normalized.radix());
+                    yield switch (suffix) {
                         case 'b' -> (byte) lv;
                         case 's' -> (short) lv;
                         case 'l' -> lv;

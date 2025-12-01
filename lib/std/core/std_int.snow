@@ -6,8 +6,8 @@ module: std_int
     import: std_parse
 
     globals:
-        declare const MIN_VALUE:int = -2147483647
-        declare const MAX_VALUE:int = 2147483647
+        declare const MIN_VALUE:int = 0x80000000
+        declare const MAX_VALUE:int = 0x7FFFFFFF
 
     /**
     @struct std_int
