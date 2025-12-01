@@ -1,3 +1,4 @@
+/*
 module: app
     import: os_fs
     import: os_fd
@@ -93,3 +94,4 @@ module: app
         end body
     end function
 end module
+*/
