@@ -6,8 +6,8 @@ module: std_long
     import: std_parse
 
     globals:
-        declare const MIN_VALUE:long = -9223372036854775807L
-        declare const MAX_VALUE:long = 9223372036854775807L
+        declare const MIN_VALUE:long = 0x80000000_00000000L
+        declare const MAX_VALUE:long = 0x7FFFFFFF_FFFFFFFFL
 
     /**
     @struct std_long
