@@ -6,6 +6,7 @@ module: app
     import: syscall.fd
     import: std_io.fd
     import: std_io
+    import: os_fs
 
     function: main
         params:
@@ -24,6 +25,7 @@ module: app
 
             // 关闭文件
             fd.close(fd1)
+            os_fs.remove_file("output.txt")
         end body
     end function
 end module

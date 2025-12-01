@@ -2,6 +2,7 @@ module: app
     import: syscall.fs
     import: syscall.fd
     import: std_io
+    import: os_fs
 
     function: main
         params:
@@ -33,6 +34,7 @@ module: app
 
             // 关闭文件
             fd.close(fd1)
+            os_fs.remove_file("seek_demo.txt")
         end body
     end function
 end module

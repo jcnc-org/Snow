@@ -6,6 +6,7 @@ module: app
     import: syscall.fd
     import: std_io.fs
     import: std_io
+    import: os_fs
 
     function: main
         params:
@@ -22,6 +23,7 @@ module: app
             // 再次重命名
             fd.rename("new.txt", "final.txt")
             std_io.println("已将 new.txt 重命名为 final.txt")
+            os_fs.remove_file("final.txt")
         end body
     end function
 end module

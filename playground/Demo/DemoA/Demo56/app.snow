@@ -6,6 +6,7 @@ module: app
     import: syscall.fd
     import: std_io.fs
     import: std_io
+    import: os_fs
 
     function: main
         params:
@@ -23,6 +24,8 @@ module: app
             declare target: any
             target = fd.readlink("alias.txt")
             std_io.println("alias.txt 指向的目标是: " + target)
+            os_fs.remove_file("alias.txt")
+            os_fs.remove_file("real.txt")
         end body
     end function
 end module

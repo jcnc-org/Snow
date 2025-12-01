@@ -6,7 +6,7 @@ module: app
     import: syscall.fd
     import: std_io.fd
     import: std_io
-
+    import: os_fs
 
     function: main
         params:
@@ -38,6 +38,7 @@ module: app
             fd.close(fd3)
 
             std_io.println("完成 dup2 测试")
+            os_fs.remove_file("dup2_demo.txt")
         end body
     end function
 end module
