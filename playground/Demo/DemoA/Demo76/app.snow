@@ -1,4 +1,3 @@
-/*
 module: app
     import: io
     import: process
@@ -7,6 +6,8 @@ module: app
         params:
             declare args:any
         body:
+            io.stdout_write("为了确报 TestAll 正常执行, 下方代码不执行")
+            /*
             io.stdout_write("准备 fork 子进程...\n")
 
             declare pid:int = process.fork(["java", "-version"])
@@ -16,7 +17,7 @@ module: app
             declare status:int = process.wait(pid)
 
             io.stdout_write("子进程退出码=" + status + "\n")
+            */
         end body
     end function
 end module
-*/
