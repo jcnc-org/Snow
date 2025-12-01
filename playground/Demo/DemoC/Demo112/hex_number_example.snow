@@ -4,7 +4,7 @@ module: hex_number_example
     import: std_short
     import: std_int
     import: std_long
-        import: os_process
+    import: os_process
 
     globals:
         declare const OK: string = "\u001B[32m"
