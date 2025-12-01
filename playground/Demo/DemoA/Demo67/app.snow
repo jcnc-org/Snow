@@ -4,14 +4,14 @@ module: app
 
     function: main
         params:
-            declare args:any
+            declare args: any
         body:
             // 1. 创建 TCP 套接字: AF_INET=2, SOCK_STREAM=1, proto=0
-            declare fd:int = web.socket(2, 1, 0)
+            declare fd: int = web.socket(2, 1, 0)
             io.stdout_write("服务器 socket 创建完成: fd=" + fd + "\n")
 
             // 2. 绑定到 0.0.0.0:8080
-            declare rc:int = web.bind(fd, "0.0.0.0", 8080)
+            declare rc: int = web.bind(fd, "0.0.0.0", 8080)
             io.stdout_write("绑定结果: " + rc + "\n")
 
             // 3. 开始监听
@@ -20,7 +20,7 @@ module: app
             io.stdout_write("等待客户端连接...\n")
 
             // 4. 接受一个客户端连接
-            declare cfd:int = web.accept(fd)
+            declare cfd: int = web.accept(fd)
             io.stdout_write("客户端已连接, cfd=" + cfd + "\n")
 
             // 5. 发送欢迎消息

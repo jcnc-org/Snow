@@ -5,7 +5,7 @@ module: Main
         params:
         returns: boolean
         body:
-           declare b1: boolean =false
+           declare b1: boolean = false
            
 			if (b1) then
 				std_io.print(0)

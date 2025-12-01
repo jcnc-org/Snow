@@ -4,13 +4,13 @@ module: app
 
     function: main
         params:
-            declare args:any
+            declare args: any
         body:
             // 1) 提示
             io.stdout_write("io_wait 演示：请在 5 秒内输入内容（回车结束）：\n")
 
             // 2) 监听 stdin (fd=0)，5 秒超时
-            declare ready:any = multiplex.io_wait([0], 5000)
+            declare ready: any = multiplex.io_wait([0], 5000)
 
             // 3) 打印 io_wait 返回内容
             io.stdout_write("io_wait 返回: " + ready + "\n")

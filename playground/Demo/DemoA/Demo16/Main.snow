@@ -7,7 +7,7 @@ module: Main
         body:
             loop:
                 init:
-                    declare i:int = 1
+                    declare i: int = 1
                 cond:
                     i <= 10
                 step:

@@ -1,7 +1,7 @@
 module: Student
-import : Person
+import: Person
 
-struct : Student extends Person
+struct: Student extends Person
     fields:
         declare id: int
 

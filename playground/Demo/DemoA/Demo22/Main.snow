@@ -5,13 +5,13 @@ module: Main
     function: main
         returns: void
         body:
-           declare sum: int = ModuleA.a+2
-           std_io.print(sum+1)
+           declare sum: int = ModuleA.a + 2
+           std_io.print(sum + 1)
         end body
     end function
 end module
 
 module: ModuleA
     globals:
-        declare const a: int =10
+        declare const a: int = 10
 end module

@@ -196,7 +196,7 @@ module: FinalComprehensiveTestFixed
             declare p: Point = new Point(10, 20)
             std_io.println("Point coordinates: (" + p.getX() + ", " + p.getY() + ")")
             
-            p.move(5, -3)
+            p.move(5, - 3)
             std_io.println("After move: (" + p.getX() + ", " + p.getY() + ")")
         end body
     end function
@@ -209,7 +209,7 @@ module: FinalComprehensiveTestFixed
             std_io.println("Colored point coordinates: (" + cp.getX() + ", " + cp.getY() + ")")
             std_io.println("Colored point color: " + cp.getColor())
             
-            cp.move(10, -5)
+            cp.move(10, - 5)
             std_io.println("After move: (" + cp.getX() + ", " + cp.getY() + ")")
         end body
     end function

@@ -148,7 +148,7 @@ module: std_array_example
             std_io.println("arr.equals(copied): " + arr.equals(copied))
 
             // 修改 cloned，验证不会影响原始 arr
-            cloned.set(0, -1)
+            cloned.set(0, - 1)
             std_io.println("修改 cloned[0] = -1 之后:")
             std_io.println("arr:     " + arr.toString())
             std_io.println("cloned:  " + cloned.toString())

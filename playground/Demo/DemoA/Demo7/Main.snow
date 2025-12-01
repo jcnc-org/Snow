@@ -5,8 +5,8 @@ module: Main
         params:
         returns: void
         body:
-            declare b1 :boolean = true
-			if(!b1) then
+            declare b1: boolean = true
+			if( ! b1) then
 				std_io.print(0)
 				else
 				std_io.print(1)

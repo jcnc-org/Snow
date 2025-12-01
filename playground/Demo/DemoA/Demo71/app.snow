@@ -4,22 +4,22 @@ module: app
 
     function: main
         params:
-            declare args:any
+            declare args: any
         body:
             // 1) 创建 UDP 套接字
-            declare fd:int = web.socket(2, 2, 0)
+            declare fd: int = web.socket(2, 2, 0)
             io.stdout_write("创建套接字 fd=" + fd + "\n")
 
             // 2) level/opt 常量（和 setsockopt 一致）
-            declare SOL_SOCKET:int   = 1
-            declare SO_REUSEADDR:int = 2
+            declare SOL_SOCKET: int = 1
+            declare SO_REUSEADDR: int = 2
 
             // 3) 默认情况下读取 SO_REUSEADDR
-            declare reuse:any = web.getsockopt(fd, SOL_SOCKET, SO_REUSEADDR)
+            declare reuse: any = web.getsockopt(fd, SOL_SOCKET, SO_REUSEADDR)
             io.stdout_write("初始 SO_REUSEADDR=" + reuse + "\n")
 
             // 4) 设置 SO_REUSEADDR = 1
-            declare rc:int = web.setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, 1)
+            declare rc: int = web.setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, 1)
             io.stdout_write("设置 SO_REUSEADDR rc=" + rc + "\n")
 
             // 5) 再次读取确认

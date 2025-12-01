@@ -5,7 +5,7 @@ module: app
     // 子线程入口：显式声明返回类型
     function: worker
         params:
-            declare arg:any
+            declare arg: any
         returns: any
         body:
             io.stdout_write("线程启动: arg=" + arg + "\n")
@@ -18,20 +18,20 @@ module: app
 
     function: main
         params:
-            declare args:any
+            declare args: any
         body:
             io.stdout_write("=== 测试 os_thread 模块 ===\n")
 
             io.stdout_write("创建线程...\n")
             // 将入口作为“函数名字符串”传入
-            declare tid:int = os_thread.create("worker", "任务A")
+            declare tid: int = os_thread.create("worker", "任务A")
             io.stdout_write("线程创建成功, TID = " + tid + "\n")
 
             io.stdout_write("主线程继续运行中...\n")
             os_thread.sleep(500)
 
             io.stdout_write("等待子线程完成...\n")
-            declare result:any = os_thread.join(tid)
+            declare result: any = os_thread.join(tid)
             io.stdout_write("子线程返回值: " + result + "\n")
 
             io.stdout_write("所有线程执行完毕。\n")

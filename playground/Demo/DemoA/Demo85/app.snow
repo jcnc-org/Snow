@@ -7,7 +7,7 @@ module: demo_sys
     // 打印分隔线的小工具
     function: hr
         params:
-            declare title:string
+            declare title: string
         body:
             std_io.println("\n==== " + title + " ====")
         end body
@@ -18,17 +18,17 @@ module: demo_sys
             hr("GETENV / SETENV")
 
             // 读取一个常见变量（可能为空或不存在）
-            declare k1:string = "OS"
-            declare v1:string = sys.getenv(k1)
+            declare k1: string = "OS"
+            declare v1: string = sys.getenv(k1)
             std_io.println("GETENV '" + k1 + "' => " + v1)
 
             // 读取一个不存在的变量，期望返回 null
-            declare k2:string = "SNOW_DEMO_NOT_EXIST"
-            declare v2:string = sys.getenv(k2)
+            declare k2: string = "SNOW_DEMO_NOT_EXIST"
+            declare v2: string = sys.getenv(k2)
             std_io.println("GETENV '" + k2 + "' => " + v2)
 
             // 设置一个变量（覆盖=1）
-            declare rc:int = sys.setenv("SNOW_DEMO_KEY", "42", 1)
+            declare rc: int = sys.setenv("SNOW_DEMO_KEY", "42", 1)
             std_io.println("SETENV 'SNOW_DEMO_KEY' = '42', overwrite=1 => rc=" + rc)
             std_io.println("GETENV 'SNOW_DEMO_KEY' => " + sys.getenv("SNOW_DEMO_KEY"))
 
@@ -38,7 +38,7 @@ module: demo_sys
             std_io.println("GETENV 'SNOW_DEMO_KEY' => " + sys.getenv("SNOW_DEMO_KEY"))
 
             // 删除变量（val=null，覆盖=1）
-            declare none:any = ""
+            declare none: any = ""
             rc = sys.setenv("SNOW_DEMO_KEY", none, 1)
             std_io.println("SETENV 'SNOW_DEMO_KEY' = null (delete), overwrite=1 => rc=" + rc)
             std_io.println("GETENV 'SNOW_DEMO_KEY' => " + sys.getenv("SNOW_DEMO_KEY"))
@@ -49,10 +49,10 @@ module: demo_sys
         body:
             hr("NCPU / MEMINFO")
 
-            declare n:int = sys.cpu_count()
+            declare n: int = sys.cpu_count()
             std_io.println("NCPU => " + n)
 
-            declare mi:any = sys.memory_info()
+            declare mi: any = sys.memory_info()
             std_io.println("MEMINFO => " + mi)
         end body
     end function
@@ -61,8 +61,8 @@ module: demo_sys
         body:
             hr("RANDOM_BYTES")
 
-            declare n:int = 16
-            declare bytes:any = sys.random_bytes(n)
+            declare n: int = 16
+            declare bytes: any = sys.random_bytes(n)
             std_io.println("RANDOM_BYTES(" + n + ") 原始输出如下（可能包含不可见字符）:")
             io.stdout_write(bytes)
             io.stdout_write("\n")
@@ -74,8 +74,8 @@ module: demo_sys
             hr("ERRSTR / ERRNO（最近一次系统调用错误信息）")
 
             // 直接读取（若之前没有错误，通常为空/0）
-            declare es:string = sys.last_error_message()
-            declare en:int = sys.last_error_code()
+            declare es: string = sys.last_error_message()
+            declare en: int = sys.last_error_code()
             std_io.println("ERRSTR => " + es)
             std_io.println("ERRNO  => " + en)
         end body

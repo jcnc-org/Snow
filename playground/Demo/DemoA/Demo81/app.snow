@@ -4,7 +4,7 @@ module: app
 
 	function: main
 	    params:
-	        declare args:any
+	        declare args: any
 	    body:
 	        io.stdout_write("开始休眠...\n")
 	        thread.sleep(100) // 休眠100毫秒

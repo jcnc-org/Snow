@@ -1,5 +1,5 @@
 module: Person
-struct:Person
+struct: Person
     fields:
         declare name: int
     init:

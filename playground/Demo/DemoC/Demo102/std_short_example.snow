@@ -25,7 +25,7 @@ module: std_short_example
             std_io.println("std_short.toString(7) -> " + std_short.toString(7))
 
             std_io.println("\n=== 实例方法 abs()/equals()/toString() ===")
-            declare negshort: std_short = new std_short(-120)
+            declare negshort: std_short = new std_short( - 120)
             declare eqA: std_short = new std_short(10)
             declare eqB: std_short = new std_short(10)
             declare eqC: std_short = new std_short(8)
@@ -38,8 +38,8 @@ module: std_short_example
             std_io.println("std_parse.parseShort(\"-71\") -> " + std_parse.parseShort("-71"))
             std_io.println("std_math.compareShort(1, 5) -> " + std_math.compareShort(1, 5))
             std_io.println("std_math.compareShort(7, 2) -> " + std_math.compareShort(7, 2))
-            std_io.println("std_math.maxShort(-15, 20) -> " + std_math.maxShort(-15, 20))
-            std_io.println("std_math.minShort(-15, 20) -> " + std_math.minShort(-15, 20))
+            std_io.println("std_math.maxShort(-15, 20) -> " + std_math.maxShort( - 15, 20))
+            std_io.println("std_math.minShort(-15, 20) -> " + std_math.minShort( - 15, 20))
 
             std_io.println("\n=== 常量 MIN_VALUE / MAX_VALUE ===")
             std_io.println("MIN_VALUE: " + std_short.MIN_VALUE)

@@ -4,10 +4,10 @@ module: app
 
     function: main
         params:
-            declare args:any
+            declare args: any
         body:
-            declare pid:int = process.getpid()
-            declare ppid:int = process.getppid()
+            declare pid: int = process.getpid()
+            declare ppid: int = process.getppid()
 
             io.stdout_write("当前进程 PID = " + pid + "\n")
             io.stdout_write("父进程 PPID = " + ppid + "\n")

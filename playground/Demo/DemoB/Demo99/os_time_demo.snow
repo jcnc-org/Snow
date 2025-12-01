@@ -15,7 +15,7 @@ module: app
             std_io.println("mono_ms=" + os_time.mono_ms())
 
             // tick_ms 计数
-            declare start:long = os_time.tick_ms()
+            declare start: long = os_time.tick_ms()
             std_io.println("tick_ms(start)=" + start)
 
             // 睡眠测试
@@ -32,7 +32,7 @@ module: app
             std_io.println("awake (100ms)")
 
             // 结束时间
-            declare end_time:long = os_time.tick_ms()
+            declare end_time: long = os_time.tick_ms()
             std_io.println("tick_ms(end)=" + end_time)
             std_io.println("总耗时约=" + (end_time - start) + "ms")
 

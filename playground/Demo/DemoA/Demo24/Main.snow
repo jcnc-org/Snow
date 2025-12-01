@@ -7,7 +7,7 @@ module: Main
     function: main
         returns: void
         body:
-            declare a: int = ModuleA.sum(c,2)
+            declare a: int = ModuleA.sum(c, 2)
             std_io.print(a)
         end body
     end function

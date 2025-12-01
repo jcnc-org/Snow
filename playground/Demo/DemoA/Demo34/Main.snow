@@ -1,7 +1,7 @@
 module: main
     import: syscall.fs
     import: syscall.fd
-    import: std_io,Student, Person, Graduate
+    import: std_io, Student, Person, Graduate
 
 	function: main
 	    returns: void

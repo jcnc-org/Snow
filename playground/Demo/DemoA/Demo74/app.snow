@@ -4,21 +4,21 @@ module: app
 
     function: main
         params:
-            declare args:any
+            declare args: any
         body:
             io.stdout_write("准备 fork 两个子进程...\n")
 
             // 第一个子进程：列出目录
-            declare cmd1:any[] = ["cmd", "/c", "dir"]
-            declare pid1:int = process.fork(cmd1)
+            declare cmd1: any[] = ["cmd", "/c", "dir"]
+            declare pid1: int = process.fork(cmd1)
             io.stdout_write("fork1 返回 pid=" + pid1 + "\n")
 
             // 第二个子进程：ping localhost
-            declare cmd2:any[] = ["ping", "localhost", "-n", "2"]
-            declare pid2:int = process.fork(cmd2)
+            declare cmd2: any[] = ["ping", "localhost", "-n", "2"]
+            declare pid2: int = process.fork(cmd2)
             io.stdout_write("fork2 返回 pid=" + pid2 + "\n")
 
-            if pid1 == -1 then
+            if pid1 == - 1 then
                 io.stdout_write("有子进程 fork 失败\n")
             else
                 io.stdout_write("父进程继续运行 (pid1=" + pid1 + ", pid2=" + pid2 + ")\n")

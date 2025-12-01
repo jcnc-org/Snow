@@ -4,20 +4,20 @@ module: Math
         params:
         returns: void
         body:
-	        declare n:int =Math.factorial(6)
+	        declare n: int = Math.factorial(6)
 			std_io.print(n)
         end body
     end function
 
     function: factorial
         params:
-            declare n:int
+            declare n: int
         returns: int
         body:
-            declare num1:int = 1
+            declare num1: int = 1
             loop:
                 init:
-                    declare counter:int = 1
+                    declare counter: int = 1
                 cond:
                     counter <= n
                 step:

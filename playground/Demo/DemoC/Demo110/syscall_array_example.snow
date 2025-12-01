@@ -90,7 +90,7 @@ module: syscall_array_example
             std_io.print("修改前: [")
             loop:
                 init:
-                    declare i:int = 0
+                    declare i: int = 0
                 cond:
                     i < array.length(numbers)
                 step:
@@ -109,7 +109,7 @@ module: syscall_array_example
             std_io.print("修改后: [")
             loop:
                 init:
-                    declare i:int = 0
+                    declare i: int = 0
                 cond:
                     i < array.length(numbers)
                 step:
@@ -137,7 +137,7 @@ module: syscall_array_example
             std_io.print("批量修改后: [")
             loop:
                 init:
-                    declare i:int = 0
+                    declare i: int = 0
                 cond:
                     i < array.length(data)
                 step:
@@ -202,7 +202,7 @@ module: syscall_array_example
             std_io.print("原数组: [")
             loop:
                 init:
-                    declare i:int = 0
+                    declare i: int = 0
                 cond:
                     i < array.length(original)
                 step:
@@ -216,18 +216,18 @@ module: syscall_array_example
             end loop
             std_io.println("]")
 
-            declare size:int = array.length(original)
+            declare size: int = array.length(original)
 
             loop:
                 init:
-                    declare i:int = 0
+                    declare i: int = 0
                 cond:
                     i < size / 2
                 step:
                     i = i + 1
                 body:
-                    declare tmp:any = array.get(original, i)
-                    declare j:int = size - 1 - i
+                    declare tmp: any = array.get(original, i)
+                    declare j: int = size - 1 - i
                     array.set(original, i, array.get(original, j))
                     array.set(original, j, tmp)
                 end body
@@ -236,7 +236,7 @@ module: syscall_array_example
             std_io.print("反转后: [")
             loop:
                 init:
-                    declare i:int = 0
+                    declare i: int = 0
                 cond:
                     i < array.length(original)
                 step:
@@ -257,7 +257,7 @@ module: syscall_array_example
 
             // 演示 11: push
             std_io.println("[11] push() - 追加元素")
-            declare lst:any[] = [1, 2, 3]
+            declare lst: any[] = [1, 2, 3]
 
             array.push(lst, 4)
             array.push(lst, 5)
@@ -265,7 +265,7 @@ module: syscall_array_example
             std_io.print("push 后: [")
             loop:
                 init:
-                    declare i:int = 0
+                    declare i: int = 0
                 cond:
                     i < array.length(lst)
                 step:
@@ -282,7 +282,7 @@ module: syscall_array_example
 
             // 演示 12: pop
             std_io.println("[12] pop() - 移除最后元素")
-            declare pop_arr:any[] = [10, 20, 30]
+            declare pop_arr: any[] = [10, 20, 30]
 
             std_io.print("pop -> ")
             std_io.println(array.pop(pop_arr))
@@ -293,7 +293,7 @@ module: syscall_array_example
             std_io.print("剩余数组: [")
             loop:
                 init:
-                    declare i:int = 0
+                    declare i: int = 0
                 cond:
                     i < array.length(pop_arr)
                 step:
@@ -310,14 +310,14 @@ module: syscall_array_example
 
             // 演示 13: insert
             std_io.println("[13] insert() - 插入元素")
-            declare ins:any[] = ["A", "B", "D"]
+            declare ins: any[] = ["A", "B", "D"]
 
             array.insert(ins, 2, "C")
 
             std_io.print("插入后: [")
             loop:
                 init:
-                    declare i:int = 0
+                    declare i: int = 0
                 cond:
                     i < array.length(ins)
                 step:
@@ -337,7 +337,7 @@ module: syscall_array_example
 
             // 演示 14: remove
             std_io.println("[14] remove() - 删除指定元素")
-            declare rm:any[] = [100, 200, 300, 400]
+            declare rm: any[] = [100, 200, 300, 400]
 
             std_io.print("remove(1) -> ")
             std_io.println(array.remove(rm, 1))
@@ -345,7 +345,7 @@ module: syscall_array_example
             std_io.print("删除后: [")
             loop:
                 init:
-                    declare i:int = 0
+                    declare i: int = 0
                 cond:
                     i < array.length(rm)
                 step:
@@ -362,7 +362,7 @@ module: syscall_array_example
 
             // 演示 15: resize
             std_io.println("[15] resize() - 调整长度")
-            declare rs:any[] = [1, 2, 3]
+            declare rs: any[] = [1, 2, 3]
 
             array.resize(rs, 5)
             std_io.print("扩展后长度 = ")
@@ -375,7 +375,7 @@ module: syscall_array_example
 
             // 演示 16: clear
             std_io.println("[16] clear() - 清空列表")
-            declare cl:any[] = [9, 8, 7]
+            declare cl: any[] = [9, 8, 7]
 
             array.clear(cl)
 

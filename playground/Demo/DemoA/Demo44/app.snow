@@ -9,7 +9,7 @@ module: app
             declare args: any
         body:
             declare fd1: int
-            declare n:  int
+            declare n: int
 
             // 打开文件，写模式 + 创建 + 截断
             // flags = O_WRONLY | O_CREAT | O_TRUNC = 1 | 64 | 512 = 577
