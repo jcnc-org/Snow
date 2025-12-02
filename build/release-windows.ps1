@@ -3,24 +3,14 @@
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-# ---------- 0. Ensure running in PowerShell 7 ----------
-if ($PSVersionTable.PSEdition -ne 'Core') {
-    Write-Host "Detected Windows PowerShell 5.x — switching to PowerShell 7..." -ForegroundColor Yellow
+# ---------- 0. Ensure running in PowerShell 7 (external script) ----------
+& (Join-Path $PSScriptRoot 'tools/ensure-pwsh7.ps1')
 
-    $pwshCmd = Get-Command pwsh.exe -ErrorAction SilentlyContinue
-    if (-not $pwshCmd) {
-        throw "PowerShell 7 (pwsh) not found. Install from https://github.com/PowerShell/PowerShell"
-    }
-
-    & $pwshCmd.Source -NoLogo -NoProfile -File $PSCommandPath @args
-    exit $LASTEXITCODE
-}
-
-# ---------- 1. Detect JDK (external script) ----------
+# ---------- 1. Detect JDK ----------
 $jdkHome = & (Join-Path $PSScriptRoot 'tools/detect-jdk.ps1')
 Write-Host "✓ JDK detected at: $jdkHome"
 
-# temporary JAVA_HOME (session only)
+# temp JAVA_HOME (session only)
 $env:JAVA_HOME = $jdkHome
 $env:Path      = ("{0};{1}" -f (Join-Path $jdkHome 'bin'), $env:Path)
 
@@ -33,7 +23,7 @@ try {
     throw "Failed to execute java.exe from temporary JAVA_HOME"
 }
 
-# ---------- 2. Detect Maven (external script) ----------
+# ---------- 2. Detect Maven ----------
 $mvnPath = & (Join-Path $PSScriptRoot 'tools/detect-maven.ps1')
 Write-Host "Maven found: $mvnPath"
 Write-Host (& mvn -v)
