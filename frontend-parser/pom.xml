@@ -19,6 +19,11 @@
             <artifactId>snow-frontend-lexer</artifactId>
             <version>0.13.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.jcnc.snow</groupId>
+            <artifactId>snow-frontend-common</artifactId>
+            <version>0.13.0</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -44,25 +49,7 @@
                     </archive>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.5.0</version>
-                <executions>
-                    <execution>
-                        <id>add-additional-parser-deps</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>add-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>../src/main/java/org/jcnc/snow/common</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+
         </plugins>
     </build>
 </project>

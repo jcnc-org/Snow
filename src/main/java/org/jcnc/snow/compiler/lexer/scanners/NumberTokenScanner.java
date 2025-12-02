@@ -1,6 +1,6 @@
 package org.jcnc.snow.compiler.lexer.scanners;
 
-import org.jcnc.snow.compiler.common.NumberLiteralHelper;
+import org.jcnc.snow.common.NumberLiteralHelper;
 import org.jcnc.snow.compiler.lexer.core.LexerContext;
 import org.jcnc.snow.compiler.lexer.core.LexicalException;
 import org.jcnc.snow.compiler.lexer.token.Token;

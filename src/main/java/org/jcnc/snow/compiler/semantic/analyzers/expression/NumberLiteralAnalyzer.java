@@ -1,6 +1,6 @@
 package org.jcnc.snow.compiler.semantic.analyzers.expression;
 
-import org.jcnc.snow.compiler.common.NumberLiteralHelper;
+import org.jcnc.snow.common.NumberLiteralHelper;
 import org.jcnc.snow.compiler.parser.ast.FunctionNode;
 import org.jcnc.snow.compiler.parser.ast.NumberLiteralNode;
 import org.jcnc.snow.compiler.semantic.analyzers.base.ExpressionAnalyzer;

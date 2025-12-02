@@ -1,6 +1,6 @@
 package org.jcnc.snow.compiler.ir.builder.core;
 
-import org.jcnc.snow.compiler.common.NumberLiteralHelper;
+import org.jcnc.snow.common.NumberLiteralHelper;
 import org.jcnc.snow.compiler.ir.builder.statement.FunctionBuilder;
 import org.jcnc.snow.compiler.ir.common.GlobalConstTable;
 import org.jcnc.snow.compiler.ir.common.GlobalFunctionTable;

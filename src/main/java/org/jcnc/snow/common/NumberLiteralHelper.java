@@ -1,4 +1,4 @@
-package org.jcnc.snow.compiler.common;
+package org.jcnc.snow.common;
 
 /**
  * 数字字面量处理工具类。

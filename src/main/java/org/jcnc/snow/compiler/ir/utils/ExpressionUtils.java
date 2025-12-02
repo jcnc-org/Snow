@@ -1,6 +1,6 @@
 package org.jcnc.snow.compiler.ir.utils;
 
-import org.jcnc.snow.compiler.common.NumberLiteralHelper;
+import org.jcnc.snow.common.NumberLiteralHelper;
 import org.jcnc.snow.compiler.ir.builder.core.IRContext;
 import org.jcnc.snow.compiler.ir.core.IROpCode;
 import org.jcnc.snow.compiler.ir.core.IROpCodeMappings;
