@@ -67,6 +67,11 @@
             <artifactId>snow-ir</artifactId>
             <version>0.13.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.snow-lang</groupId>
+            <artifactId>snow-vm</artifactId>
+            <version>0.13.0</version>
+        </dependency>
     </dependencies>
 
     <build>
