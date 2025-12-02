@@ -112,9 +112,9 @@ foreach ($module in $modules) {
 }
 
 # 8. Summary output
-Write-Host "=" * 60
+Write-Host ("-" * 30)
 Write-Info "Installation Summary"
-Write-Host "=" * 60
+Write-Host ("-" * 30)
 
 Write-Success "Successfully installed: $successCount / $( $modules.Count )"
 
