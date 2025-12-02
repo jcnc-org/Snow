@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="install-frontend-semantic" type="MavenRunConfiguration" factoryName="Maven">
+  <configuration default="false" name="install-snow-common" type="MavenRunConfiguration" factoryName="Maven">
     <MavenSettings>
       <option name="myGeneralSettings" />
       <option name="myRunnerSettings" />
@@ -16,7 +16,7 @@
             </list>
           </option>
           <option name="multimoduleDir" />
-          <option name="pomFileName" value="frontend-semantic/pom.xml" />
+          <option name="pomFileName" value="snow-common/pom.xml" />
           <option name="profilesMap">
             <map />
           </option>
