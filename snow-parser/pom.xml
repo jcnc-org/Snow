@@ -117,6 +117,7 @@
                         <configuration>
                             <doclint>none</doclint>
                             <quiet>true</quiet>
+                            <failOnError>false</failOnError>
                         </configuration>
                     </plugin>
 
