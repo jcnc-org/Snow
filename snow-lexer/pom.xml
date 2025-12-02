@@ -37,7 +37,6 @@
     <properties>
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <!-- central publishing plugin version -->
         <central-publishing-plugin.version>0.9.0</central-publishing-plugin.version>
     </properties>
 
@@ -52,7 +51,6 @@
     <build>
         <sourceDirectory>../src/main/java/org/jcnc/snow/compiler/lexer</sourceDirectory>
         <plugins>
-            <!-- 编译 + 普通 jar -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -111,7 +109,6 @@
                             </execution>
                         </executions>
                         <configuration>
-                            <!-- 可选，避免 javadoc 警告阻断构建 -->
                             <doclint>none</doclint>
                             <quiet>true</quiet>
                         </configuration>
