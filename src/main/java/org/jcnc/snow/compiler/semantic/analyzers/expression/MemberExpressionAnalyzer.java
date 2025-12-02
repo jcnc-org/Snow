@@ -76,7 +76,7 @@ public class MemberExpressionAnalyzer implements ExpressionAnalyzer<MemberExpres
         }
 
         // 2. 处理 ModuleName.member 跨模块访问
-        if (expr.object() instanceof IdentifierNode(String mod, NodeContext _)) {
+        if (expr.object() instanceof IdentifierNode(String mod, NodeContext nodeContext)) {
             boolean moduleExists = ctx.getModules().containsKey(mod);
             boolean importedOrSelf = mi != null && (
                     mi.getName().equals(mod)
