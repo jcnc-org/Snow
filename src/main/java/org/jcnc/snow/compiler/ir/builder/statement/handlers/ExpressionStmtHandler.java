@@ -39,7 +39,7 @@ public class ExpressionStmtHandler implements IStatementHandler {
      */
     @Override
     public void handle(StatementNode stmt, StatementBuilderContext c) {
-        if (stmt instanceof ExpressionStatementNode(ExpressionNode exp, NodeContext _)) {
+        if (stmt instanceof ExpressionStatementNode(ExpressionNode exp, NodeContext nodeContext)) {
             // 构建表达式IR，丢弃返回值
             c.expr().build(exp);
         } else {

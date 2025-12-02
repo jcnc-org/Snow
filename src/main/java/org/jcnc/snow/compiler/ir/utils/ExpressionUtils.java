@@ -181,7 +181,7 @@ public final class ExpressionUtils {
      * @return 推断出的类型后缀
      */
     private static char typeChar(ExpressionNode node) {
-        if (node instanceof NumberLiteralNode(String value, NodeContext _)) {
+        if (node instanceof NumberLiteralNode(String value, NodeContext nodeContext)) {
             char suffix = NumberLiteralHelper.extractTypeSuffix(value);
             if (suffix == 'l' || suffix == 'f' || suffix == 'd') {
                 return suffix;

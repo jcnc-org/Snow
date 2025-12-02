@@ -132,7 +132,7 @@ public final class ComparisonUtils {
                 return 'R';
             }
         }
-        if (node instanceof NumberLiteralNode(String value, NodeContext _)) {
+        if (node instanceof NumberLiteralNode(String value, NodeContext nodeContext)) {
             char suffix = NumberLiteralHelper.extractTypeSuffix(value);
             return switch (suffix) {
                 case 'l' -> 'L';
@@ -144,7 +144,7 @@ public final class ComparisonUtils {
         if (node instanceof StringLiteralNode) {
             return 'R';
         }
-        if (node instanceof IdentifierNode(String name, NodeContext _)) {
+        if (node instanceof IdentifierNode(String name, NodeContext nodeContext)) {
             final String type = variables.get(name);
             if (type != null) {
                 switch (type) {

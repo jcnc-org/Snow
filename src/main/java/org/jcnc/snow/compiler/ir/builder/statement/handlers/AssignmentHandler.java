@@ -51,7 +51,7 @@ public class AssignmentHandler implements IStatementHandler {
      */
     @Override
     public void handle(StatementNode stmt, StatementBuilderContext c) {
-        if (!(stmt instanceof AssignmentNode(String var, ExpressionNode rhs, NodeContext _))) {
+        if (!(stmt instanceof AssignmentNode(String var, ExpressionNode rhs, NodeContext nodeContext))) {
             throw new IllegalStateException("Unexpected AssignmentNode pattern");
         }
 

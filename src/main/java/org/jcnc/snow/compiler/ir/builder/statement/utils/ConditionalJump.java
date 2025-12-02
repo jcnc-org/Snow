@@ -42,7 +42,7 @@ public final class ConditionalJump {
                 ExpressionNode left,
                 String operator,
                 ExpressionNode right,
-                NodeContext _
+                NodeContext nodeContext
         ) && ComparisonUtils.isComparisonOperator(operator)) {
 
             // 左右表达式分别生成虚拟寄存器
