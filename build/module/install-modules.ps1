@@ -1,124 +1,112 @@
-# release-windows.ps1
+# Snow 模块自动安装脚本 (Windows PowerShell)
+# 功能: 按依赖顺序编译和安装所有模块到本地 Maven 仓库
 
-$ErrorActionPreference = 'Stop'
-Set-StrictMode -Version Latest
+param(
+    [switch]$Clean = $false,           # 是否先执行 clean
+    [switch]$SkipTests = $false,       # 是否跳过测试
+    [string]$MavenHome = ""            # Maven 主目录 (可选，自动检测)
+)
 
-# ---------- 0. Ensure running in PowerShell 7 (external script) ----------
-& (Join-Path $PSScriptRoot 'tools/ensure-pwsh7.ps1')
-
-# ---------- 1. Detect JDK ----------
-$jdkHome = & (Join-Path $PSScriptRoot 'tools/detect-jdk.ps1')
-Write-Host "✓ JDK detected at: $jdkHome"
-
-# temp JAVA_HOME (session only)
-$env:JAVA_HOME = $jdkHome
-$env:Path      = ("{0};{1}" -f (Join-Path $jdkHome 'bin'), $env:Path)
-
-# ---------- Java check ----------
-try {
-    $javaExe = Join-Path $env:JAVA_HOME 'bin\java.exe'
-    $javaVerOutput = & $javaExe -version 2>&1
-    Write-Host $javaVerOutput
-} catch {
-    throw "Failed to execute java.exe from temporary JAVA_HOME"
+# 颜色输出函数
+function Write-Success {
+    param([string]$Message)
+    Write-Host "✓ $Message" -ForegroundColor Green
 }
 
-# ---------- 2. Detect Maven ----------
-$mvnPath = & (Join-Path $PSScriptRoot 'tools/detect-maven.ps1')
-Write-Host "Maven found: $mvnPath"
-Write-Host (& mvn -v)
-
-# ---------- Import dotenv ----------
-. (Join-Path $PSScriptRoot 'tools/dotenv.ps1')
-
-# ---------- pom locator ----------
-function Find-PomUpwards([string]$startDir) {
-    $dir = (Resolve-Path $startDir).Path
-    while ($true) {
-        $pomPath = Join-Path $dir 'pom.xml'
-        if (Test-Path $pomPath) { return $pomPath }
-        $parent = Split-Path -Path $dir -Parent
-        if ($parent -eq $dir) { return $null }
-        $dir = $parent
-    }
+function Write-Error-Custom {
+    param([string]$Message)
+    Write-Host "✗ $Message" -ForegroundColor Red
 }
 
-# ---------- Step 0: Generate .env ----------
-Write-Host "Step 0: Generating .env..."
-& (Join-Path $PSScriptRoot 'tools/generate-dotenv.ps1')
-
-# ---------- Step 1: Build ----------
-$pom = Find-PomUpwards $PSScriptRoot
-if (-not $pom) { throw "pom.xml not found" }
-
-$projectRoot = Split-Path $pom -Parent
-Push-Location $projectRoot
-
-try {
-    Write-Host "Running mvn clean package..."
-    mvn -q clean package
-
-    if ($LASTEXITCODE -ne 0) {
-        throw "Maven build failed with exit code $LASTEXITCODE."
-    }
-
-    # Step 2: Read version
-    $envFilePath = Join-Path $projectRoot '.env'
-    $snowVersion = Read-DotEnvValue -FilePath $envFilePath -Key "SNOW_VERSION"
-    if (-not $snowVersion) { $snowVersion = "0.0.0" }
-
-    Write-Host "SNOW_VERSION = $snowVersion"
-
-    # Step 3: Prepare release package
-    $targetDir = Join-Path $projectRoot 'target'
-    $exePath   = Join-Path $targetDir 'snow.exe'
-    if (-not (Test-Path $exePath)) {
-        throw "snow.exe not found."
-    }
-
-    $releaseRoot = Join-Path $targetDir 'release'
-    $outDirName  = "snow-v$snowVersion-windows-x64"
-    $outDir      = Join-Path $releaseRoot $outDirName
-    $binDir      = Join-Path $outDir 'bin'
-    $libDir      = Join-Path $outDir 'lib'
-
-    if (Test-Path $outDir) { Remove-Item $outDir -Recurse -Force }
-
-    New-Item $binDir -ItemType Directory -Force | Out-Null
-    Copy-Item $exePath (Join-Path $binDir 'snow.exe')
-
-    $projectLibDir = Join-Path $projectRoot 'lib'
-    if (Test-Path $projectLibDir) {
-        New-Item $libDir -ItemType Directory -Force | Out-Null
-        Copy-Item (Join-Path $projectLibDir '*') $libDir -Recurse -Force
-    }
-
-    # Step 4: Write VERSION
-    $versionFilePath = Join-Path $outDir 'VERSION'
-    Set-Content $versionFilePath $snowVersion
-
-    # Step 5: Zip
-    $zipPath = Join-Path $releaseRoot "$outDirName.zip"
-    if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
-
-    # Ensure parent directory exists
-    $null = New-Item -ItemType Directory -Path $releaseRoot -Force
-
-    Add-Type -AssemblyName System.IO.Compression
-    Add-Type -AssemblyName System.IO.Compression.FileSystem
-
-    [System.IO.Compression.ZipFile]::CreateFromDirectory(
-            $outDir,
-            $zipPath,
-            [System.IO.Compression.CompressionLevel]::Optimal,
-            $false
-    )
-
-} finally {
-    Pop-Location
+function Write-Info {
+    param([string]$Message)
+    Write-Host "ℹ $Message" -ForegroundColor Cyan
 }
 
-Write-Host ">>> Package ready!" -ForegroundColor Green
-Write-Host "Version : $snowVersion"
-Write-Host "Output  : $outDir"
-Write-Host "Zip     : $zipPath"
+# 获取项目根目录 (脚本在 build/module/ 下，需要往上两级)
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$projectRoot = Split-Path -Parent (Split-Path -Parent $scriptDir)
+
+# 验证 Maven 是否可用
+Write-Info "正在检查 Maven..."
+if (-not (Get-Command mvn -ErrorAction SilentlyContinue)) {
+    Write-Error-Custom "未找到 Maven，请确保 Maven 已安装并配置到 PATH 中"
+    exit 1
+}
+
+Write-Success "Maven 可用"
+
+# 定义模块及其依赖顺序（依赖必须先安装）
+$modules = @(
+    @{name="snow-common"; path="snow-common"},
+    @{name="snow-lexer"; path="snow-lexer"},
+    @{name="snow-parser"; path="snow-parser"},
+    @{name="snow-semantic"; path="snow-semantic"},
+    @{name="snow-ir"; path="snow-ir"},
+    @{name="snow-vm"; path="snow-vm"},
+    @{name="snow-backend"; path="snow-backend"}
+)
+
+# 构建 Maven 命令参数
+$mavenArgs = @()
+if ($Clean) {
+    $mavenArgs += "clean"
+}
+$mavenArgs += "package", "install"
+if ($SkipTests) {
+    $mavenArgs += "-DskipTests"
+}
+
+Write-Info "开始安装模块 (跳过测试: $SkipTests, 先清理: $Clean)"
+Write-Info "命令: mvn $($mavenArgs -join ' ')"
+Write-Host ""
+
+$failedModules = @()
+$successCount = 0
+
+# 按顺序安装每个模块
+foreach ($module in $modules) {
+    Write-Info "处理模块: $($module.name)"
+    $modulePath = Join-Path $projectRoot $module.path
+
+    if (-not (Test-Path $modulePath)) {
+        Write-Error-Custom "模块路径不存在: $modulePath"
+        $failedModules += $module.name
+        continue
+    }
+
+    # 进入模块目录并执行 Maven 命令
+    Push-Location $modulePath
+
+    try {
+        & mvn $mavenArgs
+        if ($LASTEXITCODE -eq 0) {
+            Write-Success "$($module.name) 安装成功"
+            $successCount++
+        } else {
+            Write-Error-Custom "$($module.name) 安装失败 (退出码: $LASTEXITCODE)"
+            $failedModules += $module.name
+        }
+    } catch {
+        Write-Error-Custom "$($module.name) 执行异常: $_"
+        $failedModules += $module.name
+    } finally {
+        Pop-Location
+    }
+
+    Write-Host ""
+}
+
+# 输出总结
+Write-Host "=" * 60
+Write-Info "安装总结"
+Write-Host "=" * 60
+Write-Success "成功安装: $successCount/$($modules.Count)"
+
+if ($failedModules.Count -gt 0) {
+    Write-Error-Custom "失败的模块: $($failedModules -join ', ')"
+    exit 1
+} else {
+    Write-Success "所有模块安装完成！"
+    exit 0
+}
