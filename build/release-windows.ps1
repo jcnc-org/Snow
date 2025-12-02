@@ -16,57 +16,11 @@ if ($PSVersionTable.PSEdition -ne 'Core') {
     exit $LASTEXITCODE
 }
 
-# ---------- 1. Detect JDK (no system env modifications) ----------
-function Detect-JDK {
-    Write-Host "🔍 Detecting JDK..."
-
-    # A. Prefixed JAVA_HOME
-    if ($env:JAVA_HOME) {
-        $javaExe = Join-Path $env:JAVA_HOME 'bin\java.exe'
-        if (Test-Path $javaExe) {
-            return $env:JAVA_HOME
-        }
-    }
-
-    # B. jabba environment
-    $jabbaScript = Join-Path $HOME '.jabba\jabba.ps1'
-    if (Test-Path $jabbaScript) {
-        . $jabbaScript
-        if ($env:JAVA_HOME) {
-            $javaExe = Join-Path $env:JAVA_HOME 'bin\java.exe'
-            if (Test-Path $javaExe) {
-                return $env:JAVA_HOME
-            }
-        }
-    }
-
-    # C. scan jabba jdk folder (pick most recently modified JDK)
-    $jdkRoot = Join-Path $HOME '.jabba\jdk'
-    if (Test-Path $jdkRoot) {
-        $jdks = Get-ChildItem $jdkRoot -Directory | Sort-Object LastWriteTime -Descending
-        foreach ($d in $jdks) {
-            $javaExe = Join-Path $d.FullName 'bin\java.exe'
-            if (Test-Path $javaExe) {
-                return $d.FullName
-            }
-        }
-    }
-
-    # D. java in PATH (compatible with PS5)
-    $javaCmd = Get-Command java.exe -ErrorAction SilentlyContinue
-    if ($javaCmd) {
-        $javaBinDir = Split-Path $javaCmd.Source
-        $javaHomeGuess = Split-Path $javaBinDir
-        return $javaHomeGuess
-    }
-
-    throw "❌ No JDK found (JAVA_HOME, jabba, PATH). Please install JDK."
-}
-
-$jdkHome = Detect-JDK
+# ---------- 1. Detect JDK (external script) ----------
+$jdkHome = & (Join-Path $PSScriptRoot 'tools/detect-jdk.ps1')
 Write-Host "✓ JDK detected at: $jdkHome"
 
-# temp JAVA_HOME (session only)
+# temporary JAVA_HOME (session only)
 $env:JAVA_HOME = $jdkHome
 $env:Path      = ("{0};{1}" -f (Join-Path $jdkHome 'bin'), $env:Path)
 
@@ -79,16 +33,12 @@ try {
     throw "Failed to execute java.exe from temporary JAVA_HOME"
 }
 
-# ---------- Maven check ----------
-$mvnCmd = Get-Command mvn -ErrorAction SilentlyContinue
-if (-not $mvnCmd) {
-    throw "❌ Maven not found in PATH. Please install Maven."
-}
-
-Write-Host "Maven found: $($mvnCmd.Source)"
+# ---------- 2. Detect Maven (external script) ----------
+$mvnPath = & (Join-Path $PSScriptRoot 'tools/detect-maven.ps1')
+Write-Host "Maven found: $mvnPath"
 Write-Host (& mvn -v)
 
-# Import dotenv
+# ---------- Import dotenv ----------
 . (Join-Path $PSScriptRoot 'tools/dotenv.ps1')
 
 # ---------- pom locator ----------
@@ -153,7 +103,7 @@ try {
         Copy-Item (Join-Path $projectLibDir '*') $libDir -Recurse -Force
     }
 
-    # Step 4: Write VERSION (before zipping so it's included)
+    # Step 4: Write VERSION
     $versionFilePath = Join-Path $outDir 'VERSION'
     Set-Content $versionFilePath $snowVersion
 
@@ -164,7 +114,6 @@ try {
     # Ensure parent directory exists
     $null = New-Item -ItemType Directory -Path $releaseRoot -Force
 
-    # Use .NET to create zip — works reliably in PowerShell 7+ on all Windows systems
     Add-Type -AssemblyName System.IO.Compression
     Add-Type -AssemblyName System.IO.Compression.FileSystem
 
@@ -172,7 +121,7 @@ try {
             $outDir,
             $zipPath,
             [System.IO.Compression.CompressionLevel]::Optimal,
-            $false  # Do NOT include root folder name inside zip
+            $false
     )
 
 } finally {
