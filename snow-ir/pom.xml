@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.jcnc.snow</groupId>
+    <groupId>com.snowlang</groupId>
     <artifactId>snow-ir</artifactId>
     <version>0.13.0</version>
 
@@ -18,17 +18,17 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.jcnc.snow</groupId>
+            <groupId>com.snowlang</groupId>
             <artifactId>snow-semantic</artifactId>
             <version>0.13.0</version>
         </dependency>
         <dependency>
-            <groupId>org.jcnc.snow</groupId>
+            <groupId>com.snowlang</groupId>
             <artifactId>snow-parser</artifactId>
             <version>0.13.0</version>
         </dependency>
         <dependency>
-            <groupId>org.jcnc.snow</groupId>
+            <groupId>com.snowlang</groupId>
             <artifactId>snow-common</artifactId>
             <version>0.13.0</version>
         </dependency>
