@@ -1,14 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.jcnc.snow</groupId>
-    <artifactId>snow-frontend-lexer</artifactId>
+    <artifactId>snow-vm</artifactId>
     <version>0.13.0</version>
 
-    <name>Snow Frontend Lexer</name>
-    <description>Standalone Snow lexer compiled with Java 21 for IDE integration.</description>
+    <name>Snow VM</name>
+    <description>Standalone Snow virtual machine compiled with Java 21 for IDE integration.</description>
 
     <properties>
         <maven.compiler.release>21</maven.compiler.release>
@@ -18,15 +19,32 @@
     <dependencies>
         <dependency>
             <groupId>org.jcnc.snow</groupId>
-            <artifactId>snow-frontend-common</artifactId>
+            <artifactId>snow-common</artifactId>
             <version>0.13.0</version>
         </dependency>
     </dependencies>
 
     <build>
-        <sourceDirectory>../src/main/java/org/jcnc/snow/compiler/lexer</sourceDirectory>
-
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <id>add-vm-source</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>../src/main/java/org/jcnc/snow/vm</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -49,8 +67,6 @@
                     </archive>
                 </configuration>
             </plugin>
-
         </plugins>
     </build>
-
 </project>

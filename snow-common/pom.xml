@@ -5,47 +5,18 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.jcnc.snow</groupId>
-    <artifactId>snow-frontend-backend</artifactId>
+    <artifactId>snow-common</artifactId>
     <version>0.13.0</version>
 
-    <name>Snow Frontend Backend</name>
-    <description>Standalone Snow backend code generator compiled with Java 21 for IDE integration.</description>
+    <name>Snow Common</name>
+    <description>Common utilities for Snow frontend (lexer and parser) compiled with Java 21 for IDE integration.</description>
 
     <properties>
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.jcnc.snow</groupId>
-            <artifactId>snow-frontend-ir</artifactId>
-            <version>0.13.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jcnc.snow</groupId>
-            <artifactId>snow-frontend-semantic</artifactId>
-            <version>0.13.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jcnc.snow</groupId>
-            <artifactId>snow-frontend-parser</artifactId>
-            <version>0.13.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jcnc.snow</groupId>
-            <artifactId>snow-frontend-vm</artifactId>
-            <version>0.13.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jcnc.snow</groupId>
-            <artifactId>snow-frontend-common</artifactId>
-            <version>0.13.0</version>
-        </dependency>
-    </dependencies>
-
     <build>
-
         <plugins>
 
             <plugin>
@@ -54,14 +25,14 @@
                 <version>3.5.0</version>
                 <executions>
                     <execution>
-                        <id>add-backend-source</id>
+                        <id>add-sources</id>
                         <phase>generate-sources</phase>
                         <goals>
                             <goal>add-source</goal>
                         </goals>
                         <configuration>
                             <sources>
-                                <source>../src/main/java/org/jcnc/snow/compiler/backend</source>
+                                <source>../src/main/java/org/jcnc/snow/common</source>
                             </sources>
                         </configuration>
                     </execution>
@@ -89,8 +60,6 @@
                     </archive>
                 </configuration>
             </plugin>
-
         </plugins>
     </build>
-
 </project>
