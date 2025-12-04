@@ -8,8 +8,8 @@ module: Main
     function: main
         returns: void
         body:
-             c = ModuleA.getA()
-             std_io.print(c)
+            c = ModuleA.getA()
+            std_io.print(c)
         end body
     end function
 end module

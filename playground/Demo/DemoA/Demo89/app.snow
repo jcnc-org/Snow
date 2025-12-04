@@ -4,7 +4,7 @@ module: app
     function: main
         returns: void
         body:
-			std_io.eprintln("eprintln")
+            std_io.eprintln("eprintln")
         end body
     end function
 end module

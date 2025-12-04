@@ -24,13 +24,13 @@ module: server
                 // init: （不需要循环变量，这里可以留空或声明个哨兵变量）
                 init:
                     declare dummy: int = 0
-                // cond: 永远为真，表示无限循环
+                    // cond: 永远为真，表示无限循环
                 cond:
                     true
-                // step: 每轮之后没什么要自增的，可以留空或保持 dummy 不变
+                    // step: 每轮之后没什么要自增的，可以留空或保持 dummy 不变
                 step:
                     dummy = dummy
-                // body: 一次处理一个客户端
+                    // body: 一次处理一个客户端
                 body:
                     // 4a. 等待一个客户端连接
                     declare conn: any = os_web.accept(listener)

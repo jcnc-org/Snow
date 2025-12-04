@@ -1,5 +1,5 @@
 module: Main
-	import: syscall.fs
+    import: syscall.fs
     import: syscall.fd
     import: std_io
     struct: Address

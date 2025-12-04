@@ -64,7 +64,7 @@ module: Main
             f == d
 
             d == d
-			std_io.print("Hello, World!")
+            std_io.print("Hello, World!")
             return 65537
         end body
     end function

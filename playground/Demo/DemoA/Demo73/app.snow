@@ -9,10 +9,10 @@ module: app
             io.stdout_write("准备退出...\n")
 
             // 以退出码 42 结束进程
-//            process.exit(42)
+            //            process.exit(42)
 
             // 这一行不会执行
-//            io.stdout_write("这句话永远不会被看到\n")
+            //            io.stdout_write("这句话永远不会被看到\n")
         end body
     end function
 end module

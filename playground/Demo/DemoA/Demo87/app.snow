@@ -26,7 +26,7 @@ module: fibonacci
                     b = next
                 end body
             end loop
-            
+
         end body
     end function
 end module

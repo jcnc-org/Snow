@@ -5,8 +5,8 @@ module: app
     import: syscall.fs
     import: syscall.fd
     import: std_io.fd
-	import: std_io
-	import: os_fs
+    import: std_io
+    import: os_fs
 
     function: main
         params:

@@ -27,7 +27,7 @@ module: app
             fs.chdir("demoDir")
             std_io.println("已切换到 demoDir")
 
-           // 3. 获取并打印当前工作目录
+            // 3. 获取并打印当前工作目录
             cwd = fs.getcwd()
             std_io.println("当前工作目录: " + cwd)
 

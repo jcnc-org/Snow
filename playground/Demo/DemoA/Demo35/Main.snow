@@ -1,9 +1,9 @@
 module: main
     import: std_io
-	function: main
-	    returns: void
-	    body:
-	        std_io.print("Hello" + " " + "World!")
-	    end body
-	end function
+    function: main
+        returns: void
+        body:
+            std_io.print("Hello" + " " + "World!")
+        end body
+    end function
 end module

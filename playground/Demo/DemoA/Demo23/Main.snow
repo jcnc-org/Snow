@@ -5,8 +5,8 @@ module: Main
     function: main
         returns: void
         body:
-           declare sum: byte = ModuleA.a
-           std_io.print(sum)
+            declare sum: byte = ModuleA.a
+            std_io.print(sum)
         end body
     end function
 end module

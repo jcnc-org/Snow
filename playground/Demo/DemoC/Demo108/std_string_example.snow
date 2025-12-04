@@ -116,16 +116,16 @@ module: std_string_example
             std_io.println("\n=== 13. 组合使用示例 ===")
             declare rawInput: string = "   Snow Programming Language   "
             std_io.println("原始输入: [" + rawInput + "]")
-            
+
             declare trimmed: string = std_string.trim(rawInput)
             std_io.println("1. trim() -> [" + trimmed + "]")
-            
+
             declare upper: string = std_string.toUpperCase(trimmed)
             std_io.println("2. toUpperCase() -> [" + upper + "]")
-            
+
             declare hasSnow: boolean = std_string.contains(upper, "SNOW")
             std_io.println("3. contains(\"SNOW\") -> " + hasSnow)
-            
+
             declare firstWord: string = std_string.substring(trimmed, 0, 4)
             std_io.println("4. substring(0, 4) -> [" + firstWord + "]")
 
