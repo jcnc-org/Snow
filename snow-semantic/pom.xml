@@ -6,7 +6,7 @@
 
     <groupId>com.snow-lang</groupId>
     <artifactId>snow-semantic</artifactId>
-    <version>${snow.version}</version>
+    <version>0.13.1</version>
 
     <name>Snow Semantic</name>
     <description>Standalone Snow semantic analyzer compiled with Java 21 for IDE integration.</description>
@@ -45,17 +45,17 @@
         <dependency>
             <groupId>com.snow-lang</groupId>
             <artifactId>snow-common</artifactId>
-            <version>${snow.version}</version>
+            <version>0.13.1</version>
         </dependency>
         <dependency>
             <groupId>com.snow-lang</groupId>
             <artifactId>snow-lexer</artifactId>
-            <version>${snow.version}</version>
+            <version>0.13.1</version>
         </dependency>
         <dependency>
             <groupId>com.snow-lang</groupId>
             <artifactId>snow-parser</artifactId>
-            <version>${snow.version}</version>
+            <version>0.13.1</version>
         </dependency>
     </dependencies>
 

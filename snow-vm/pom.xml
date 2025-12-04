@@ -6,7 +6,7 @@
 
     <groupId>com.snow-lang</groupId>
     <artifactId>snow-vm</artifactId>
-    <version>${snow.version}</version>
+    <version>0.13.1</version>
 
     <name>Snow VM</name>
     <description>Snow virtual machine for executing .water bytecode compiled with Java 21.</description>
@@ -45,7 +45,7 @@
         <dependency>
             <groupId>com.snow-lang</groupId>
             <artifactId>snow-common</artifactId>
-            <version>${snow.version}</version>
+            <version>0.13.1</version>
         </dependency>
     </dependencies>
 
