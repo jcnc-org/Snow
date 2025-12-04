@@ -10,7 +10,18 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 # 0. Ensure running under PowerShell 7
-& (Join-Path $PSScriptRoot '..\tools\ensure-pwsh7.ps1')
+if ($PSVersionTable.PSEdition -ne 'Core') {
+    Write-Host "Detected Windows PowerShell 5.x — switching to PowerShell 7..." -ForegroundColor Yellow
+
+    $pwshCmd = Get-Command pwsh.exe -ErrorAction SilentlyContinue
+    if (-not $pwshCmd) {
+        throw "PowerShell 7 (pwsh) not found. Install it from https://github.com/PowerShell/PowerShell"
+    }
+
+    # 重新启动 pwsh，但保留所有参数
+    & $pwshCmd.Source -NoLogo -NoProfile -File $PSCommandPath @args
+    exit $LASTEXITCODE
+}
 
 # 1. Detect JDK
 $jdkHome = & (Join-Path $PSScriptRoot '..\tools\detect-jdk.ps1')
