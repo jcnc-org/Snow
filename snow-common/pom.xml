@@ -6,7 +6,7 @@
 
     <groupId>com.snow-lang</groupId>
     <artifactId>snow-common</artifactId>
-    <version>0.13.0</version>
+    <version>${snow.version}</version>
 
     <name>Snow Common</name>
     <description>Common utilities and configurations for Snow language compiler and runtime with Java 21 for IDE integration.</description>

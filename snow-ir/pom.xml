@@ -6,7 +6,7 @@
 
     <groupId>com.snow-lang</groupId>
     <artifactId>snow-ir</artifactId>
-    <version>0.13.0</version>
+    <version>${snow.version}</version>
 
     <name>Snow IR</name>
     <description>Intermediate representation (IR) generation module for Snow compiler compiled with Java 21 for IDE integration.</description>
@@ -45,22 +45,22 @@
         <dependency>
             <groupId>com.snow-lang</groupId>
             <artifactId>snow-common</artifactId>
-            <version>0.13.0</version>
+            <version>${snow.version}</version>
         </dependency>
         <dependency>
             <groupId>com.snow-lang</groupId>
             <artifactId>snow-lexer</artifactId>
-            <version>0.13.0</version>
+            <version>${snow.version}</version>
         </dependency>
         <dependency>
             <groupId>com.snow-lang</groupId>
             <artifactId>snow-parser</artifactId>
-            <version>0.13.0</version>
+            <version>${snow.version}</version>
         </dependency>
         <dependency>
             <groupId>com.snow-lang</groupId>
             <artifactId>snow-semantic</artifactId>
-            <version>0.13.0</version>
+            <version>${snow.version}</version>
         </dependency>
     </dependencies>
 

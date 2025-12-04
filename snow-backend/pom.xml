@@ -6,7 +6,7 @@
 
     <groupId>com.snow-lang</groupId>
     <artifactId>snow-backend</artifactId>
-    <version>0.13.0</version>
+    <version>${snow.version}</version>
 
     <name>Snow Backend</name>
     <description>Code generation backend module for Snow compiler compiled with Java 21.</description>
@@ -45,32 +45,32 @@
         <dependency>
             <groupId>com.snow-lang</groupId>
             <artifactId>snow-common</artifactId>
-            <version>0.13.0</version>
+            <version>${snow.version}</version>
         </dependency>
         <dependency>
             <groupId>com.snow-lang</groupId>
             <artifactId>snow-lexer</artifactId>
-            <version>0.13.0</version>
+            <version>${snow.version}</version>
         </dependency>
         <dependency>
             <groupId>com.snow-lang</groupId>
             <artifactId>snow-parser</artifactId>
-            <version>0.13.0</version>
+            <version>${snow.version}</version>
         </dependency>
         <dependency>
             <groupId>com.snow-lang</groupId>
             <artifactId>snow-semantic</artifactId>
-            <version>0.13.0</version>
+            <version>${snow.version}</version>
         </dependency>
         <dependency>
             <groupId>com.snow-lang</groupId>
             <artifactId>snow-ir</artifactId>
-            <version>0.13.0</version>
+            <version>${snow.version}</version>
         </dependency>
         <dependency>
             <groupId>com.snow-lang</groupId>
             <artifactId>snow-vm</artifactId>
-            <version>0.13.0</version>
+            <version>${snow.version}</version>
         </dependency>
     </dependencies>
 
