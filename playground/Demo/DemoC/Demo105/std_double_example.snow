@@ -25,7 +25,7 @@ module: std_double_example
             std_io.println("std_double.toString(7.5) -> " + std_double.toString(7.5))
 
             std_io.println("\n=== 实例方法 abs()/equals()/toString() ===")
-            declare negdouble: std_double = new std_double( - 120)
+            declare negdouble: std_double = new std_double(-120)
             declare eqA: std_double = new std_double(10)
             declare eqB: std_double = new std_double(10)
             declare eqC: std_double = new std_double(8)
@@ -38,8 +38,8 @@ module: std_double_example
             std_io.println("std_parse.parseDouble(\"-71.25\") -> " + std_parse.parseDouble("-71.25"))
             std_io.println("std_math.compareDouble(1.2, 5.0) -> " + std_math.compareDouble(1.2, 5.0))
             std_io.println("std_math.compareDouble(7.0, 2.0) -> " + std_math.compareDouble(7.0, 2.0))
-            std_io.println("std_math.maxDouble(-15, 20) -> " + std_math.maxDouble( - 15, 20))
-            std_io.println("std_math.minDouble(-15, 20) -> " + std_math.minDouble( - 15, 20))
+            std_io.println("std_math.maxDouble(-15, 20) -> " + std_math.maxDouble(-15, 20))
+            std_io.println("std_math.minDouble(-15, 20) -> " + std_math.minDouble(-15, 20))
 
             std_io.println("\n=== 常量 MIN_VALUE / MAX_VALUE ===")
             std_io.println("MIN_VALUE: " + std_double.MIN_VALUE)

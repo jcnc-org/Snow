@@ -25,7 +25,7 @@ module: std_byte_example
             std_io.println("std_byte.toString(7) -> " + std_byte.toString(7))
 
             std_io.println("\n=== 实例方法 abs()/equals()/toString() ===")
-            declare negbyte: std_byte = new std_byte( - 120)
+            declare negbyte: std_byte = new std_byte(-120)
             declare eqA: std_byte = new std_byte(10)
             declare eqB: std_byte = new std_byte(10)
             declare eqC: std_byte = new std_byte(8)
@@ -38,8 +38,8 @@ module: std_byte_example
             std_io.println("std_parse.parseByte(\"-71\") -> " + std_parse.parseByte("-71"))
             std_io.println("std_math.compareByte(1, 5) -> " + std_math.compareByte(1, 5))
             std_io.println("std_math.compareByte(7, 2) -> " + std_math.compareByte(7, 2))
-            std_io.println("std_math.maxByte(-15, 20) -> " + std_math.maxByte( - 15, 20))
-            std_io.println("std_math.minByte(-15, 20) -> " + std_math.minByte( - 15, 20))
+            std_io.println("std_math.maxByte(-15, 20) -> " + std_math.maxByte(-15, 20))
+            std_io.println("std_math.minByte(-15, 20) -> " + std_math.minByte(-15, 20))
 
             std_io.println("\n=== 常量 MIN_VALUE / MAX_VALUE ===")
             std_io.println("MIN_VALUE: " + std_byte.MIN_VALUE)

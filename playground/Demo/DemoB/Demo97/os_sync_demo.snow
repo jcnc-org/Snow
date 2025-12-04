@@ -22,7 +22,7 @@ module: app
 
             os_sync.mutex_lock(mid)
             // 无限等待，直到被 signal/broadcast 唤醒
-            os_sync.cond_wait(cid, mid, - 1)
+            os_sync.cond_wait(cid, mid, -1)
             io.stdout_write("线程 " + tagStr + " 被唤醒。\n")
             os_sync.mutex_unlock(mid)
 
@@ -40,7 +40,7 @@ module: app
         returns: any
         body:
             io.stdout_write("信号量等待线程启动，SID=" + sid + "\n")
-            os_sync.sem_wait(sid, - 1)
+            os_sync.sem_wait(sid, -1)
             io.stdout_write("信号量获取成功，线程继续运行。\n")
             return "sem_ok"
         end body

@@ -25,7 +25,7 @@ module: std_long_example
             std_io.println("std_long.toString(7) -> " + std_long.toString(7L))
 
             std_io.println("\n=== 实例方法 abs()/equals()/toString() ===")
-            declare neglong: std_long = new std_long( - 120L)
+            declare neglong: std_long = new std_long(-120L)
             declare eqA: std_long = new std_long(10L)
             declare eqB: std_long = new std_long(10L)
             declare eqC: std_long = new std_long(8L)
@@ -38,8 +38,8 @@ module: std_long_example
             std_io.println("std_parse.parseLong(\"-71\") -> " + std_parse.parseLong("-71"))
             std_io.println("std_math.compareLong(1, 5) -> " + std_math.compareLong(1L, 5L))
             std_io.println("std_math.compareLong(7, 2) -> " + std_math.compareLong(7L, 2L))
-            std_io.println("std_math.maxLong(-15, 20) -> " + std_math.maxLong( - 15L, 20L))
-            std_io.println("std_math.minLong(-15, 20) -> " + std_math.minLong( - 15L, 20L))
+            std_io.println("std_math.maxLong(-15, 20) -> " + std_math.maxLong(-15L, 20L))
+            std_io.println("std_math.minLong(-15, 20) -> " + std_math.minLong(-15L, 20L))
 
             std_io.println("\n=== 常量 MIN_VALUE / MAX_VALUE ===")
             std_io.println("MIN_VALUE: " + std_long.MIN_VALUE)

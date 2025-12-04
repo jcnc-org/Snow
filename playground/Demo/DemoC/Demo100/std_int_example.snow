@@ -25,7 +25,7 @@ module: std_int_example
             std_io.println("std_int.toString(7) -> " + std_int.toString(7))
 
             std_io.println("\n=== 实例方法 abs()/equals()/toString() ===")
-            declare negint: std_int = new std_int( - 120)
+            declare negint: std_int = new std_int(-120)
             declare eqA: std_int = new std_int(10)
             declare eqB: std_int = new std_int(10)
             declare eqC: std_int = new std_int(8)
@@ -38,8 +38,8 @@ module: std_int_example
             std_io.println("std_parse.parseInt(\"-71\") -> " + std_parse.parseInt("-71"))
             std_io.println("std_math.compareInt(1, 5) -> " + std_math.compareInt(1, 5))
             std_io.println("std_math.compareInt(7, 2) -> " + std_math.compareInt(7, 2))
-            std_io.println("std_math.maxInt(-15, 20) -> " + std_math.maxInt( - 15, 20))
-            std_io.println("std_math.minInt(-15, 20) -> " + std_math.minInt( - 15, 20))
+            std_io.println("std_math.maxInt(-15, 20) -> " + std_math.maxInt(-15, 20))
+            std_io.println("std_math.minInt(-15, 20) -> " + std_math.minInt(-15, 20))
 
             std_io.println("\n=== 常量 MIN_VALUE / MAX_VALUE ===")
             std_io.println("MIN_VALUE: " + std_int.MIN_VALUE)

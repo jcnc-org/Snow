@@ -18,7 +18,7 @@ module: app
             declare pid2: int = process.fork(cmd2)
             io.stdout_write("fork2 返回 pid=" + pid2 + "\n")
 
-            if pid1 == - 1 then
+            if pid1 == -1 then
                 io.stdout_write("有子进程 fork 失败\n")
             else
                 io.stdout_write("父进程继续运行 (pid1=" + pid1 + ", pid2=" + pid2 + ")\n")
