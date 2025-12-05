@@ -1,8 +1,10 @@
+# ------------------------------------------------------------
 # Stage 1: 官方 GraalVM 社区版（已含 native-image）
+# ------------------------------------------------------------
 FROM ghcr.io/graalvm/native-image-community:25 AS builder
 
 RUN microdnf install -y \
-      gcc gcc-c++ make git wget tar gzip which findutils maven \
+      gcc make git wget tar gzip which findutils maven \
     && microdnf clean all
 
 # ---------- 构建 musl ----------
@@ -40,7 +42,7 @@ RUN wget -q https://zlib.net/zlib-${ZLIB_VERSION}.tar.gz \
 WORKDIR /app
 COPY pom.xml ./
 
-# 先拉依赖并缓存
+# ---------- 先拉依赖并缓存 ----------
 RUN mvn -B -P native-linux dependency:go-offline
 
 # ---------- 复制源码 ----------
@@ -50,7 +52,7 @@ COPY . /app
 RUN mvn -P native-linux -DskipTests clean package
 
 # ------------------------------------------------------------
-# Stage 2: 输出产物镜像（可以直接 cp 出二进制）
+# Stage 2: 输出产物镜像
 # ------------------------------------------------------------
 FROM busybox AS export
 WORKDIR /export
