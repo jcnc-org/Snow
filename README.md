@@ -140,305 +140,6 @@ sudo pacman -Syu snow-lang-git
     git clone https://gitee.com/jcnc-org/snow.git
     ```
 
-3. **运行项目**
-
-   使用IDEA配置好的运行配置 `Demo1`
-
-   ![IMG_运行配置文件_1.png](docs/README/IMG/IMG_Run-Profile_1.png)
-
-4. **运行成功**
-    
-    `````snow   
-    ## 编译器输出
-    ### Snow 源代码
-    #### Main.snow
-    module: Main
-        import:Math
-        function: main
-            returns: int
-            body:
-                Math.add(6,1)
-                return 0
-            end body
-        end function
-    end module
-    line   col    type             lexeme
-    ----------------------------------------------------
-    1      1      KEYWORD          module
-    1      7      COLON            :
-    1      9      IDENTIFIER       Main
-    1      13     NEWLINE          \n
-    
-    2      5      KEYWORD          import
-    2      11     COLON            :
-    2      12     IDENTIFIER       Math
-    2      16     NEWLINE          \n
-    
-    3      5      KEYWORD          function
-    3      13     COLON            :
-    3      15     IDENTIFIER       main
-    3      19     NEWLINE          \n
-    
-    4      9      KEYWORD          returns
-    4      20     COLON            :
-    4      22     TYPE             int
-    4      25     NEWLINE          \n
-    
-    5      9      KEYWORD          body
-    5      13     COLON            :
-    5      14     NEWLINE          \n
-    
-    6      13     IDENTIFIER       Math
-    6      17     DOT              .
-    6      18     IDENTIFIER       add
-    6      21     LPAREN           (
-    6      22     NUMBER_LITERAL   6
-    6      23     COMMA            ,
-    6      24     NUMBER_LITERAL   1
-    6      25     RPAREN           )
-    6      26     NEWLINE          \n
-    
-    7      13     KEYWORD          return
-    7      20     NUMBER_LITERAL   0
-    7      21     NEWLINE          \n
-    
-    8      9      KEYWORD          end
-    8      13     KEYWORD          body
-    8      17     NEWLINE          \n
-    
-    9      5      KEYWORD          end
-    9      9      KEYWORD          function
-    9      17     NEWLINE          \n
-    
-    10     1      KEYWORD          end
-    10     5      KEYWORD          module
-    10     1      EOF              
-    ## 词法分析通过，没有发现错误
-    
-    #### Math.snow
-    module: Math
-        function: add
-            params:
-                declare n1: int
-                declare n2: int
-            returns: int
-            body:
-               return n1 + n2
-            end body
-        end function
-    end module
-    line   col    type             lexeme
-    ----------------------------------------------------
-    1      1      KEYWORD          module
-    1      7      COLON            :
-    1      9      IDENTIFIER       Math
-    1      13     NEWLINE          \n
-    
-    2      5      KEYWORD          function
-    2      13     COLON            :
-    2      15     IDENTIFIER       add
-    2      18     NEWLINE          \n
-    
-    3      9      KEYWORD          params
-    3      18     COLON            :
-    3      19     NEWLINE          \n
-    
-    4      13     KEYWORD          declare
-    4      21     IDENTIFIER       n1
-    4      23     COLON            :
-    4      25     TYPE             int
-    4      28     NEWLINE          \n
-    
-    5      13     KEYWORD          declare
-    5      21     IDENTIFIER       n2
-    5      23     COLON            :
-    5      25     TYPE             int
-    5      28     NEWLINE          \n
-    
-    6      9      KEYWORD          returns
-    6      20     COLON            :
-    6      22     TYPE             int
-    6      25     NEWLINE          \n
-    
-    7      9      KEYWORD          body
-    7      13     COLON            :
-    7      14     NEWLINE          \n
-    
-    8      12     KEYWORD          return
-    8      19     IDENTIFIER       n1
-    8      22     PLUS             +
-    8      24     IDENTIFIER       n2
-    8      26     NEWLINE          \n
-    
-    9      9      KEYWORD          end
-    9      13     KEYWORD          body
-    9      17     NEWLINE          \n
-    
-    10     5      KEYWORD          end
-    10     9      KEYWORD          function
-    10     17     NEWLINE          \n
-    
-    11     1      KEYWORD          end
-    11     5      KEYWORD          module
-    11     1      EOF        
-    
-    ## 词法分析通过，没有发现错误
-    
-    ## 语义分析通过，没有发现错误
-    
-    ### AST
-    [
-      {
-        "type": "Module",
-        "name": "Main",
-        "imports": [
-          {
-            "type": "Import",
-            "module": "Math"
-          }
-        ],
-        "functions": [
-          {
-            "type": "Function",
-            "name": "main",
-            "parameters": [
-              
-            ],
-            "returnType": "int",
-            "body": [
-              {
-                "type": "ExpressionStatement",
-                "expression": {
-                  "type": "CallExpression",
-                  "callee": {
-                    "type": "MemberExpression",
-                    "object": {
-                      "type": "Identifier",
-                      "name": "Math"
-                    },
-                    "member": "add"
-                  },
-                  "arguments": [
-                    {
-                      "type": "NumberLiteral",
-                      "value": "6"
-                    },
-                    {
-                      "type": "NumberLiteral",
-                      "value": "1"
-                    }
-                  ]
-                }
-              },
-              {
-                "type": "Return",
-                "value": {
-                  "type": "NumberLiteral",
-                  "value": "0"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "type": "Module",
-        "name": "Math",
-        "imports": [
-          
-        ],
-        "functions": [
-          {
-            "type": "Function",
-            "name": "add",
-            "parameters": [
-              {
-                "name": "n1",
-                "type": "int"
-              },
-              {
-                "name": "n2",
-                "type": "int"
-              }
-            ],
-            "returnType": "int",
-            "body": [
-              {
-                "type": "Return",
-                "value": {
-                  "type": "BinaryExpression",
-                  "left": {
-                    "type": "Identifier",
-                    "name": "n1"
-                  },
-                  "operator": "+",
-                  "right": {
-                    "type": "Identifier",
-                    "name": "n2"
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ]
-    ### IR
-    func main() {
-      %0 = CONST 6
-      %1 = CONST 1
-      %2 = CALL Math.add, %0, %1
-      %3 = CONST 0
-      RET %3
-    }
-    func add(%0, %1) {
-      %2 = ADD_I32 %0, %1
-      RET %2
-    }
-    
-    ### VM code
-    0000: I_PUSH     6
-    0001: I_STORE    0
-    0002: I_PUSH     1
-    0003: I_STORE    1
-    0004: I_LOAD     0
-    0005: I_LOAD     1
-    0006: CALL       13 2
-    0007: I_STORE    2
-    0008: I_PUSH     0
-    0009: I_STORE    3
-    0010: I_LOAD     3
-    0011: HALT       
-    0012: HALT       
-    0013: I_LOAD     0
-    0014: I_LOAD     1
-    0015: I_ADD      
-    0016: I_STORE    2
-    0017: I_LOAD     2
-    0018: RET        
-    0019: RET        
-    Written to D:\Devs\IdeaProjects\Snow\target\Demo1.water
-    
-    === Launching VM ===
-    
-    Calling function at address: 13
-    
-    Return 7
-    
-    Process has ended
-
-    Operand Stack state:[0]
-    
-    --- Call Stack State ---
-    
-    ### VM Local Variable Table:
-    0: 6
-    1: 1
-    2: 7
-    3: 0
-    
-    === VM exited ===
-    `````
     
 ## 编译 Snow 源代码
 
@@ -579,39 +280,150 @@ end module
 
 ## 项目结构说明
 
-* `compiler/`: Snow 编译器源代码目录
+项目采用 Maven 多模块构建，源码结构如下:
 
-    * `lexer/`: 词法分析模块，负责将源码切分为 Token
-    * `parser/`: 语法分析模块，将 Token 流解析为 AST（含模块/函数/语句解析）
-    * `semantic/`: 语义分析模块，负责符号表管理、类型检查等
-    * `ir/`: 中间表示（IR）模块，生成并管理三地址码形式的中间代码
-    * `backend/`: 编译器后端模块，将 IR 翻译为虚拟机指令，包含寄存器分配和指令生成器
+### 根级模块结构
 
-* `vm/`: 虚拟机相关源代码目录
+```
+Snow/
+├── snow-backend/        # 独立模块：编译器后端
+├── snow-common/         # 独立模块：通用工具
+├── snow-ir/             # 独立模块：中间表示（IR）
+├── snow-lexer/          # 独立模块：词法分析
+├── snow-parser/         # 独立模块：语法分析
+├── snow-semantic/       # 独立模块：语义分析
+├── snow-vm/             # 独立模块：虚拟机
+├── src/main/java/org/jcnc/snow/  # 主源码目录
+├── pom.xml              # Maven 聚合配置
+└── ...
+```
 
-    * `commands/`: 定义 SnowVM 指令集的具体实现
-    * `engine/`: 核心执行引擎，提供指令执行和寄存器/栈管理
-    * `execution/`: 执行流程控制（按指令顺序执行、分支跳转等）
-    * `io/`: 输入输出辅助类（加载指令、文件解析等）
-    * `gui/`: Swing 可视化调试面板，实时展示局部变量表
-    * `factories/`、`utils/`: 指令创建、日志调试等公共工具
+### 主源码目录结构（src/main/java/org/jcnc/snow/）
 
-* `pkg/`: 内置构建与包管理器 **snow pkg**
+* **`compiler/`** - Snow 编译器核心
 
-    * `dsl/`: `.cloud` 描述文件解析器
-    * `tasks/`: 预设任务实现（`clean · compile · run · package · publish` 等）
-    * `resolver/`: 本地/远程仓库解析与缓存
-    * `lifecycle/`: 任务生命周期钩子（pre/post 脚本等）
-    * `model/`: 项目、依赖、版本等模型
-    * `utils/`: 文件、日志、校验和等通用工具
-    * `doc/`: 开发者文档与示例 `.cloud` 配置
+    * **`lexer/`** - 词法分析模块
+        * `core/`: 词法分析器主逻辑
+        * `scanners/`: 各类 Token 扫描器（关键字、字符串、数字等）
+        * `token/`: Token 定义和工具
+        * `utils/`: 词法分析辅助工具
 
-* `cli/`: 独立的命令行前端
+    * **`parser/`** - 语法分析模块
+        * `ast/`: 抽象语法树（AST）节点定义
+        * `context/`: 解析上下文管理
+        * `core/`: 解析器主逻辑
+        * `expression/`: 表达式解析
+        * `statement/`: 语句解析
+        * `module/`: 模块解析
+        * `function/`: 函数解析
+        * `struct/`: 结构体解析
+        * `utils/`: 语法分析辅助工具
+        * `factory/`: 工厂类
 
-    * `commands/`: `compile` / `run` / `pkg` 等子命令实现
-    * `api/`: 公共选项解析、终端交互抽象
-    * `utils/`: 终端颜色、进度条、异常格式化等
-    * `SnowCLI.java`: CLI 主入口
+    * **`semantic/`** - 语义分析模块
+        * `core/`: 语义分析器主逻辑
+        * `analyzers/`: 具体的语义分析器（类型检查、符号表等）
+        * `type/`: 类型系统定义和管理
+        * `symbol/`: 符号表管理
+        * `error/`: 错误处理
+        * `utils/`: 语义分析辅助工具
+
+    * **`ir/`** - 中间表示（IR）模块
+        * `core/`: IR 核心数据结构（函数、基本块、指令等）
+        * `builder/`: IR 构建器（表达式、语句、函数等）
+        * `instruction/`: IR 指令定义
+        * `value/`: IR 值类型
+        * `common/`: 公共工具
+        * `utils/`: IR 辅助工具
+
+    * **`backend/`** - 编译器后端模块
+        * `core/`: 后端编译核心
+        * `generator/`: 虚拟机指令生成器
+        * `builder/`: 指令构建器
+        * `alloc/`: 寄存器分配
+        * `utils/`: 后端辅助工具
+
+* **`vm/`** - 虚拟机（SnowVM）
+
+    * **`engine/`** - 执行引擎
+        * 寄存器/栈管理
+        * 指令执行逻辑
+
+    * **`commands/`** - 虚拟机指令集
+        * 各类指令的具体实现
+
+    * **`execution/`** - 执行流程控制
+        * 指令顺序执行
+        * 分支跳转管理
+
+    * **`io/`** - 输入输出
+        * 指令加载
+        * 文件解析
+        * 标准库 I/O 实现
+
+    * **`gui/`** - 可视化调试
+        * Swing 调试面板
+        * 局部变量表展示
+
+    * **`module/`** - 模块管理
+        * 标准库模块加载
+
+    * **`interfaces/`** - 公共接口
+
+    * **`factories/`** - 工厂类
+
+    * **`utils/`** - 工具类
+        * 日志、调试输出等
+
+    * **`VMInitializer.java`** - VM 初始化器
+    * **`VMLauncher.java`** - VM 启动器
+
+* **`pkg/`** - 构建与包管理系统（snow pkg）
+
+    * **`dsl/`** - DSL 解析器
+        * `.cloud` 配置文件解析
+
+    * **`tasks/`** - 预设任务
+        * clean / compile / run / package / publish 等
+
+    * **`resolver/`** - 依赖解析
+        * 本地/远程仓库访问
+        * 缓存管理
+
+    * **`lifecycle/`** - 生命周期管理
+        * pre/post 脚本钩子
+
+    * **`model/`** - 数据模型
+        * 项目模型
+        * 依赖模型
+        * 版本模型
+
+    * **`utils/`** - 工具函数
+        * 文件操作
+        * 日志记录
+        * 校验和计算
+
+* **`cli/`** - 命令行前端
+
+    * **`commands/`** - 子命令实现
+        * compile / run / clean / init / generate / build 等
+
+    * **`api/`** - 公共接口
+        * 选项解析
+        * 终端交互抽象
+
+    * **`utils/`** - 工具类
+        * 终端颜色、进度条
+        * 异常格式化
+
+    * **`SnowCLI.java`** - 主入口
+
+* **`common/`** - 通用工具模块
+
+    * **`Mode.java`** - 运行模式（RUN、DEBUG）
+    * **`SnowConfig.java`** - 配置管理
+    * **`NumberLiteralHelper.java`** - 数字字面量处理
+    * **`StringEscape.java`** - 字符串转义处理
 
 
 ## 版权声明
