@@ -162,7 +162,8 @@ snow compile -d . -o performance-test run
 
 ### 5.2 批量测试
 
-Snow提供了[test-all](file:///D:/Devs/IdeaProjects/Snow/src/main/java/org/jcnc/snow/cli/commands/TestAllCommand.java#L41-L463)命令来运行所有示例程序，可以用来进行更全面的性能测试：
+Snow提供了[test-all](file:///D:/Devs/IdeaProjects/Snow/src/main/java/org/jcnc/snow/cli/commands/TestAllCommand.java#L41-L463)
+命令来运行所有示例程序，可以用来进行更全面的性能测试：
 
 ```bash
 # 运行所有Demo示例
@@ -210,6 +211,7 @@ snow compile --debug Main.snow
 ### 7.2 虚拟机状态监控
 
 在调试模式下，Snow虚拟机会显示：
+
 - 操作数栈状态
 - 调用栈状态
 - 局部变量表

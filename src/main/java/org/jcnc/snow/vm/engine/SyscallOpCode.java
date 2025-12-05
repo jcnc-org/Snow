@@ -1002,7 +1002,6 @@ public final class SyscallOpCode {
 
 
     // region 数组操作 (0x1800 – 0x18FF)
-
     /**
      * ARR_LEN (0x1801)
      *
@@ -1020,7 +1019,6 @@ public final class SyscallOpCode {
      * <p><b>异常</b>：若类型不支持，则抛出 {@link IllegalArgumentException}。</p>
      */
     public static final int ARR_LEN = 0x1801;
-
     /**
      * ARR_GET (0x1802)
      *
@@ -1035,7 +1033,6 @@ public final class SyscallOpCode {
      * <p><b>异常</b>：若 {@code arr} 为 {@code null} 或索引越界，应抛出 {@link IndexOutOfBoundsException} 或 {@link IllegalArgumentException}。</p>
      */
     public static final int ARR_GET = 0x1802;
-
     /**
      * ARR_SET (0x1803)
      *
@@ -1050,7 +1047,128 @@ public final class SyscallOpCode {
      * <p><b>异常</b>：若 {@code arr} 为 {@code null}、索引越界或类型不支持写入，应抛出 {@link IndexOutOfBoundsException} 或 {@link IllegalArgumentException}。</p>
      */
     public static final int ARR_SET = 0x1803;
-
+    /**
+     * ARR_PUSH (0x1810)
+     *
+     * <p><b>Stack</b>：入参 {@code (arr:any, value:any)} → 出参 {@code (len:int)}</p>
+     *
+     * <p><b>语义</b>：
+     * 向列表尾部追加一个元素，并返回追加后的长度。
+     * </p>
+     *
+     * <p><b>支持</b>：仅支持 {@link java.util.List}（可变序列）。</p>
+     *
+     * <p><b>返回</b>：追加后的长度。</p>
+     *
+     * <p><b>异常</b>：若 arr 不是列表，抛出 {@link IllegalArgumentException}。</p>
+     */
+    public static final int ARR_PUSH = 0x1810;
+    /**
+     * ARR_POP (0x1811)
+     *
+     * <p><b>Stack</b>：入参 {@code (arr:any)} → 出参 {@code (elem:any)}</p>
+     *
+     * <p><b>语义</b>：
+     * 移除并返回列表末尾的元素。
+     * </p>
+     *
+     * <p><b>支持</b>：仅 {@link java.util.List}。</p>
+     *
+     * <p><b>返回</b>：被移除的元素。</p>
+     *
+     * <p><b>异常</b>：
+     * <ul>
+     *   <li>若 arr 不是列表，抛出 {@link IllegalArgumentException}</li>
+     *   <li>若列表为空，抛出 {@link IndexOutOfBoundsException}</li>
+     * </ul>
+     * </p>
+     */
+    public static final int ARR_POP = 0x1811;
+    /**
+     * ARR_INSERT (0x1812)
+     *
+     * <p><b>Stack</b>：入参 {@code (arr:any, index:int, value:any)} → 出参 {@code (len:int)}</p>
+     *
+     * <p><b>语义</b>：
+     * 在指定索引插入元素，原位置及之后的元素向后移动。
+     * </p>
+     *
+     * <p><b>支持</b>：仅 {@link java.util.List}。</p>
+     *
+     * <p><b>返回</b>：插入后的长度。</p>
+     *
+     * <p><b>异常</b>：
+     * <ul>
+     *   <li>若 arr 不是列表，抛出 {@link IllegalArgumentException}</li>
+     *   <li>若索引不在 [0, size] 范围内，抛出 {@link IndexOutOfBoundsException}</li>
+     * </ul>
+     * </p>
+     */
+    public static final int ARR_INSERT = 0x1812;
+    /**
+     * ARR_REMOVE (0x1813)
+     *
+     * <p><b>Stack</b>：入参 {@code (arr:any, index:int)} → 出参 {@code (elem:any)}</p>
+     *
+     * <p><b>语义</b>：
+     * 删除指定索引的元素，并返回被删除的值。
+     * </p>
+     *
+     * <p><b>支持</b>：仅 {@link java.util.List}。</p>
+     *
+     * <p><b>返回</b>：被移除的元素。</p>
+     *
+     * <p><b>异常</b>：
+     * <ul>
+     *   <li>若 arr 不是列表，抛出 {@link IllegalArgumentException}</li>
+     *   <li>若索引越界，抛出 {@link IndexOutOfBoundsException}</li>
+     * </ul>
+     * </p>
+     */
+    public static final int ARR_REMOVE = 0x1813;
+    /**
+     * ARR_RESIZE (0x1814)
+     *
+     * <p><b>Stack</b>：入参 {@code (arr:any, newLen:int)} → 出参 {@code (len:int)}</p>
+     *
+     * <p><b>语义</b>：
+     * 调整列表长度：
+     * <ul>
+     *   <li>若 newLen 小于当前长度，则从末尾删除多余元素</li>
+     *   <li>若 newLen 大于当前长度，则在末尾补 {@code null}</li>
+     * </ul>
+     * </p>
+     *
+     * <p><b>支持</b>：仅 {@link java.util.List}。</p>
+     *
+     * <p><b>返回</b>：调整后的长度（即 newLen）。</p>
+     *
+     * <p><b>异常</b>：
+     * <ul>
+     *   <li>若 newLen 为负数，抛出 {@link IllegalArgumentException}</li>
+     *   <li>若 arr 不是列表，抛出 {@link IllegalArgumentException}</li>
+     * </ul>
+     * </p>
+     */
+    public static final int ARR_RESIZE = 0x1814;
+    /**
+     * ARR_CLEAR (0x1815)
+     *
+     * <p><b>Stack</b>：入参 {@code (arr:any)} → 出参 {@code (len:int)}</p>
+     *
+     * <p><b>语义</b>：
+     * 清空列表，使其长度变为 0。
+     * </p>
+     *
+     * <p><b>支持</b>：仅 {@link java.util.List}。</p>
+     *
+     * <p><b>返回</b>：0（清空后的长度）。</p>
+     *
+     * <p><b>异常</b>：
+     * 若 arr 不是 {@link java.util.List}，抛出 {@link IllegalArgumentException}。
+     * </p>
+     */
+    public static final int ARR_CLEAR = 0x1815;
     // endregion
 
 

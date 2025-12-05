@@ -3,6 +3,7 @@ package org.jcnc.snow.compiler.backend.generator;
 import org.jcnc.snow.compiler.backend.builder.VMProgramBuilder;
 import org.jcnc.snow.compiler.backend.core.InstructionGenerator;
 import org.jcnc.snow.compiler.backend.utils.OpHelper;
+import org.jcnc.snow.compiler.backend.utils.TypePromoteUtils;
 import org.jcnc.snow.compiler.ir.common.GlobalFunctionTable;
 import org.jcnc.snow.compiler.ir.core.IRValue;
 import org.jcnc.snow.compiler.ir.instruction.CallInstruction;
@@ -75,6 +76,14 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
 
             default -> 'R';
         };
+    }
+
+    /**
+     * 根据参数签名解析期望的类型前缀。
+     */
+    private char paramPrefix(List<String> paramTypes, int idx) {
+        if (paramTypes == null || idx >= paramTypes.size()) return 'R';
+        return normalizeTypePrefix(paramTypes.get(idx));
     }
 
     /**
@@ -235,6 +244,8 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
         return switch (s) {
             // 返回引用（字符串/字节数组/Map/数组等）
             case "0X1802", "ARR_GET",
+                 "0X1811", "ARR_POP",
+                 "0X1813", "ARR_REMOVE",
                  "0X1001", "READ",
                  "0X1005", "STAT",
                  "0X1006", "FSTAT",
@@ -340,9 +351,12 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
     private void generateNormalCall(CallInstruction ins, VMProgramBuilder out, Map<IRVirtualRegister, Integer> slotMap, String fn) {
         String retTypeName = GlobalFunctionTable.getReturnType(fn);
         char retType = normalizeTypePrefix(retTypeName);
+        List<String> paramTypes = GlobalFunctionTable.getParamTypes(fn);
 
-        for (IRValue arg : ins.getArguments()) {
-            loadArgument(out, slotMap, arg, 'R', fn);
+        for (int i = 0; i < ins.getArguments().size(); i++) {
+            IRValue arg = ins.getArguments().get(i);
+            char expected = paramPrefix(paramTypes, i);
+            loadArgument(out, slotMap, arg, expected, fn);
         }
         out.emitCall(fn, ins.getArguments().size());
 
@@ -364,11 +378,11 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
      * @param out         VM 指令构建器
      * @param slotMap     虚拟寄存器到槽位映射
      * @param arg         参数
-     * @param defaultType 默认类型前缀
+     * @param targetType 默认类型前缀
      * @param fn          所属函数名
      * @throws IllegalStateException 如果类型或槽位未找到
      */
-    private void loadArgument(VMProgramBuilder out, Map<IRVirtualRegister, Integer> slotMap, IRValue arg, char defaultType, String fn) {
+    private void loadArgument(VMProgramBuilder out, Map<IRVirtualRegister, Integer> slotMap, IRValue arg, char targetType, String fn) {
         this.fn = fn;
         if (!(arg instanceof IRVirtualRegister vr))
             throw new IllegalStateException("[CallGenerator] 参数必须是 IRVirtualRegister");
@@ -376,11 +390,18 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
         Integer slot = slotMap.get(vr);
         if (slot == null) throw new IllegalStateException("[CallGenerator] 未找到参数槽位");
 
-        char t = out.getSlotType(slot);
-        if (t == '\0' || (t == 'I' && defaultType != 'I')) {
-            t = defaultType;
+        char srcPrefix = out.getSlotType(slot);
+        if (srcPrefix == '\0') {
+            srcPrefix = (targetType == '\0') ? 'I' : targetType;
         }
-        out.emit(OpHelper.opcode(t + "_LOAD") + " " + slot);
+        out.emit(OpHelper.opcode(srcPrefix + "_LOAD") + " " + slot);
+
+        if (needsNumericConvert(srcPrefix, targetType)) {
+            String conv = TypePromoteUtils.convert(srcPrefix, targetType);
+            if (conv != null) {
+                out.emit(OpHelper.opcode(conv));
+            }
+        }
     }
 
     /**
@@ -390,5 +411,20 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
      */
     public String getFn() {
         return fn;
+    }
+
+    /**
+     * 判断是否需要数值类型转换。
+     */
+    private boolean needsNumericConvert(char from, char to) {
+        if (to == '\0' || to == 'R' || to == 'V') return false;
+        if (from == to) return false;
+        return switch (to) {
+            case 'B', 'S', 'I', 'L', 'F', 'D' -> switch (from) {
+                case 'B', 'S', 'I', 'L', 'F', 'D' -> true;
+                default -> false;
+            };
+            default -> false;
+        };
     }
 }

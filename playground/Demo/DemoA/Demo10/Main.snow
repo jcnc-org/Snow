@@ -1,15 +1,15 @@
-module : Main
-	import: std_io
+module: Main
+    import: std_io
 
-	import: std_io
-	function: main
-	    returns: void
-	    body:
-	        declare res: boolean = 8L > 9L
-	        if res then
-	            std_io.println(131)
-	        end if
-	        std_io.println(65537)
-	    end body
-	end function
+    import: std_io
+    function: main
+        returns: void
+        body:
+            declare res: boolean = 8L > 9L
+            if res then
+                std_io.println(131)
+            end if
+            std_io.println(65537)
+        end body
+    end function
 end module

@@ -2,13 +2,14 @@ module: app
     import: syscall.fs
     import: syscall.fd
     import: std_io
+    import: os_fs
 
     function: main
         params:
             declare args: any
         body:
             declare fd1: int
-            declare n:  int
+            declare n: int
 
             // 打开文件，写模式 + 创建 + 截断
             // flags = O_WRONLY | O_CREAT | O_TRUNC = 1 | 64 | 512 = 577
@@ -33,6 +34,7 @@ module: app
 
             // 关闭文件
             fd.close(fd1)
+            os_fs.remove_file("seek_demo.txt")
         end body
     end function
 end module

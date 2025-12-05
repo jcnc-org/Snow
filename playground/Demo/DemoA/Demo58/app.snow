@@ -6,6 +6,7 @@ module: app
     import: syscall.fd
     import: std_io.fs
     import: std_io
+    import: os_fs
 
     function: main
         params:
@@ -18,6 +19,9 @@ module: app
             // 在 demoDir 下再创建子目录 subDir
             fs.mkdir("demoDir/subDir", 0)
             std_io.println("已创建目录 demoDir/subDir")
+
+            os_fs.remove_dir("demoDir/subDir")
+            os_fs.remove_dir("demoDir")
         end body
     end function
 end module

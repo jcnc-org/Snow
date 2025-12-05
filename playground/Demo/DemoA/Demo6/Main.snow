@@ -1,12 +1,12 @@
 module: Main
-	import: std_io
+    import: std_io
 
     function: main
         params:
         returns: void
         body:
-            declare b1 :int = -1+(-2)
-			std_io.print(b1)
+            declare b1: int = -1 + (-2)
+            std_io.print(b1)
         end body
     end function
 end module

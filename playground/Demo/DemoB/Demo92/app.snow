@@ -9,7 +9,7 @@ module: app
             std_io.print("=== os_fs 模块功能测试 ===\n")
 
             // 记录启动时所在目录
-            declare orig_dir:string = os_fs.current_dir()
+            declare orig_dir: string = os_fs.current_dir()
             std_io.print("当前工作目录: " + orig_dir + "\n")
 
             // 1. 创建并进入 demo_dir
@@ -25,7 +25,7 @@ module: app
 
             // 3. 向 note.txt 写入一些内容
             std_io.print("[3] 向 note.txt 写入内容...\n")
-            declare fh:int = os_fd.open_write("note.txt", false, false)
+            declare fh: int = os_fd.open_write("note.txt", false, false)
             os_fd.write_bytes(fh, "first line\nsecond line\n")
             os_fd.close(fh)
 
@@ -49,18 +49,18 @@ module: app
             std_io.print("[7] 创建符号链接 softlink.txt -> note.txt ...\n")
             os_fs.symlink("note.txt", "softlink.txt")
 
-            declare linkTarget:string = os_fs.readlink("softlink.txt")
+            declare linkTarget: string = os_fs.readlink("softlink.txt")
             std_io.print("softlink.txt -> " + linkTarget + "\n")
 
             // 8. 列出当前目录内容
             std_io.print("[8] 列出目录内容:\n")
-            declare entries:any = os_fs.list_dir(".")
+            declare entries: any = os_fs.list_dir(".")
             std_io.print("entries: " + entries + "\n")
 
             // 9. 打开 note.txt 读内容
             std_io.print("[9] 打开并读取 note.txt 内容:\n")
             fh = os_fd.open_read("note.txt")
-            declare data:any = os_fd.read_bytes(fh, 200)
+            declare data: any = os_fd.read_bytes(fh, 200)
             std_io.print("note.txt 内容:\n" + data + "\n")
             os_fd.close(fh)
 

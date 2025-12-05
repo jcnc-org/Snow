@@ -5,7 +5,7 @@ module: Math
             declare n2: int
         returns: int
         body:
-           return n1 + n2
+            return n1 + n2
         end body
     end function
 end module

@@ -1,18 +1,18 @@
 module: Main
-	import: std_io
+    import: std_io
 
     function: main
         params:
         returns: boolean
         body:
-           declare b1: boolean =false
-           
-			if (b1) then
-				std_io.print(0)
-			else
-				std_io.print(1)
-			end if
-        return b1
+            declare b1: boolean = false
+
+            if (b1) then
+                std_io.print(0)
+            else
+                std_io.print(1)
+            end if
+            return b1
         end body
     end function
 end module

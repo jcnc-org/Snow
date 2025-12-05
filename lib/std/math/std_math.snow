@@ -1,0 +1,340 @@
+module: std_math
+
+    /**
+    @function compareDouble
+    @summary 比较两个 double 值，返回 -1 / 0 / 1
+    */
+    function: compareDouble
+        params:
+            declare lhs: double
+            declare rhs: double
+        returns: int
+        body:
+            if lhs == rhs then
+                return 0
+            end if
+            if lhs > rhs then
+                return 1
+            end if
+            return -1
+        end body
+    end function
+
+    /**
+    @function compareFloat
+    @summary 比较两个 float 值，返回 -1 / 0 / 1
+    */
+    function: compareFloat
+        params:
+            declare lhs: float
+            declare rhs: float
+        returns: int
+        body:
+            if lhs == rhs then
+                return 0
+            end if
+            if lhs > rhs then
+                return 1
+            end if
+            return -1
+        end body
+    end function
+
+    /**
+    @function maxDouble
+    @summary 返回两个 double 中较大的值
+    */
+    function: maxDouble
+        params:
+            declare lhs: double
+            declare rhs: double
+        returns: double
+        body:
+            if lhs >= rhs then
+                return lhs
+            else
+                return rhs
+            end if
+        end body
+    end function
+
+    /**
+    @function maxFloat
+    @summary 返回两个 float 中较大的值
+    */
+    function: maxFloat
+        params:
+            declare lhs: float
+            declare rhs: float
+        returns: float
+        body:
+            if lhs >= rhs then
+                return lhs
+            else
+                return rhs
+            end if
+        end body
+    end function
+
+    /**
+    @function minDouble
+    @summary 返回两个 double 中较小的值
+    */
+    function: minDouble
+        params:
+            declare lhs: double
+            declare rhs: double
+        returns: double
+        body:
+            if lhs <= rhs then
+                return lhs
+            else
+                return rhs
+            end if
+        end body
+    end function
+
+    /**
+    @function minFloat
+    @summary 返回两个 float 中较小的值
+    */
+    function: minFloat
+        params:
+            declare lhs: float
+            declare rhs: float
+        returns: float
+        body:
+            if lhs <= rhs then
+                return lhs
+            else
+                return rhs
+            end if
+        end body
+    end function
+
+    /**
+    @function compareLong
+    @summary 比较两个 long 值，返回 -1 / 0 / 1
+    */
+    function: compareLong
+        params:
+            declare lhs: long
+            declare rhs: long
+        returns: int
+        body:
+            if lhs == rhs then
+                return 0
+            end if
+            if lhs > rhs then
+                return 1
+            end if
+            return -1
+        end body
+    end function
+
+    /**
+    @function maxLong
+    @summary 返回两个 long 中较大的值
+    */
+    function: maxLong
+        params:
+            declare lhs: long
+            declare rhs: long
+        returns: long
+        body:
+            if lhs >= rhs then
+                return lhs
+            else
+                return rhs
+            end if
+        end body
+    end function
+
+    /**
+    @function minLong
+    @summary 返回两个 long 中较小的值
+    */
+    function: minLong
+        params:
+            declare lhs: long
+            declare rhs: long
+        returns: long
+        body:
+            if lhs <= rhs then
+                return lhs
+            else
+                return rhs
+            end if
+        end body
+    end function
+
+    /**
+    @function compareShort
+    @summary 比较两个 short 值，返回 -1 / 0 / 1
+    */
+    function: compareShort
+        params:
+            declare lhs: short
+            declare rhs: short
+        returns: int
+        body:
+            if lhs == rhs then
+                return 0
+            end if
+            if lhs > rhs then
+                return 1
+            end if
+            return -1
+        end body
+    end function
+
+    /**
+    @function maxShort
+    @summary 返回两个 short 中较大的值
+    */
+    function: maxShort
+        params:
+            declare lhs: short
+            declare rhs: short
+        returns: short
+        body:
+            if lhs >= rhs then
+                return lhs
+            else
+                return rhs
+            end if
+        end body
+    end function
+
+    /**
+    @function minShort
+    @summary 返回两个 short 中较小的值
+    */
+    function: minShort
+        params:
+            declare lhs: short
+            declare rhs: short
+        returns: short
+        body:
+            if lhs <= rhs then
+                return lhs
+            else
+                return rhs
+            end if
+        end body
+    end function
+
+    /**
+    @function compareInt
+    @summary 比较两个 int 值，返回 -1 / 0 / 1
+    */
+    function: compareInt
+        params:
+            declare lhs: int
+            declare rhs: int
+        returns: int
+        body:
+            if lhs == rhs then
+                return 0
+            end if
+            if lhs > rhs then
+                return 1
+            end if
+            return -1
+        end body
+    end function
+
+    /**
+    @function maxInt
+    @summary 返回两个 int 中较大的值
+    */
+    function: maxInt
+        params:
+            declare lhs: int
+            declare rhs: int
+        returns: int
+        body:
+            if lhs >= rhs then
+                return lhs
+            else
+                return rhs
+            end if
+        end body
+    end function
+
+    /**
+    @function minInt
+    @summary 返回两个 int 中较小的值
+    */
+    function: minInt
+        params:
+            declare lhs: int
+            declare rhs: int
+        returns: int
+        body:
+            if lhs <= rhs then
+                return lhs
+            else
+                return rhs
+            end if
+        end body
+    end function
+
+        /**
+        @function compareByte
+        @summary 比较两个 byte 值，返回 -1 / 0 / 1
+        */
+        function: compareByte
+            params:
+                declare lhs: byte
+                declare rhs: byte
+            returns: int
+            body:
+                if lhs == rhs then
+                    return 0
+                end if
+                if lhs > rhs then
+                    return 1
+                end if
+                return -1
+            end body
+        end function
+
+        /**
+        @function maxByte
+        @summary 返回两个 byte 中较大的值
+        */
+        function: maxByte
+            params:
+                declare lhs: byte
+                declare rhs: byte
+            returns: byte
+            body:
+                if lhs >= rhs then
+                    return lhs
+                else
+                    return rhs
+                end if
+            end body
+        end function
+
+        /**
+        @function minByte
+        @summary 返回两个 byte 中较小的值
+        */
+        function: minByte
+            params:
+                declare lhs: byte
+                declare rhs: byte
+            returns: byte
+            body:
+                if lhs <= rhs then
+                    return lhs
+                else
+                    return rhs
+                end if
+            end body
+        end function
+
+
+end module

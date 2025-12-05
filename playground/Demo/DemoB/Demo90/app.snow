@@ -6,13 +6,13 @@ module: app
         returns: void
         body:
             // 打开文件（只读）
-            declare handle:int = os_fd.open_read("test.txt")
+            declare handle: int = os_fd.open_read("test.txt")
 
             // 读取前 100 个字节
-            declare data:any = os_fd.read_bytes(handle, 2)
+            declare data: any = os_fd.read_bytes(handle, 2)
 
             // 输出内容
-            std_io.print("File content: "+ data+"\n")
+            std_io.print("File content: " + data + "\n")
 
             // 关闭文件
             os_fd.close(handle)

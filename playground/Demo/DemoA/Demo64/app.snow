@@ -4,12 +4,12 @@ module: app
 
     function: main
         params:
-            declare args:any
+            declare args: any
         body:
             io.stdout_write("请输入内容 (5 秒内):\n")
 
             // 只监听 stdin (fd=0)，超时 5000ms
-            declare ready:any = multiplex.select([0], [], [], 5000)
+            declare ready: any = multiplex.select([0], [], [], 5000)
 
             io.stdout_write("select 返回结果: " + ready + "\n")
         end body

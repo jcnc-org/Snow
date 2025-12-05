@@ -69,7 +69,7 @@ body:
     attributes:
       label: 软件版本/分支
       options:
-        - v0.12.0
+        - v0.13.0
         - main
         - dev
         - 其他

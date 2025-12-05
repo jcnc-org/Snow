@@ -10,6 +10,7 @@ import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.base.NodeContext;
 import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
 
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -50,7 +51,7 @@ public class AssignmentHandler implements IStatementHandler {
      */
     @Override
     public void handle(StatementNode stmt, StatementBuilderContext c) {
-        if (!(stmt instanceof AssignmentNode(String var, ExpressionNode rhs, NodeContext _))) {
+        if (!(stmt instanceof AssignmentNode(String var, ExpressionNode rhs, NodeContext nodeContext))) {
             throw new IllegalStateException("Unexpected AssignmentNode pattern");
         }
 
@@ -84,17 +85,23 @@ public class AssignmentHandler implements IStatementHandler {
             }
             Integer idx = (layout != null) ? layout.get(var) : null;
             if (idx != null) {
+                String fieldType = IRBuilderScope.getStructFieldType(thisType, var);
+                if (fieldType != null) {
+                    c.ctx().setVarType(fieldType);
+                }
                 IRVirtualRegister valReg = c.expr().build(rhs);
                 IRVirtualRegister idxReg = InstructionFactory.loadConst(c.ctx(), idx);
                 java.util.List<org.jcnc.snow.compiler.ir.core.IRValue> argv =
                         java.util.List.of(thisReg, idxReg, valReg);
+                String setFn = selectSetIndexFunc(fieldType);
                 c.ctx().addInstruction(new org.jcnc.snow.compiler.ir.instruction.CallInstruction(
-                        null, "__setindex_r", argv));
+                        null, setFn, argv));
 
                 try {
                     c.ctx().getScope().clearConstValue(var);
                 } catch (Throwable ignored) {
                 }
+                c.ctx().clearVarType();
                 return;
             }
         }
@@ -128,5 +135,21 @@ public class AssignmentHandler implements IStatementHandler {
             c.ctx().getScope().declare(name, type, reg);
         }
         return reg;
+    }
+
+    /**
+     * 根据字段类型选择合适的 __setindex_* 通道。
+     */
+    private String selectSetIndexFunc(String fieldType) {
+        if (fieldType == null || fieldType.isBlank()) return "__setindex_r";
+        return switch (fieldType.toLowerCase(Locale.ROOT)) {
+            case "byte" -> "__setindex_b";
+            case "short" -> "__setindex_s";
+            case "int", "integer", "bool", "boolean" -> "__setindex_i";
+            case "long" -> "__setindex_l";
+            case "float" -> "__setindex_f";
+            case "double" -> "__setindex_d";
+            default -> "__setindex_r";
+        };
     }
 }

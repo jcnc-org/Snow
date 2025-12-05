@@ -1,7 +1,9 @@
 package org.jcnc.snow.compiler.ir.utils;
 
+import org.jcnc.snow.common.NumberLiteralHelper;
 import org.jcnc.snow.compiler.ir.core.IROpCode;
 import org.jcnc.snow.compiler.ir.core.IROpCodeMappings;
+import org.jcnc.snow.compiler.parser.ast.BinaryExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.IdentifierNode;
 import org.jcnc.snow.compiler.parser.ast.NumberLiteralNode;
 import org.jcnc.snow.compiler.parser.ast.StringLiteralNode;
@@ -19,9 +21,9 @@ import java.util.Map;
  * <p>
  * 类型判定支持:
  * <ul>
- *     <li>字面量后缀: 支持 B/S/I/L/F/D（大小写均可）</li>
+ *     <li>字面量后缀: 识别 L/F/D（整数字面量默认 int）</li>
  *     <li>浮点数支持: 如无后缀但有小数点，视为 double</li>
- *     <li>变量类型: 根据传入变量表推断类型，未识别则默认 int</li>
+ *     <li>变量类型: 根据变量表推断，byte/short 视为 int，未识别则默认 int</li>
  * </ul>
  */
 public final class ComparisonUtils {
@@ -59,9 +61,7 @@ public final class ComparisonUtils {
             case 'D' -> 6;
             case 'F' -> 5;
             case 'L' -> 4;
-            case 'I' -> 3;
-            case 'S' -> 2;
-            case 'B' -> 1;
+            case 'I', 'S', 'B' -> 3; // byte/short 按 int 处理
             case 'R' -> 7;
             default -> 0;
         };
@@ -126,27 +126,30 @@ public final class ComparisonUtils {
      * @return 类型标记字符（B/S/I/L/F/D），未知时返回 I
      */
     private static char analysisType(Map<String, String> variables, ExpressionNode node) {
-        if (node instanceof NumberLiteralNode(String value, NodeContext _)) {
-            char suffix = Character.toUpperCase(value.charAt(value.length() - 1));
-            if ("BSILFD".indexOf(suffix) != -1) {
-                return suffix;
+        if (node instanceof BinaryExpressionNode bin) {
+            if ("+".equals(bin.operator()) &&
+                    (bin.left() instanceof StringLiteralNode || bin.right() instanceof StringLiteralNode)) {
+                return 'R';
             }
-            if (value.indexOf('.') != -1) {
-                return 'D';
-            }
-            return 'I';  // 默认 int
+        }
+        if (node instanceof NumberLiteralNode(String value, NodeContext nodeContext)) {
+            char suffix = NumberLiteralHelper.extractTypeSuffix(value);
+            return switch (suffix) {
+                case 'l' -> 'L';
+                case 'f' -> 'F';
+                case 'd' -> 'D';
+                default -> (NumberLiteralHelper.looksLikeFloat(value) ? 'D' : 'I'); // 默认 int
+            };
         }
         if (node instanceof StringLiteralNode) {
             return 'R';
         }
-        if (node instanceof IdentifierNode(String name, NodeContext _)) {
+        if (node instanceof IdentifierNode(String name, NodeContext nodeContext)) {
             final String type = variables.get(name);
             if (type != null) {
                 switch (type) {
                     case "byte":
-                        return 'B';
                     case "short":
-                        return 'S';
                     case "int":
                         return 'I';
                     case "long":

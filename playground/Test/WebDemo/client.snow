@@ -7,11 +7,11 @@ module: client
         returns: void
         body:
             // 1. 创建 TCP 套接字
-            declare s:int = os_web.tcp_socket()
+            declare s: int = os_web.tcp_socket()
             std_io.println("socket fd = " + s)
 
             // 2. 连接本地服务
-            declare rc:int = os_web.connect(s, "127.0.0.1", 8080)
+            declare rc: int = os_web.connect(s, "127.0.0.1", 8080)
             std_io.println("connect rc = " + rc)
             if rc < 0 then
                 std_io.println("connect failed.")
@@ -20,12 +20,12 @@ module: client
             end if
 
             // 3. 发送消息
-            declare msg:string = "hello server!"
+            declare msg: string = "hello server!"
             os_web.send(s, msg)
             std_io.println("sent: " + msg)
 
             // 4. 接收回复
-            declare resp:any = os_web.recv(s, 256)
+            declare resp: any = os_web.recv(s, 256)
             std_io.println("recv: " + resp)
 
             // 5. 关闭连接

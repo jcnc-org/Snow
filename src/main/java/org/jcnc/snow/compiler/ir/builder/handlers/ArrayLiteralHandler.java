@@ -57,7 +57,7 @@ public class ArrayLiteralHandler implements ExpressionHandler<ArrayLiteralNode> 
             switch (e) {
                 case NumberLiteralNode n ->
                     // 数字字面量
-                        list.add(ExpressionUtils.buildNumberConstant(b.ctx(), n.value()).value());
+                        list.add(ExpressionUtils.buildNumberConstant(b.ctx(), n.value(), n.context()).value());
                 case StringLiteralNode s ->
                     // 字符串字面量
                         list.add(s.value());

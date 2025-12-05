@@ -4,20 +4,20 @@ module: app
 
     function: main
         params:
-            declare args:any
+            declare args: any
         body:
             io.stdout_write("=== 测试 os_sys 模块 ===\n")
 
             // 1) CPU 数量
-            declare ncpu:int = os_sys.cpu_count()
+            declare ncpu: int = os_sys.cpu_count()
             io.stdout_write("CPU 数量: " + ncpu + "\n")
 
             // 2) 环境变量
             io.stdout_write("\n=== 环境变量 ===\n")
-            declare key:string = "SNOW_DEMO_ENV"
+            declare key: string = "SNOW_DEMO_ENV"
 
             // 删除
-            declare rc:int = os_sys.setenv(key, "", true)
+            declare rc: int = os_sys.setenv(key, "", true)
             io.stdout_write("删除环境变量返回码: " + rc + "\n")
             io.stdout_write(key + " (删除后) = " + os_sys.getenv(key) + "\n")
 
@@ -38,18 +38,18 @@ module: app
 
             // 3) 随机字节
             io.stdout_write("\n=== 随机字节 ===\n")
-            declare bytes:any = os_sys.random_bytes(8)
+            declare bytes: any = os_sys.random_bytes(8)
             io.stdout_write("random_bytes(8) = " + bytes + "\n")
 
             // 4) 内存信息
             io.stdout_write("\n=== 内存信息 ===\n")
-            declare mem:any = os_sys.memory_info()
+            declare mem: any = os_sys.memory_info()
             io.stdout_write("memory_info = " + mem + "\n")
 
             // 5) 最近错误
             io.stdout_write("\n=== 最近错误 ===\n")
-            declare errc:int = os_sys.last_error_code()
-            declare errmsg:string = os_sys.last_error_message()
+            declare errc: int = os_sys.last_error_code()
+            declare errmsg: string = os_sys.last_error_message()
             io.stdout_write("last_error_code = " + errc + "\n")
             io.stdout_write("last_error_message = " + errmsg + "\n")
 

@@ -15,39 +15,11 @@ public final class SnowExample {
     public static String getMainModule() {
         return """
                 module: main
-                    import: os
+                    import: std_io
                     function: main
                         returns: void
                         body:
-                            os.print("Hello" + " "+"World!")
-                        end body
-                    end function
-                end module
-                """;
-    }
-
-    /**
-     * 获取系统库 os.snow 模块的内容字符串。
-     *
-     * @return os.snow 模块的完整代码
-     */
-    public static String getOsModule() {
-        return """
-                module: os
-                    function: print
-                        params:
-                            declare i1: any
-                        returns: void
-                        body:
-                            syscall("PRINT", i1)
-                        end body
-                    end function
-                    function: println
-                        params:
-                            declare i1: any
-                        returns: void
-                        body:
-                            syscall("PRINTLN", i1)
+                            std_io.println("Hello" + " " + "World!")
                         end body
                     end function
                 end module

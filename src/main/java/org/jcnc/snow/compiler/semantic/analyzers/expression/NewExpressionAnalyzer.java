@@ -12,6 +12,7 @@ import org.jcnc.snow.compiler.semantic.type.BuiltinType;
 import org.jcnc.snow.compiler.semantic.type.FunctionType;
 import org.jcnc.snow.compiler.semantic.type.StructType;
 import org.jcnc.snow.compiler.semantic.type.Type;
+import org.jcnc.snow.compiler.semantic.utils.NumericConstantUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -101,8 +102,10 @@ public class NewExpressionAnalyzer implements ExpressionAnalyzer<NewExpressionNo
             boolean widenOK = expected.isNumeric()
                     && actual.isNumeric()
                     && expected.equals(Type.widen(actual, expected)); // 支持数值类型自动宽化
+            boolean narrowingNumeric = NumericConstantUtils.allowIntegralNarrowing(expected, actual);
+            boolean narrowingConst = NumericConstantUtils.canNarrowToIntegral(expected, actual, expr.arguments().get(i));
 
-            if (!compatible && !widenOK) {
+            if (!compatible && !widenOK && !narrowingConst && !narrowingNumeric) {
                 // 实参类型不兼容也无法宽化，报错
                 ctx.errors().add(new SemanticError(expr,
                         String.format("构造函数参数类型不匹配 (位置 %d): 期望 %s, 实际 %s",

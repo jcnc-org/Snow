@@ -103,7 +103,7 @@ style G fill:#fff8e1
 flowchart TD
 A["解析命令行参数"] --> B{"是否包含 run?"}
 B --> |是| C["设置 runAfterCompile = true"]
-B --> |否| D["继续解析"]
+B --> |否| D{"是否包含 --debug?"}
 C --> E{"是否包含 --debug?"}
 E --> |是| F["设置 SnowConfig.MODE = DEBUG"]
 E --> |否| D

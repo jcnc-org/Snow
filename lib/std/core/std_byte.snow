@@ -1,0 +1,136 @@
+/**
+@module std_byte
+@summary std_byte 结构体 - 对 byte 基本数据类型的封装
+*/
+module: std_byte
+    import: std_parse
+
+    globals:
+        declare const MIN_VALUE:byte = 0x80
+        declare const MAX_VALUE:byte = 0x7f
+
+    /**
+    @struct std_byte
+    @summary byte 的包装类
+    */
+    struct: std_byte
+
+        fields:
+            declare value: byte
+
+        /**
+        @init default
+        @summary 无参构造函数，默认创建值为 0 的 std_byte
+        */
+        init:
+            body:
+                value = 0
+            end body
+        end init
+
+        /**
+        @init with_value
+        @summary 带参构造函数，根据给定值创建 std_byte
+        @param val 初始 byte 值
+        */
+        init:
+            params:
+                declare val: byte
+            body:
+                value = val
+            end body
+        end init
+
+        /**
+        @function byteValue
+        @summary 获取包装的 byte 值（拆箱）
+        */
+        function: byteValue
+            returns: byte
+            body:
+                return value
+            end body
+        end function
+
+        /**
+        @function abs
+        @summary 返回当前 byte 绝对值的 std_byte 实例
+        */
+        function: abs
+            returns: std_byte
+            body:
+                declare result: byte = value
+                if result < 0 then
+                    result = -result
+                end if
+                return new std_byte(result)
+            end body
+        end function
+
+        /**
+        @function equals
+        @summary 比较两个 std_byte 是否相等
+        */
+        function: equals
+            params:
+                declare other: std_byte
+            returns: boolean
+            body:
+                return value == other.value
+            end body
+        end function
+
+        /**
+        @function toString
+        @summary 将当前 byte 值转为字符串
+        */
+        function: toString
+            returns: string
+            body:
+                return std_byte.toString(value)
+            end body
+        end function
+
+    end struct
+
+    /**
+    @function valueOf
+    @summary 将 byte 装箱为 std_byte
+    */
+    function: valueOf
+        params:
+            declare d: byte
+        returns: std_byte
+        body:
+            return new std_byte(d)
+        end body
+    end function
+
+    /**
+    @function valueOfString
+    @summary 将字符串解析并包装为 std_byte
+    */
+    function: valueOfString
+        params:
+            declare s: string
+        returns: std_byte
+        body:
+            declare d: byte = std_parse.parseByte(s)
+            return new std_byte(d)
+        end body
+    end function
+
+    /**
+    @function toString
+    @summary 将 byte 转换为字符串
+    */
+    function: toString
+        params:
+            declare d: byte
+        returns: string
+        body:
+            return "" + d   // Snow 使用 + 转换为字符串
+        end body
+    end function
+
+end module

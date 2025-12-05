@@ -4,23 +4,23 @@ module: app
 
     function: main
         params:
-            declare args:any
+            declare args: any
         body:
             // 1. 创建 TCP socket
-            declare fd:int = web.socket(2, 1, 0)   // AF_INET=2, SOCK_STREAM=1
+            declare fd: int = web.socket(2, 1, 0)   // AF_INET=2, SOCK_STREAM=1
             io.stdout_write("客户端 socket 已创建, fd=" + fd + "\n")
 
             // 2. 连接到服务器
-            declare rc:int = web.connect(fd, "127.0.0.1", 8080)
+            declare rc: int = web.connect(fd, "127.0.0.1", 8080)
             io.stdout_write("连接结果: " + rc + "\n")
 
             // 3. 发送一条消息
-            declare msg:string = "Hello from Snow client!\n"
+            declare msg: string = "Hello from Snow client!\n"
             rc = web.send(fd, msg)
             io.stdout_write("发送字节数: " + rc + "\n")
 
             // 4. 接收服务器的响应
-            declare resp:any = web.recv(fd, 1024)
+            declare resp: any = web.recv(fd, 1024)
             io.stdout_write("收到服务器响应: ")
             io.stdout_write(resp)
             io.stdout_write("\n")

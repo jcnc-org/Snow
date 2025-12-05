@@ -4,10 +4,10 @@ module: app
 
     function: main
         params:
-            declare args:any
+            declare args: any
         body:
             // 0) 测试 getaddrinfo：解析本机 "localhost" 的 80 端口
-            declare infos:any[] = web.getaddrinfo("localhost", "80", [])
+            declare infos: any[] = web.getaddrinfo("localhost", "80", [])
             io.stdout_write("getaddrinfo(localhost, 80) 返回=" + infos + "\n")
 
         end body

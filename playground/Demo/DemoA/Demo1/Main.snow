@@ -5,7 +5,7 @@ module: Main
     function: main
         returns: void
         body:
-            std_io.print(Math.add(6,1))
+            std_io.print(Math.add(6, 1))
         end body
     end function
 end module

@@ -1,14 +1,14 @@
 module: app
-	import: thread
-	import: io
+    import: thread
+    import: io
 
-	function: main
-	    params:
-	        declare args:any
-	    body:
-	        io.stdout_write("开始休眠...\n")
-	        thread.sleep(2000)   // 休眠 2 秒
-	        io.stdout_write("休眠结束\n")
-	    end body
-	end function
+    function: main
+        params:
+            declare args: any
+        body:
+            io.stdout_write("开始休眠...\n")
+            thread.sleep(100) // 休眠100毫秒
+            io.stdout_write("休眠结束\n")
+        end body
+    end function
 end module

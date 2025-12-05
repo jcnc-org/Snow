@@ -131,7 +131,13 @@ public class BinaryOpGenerator implements InstructionGenerator<BinaryOperationIn
         char lType = out.getSlotType(lSlot); // 未登记时默认 'I'
         char rType = out.getSlotType(rSlot);
 
+        // 根据槽位类型推导结果类型，必要时与 IR 操作码的类型保持一致
+        String opCore = irName.contains("_") ? irName.substring(0, irName.indexOf('_')) : irName;
         char tType = TypePromoteUtils.promote(lType, rType); // 类型提升结果
+        char irType = typeFromOpcode(irName);
+        if (!"ADD".equals(opCore) && irType != 0 && tType != irType) {
+            tType = irType;
+        }
         String tPre = TypePromoteUtils.str(tType);
 
         //  2. 加载并做类型转换
@@ -155,7 +161,6 @@ public class BinaryOpGenerator implements InstructionGenerator<BinaryOperationIn
 
         // 3-A. 普通算术 / 位运算
         if (!isCmp) {
-            String opCore = irName.split("_")[0]; // ADD / SUB / MUL …
             out.emit(OpHelper.opcode(tPre + "_" + opCore));
             out.emit(OpHelper.opcode(tPre + "_STORE") + " " + dSlot);
             out.setSlotType(dSlot, tType);
@@ -184,5 +189,25 @@ public class BinaryOpGenerator implements InstructionGenerator<BinaryOperationIn
         // 5. 写入目标槽位
         out.emit(OpHelper.opcode("I_STORE") + " " + dSlot);
         out.setSlotType(dSlot, 'I'); // 布尔 ➜ int
+    }
+
+    /**
+     * 根据 IR 操作码名提取预期类型前缀。
+     */
+    private static char typeFromOpcode(String irName) {
+        int idx = irName.indexOf('_');
+        if (idx < 0 || idx + 1 >= irName.length()) {
+            return 0;
+        }
+        return switch (irName.charAt(idx + 1)) {
+            case 'B' -> 'B';
+            case 'S' -> 'S';
+            case 'I' -> 'I';
+            case 'L' -> 'L';
+            case 'F' -> 'F';
+            case 'D' -> 'D';
+            case 'R' -> 'R';
+            default -> 0;
+        };
     }
 }

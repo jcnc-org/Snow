@@ -11,8 +11,8 @@ module: Main
             declare name: string
             declare age: int
 
-        // === 构造函数重载 ===
-        // 1) 传入 name 和 age
+            // === 构造函数重载 ===
+            // 1) 传入 name 和 age
         init:
             params:
                 n: string

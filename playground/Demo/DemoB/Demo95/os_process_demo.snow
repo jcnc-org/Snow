@@ -1,12 +1,13 @@
-/*
 module: app
     import: io
     import: os_process
 
     function: main
         params:
-            declare args:any
+            declare args: any
         body:
+            io.stdout_write("为了防止测试被关闭所以注释全部内容")
+            /*
             io.stdout_write("=== 测试 os_process 模块 ===\n")
 
             // 1) getpid / getppid
@@ -34,7 +35,7 @@ module: app
             os_process.exec(env, argv, path)
             // 不会执行到这里
             os_process.exit(0)
+            */
         end body
     end function
 end module
-*/

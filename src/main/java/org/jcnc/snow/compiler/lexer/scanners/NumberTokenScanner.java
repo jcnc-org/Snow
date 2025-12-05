@@ -1,5 +1,6 @@
 package org.jcnc.snow.compiler.lexer.scanners;
 
+import org.jcnc.snow.common.NumberLiteralHelper;
 import org.jcnc.snow.compiler.lexer.core.LexerContext;
 import org.jcnc.snow.compiler.lexer.core.LexicalException;
 import org.jcnc.snow.compiler.lexer.token.Token;
@@ -78,6 +79,11 @@ public class NumberTokenScanner extends AbstractTokenScanner {
      */
     @Override
     protected Token scanToken(LexerContext ctx, int line, int col) throws LexicalException {
+        // 16 进制：0x / 0X 开头，单独处理
+        if (isHexStart(ctx)) {
+            return scanHexLiteral(ctx, line, col);
+        }
+
         StringBuilder literal = new StringBuilder();
         State state = State.INT_PART;
 
@@ -247,6 +253,71 @@ public class NumberTokenScanner extends AbstractTokenScanner {
         }
 
         /* ───── 3. 生成并返回 Token ───── */
+        return new Token(TokenType.NUMBER_LITERAL, literal.toString().replace("_", ""), line, col);
+    }
+
+    private boolean isHexStart(LexerContext ctx) {
+        return ctx.peek() == '0' && (ctx.peekNext() == 'x' || ctx.peekNext() == 'X');
+    }
+
+    /**
+     * 处理 16 进制数字字面量。
+     */
+    private Token scanHexLiteral(LexerContext ctx, int line, int col) throws LexicalException {
+        StringBuilder literal = new StringBuilder();
+        literal.append(ctx.advance()); // 0
+        literal.append(ctx.advance()); // x / X
+
+        boolean sawDigit = false;
+        boolean lastUnderscore = false;
+
+        while (!ctx.isAtEnd()) {
+            char ch = ctx.peek();
+            if (NumberLiteralHelper.isHexDigit(ch)) {
+                literal.append(ctx.advance());
+                sawDigit = true;
+                lastUnderscore = false;
+            } else if (ch == '_') {
+                if (!sawDigit)
+                    throw new LexicalException("16进制数字不能以下划线开头", line, col);
+                if (lastUnderscore)
+                    throw new LexicalException("16进制数字中下划线不能连续出现", line, col);
+                literal.append(ctx.advance());
+                lastUnderscore = true;
+            } else {
+                break;
+            }
+        }
+
+        if (!sawDigit)
+            throw new LexicalException("16进制数字需至少包含一位", line, col);
+        if (lastUnderscore)
+            throw new LexicalException("16进制数字不能以下划线结尾", line, col);
+
+        if (!ctx.isAtEnd()) {
+            char next = ctx.peek();
+            if (SUFFIX_CHARS.indexOf(next) >= 0) {
+                literal.append(ctx.advance());
+                if (!ctx.isAtEnd()) {
+                    char peekAfterSuffix = ctx.peek();
+                    if (Character.isLetter(peekAfterSuffix)
+                            || Character.isDigit(peekAfterSuffix)
+                            || peekAfterSuffix == '.') {
+                        throw new LexicalException(
+                                "数字类型后缀只能是单字符，非法续接 '" + peekAfterSuffix + "'",
+                                line, col);
+                    }
+                }
+            } else if (Character.isLetter(next)) {
+                var its = new IdentifierTokenScanner();
+                var token = its.scanToken(ctx, line, col);
+                throw new LexicalException(
+                        "数字后不能紧跟未知标识符 '" + token.getLexeme() + "'", line, col);
+            } else if (next == '_') {
+                throw new LexicalException("数字后不能紧跟下划线 '_'", line, col);
+            }
+        }
+
         return new Token(TokenType.NUMBER_LITERAL, literal.toString().replace("_", ""), line, col);
     }
 

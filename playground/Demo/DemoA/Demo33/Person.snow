@@ -1,20 +1,20 @@
 module: Person
-struct:Person
-    fields:
-        declare name: int
-    init:
-        params:
+    struct: Person
+        fields:
             declare name: int
-        body:
-            this.name = name
-        end body
-    end init
+        init:
+            params:
+                declare name: int
+            body:
+                this.name = name
+            end body
+        end init
 
-	function: getName
-		returns: int
-		body:
-			return this.name
-		end body
-	end function
-end struct
+        function: getName
+            returns: int
+            body:
+                return this.name
+            end body
+        end function
+    end struct
 end module

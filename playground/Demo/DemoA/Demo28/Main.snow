@@ -9,7 +9,7 @@ module: Main
             declare name: string
             declare age: int
 
-        // 构造函数
+            // 构造函数
         init:
             params:
                 n: string
@@ -20,13 +20,13 @@ module: Main
             end body
         end init
 
-    function: getAge
-        returns: int
-        body:
-            // 获取字段 age
-            return this.age
-        end body
-    end function
+        function: getAge
+            returns: int
+            body:
+                // 获取字段 age
+                return this.age
+            end body
+        end function
 
         function: setAge
             params:

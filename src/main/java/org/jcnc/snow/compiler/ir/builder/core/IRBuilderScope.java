@@ -27,6 +27,10 @@ public final class IRBuilderScope {
      */
     private static final Map<String, Map<String, Integer>> STRUCT_LAYOUTS = new HashMap<>();
     /**
+     * 结构体字段类型表（全局共享）：结构体名 → (字段名 → 类型)
+     */
+    private static final Map<String, Map<String, String>> STRUCT_FIELD_TYPES = new HashMap<>();
+    /**
      * 结构体继承关系表（全局共享）：子类名 → 父类名
      */
     private static final Map<String, String> STRUCT_PARENTS = new HashMap<>();
@@ -69,6 +73,17 @@ public final class IRBuilderScope {
     }
 
     /**
+     * 注册结构体字段类型映射。
+     *
+     * @param structName   结构体名
+     * @param fieldToTypes 字段名到类型的映射
+     */
+    static void registerStructFieldTypes(String structName, Map<String, String> fieldToTypes) {
+        if (structName == null || fieldToTypes == null) return;
+        STRUCT_FIELD_TYPES.put(structName, new HashMap<>(fieldToTypes));
+    }
+
+    /**
      * 获取结构体的字段布局。
      * 支持全限定名与简单名查找。
      *
@@ -84,6 +99,43 @@ public final class IRBuilderScope {
             }
         }
         return layout == null ? null : Collections.unmodifiableMap(layout);
+    }
+
+    /**
+     * 获取结构体的字段类型映射。
+     * 支持全限定名与简单名查找。
+     *
+     * @param structName 结构体名或全限定名
+     * @return 字段名到类型的不可变映射表；若未注册则返回 null
+     */
+    public static Map<String, String> getStructFieldTypes(String structName) {
+        Map<String, String> types = STRUCT_FIELD_TYPES.get(structName);
+        if (types == null && structName != null) {
+            int dot = structName.lastIndexOf('.');
+            if (dot >= 0 && dot + 1 < structName.length()) {
+                types = STRUCT_FIELD_TYPES.get(structName.substring(dot + 1));
+            }
+        }
+        return types == null ? null : Collections.unmodifiableMap(types);
+    }
+
+    /**
+     * 获取结构体及其继承链上的字段类型。
+     *
+     * @param structName 结构体名
+     * @param fieldName  字段名
+     * @return 字段类型字符串，若未知则返回 null
+     */
+    public static String getStructFieldType(String structName, String fieldName) {
+        String cur = structName;
+        while (cur != null && !cur.isBlank()) {
+            Map<String, String> types = getStructFieldTypes(cur);
+            if (types != null && types.containsKey(fieldName)) {
+                return types.get(fieldName);
+            }
+            cur = getStructParent(cur);
+        }
+        return null;
     }
 
     /**

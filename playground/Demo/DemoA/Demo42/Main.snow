@@ -16,7 +16,7 @@ module: app
             line = io.stdin_read()
 
             // 以只写 + 创建 + 截断模式打开/创建文件
-			// flags = O_WRONLY | O_CREAT | O_TRUNC = 1 | 64 | 512 = 577
+            // flags = O_WRONLY | O_CREAT | O_TRUNC = 1 | 64 | 512 = 577
             fd1 = fd.open("output.txt", 577)
 
             // 将输入的文本写入文件并追加换行

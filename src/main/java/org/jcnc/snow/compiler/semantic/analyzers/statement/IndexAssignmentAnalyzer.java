@@ -10,6 +10,7 @@ import org.jcnc.snow.compiler.semantic.error.SemanticError;
 import org.jcnc.snow.compiler.semantic.symbol.SymbolTable;
 import org.jcnc.snow.compiler.semantic.type.ArrayType;
 import org.jcnc.snow.compiler.semantic.type.Type;
+import org.jcnc.snow.compiler.semantic.utils.NumericConstantUtils;
 
 /**
  * {@code IndexAssignmentAnalyzer} 用于分析和类型检查数组下标赋值语句。
@@ -64,7 +65,14 @@ public class IndexAssignmentAnalyzer implements StatementAnalyzer<IndexAssignmen
         Type rhsT = ctx.getRegistry()
                 .getExpressionAnalyzer(node.value())
                 .analyze(ctx, mi, fn, locals, node.value());
-        if (!rhsT.equals(elementType)) {
+        boolean compatible = elementType.isCompatible(rhsT);
+        boolean widenOK = elementType.isNumeric()
+                && rhsT.isNumeric()
+                && Type.widen(rhsT, elementType) == elementType;
+        boolean narrowingConst = NumericConstantUtils.canNarrowToIntegral(elementType, rhsT, node.value());
+        boolean narrowingNumeric = NumericConstantUtils.allowIntegralNarrowing(elementType, rhsT);
+
+        if (!compatible && !widenOK && !narrowingConst && !narrowingNumeric) {
             ctx.getErrors().add(new SemanticError(node,
                     "数组元素赋值类型不匹配: 期望 " + elementType.name() + "，实际 " + rhsT.name()));
         }

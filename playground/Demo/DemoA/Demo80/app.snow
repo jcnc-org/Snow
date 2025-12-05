@@ -1,17 +1,17 @@
 module: app
-	import: io
-	import: thread
+    import: io
+    import: thread
 
 
-	function: main
-	    params:
-	        declare args:any
-	    body:
-	        declare tid:int = thread.create("", "hello")
-	        io.stdout_write("新线程 tid=" + tid + "\n")
+    function: main
+        params:
+            declare args: any
+        body:
+            declare tid: int = thread.create("", "hello")
+            io.stdout_write("新线程 tid=" + tid + "\n")
 
-	        declare result:any = thread.join(tid)
-	        io.stdout_write("子线程返回值=" + result + "\n")
-	    end body
-	end function
+            declare result: any = thread.join(tid)
+            io.stdout_write("子线程返回值=" + result + "\n")
+        end body
+    end function
 end module

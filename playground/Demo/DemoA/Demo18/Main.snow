@@ -7,7 +7,7 @@ module: Main
         body:
             loop:
                 init:
-                    declare i:int = 1
+                    declare i: int = 1
                 cond:
                     i <= 5
                 step:
@@ -21,7 +21,7 @@ module: Main
                     end if
                     loop:
                         init:
-                            declare j:int = 1
+                            declare j: int = 1
                         cond:
                             j <= 5
                         step:

@@ -4,24 +4,24 @@ module: app
 
     function: main
         params:
-            declare args:any
+            declare args: any
         body:
 
             // ────────────── epoll 用到的常量 ──────────────
-            declare EPOLL_CTL_ADD:int = 1          // 与 Linux epoll_ctl 保持一致
-            declare EPOLLIN:int       = 1          // 关心 "可读" 事件
+            declare EPOLL_CTL_ADD: int = 1          // 与 Linux epoll_ctl 保持一致
+            declare EPOLLIN: int = 1          // 关心 "可读" 事件
 
             // 1) 创建 epoll 实例
-            declare epfd:int = multiplex.epoll_create(0)
+            declare epfd: int = multiplex.epoll_create(0)
             io.stdout_write("epoll_create 成功，epfd = " + epfd + "\n")
 
             // 2) 把标准输入 (fd=0) 注册到 epoll，监视可读
-            declare ctl_rc:int = multiplex.epoll_ctl(epfd, EPOLL_CTL_ADD, 0, EPOLLIN)
+            declare ctl_rc: int = multiplex.epoll_ctl(epfd, EPOLL_CTL_ADD, 0, EPOLLIN)
             io.stdout_write("epoll_ctl 返回值 = " + ctl_rc + "\n")
 
             // 3) 阻塞等待 5 秒，看用户是否输入数据
             io.stdout_write("请在 5 秒内输入一行文本，然后回车：\n")
-            declare ready:any = multiplex.epoll_wait(epfd, 16, 5000)
+            declare ready: any = multiplex.epoll_wait(epfd, 16, 5000)
 
             // 4) 输出 epoll_wait 的结果
             io.stdout_write("epoll_wait 返回: " + ready + "\n")

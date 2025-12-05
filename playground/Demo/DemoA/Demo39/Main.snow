@@ -2,6 +2,7 @@ module: app
     import: syscall.fs
     import: syscall.fd
     import: std_io
+    import: os_fs
 
     function: main
         params:
@@ -22,6 +23,7 @@ module: app
 
             // 打印写入的字节数
             std_io.println("字节数:" + n)
+            os_fs.remove_file("output.txt")
         end body
     end function
 end module

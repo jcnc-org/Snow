@@ -1,5 +1,5 @@
 module: Main
-	import: std_io
+    import: std_io
 
     function: main
         params:
@@ -8,17 +8,17 @@ module: Main
             declare b1: boolean = true
             loop:
                 init:
-                    declare i:int = 0
+                    declare i: int = 0
                 cond:
                     b1
                 step:
                     i = i + 1
                 body:
-                    if i==0 then
-					std_io.println(i)
-					else
-					return 1
-					end if
+                    if i == 0 then
+                        std_io.println(i)
+                    else
+                        return 1
+                    end if
                 end body
             end loop
             return 0

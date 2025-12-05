@@ -1,5 +1,6 @@
 package org.jcnc.snow.compiler.ir.builder.statement.utils;
 
+import org.jcnc.snow.common.NumberLiteralHelper;
 import org.jcnc.snow.compiler.ir.builder.statement.StatementBuilderContext;
 import org.jcnc.snow.compiler.parser.ast.*;
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
@@ -36,10 +37,11 @@ public record ConstFolder(StatementBuilderContext ctx) {
                 // 处理数字字面量（自动区分整型与浮点型）
                 String s = n.value();
                 try {
-                    if (s.contains(".") || s.contains("e") || s.contains("E")) {
-                        return Double.parseDouble(s);
+                    NumberLiteralHelper.NormalizedLiteral normalized = NumberLiteralHelper.normalize(s, true);
+                    if (NumberLiteralHelper.looksLikeFloat(normalized.text())) {
+                        return Double.parseDouble(normalized.text());
                     }
-                    return Integer.parseInt(s);
+                    return NumberLiteralHelper.parseIntLiteral(normalized.digits(), normalized.radix());
                 } catch (NumberFormatException ignored) {
                     return null;
                 }

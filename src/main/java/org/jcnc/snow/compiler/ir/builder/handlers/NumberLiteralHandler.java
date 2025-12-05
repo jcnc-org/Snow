@@ -25,7 +25,7 @@ public class NumberLiteralHandler implements ExpressionHandler<NumberLiteralNode
     @Override
     public IRVirtualRegister handle(ExpressionBuilder b, NumberLiteralNode n) {
         // 1. 自动判断数字类型，生成对应 IR 常量
-        IRConstant c = ExpressionUtils.buildNumberConstant(b.ctx(), n.value());
+        IRConstant c = ExpressionUtils.buildNumberConstant(b.ctx(), n.value(), n.context());
         // 2. 分配新寄存器
         IRVirtualRegister r = b.ctx().newRegister();
         // 3. 加载常量指令

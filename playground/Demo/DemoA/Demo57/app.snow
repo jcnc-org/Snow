@@ -6,6 +6,7 @@ module: app
     import: syscall.fd
     import: std_io.fs
     import: std_io
+    import: os_fs
 
     function: main
         params:
@@ -13,7 +14,7 @@ module: app
         body:
             declare fd1: int
             // 打开文件（这里只是示例，通常非阻塞用于 socket/pipe）
-            fd1 = fd.open("demo.txt",66)   // O_RDWR | O_CREAT
+            fd1 = fd.open("demo.txt", 66)   // O_RDWR | O_CREAT
 
             // 设置非阻塞模式
             fd.setNonblock(fd1, 1)
@@ -24,6 +25,7 @@ module: app
             std_io.println("fd 已切回阻塞模式")
 
             fd.close(fd1)
+            os_fs.remove_file("demo.txt")
         end body
     end function
 end module

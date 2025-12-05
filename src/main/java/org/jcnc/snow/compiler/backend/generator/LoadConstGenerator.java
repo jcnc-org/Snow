@@ -157,15 +157,15 @@ public class LoadConstGenerator implements InstructionGenerator<LoadConstInstruc
 
         // 4. Mark the slot's data type for later use (type inference, instruction selection, etc.)
         char prefix = switch (value) {
-            case Integer _ -> 'I';   // Integer
-            case Long _ -> 'L';      // Long
-            case Short _ -> 'S';     // Short
-            case Byte _ -> 'B';      // Byte
-            case Double _ -> 'D';    // Double
-            case Float _ -> 'F';     // Float
-            case Boolean _ -> 'I';   // Booleans are treated as integers (1/0)
-            case String _ -> 'R';    // Reference type for strings
-            case List<?> _ -> 'R'; // Reference type for arrays/lists
+            case Integer i -> 'I';   // Integer
+            case Long l -> 'L';      // Long
+            case Short s -> 'S';     // Short
+            case Byte b -> 'B';      // Byte
+            case Double d -> 'D';    // Double
+            case Float f -> 'F';     // Float
+            case Boolean b -> 'I';   // Booleans are treated as integers (1/0)
+            case String string -> 'R';    // Reference type for strings
+            case List<?> list -> 'R'; // Reference type for arrays/lists
             case null, default -> throw new IllegalStateException("Unknown constant type: "
                     + (value != null ? value.getClass() : null));
         };

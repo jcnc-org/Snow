@@ -24,6 +24,5 @@ import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
  * 有助于提升类型安全性与维护性。
  * </p>
  */
-public sealed interface IRValue
-        permits IRVirtualRegister, IRConstant, IRLabel {
+public interface IRValue {
 }

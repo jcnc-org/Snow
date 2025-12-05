@@ -1,0 +1,606 @@
+/**
+@module std_array
+@summary Snow 通用动态数组结构体封装。
+@description
+    对外提供结构体风格的数组操作接口；
+    底层通过 os_array 调用实际的数组/列表实现。
+*/
+module: std_array
+
+    import: os_array
+
+    /**
+    @struct std_array_iterator
+    @summary std_array 的简单迭代器实现
+    @description
+        持有底层数组引用和当前索引，提供 hasNext/next 方法，
+        便于在循环中顺序遍历元素。
+    */
+    struct: std_array_iterator
+
+        fields:
+            /**
+            @field data
+            @summary 被迭代的底层数组/列表引用
+            */
+            declare data: any
+
+            /**
+            @field index
+            @summary 当前迭代位置索引（下一个要读取的位置）
+            */
+            declare index: int
+
+        /**
+        @init with_data
+        @summary 使用原始数组/列表创建迭代器
+        @param arrayData 要遍历的底层数组/列表
+        */
+        init:
+            params:
+                declare arrayData: any
+            body:
+                data = arrayData
+                index = 0
+            end body
+        end init
+
+        /**
+        @function hasNext
+        @summary 判断是否还有下一个元素
+        @returns true 若还有元素可读，否则 false
+        */
+        function: hasNext
+            returns: boolean
+            body:
+                declare len: int = os_array.length(data)
+                return index < len
+            end body
+        end function
+
+        /**
+        @function next
+        @summary 返回当前元素并将迭代位置向前移动一位
+        @description 若没有更多元素，行为由底层 get 决定（通常抛出异常）。
+        */
+        function: next
+            returns: any
+            body:
+                declare value: any = os_array.get(data, index)
+                index = index + 1
+                return value
+            end body
+        end function
+
+    end struct
+
+    /**
+    @struct std_array
+    @summary Snow 通用动态数组封装
+    @description
+        - 内部持有一个列表引用（通常为 any[]）
+        - 所有操作都通过 os_array 稳定层完成
+    */
+    struct: std_array
+
+        fields:
+            /**
+            @field data
+            @summary 内部真实数组/列表引用
+            */
+            declare data: any
+
+        /**
+        @init default
+        @summary 无参构造函数，创建空数组
+        */
+        init:
+            body:
+                declare tmp: any[] = []
+                data = tmp
+            end body
+        end init
+
+        /**
+        @init with_initial_data
+        @summary 从已有数组/列表创建 std_array 包装
+        @param initial_data 任意可被 os_array 识别的数组/列表
+        */
+        init:
+            params:
+                declare initial_data: any
+            body:
+                data = initial_data
+            end body
+        end init
+
+        /**
+        @function length
+        @summary 获取数组长度
+        */
+        function: length
+            returns: int
+            body:
+                return os_array.length(data)
+            end body
+        end function
+
+        /**
+        @function isEmpty
+        @summary 判断数组是否为空
+        */
+        function: isEmpty
+            returns: boolean
+            body:
+                declare len: int = length()
+                return len == 0
+            end body
+        end function
+
+        /**
+        @function get
+        @summary 获取指定索引处的元素
+        @param index 索引（从 0 开始）
+        */
+        function: get
+            params:
+                declare index: int
+            returns: any
+            body:
+                return os_array.get(data, index)
+            end body
+        end function
+
+        /**
+        @function set
+        @summary 设置指定索引处的元素值
+        @param index 索引（从 0 开始）
+        @param value 新值
+        */
+        function: set
+            params:
+                declare index: int
+                declare value: any
+            returns: void
+            body:
+                // os_array.set 返回长度，这里忽略，仅做就地修改
+                os_array.set(data, index, value)
+            end body
+        end function
+
+        /**
+        @function append
+        @summary 在数组末尾追加元素（等价于 push，但不返回长度）
+        @param value 要追加的值
+        */
+        function: append
+            params:
+                declare value: any
+            returns: void
+            body:
+                os_array.push(data, value)
+            end body
+        end function
+
+        /**
+        @function push
+        @summary 在数组末尾追加元素并返回新长度
+        @param value 要追加的值
+        @returns 追加后的长度
+        */
+        function: push
+            params:
+                declare value: any
+            returns: int
+            body:
+                return os_array.push(data, value)
+            end body
+        end function
+
+        /**
+        @function pop
+        @summary 移除并返回末尾元素
+        @returns 若为空，返回 ""（由 os_array 定义）
+        */
+        function: pop
+            returns: any
+            body:
+                return os_array.pop(data)
+            end body
+        end function
+
+        /**
+        @function insert
+        @summary 在指定索引处插入元素
+        @description 原位置及之后的元素向后移动一位
+        @param index 插入位置，范围 [0, length]
+        @param value 插入的值
+        */
+        function: insert
+            params:
+                declare index: int
+                declare value: any
+            returns: void
+            body:
+                os_array.insert(data, index, value)
+            end body
+        end function
+
+        /**
+        @function removeAt
+        @summary 删除指定索引位置的元素
+        @param index 待删除元素索引
+        @returns 被删除的元素
+        */
+        function: removeAt
+            params:
+                declare index: int
+            returns: any
+            body:
+                return os_array.remove(data, index)
+            end body
+        end function
+
+        /**
+        @function resize
+        @summary 调整数组长度
+        @param newLen 新长度（>= 0）
+        @returns 调整后的长度
+        */
+        function: resize
+            params:
+                declare newLen: int
+            returns: int
+            body:
+                return os_array.resize(data, newLen)
+            end body
+        end function
+
+        /**
+        @function clear
+        @summary 清空数组
+        */
+        function: clear
+            returns: void
+            body:
+                os_array.clear(data)
+            end body
+        end function
+
+        /**
+        @function contains
+        @summary 判断数组是否包含指定值（基于字符串化的宽松比较）
+        @param value 要查找的值
+        @returns true 若存在，否则 false
+        */
+        function: contains
+            params:
+                declare value: any
+            returns: boolean
+            body:
+                declare len: int = length()
+
+                loop:
+                    init:
+                        declare i: int = 0
+                    cond:
+                        i < len
+                    step:
+                        i = i + 1
+                    body:
+                        declare elem: any = get(i)
+                        if "" + elem == "" + value then
+                            return 1
+                        end if
+                    end body
+                end loop
+
+                return 0
+            end body
+        end function
+
+        /**
+        @function indexOf
+        @summary 查找指定值首次出现的索引（基于字符串化的宽松比较）
+        @param value 要查找的值
+        @returns 首次出现的索引，未找到返回 -1
+        */
+        function: indexOf
+            params:
+                declare value: any
+            returns: int
+            body:
+                declare len: int = length()
+
+                loop:
+                    init:
+                        declare i: int = 0
+                    cond:
+                        i < len
+                    step:
+                        i = i + 1
+                    body:
+                        declare elem: any = get(i)
+                        if "" + elem == "" + value then
+                            return i
+                        end if
+                    end body
+                end loop
+
+                return -1
+            end body
+        end function
+
+        /**
+        @function lastIndexOf
+        @summary 查找指定值最后一次出现的索引（基于字符串化的宽松比较）
+        @param value 要查找的值
+        @returns 最后一次出现的索引，未找到返回 -1
+        */
+        function: lastIndexOf
+            params:
+                declare value: any
+            returns: int
+            body:
+                declare len: int = length()
+
+                // 从最后一个元素开始向前查找
+                loop:
+                    init:
+                        declare i: int = len - 1
+                    cond:
+                        i >= 0
+                    step:
+                        i = i - 1
+                    body:
+                        declare elem: any = get(i)
+                        if "" + elem == "" + value then
+                            return i
+                        end if
+                    end body
+                end loop
+
+                return -1
+            end body
+        end function
+
+        /**
+        @function reverse
+        @summary 原地反转数组
+        */
+        function: reverse
+            returns: void
+            body:
+                declare len: int = length()
+                declare left: int = 0
+                declare right: int = len - 1
+
+                loop:
+                    init:
+                        declare i: int = 0
+                    cond:
+                        left < right
+                    step:
+                        i = i + 1
+                    body:
+                        declare lv: any = get(left)
+                        declare rv: any = get(right)
+                        set(left, rv)
+                        set(right, lv)
+
+                        left = left + 1
+                        right = right - 1
+                    end body
+                end loop
+            end body
+        end function
+
+        /**
+        @function getFirst
+        @summary 获取第一个元素
+        @description 若数组为空，将抛出底层 get 的异常。
+        */
+        function: getFirst
+            returns: any
+            body:
+                return get(0)
+            end body
+        end function
+
+        /**
+        @function getLast
+        @summary 获取最后一个元素
+        @description 若数组为空，将抛出底层 get 的异常。
+        */
+        function: getLast
+            returns: any
+            body:
+                declare len: int = length()
+                return get(len - 1)
+            end body
+        end function
+
+        /**
+        @function iterator
+        @summary 创建一个迭代器，用于遍历当前数组
+        @returns std_array_iterator 实例
+        */
+        function: iterator
+            returns: std_array_iterator
+            body:
+                return new std_array_iterator(data)
+            end body
+        end function
+
+        /**
+        @function clone
+        @summary 创建当前数组的浅拷贝（内容复制，底层存储分离）
+        @returns 一个新的 std_array，包含相同元素
+        */
+        function: clone
+            returns: std_array
+            body:
+                declare len: int = length()
+                declare newData: any[] = []
+
+                // 逐个 push 复制元素
+                loop:
+                    init:
+                        declare i: int = 0
+                    cond:
+                        i < len
+                    step:
+                        i = i + 1
+                    body:
+                        declare elem: any = get(i)
+                        os_array.push(newData, elem)
+                    end body
+                end loop
+
+                return new std_array(newData)
+            end body
+        end function
+
+        /**
+        @function copy
+        @summary 复制当前数组（语义等同于 clone）
+        @returns 一个新的 std_array，包含相同元素
+        */
+        function: copy
+            returns: std_array
+            body:
+                return clone()
+            end body
+        end function
+
+        /**
+        @function equals
+        @summary 比较两个 std_array 是否“元素相等”
+        @description
+            - 若长度不同则返回 false；
+            - 若对应位置元素字符串化后都相等，则返回 true；
+            - 否则返回 false。
+        @param other 要比较的另一个 std_array
+        @returns 若相等返回 true，否则 false
+        */
+        function: equals
+            params:
+                declare other: std_array
+            returns: boolean
+            body:
+                declare len1: int = length()
+                declare len2: int = other.length()
+
+                if len1 != len2 then
+                    return 0
+                end if
+
+                loop:
+                    init:
+                        declare i: int = 0
+                    cond:
+                        i < len1
+                    step:
+                        i = i + 1
+                    body:
+                        declare a: any = get(i)
+                        declare b: any = other.get(i)
+                        if "" + a != "" + b then
+                            return 0
+                        end if
+                    end body
+                end loop
+
+                return 1
+            end body
+        end function
+
+        /**
+        @function toString
+        @summary 返回便于调试的字符串表示
+        @returns 类似 "std_array(len=3)[1, 2, 3]" 的字符串
+        */
+        function: toString
+            returns: string
+            body:
+                declare len: int = length()
+                declare s: string = "std_array(len=" + ("" + len) + ")["
+
+                loop:
+                    init:
+                        declare i: int = 0
+                    cond:
+                        i < len
+                    step:
+                        i = i + 1
+                    body:
+                        declare elem: any = get(i)
+                        s = s + ("" + elem)
+                        if i < len - 1 then
+                            s = s + ", "
+                        end if
+                    end body
+                end loop
+
+                s = s + "]"
+                return s
+            end body
+        end function
+
+        /**
+        @function toRawArray
+        @summary 取得内部原始数组/列表引用
+        @returns 内部 data 引用（注意：为同一引用，修改会影响 std_array）
+        */
+        function: toRawArray
+            returns: any
+            body:
+                return data
+            end body
+        end function
+
+    end struct
+
+    /**
+    @function newArray
+    @summary 创建空 std_array
+    */
+    function: newArray
+        returns: std_array
+        body:
+            return new std_array()
+        end body
+    end function
+
+    /**
+    @function newArrayWithCapacity
+    @summary 创建指定初始容量的 std_array
+    @description
+        当前实现中 capacity 仅作语义占位，
+        实际容量管理由底层实现负责，返回的数组初始长度仍为 0。
+    */
+    function: newArrayWithCapacity
+        params:
+            declare capacity: int
+        returns: std_array
+        body:
+            // 目前没有显式容量 API，先返回空数组实例
+            return new std_array()
+        end body
+    end function
+
+    /**
+    @function fromRawArray
+    @summary 从原始数组/列表创建 std_array 包装
+    @param raw 原始数组/列表
+    */
+    function: fromRawArray
+        params:
+            declare raw: any
+        returns: std_array
+        body:
+            return new std_array(raw)
+        end body
+    end function
+
+end module

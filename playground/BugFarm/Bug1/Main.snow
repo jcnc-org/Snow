@@ -3,7 +3,7 @@ module: Main
     function: main
         returns: void
         body:
-            declare abc:int =1
+            declare abc: int = 1
             std_io.println(abc)
         end body
     end function

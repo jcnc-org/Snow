@@ -1,0 +1,92 @@
+/**
+@module std_io
+@summary 标准输入输出的标准库接口。
+@details
+    本模块提供面向用户标准 I/O 接口，
+    封装了 os_io 层的过程式 API，使常见的输入输出操作更直观易用。
+*/
+module: std_io
+    import: os_io
+
+    /**
+    @function print
+    @summary 向标准输出写入内容（不自动换行）。
+    @param x 任意对象，将被转为字符串后输出。
+    @returns 实际写入的字节数。
+    @throws IOException I/O 操作失败时抛出异常。
+    */
+    function: print
+        params:
+            declare x: any
+        returns: int
+        body:
+            return os_io.stdout_write("" + x)
+        end body
+    end function
+
+    /**
+    @function println
+    @summary 向标准输出写入内容并自动追加换行符。
+    @param x 任意对象，将被转为字符串后输出。
+    @returns 实际写入的字节数。
+    @throws IOException I/O 操作失败时抛出异常。
+    */
+    function: println
+        params:
+            declare x: any
+        returns: int
+        body:
+            return os_io.stdout_write(("" + x) + os_io.NEWLINE)
+        end body
+    end function
+
+    /**
+    @function eprint
+    @summary 向标准错误输出（stderr）写入内容（不自动换行）。
+    @param x 任意对象，将被转为字符串后输出。
+    @returns 写入结果码（由底层 os_io 定义，通常为 0）。
+    @throws IOException I/O 操作失败时抛出异常。
+    */
+    function: eprint
+        params:
+            declare x: any
+        returns: int
+        body:
+            return os_io.stderr_write("" + x)
+        end body
+    end function
+
+    /**
+    @function eprintln
+    @summary 向标准错误输出（stderr）写入内容并自动追加换行符。
+    @param x 任意对象，将被转为字符串后输出。
+    @returns 写入结果码（由底层 os_io 定义，为 0）。
+    @throws IOException I/O 操作失败时抛出异常。
+    */
+    function: eprintln
+        params:
+            declare x: any
+        returns: int
+        body:
+            return os_io.stderr_write(("" + x) + os_io.NEWLINE)
+        end body
+    end function
+
+    /**
+    @function read_line
+    @summary 从标准输入读取一行文本。
+    @returns 读取到的字符串。若遇 EOF，返回空字符串 ""。
+    @throws IOException I/O 操作失败时抛出异常。
+    @example
+        declare line:string = std_io.read_line()
+        std_io.println("输入内容: " + line)
+    */
+    function: read_line
+        params:
+        returns: string
+        body:
+            return os_io.read_line()
+        end body
+    end function
+
+end module
