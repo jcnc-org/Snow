@@ -149,7 +149,7 @@ public class DeclarationHandler implements IStatementHandler {
             return;
         }
 
-        // ——无预存在寄存器：执行正常声明流程——
+        // 无预存在寄存器：执行正常声明流程
         if (decl.getInitializer().isPresent()) {
             ExpressionNode init = decl.getInitializer().get();
 
