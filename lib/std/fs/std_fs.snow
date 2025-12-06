@@ -145,7 +145,8 @@ module: std_fs
                         keep = keep
                     body:
                         declare chunk: any = os_fd.read_bytes(fd, 4096)
-                        if chunk == -1 then
+                        declare chunkStr: string = "" + chunk
+                        if chunkStr == "-1" then
                             break
                         end if
 
@@ -163,7 +164,8 @@ module: std_fs
                             step:
                                 i = i + 1
                             body:
-                                syscall("0x1810", data, chunk[i])
+                                declare b: int = syscall("0x1802", chunk, i)
+                                syscall("0x1810", data, b)
                             end body
                         end loop
                     end body

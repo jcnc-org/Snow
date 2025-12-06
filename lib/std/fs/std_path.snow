@@ -195,7 +195,8 @@ module: std_path
                 absolute = true
             end if
 
-            declare segments: string[] = []
+            declare segments: any = []
+            declare segCount: int = 0
             declare current: string = ""
 
             declare i: int = 0
@@ -212,11 +213,30 @@ module: std_path
                         ch = 47    // sentinel '/'
                     else
                         ch = bytes[i]
+                        if ch == 92 then
+                            ch = 47
+                        end if
                     end if
 
                     if std_path._isSeparator(ch) then
                         if current != "" then
-                            std_path._consumeSegment(segments, current, absolute)
+                            if current == "." then
+                                // skip
+                            else
+                                if current == ".." then
+                                    if segCount > 0 then
+                                        segCount = segCount - 1
+                                    else
+                                        if absolute == false then
+                                            syscall("0x1803", segments, segCount, current)
+                                            segCount = segCount + 1
+                                        end if
+                                    end if
+                                else
+                                    syscall("0x1803", segments, segCount, current)
+                                    segCount = segCount + 1
+                                end if
+                            end if
                             current = ""
                         end if
                     else
@@ -225,8 +245,7 @@ module: std_path
                 end body
             end loop
 
-            declare count: int = syscall("0x1801", segments)
-            if count == 0 then
+            if segCount == 0 then
                 if absolute then
                     return "/"
                 end if
@@ -243,24 +262,17 @@ module: std_path
                 init:
                     idx = idx
                 cond:
-                    idx < count
+                    idx < segCount
                 step:
                     idx = idx + 1
                 body:
                     if result != "" && std_path._endsWithSep(result) == false then
                         result = result + "/"
                     end if
-                    result = result + syscall("0x1802", segments, idx)
+                    declare segVal: string = "" + syscall("0x1802", segments, idx)
+                    result = result + segVal
                 end body
             end loop
-
-            if result == "" then
-                if absolute then
-                    return "/"
-                else
-                    return "."
-                end if
-            end if
 
             return result
         end body
@@ -305,37 +317,6 @@ module: std_path
     end function
 
     /**
-    @function _consumeSegment
-    @summary 将一个片段写入 segments，处理 "." 与 ".."。
-    */
-    function: _consumeSegment
-        params:
-            declare segments: string[]
-            declare segment: string
-            declare absolute: boolean
-        returns: void
-        body:
-            if segment == "." then
-                return
-            end if
-
-            if segment == ".." then
-                declare count: int = syscall("0x1801", segments)
-                if count > 0 then
-                    syscall("0x1811", segments)
-                    return
-                end if
-                if absolute == false then
-                    syscall("0x1810", segments, segment)
-                end if
-                return
-            end if
-
-            syscall("0x1810", segments, segment)
-        end body
-    end function
-
-    /**
     @function _fromByte
     @summary 将单个字节值转为字符串。
     */
@@ -344,9 +325,7 @@ module: std_path
             declare b: int
         returns: string
         body:
-            declare buf: any = syscall("0x1903", 1)
-            syscall("0x1803", buf, 0, b)
-            return "" + buf
+            return std_string._charToString(b)
         end body
     end function
 
