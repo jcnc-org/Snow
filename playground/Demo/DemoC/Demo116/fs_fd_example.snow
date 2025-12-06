@@ -1,0 +1,10 @@
+module: main
+	import: std_io
+
+	function: main
+		returns: void
+		body:
+
+		end body
+	end function
+end module
