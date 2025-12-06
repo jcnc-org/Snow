@@ -9,6 +9,7 @@ module: os_fs
     import: fs
     import: fd
     import: os_fd
+    import: std_string
 
     /**
     @function current_dir
@@ -239,5 +240,254 @@ module: os_fs
             os_fd.close(handle)
         end body
     end function
+
+    /**
+    @function exists
+    @summary 判断路径是否存在。
+    */
+    function: exists
+        params:
+            declare path: any
+        returns: boolean
+        body:
+            declare info: any = fd.stat(path)
+            if info == -1 then
+                return false
+            end if
+            return true
+        end body
+    end function
+
+    /**
+    @function is_file
+    @summary 判断路径是否为常规文件。
+    */
+    function: is_file
+        params:
+            declare path: any
+        returns: boolean
+        body:
+            if os_fs.exists(path) == false then
+                return false
+            end if
+
+            // readdir 成功表示目录；失败则按常规文件处理
+            declare entries: any = fs.readdir(path)
+            if entries == -1 then
+                return true
+            end if
+            return false
+        end body
+    end function
+
+    /**
+    @function is_dir
+    @summary 判断路径是否为目录。
+    */
+    function: is_dir
+        params:
+            declare path: any
+        returns: boolean
+        body:
+            declare entries: any = fs.readdir(path)
+            if entries == -1 then
+                return false
+            end if
+            return true
+        end body
+    end function
+
+    /**
+    @function read_text
+    @summary 读取文本文件的全部内容，按 UTF-8 返回字符串。
+    */
+    function: read_text
+        params:
+            declare path: any
+        returns: string
+        body:
+            declare handle: int = os_fd.open_read(path)
+            if handle == -1 then
+                return ""
+            end if
+            declare content: string = ""
+
+            loop:
+                init:
+                    declare keep: boolean = true
+                cond:
+                    keep
+                step:
+                    keep = keep
+                body:
+                    declare chunk: any = os_fd.read_bytes(handle, 4096)
+                    if chunk == -1 then
+                        break
+                    end if
+
+                    declare chunkLen: int = syscall("0x1801", chunk)
+                    if chunkLen == 0 then
+                        break
+                    end if
+
+                    content = content + std_string.fromBytes(chunk)
+                end body
+            end loop
+
+            os_fd.close(handle)
+            return content
+        end body
+    end function
+
+    /**
+    @function write_text
+    @summary 将字符串完整写入指定路径（如需会创建/截断）。
+    */
+    function: write_text
+        params:
+            declare path: any
+            declare content: string
+        returns: void
+        body:
+            declare handle: int = os_fd.open_write(path, true, true)
+            if handle == -1 then
+                return
+            end if
+            os_fd.write_bytes(handle, content)
+            os_fd.close(handle)
+        end body
+    end function
+
+    /**
+    @struct File
+    @summary 轻量文件句柄封装，提供 open/read/write/close。
+    */
+    struct: File
+
+        fields:
+            declare fd: int
+            declare path: string
+
+        /**
+        @init default
+        @summary 默认构造，fd 设为 -1。
+        */
+        init:
+            body:
+                fd = -1
+                path = ""
+            end body
+        end init
+
+        /**
+        @function open
+        @summary 按模式打开文件（r/w/a/rw）。
+        */
+        function: open
+            params:
+                declare target: any
+                declare mode: string
+            returns: void
+            body:
+                path = "" + target
+                declare m: string = mode
+
+                if m == "r" then
+                    fd = os_fd.open_read(path)
+                else
+                    if m == "w" then
+                        fd = os_fd.open_write(path, true, true)
+                    else
+                        if m == "a" then
+                            fd = os_fd.open_append(path)
+                        else
+                            // 其他模式一律视作读写打开，必要时创建
+                            fd = os_fd.open_readwrite(path, true, false)
+                        end if
+                    end if
+                end if
+            end body
+        end function
+
+        /**
+        @function read_all_bytes
+        @summary 读取文件全部字节内容。
+        */
+        function: read_all_bytes
+            returns: byte[]
+            body:
+                if fd == -1 then
+                    declare empty: byte[] = []
+                    return empty
+                end if
+
+                declare data: byte[] = []
+
+                loop:
+                    init:
+                        declare keep: boolean = true
+                    cond:
+                        keep
+                    step:
+                        keep = keep
+                    body:
+                        declare chunk: any = os_fd.read_bytes(fd, 4096)
+                        if chunk == -1 then
+                            break
+                        end if
+
+                        declare chunkLen: int = syscall("0x1801", chunk)
+                        if chunkLen == 0 then
+                            break
+                        end if
+
+                        declare i: int = 0
+                        loop:
+                            init:
+                                i = i
+                            cond:
+                                i < chunkLen
+                            step:
+                                i = i + 1
+                            body:
+                                syscall("0x1810", data, chunk[i])
+                            end body
+                        end loop
+                    end body
+                end loop
+
+                return data
+            end body
+        end function
+
+        /**
+        @function write_bytes
+        @summary 将字节或字符串写入当前 fd。
+        */
+        function: write_bytes
+            params:
+                declare bytes: any
+            returns: int
+            body:
+                if fd == -1 then
+                    return 0
+                end if
+                return os_fd.write_bytes(fd, bytes)
+            end body
+        end function
+
+        /**
+        @function close
+        @summary 关闭文件。
+        */
+        function: close
+            returns: void
+            body:
+                os_fd.close(fd)
+                fd = -1
+            end body
+        end function
+
+    end struct
 
 end module

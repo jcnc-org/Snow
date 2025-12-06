@@ -1,3 +1,353 @@
+/**
+@module std_path
+@summary 基础路径字符串工具，提供拼接、规范化与拆解能力。
+*/
 module: std_path
+    import: std_string
+
+    /**
+    @function join
+    @summary 将 base 与 sub 拼为单一路径并规范化。
+    */
+    function: join
+        params:
+            declare base: string
+            declare sub: string
+        returns: string
+        body:
+            if base == "" then
+                return std_path.normalize(sub)
+            end if
+            if sub == "" then
+                return std_path.normalize(base)
+            end if
+
+            declare subBytes: byte[] = std_string.toBytes(sub)
+            declare subLen: int = syscall("0x1801", subBytes)
+            if subLen > 0 && std_path._isSeparator(subBytes[0]) then
+                return std_path.normalize(sub)
+            end if
+
+            declare combined: string = base
+            if std_path._endsWithSep(combined) == false then
+                combined = combined + "/"
+            end if
+            combined = combined + sub
+
+            return std_path.normalize(combined)
+        end body
+    end function
+
+    /**
+    @function basename
+    @summary 返回路径的文件名部分。
+    */
+    function: basename
+        params:
+            declare path: string
+        returns: string
+        body:
+            declare norm: string = std_path.normalize(path)
+            declare len: int = std_string.length(norm)
+            if len == 0 then
+                return ""
+            end if
+
+            declare data: byte[] = std_string.toBytes(norm)
+            declare lastSep: int = -1
+            declare i: int = 0
+            loop:
+                init:
+                    i = i
+                cond:
+                    i < len
+                step:
+                    i = i + 1
+                body:
+                    if std_path._isSeparator(data[i]) then
+                        lastSep = i
+                    end if
+                end body
+            end loop
+
+            if lastSep == -1 then
+                return norm
+            end if
+            if lastSep == len - 1 then
+                return "/"
+            end if
+
+            return std_string.substring(norm, lastSep + 1, len)
+        end body
+    end function
+
+    /**
+    @function dirname
+    @summary 返回路径的目录部分。
+    */
+    function: dirname
+        params:
+            declare path: string
+        returns: string
+        body:
+            declare norm: string = std_path.normalize(path)
+            declare len: int = std_string.length(norm)
+            if len == 0 then
+                return "."
+            end if
+
+            declare data: byte[] = std_string.toBytes(norm)
+            declare lastSep: int = -1
+            declare i: int = 0
+            loop:
+                init:
+                    i = i
+                cond:
+                    i < len
+                step:
+                    i = i + 1
+                body:
+                    if std_path._isSeparator(data[i]) then
+                        lastSep = i
+                    end if
+                end body
+            end loop
+
+            if lastSep == -1 then
+                return "."
+            end if
+            if lastSep == 0 then
+                return "/"
+            end if
+
+            return std_string.substring(norm, 0, lastSep)
+        end body
+    end function
+
+    /**
+    @function extname
+    @summary 返回路径的扩展名（含点），无扩展名返回空字符串。
+    */
+    function: extname
+        params:
+            declare path: string
+        returns: string
+        body:
+            declare norm: string = std_path.normalize(path)
+            declare len: int = std_string.length(norm)
+            if len == 0 then
+                return ""
+            end if
+
+            declare data: byte[] = std_string.toBytes(norm)
+            declare lastSep: int = -1
+            declare lastDot: int = -1
+
+            declare i: int = 0
+            loop:
+                init:
+                    i = i
+                cond:
+                    i < len
+                step:
+                    i = i + 1
+                body:
+                    declare ch: int = data[i]
+                    if ch == 46 then              // '.'
+                        lastDot = i
+                    end if
+                    if std_path._isSeparator(ch) then
+                        lastSep = i
+                        lastDot = -1
+                    end if
+                end body
+            end loop
+
+            if lastDot == -1 then
+                return ""
+            end if
+            if lastDot == len - 1 then
+                return ""
+            end if
+
+            return std_string.substring(norm, lastDot, len)
+        end body
+    end function
+
+    /**
+    @function normalize
+    @summary 规范化路径，折叠重复分隔符并处理 "." 与 ".."。
+    */
+    function: normalize
+        params:
+            declare path: string
+        returns: string
+        body:
+            declare rawLen: int = std_string.length(path)
+            if rawLen == 0 then
+                return "."
+            end if
+
+            declare bytes: byte[] = std_string.toBytes(path)
+            declare len: int = syscall("0x1801", bytes)
+            declare absolute: boolean = false
+            if len > 0 && std_path._isSeparator(bytes[0]) then
+                absolute = true
+            end if
+
+            declare segments: string[] = []
+            declare current: string = ""
+
+            declare i: int = 0
+            loop:
+                init:
+                    i = i
+                cond:
+                    i <= len
+                step:
+                    i = i + 1
+                body:
+                    declare ch: int
+                    if i == len then
+                        ch = 47    // sentinel '/'
+                    else
+                        ch = bytes[i]
+                    end if
+
+                    if std_path._isSeparator(ch) then
+                        if current != "" then
+                            std_path._consumeSegment(segments, current, absolute)
+                            current = ""
+                        end if
+                    else
+                        current = current + std_path._fromByte(ch)
+                    end if
+                end body
+            end loop
+
+            declare count: int = syscall("0x1801", segments)
+            if count == 0 then
+                if absolute then
+                    return "/"
+                end if
+                return "."
+            end if
+
+            declare result: string = ""
+            if absolute then
+                result = "/"
+            end if
+
+            declare idx: int = 0
+            loop:
+                init:
+                    idx = idx
+                cond:
+                    idx < count
+                step:
+                    idx = idx + 1
+                body:
+                    if result != "" && std_path._endsWithSep(result) == false then
+                        result = result + "/"
+                    end if
+                    result = result + syscall("0x1802", segments, idx)
+                end body
+            end loop
+
+            if result == "" then
+                if absolute then
+                    return "/"
+                else
+                    return "."
+                end if
+            end if
+
+            return result
+        end body
+    end function
+
+    /**
+    @function _isSeparator
+    @summary 判断字符是否为路径分隔符。
+    */
+    function: _isSeparator
+        params:
+            declare ch: int
+        returns: boolean
+        body:
+            if ch == 47 then
+                return true
+            end if
+            if ch == 92 then
+                return true
+            end if
+            return false
+        end body
+    end function
+
+    /**
+    @function _endsWithSep
+    @summary 判断字符串是否以分隔符结尾。
+    */
+    function: _endsWithSep
+        params:
+            declare s: string
+        returns: boolean
+        body:
+            declare len: int = std_string.length(s)
+            if len == 0 then
+                return false
+            end if
+            declare bytes: byte[] = std_string.toBytes(s)
+            declare last: int = bytes[len - 1]
+            return std_path._isSeparator(last)
+        end body
+    end function
+
+    /**
+    @function _consumeSegment
+    @summary 将一个片段写入 segments，处理 "." 与 ".."。
+    */
+    function: _consumeSegment
+        params:
+            declare segments: string[]
+            declare segment: string
+            declare absolute: boolean
+        returns: void
+        body:
+            if segment == "." then
+                return
+            end if
+
+            if segment == ".." then
+                declare count: int = syscall("0x1801", segments)
+                if count > 0 then
+                    syscall("0x1811", segments)
+                    return
+                end if
+                if absolute == false then
+                    syscall("0x1810", segments, segment)
+                end if
+                return
+            end if
+
+            syscall("0x1810", segments, segment)
+        end body
+    end function
+
+    /**
+    @function _fromByte
+    @summary 将单个字节值转为字符串。
+    */
+    function: _fromByte
+        params:
+            declare b: int
+        returns: string
+        body:
+            declare buf: any = syscall("0x1903", 1)
+            syscall("0x1803", buf, 0, b)
+            return "" + buf
+        end body
+    end function
 
 end module
