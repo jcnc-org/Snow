@@ -1,0 +1,19 @@
+module: main
+	import: std_io
+	globals:
+		declare counter: int = 999
+
+	function: helper
+		returns: void
+		body:
+			std_io.println("helper 里看到 counter：" + counter)
+		end body
+	end function
+
+	function: main
+		returns: void
+		body:
+			std_io.println("main 入口看到 counter：" + counter)
+		end body
+	end function
+end module

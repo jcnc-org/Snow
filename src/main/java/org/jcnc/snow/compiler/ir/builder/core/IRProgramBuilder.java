@@ -17,25 +17,24 @@ import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
 import java.util.*;
 
 /**
- * {@code IRProgramBuilder} 负责将 AST 顶层节点（如模块、函数、语句等）
- * 构建并转换为可执行的 {@link IRProgram}。
- * <p>
- * 主要职责包括：
+ * IRProgramBuilder 负责将 AST 的顶层结构（模块、函数、语句等）构建为可执行的 IRProgram。
+ *
+ * <p>核心流程包括：</p>
  * <ul>
- *   <li>扫描所有模块，将 <code>declare const</code> 编译期常量注册到全局常量表，实现跨模块常量折叠。</li>
- *   <li>注册所有 struct 的字段布局，为成员访问提供支持，兼容继承。</li>
- *   <li>为 struct 的 init 方法和成员方法降级为普通函数，并注册为唯一函数名。</li>
- *   <li>为模块内函数名添加前缀，保证命名唯一，并按需注入全局声明。</li>
- *   <li>将独立顶层语句封装为特殊 "_start" 函数，支持脚本式语法入口。</li>
+ *   <li>预扫描所有模块，加载编译期常量至全局常量表，实现跨模块常量折叠。</li>
+ *   <li>注册所有 struct 的字段布局，并处理继承关系，为成员访问与布局查询提供支持。</li>
+ *   <li>预注册所有 struct 的构造函数及成员方法的签名，用于构建阶段的类型查询。</li>
+ *   <li>将 struct 的方法降级为普通函数（重命名并注入隐式 this 参数）并加入 IR 程序。</li>
+ *   <li>为模块内函数自动添加模块名前缀并按需注入全局声明。</li>
+ *   <li>将顶层语句包装为特殊入口函数 "_start" 便于脚本式执行。</li>
  * </ul>
- * <p>
- * 本类为工具类，所有行为静态无状态（除注入追踪），禁止外部持有状态。
- * </p>
- * <p>
- * <b>注意事项：</b>
+ *
+ * <p>本类为无状态工具类（除全局注入追踪），外部不应持有其实例。</p>
+ *
+ * <p><b>注意：</b></p>
  * <ul>
- *   <li>请勿直接修改全局表，均通过本类预处理方法。</li>
- *   <li>异常处理严格，遇到不支持节点类型会抛出 {@link IllegalStateException}。</li>
+ *   <li>禁止外部直接操作全局表，应通过本类的预处理流程完成。</li>
+ *   <li>如遇无法处理的顶层节点类型，将抛出 IllegalStateException。</li>
  * </ul>
  */
 public final class IRProgramBuilder {
@@ -396,11 +395,12 @@ public final class IRProgramBuilder {
     }
 
     /**
-     * 重命名函数节点，只修改名称，其他属性保持不变。
+     * 创建一个新的函数节点，其内容与原函数完全一致，仅更改函数名。
+     * 原节点的参数、返回类型、函数体及上下文信息均保持不变。
      *
-     * @param fn      原始函数节点
+     * @param fn      原始的 FunctionNode
      * @param newName 新函数名
-     * @return 新函数节点
+     * @return 一个名称被替换后的新 FunctionNode
      */
     private FunctionNode renameFunction(FunctionNode fn, String newName) {
         return new FunctionNode(
@@ -413,11 +413,18 @@ public final class IRProgramBuilder {
     }
 
     /**
-     * 判断是否需要为模块注入全局初始化声明（每模块仅注入一次，优先 main）。
+     * 判断某个函数在构建时是否应注入模块级全局变量声明。
+     * <p>规则：</p>
+     * <ul>
+     *   <li>每个模块的全局变量只会被注入一次。</li>
+     *   <li>若模块存在入口函数（main），则只对该入口函数注入。</li>
+     *   <li>若模块不存在入口函数，则对出现的第一个函数注入。</li>
+     * </ul>
      *
      * @param moduleName 模块名
      * @param fnName     函数名
-     * @return 是否需要注入
+     * @param moduleHasEntry 模块是否包含入口函数
+     * @return 是否应对该函数注入全局变量
      */
     private boolean shouldInjectGlobals(String moduleName, String fnName, boolean moduleHasEntry) {
         if (moduleName == null || moduleName.isBlank()) return false;
@@ -437,6 +444,13 @@ public final class IRProgramBuilder {
         return true;
     }
 
+    /**
+     * 判断给定模块是否包含入口函数。
+     * 入口函数定义为名为 "main" 或以 ".main" 结尾的函数。
+     *
+     * @param moduleNode 模块 AST 节点
+     * @return 若存在入口函数则返回 true，否则返回 false
+     */
     private static boolean moduleHasEntryFunction(ModuleNode moduleNode) {
         if (moduleNode == null || moduleNode.functions() == null) {
             return false;
@@ -449,6 +463,13 @@ public final class IRProgramBuilder {
         return false;
     }
 
+    /**
+     * 判断指定名称是否代表入口函数。
+     * 入口函数规则：名称为 "main"，或以 ".main" 结尾（模块前缀形式）。
+     *
+     * @param fnName 函数名
+     * @return 是否为入口函数
+     */
     private static boolean isEntryFunction(String fnName) {
         return "main".equals(fnName) || (fnName != null && fnName.endsWith(".main"));
     }
