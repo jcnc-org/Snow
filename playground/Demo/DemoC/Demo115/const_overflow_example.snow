@@ -1,0 +1,12 @@
+module: main
+	import: std_io
+	globals:
+		declare const MIN_VALUE:int = (2147483647) +2 //正常溢出
+
+	function: main
+		returns: void
+		body:
+			std_io.println(MIN_VALUE)
+		end body
+	end function
+end module
