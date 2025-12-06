@@ -1,10 +1,61 @@
 module: main
-	import: std_io
+    import: std_io
+    import: std_fs
+    import: std_path
+    import: std_string
+    import: os_fs
 
-	function: main
-		returns: void
-		body:
+    function: main
+        returns: void
+        body:
             std_io.println("fs_fd示例")
-		end body
-	end function
+
+            // 路径工具演示
+            std_io.println("[1] 计算工作目录...")
+            declare cwd: string = os_fs.current_dir()
+            std_io.println("[1] cwd=" + cwd)
+
+            declare workDir: string = cwd + "/demo_fs116"
+            std_io.println("[1] workDir=" + workDir)
+            if std_fs.exists(workDir) == false then
+                std_io.println("[1] 创建目录 " + workDir)
+                os_fs.make_dir(workDir)
+            end if
+            std_io.println("工作目录: " + workDir)
+
+            std_io.println("[2] 路径拆解/规范化")
+            declare joined: string = std_path.join("demo_fs116", "sub/../hello.txt")
+            std_io.println("join -> " + joined)
+            declare normalized: string = std_path.normalize(joined + "/./")
+            std_io.println("normalize -> " + normalized)
+            std_io.println("basename -> " + std_path.basename(normalized))
+            std_io.println("dirname -> " + std_path.dirname(normalized))
+            std_io.println("extname -> " + std_path.extname(normalized))
+
+            // std_fs 读写示例
+            std_io.println("写入文本文件...")
+            declare filePath: string = workDir + "/hello.txt"
+            std_fs.write_text(filePath, "line1\nline2")
+            std_io.println("exists: " + std_fs.exists(filePath))
+            std_io.println("is_file: " + std_fs.is_file(filePath))
+            std_io.println("is_dir(workDir): " + std_fs.is_dir(workDir))
+            std_io.println("read_text:\n" + std_fs.read_text(filePath))
+
+            // File 结构体读写
+            declare f: File = new File()
+            f.open(filePath, "a")
+            f.write_bytes("\nappend by File")
+            f.close()
+
+            f.open(filePath, "r")
+            declare bytes: byte[] = f.read_all_bytes()
+            f.close()
+            declare content: string = std_string.fromBytes(bytes)
+            std_io.println("read_all_bytes ->\n" + content)
+
+            // 收尾清理
+            os_fs.remove_file(filePath)
+            os_fs.remove_dir(workDir)
+        end body
+    end function
 end module
