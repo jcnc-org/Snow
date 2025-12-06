@@ -77,6 +77,7 @@ public final class IRProgramBuilder {
                 case ModuleNode moduleNode -> {
                     Collection<GlobalVariable> moduleGlobals =
                             GlobalVariableTable.ofModule(moduleNode.name());
+                    boolean moduleHasEntry = moduleHasEntryFunction(moduleNode);
                     // 降级并注册本模块所有 struct 构造/方法
                     if (moduleNode.structs() != null) {
                         for (StructNode structNode : moduleNode.structs()) {
@@ -86,7 +87,7 @@ public final class IRProgramBuilder {
                     // 处理模块内的普通函数
                     if (moduleNode.functions() != null) {
                         for (FunctionNode f : moduleNode.functions()) {
-                            irProgram.add(buildFunctionWithGlobals(moduleNode, f, moduleGlobals));
+                            irProgram.add(buildFunctionWithGlobals(moduleNode, f, moduleGlobals, moduleHasEntry));
                         }
                     }
                 }
@@ -351,9 +352,10 @@ public final class IRProgramBuilder {
      */
     private IRFunction buildFunctionWithGlobals(ModuleNode moduleNode,
                                                 FunctionNode functionNode,
-                                                Collection<GlobalVariable> moduleGlobals) {
+                                                Collection<GlobalVariable> moduleGlobals,
+                                                boolean moduleHasEntry) {
         String qualifiedName = moduleNode.name() + "." + functionNode.name();
-        boolean injectGlobals = shouldInjectGlobals(moduleNode.name(), functionNode.name());
+        boolean injectGlobals = shouldInjectGlobals(moduleNode.name(), functionNode.name(), moduleHasEntry);
 
         List<StatementNode> newBody = functionNode.body();
         if (moduleNode.globals() != null && !moduleNode.globals().isEmpty()) {
@@ -417,16 +419,38 @@ public final class IRProgramBuilder {
      * @param fnName     函数名
      * @return 是否需要注入
      */
-    private boolean shouldInjectGlobals(String moduleName, String fnName) {
+    private boolean shouldInjectGlobals(String moduleName, String fnName, boolean moduleHasEntry) {
+        if (moduleName == null || moduleName.isBlank()) return false;
         if (injectedModuleGlobals.contains(moduleName)) {
             return false;
         }
-        if ("main".equals(fnName) || fnName.endsWith(".main")) {
-            injectedModuleGlobals.add(moduleName);
-            return true;
+        boolean isEntry = isEntryFunction(fnName);
+        if (moduleHasEntry) {
+            if (isEntry) {
+                injectedModuleGlobals.add(moduleName);
+                return true;
+            }
+            return false;
         }
+        // 模块没有入口函数，随第一个函数注入
         injectedModuleGlobals.add(moduleName);
         return true;
+    }
+
+    private static boolean moduleHasEntryFunction(ModuleNode moduleNode) {
+        if (moduleNode == null || moduleNode.functions() == null) {
+            return false;
+        }
+        for (FunctionNode fn : moduleNode.functions()) {
+            if (isEntryFunction(fn.name())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isEntryFunction(String fnName) {
+        return "main".equals(fnName) || (fnName != null && fnName.endsWith(".main"));
     }
 
     /**
