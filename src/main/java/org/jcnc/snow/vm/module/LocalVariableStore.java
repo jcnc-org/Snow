@@ -1,5 +1,6 @@
 package org.jcnc.snow.vm.module;
 
+import org.jcnc.snow.common.GlobalSlot;
 import org.jcnc.snow.common.SnowConfig;
 import org.jcnc.snow.vm.gui.LocalVariableStoreSwing;
 import org.jcnc.snow.vm.utils.LoggingUtils;
@@ -9,66 +10,89 @@ import java.util.ArrayList;
 import static org.jcnc.snow.vm.utils.VMUtils.isNativeImage;
 
 /**
- * The {@code LocalVariableStore} represents a simple, dynamically-sized
- * local-variable table (<em>frame locals</em>) for the virtual machine (VM).
+ * {@code LocalVariableStore} provides a dynamically-sized local variable table (frame locals)
+ * for the virtual machine (VM) stack frame management.
  *
- * <p>This class supports random access for storing and retrieving variables
- * via {@link #setVariable(int, Object)} and {@link #getVariable(int)}.
- * It can also <strong>compact</strong> itself by trimming trailing {@code null}
- * slots after execution, for cleaner debug output.
+ * <p>
+ * This class supports random access storage and retrieval of variables, and allows
+ * automatic expansion of the table as needed. It is mainly used for VM stack frame management,
+ * debugging, and inspection.
+ * </p>
  *
- * <p>Internally, it uses an {@link ArrayList} to store variables, automatically
- * expanding as needed to support random index writes. This structure is designed
- * for VM stack frame management and debug inspection.
+ * <p>
+ * Core features include:
+ * <ul>
+ *     <li>Random access get/set operations by index</li>
+ *     <li>Automatic expansion and compaction of storage slots</li>
+ *     <li>Integration with VM's global variable store (via GlobalSlot check)</li>
+ *     <li>Debugging and inspection utilities for local variables</li>
+ * </ul>
+ * </p>
+ *
+ * <p>
+ * <strong>Thread Safety:</strong> This class is <b>not</b> thread-safe.
+ * </p>
+ *
+ * @author (your name)
+ * @version 1.0
+ * @since 2024-12-05
  */
 public class LocalVariableStore {
 
     /**
-     * The backing list storing the local variables.
+     * The backing list storing local variable values.
      */
     private final ArrayList<Object> localVariables;
 
     /* ---------- Construction ---------- */
 
     /**
-     * Constructs a new {@code LocalVariableStore} with the given initial capacity.
+     * Constructs a new {@code LocalVariableStore} with the specified initial capacity.
      *
-     * @param initialCapacity the initial capacity for the local variable list
+     * @param initialCapacity the initial capacity for the local variable table
      */
     public LocalVariableStore(int initialCapacity) {
         this.localVariables = new ArrayList<>(initialCapacity);
-//        handleMode();
+        // handleMode(); // Uncomment for debug-mode Swing window
     }
 
     /**
-     * Constructs a new {@code LocalVariableStore} with default capacity.
+     * Constructs a new {@code LocalVariableStore} with the default initial capacity.
      */
     public LocalVariableStore() {
         this.localVariables = new ArrayList<>();
-//        handleMode();
+        // handleMode(); // Uncomment for debug-mode Swing window
     }
 
     /* ---------- Public API ---------- */
 
     /**
-     * Sets the value at the specified index, expanding the list if necessary.
-     * <p>If the list is smaller than {@code index + 1}, it will be padded
-     * with {@code null} until the required capacity is reached.
+     * Sets the value at the specified index, automatically expanding the table if required.
+     * <p>
+     * If the index refers to a global slot (determined by {@link GlobalSlot#isGlobal(int)}),
+     * the value is set in the global variable store instead.
+     * </p>
      *
-     * @param index the index to set (0-based)
-     * @param value the value to store at the specified index
+     * @param index the zero-based index at which to store the value
+     * @param value the value to store; may be {@code null}
      * @throws IndexOutOfBoundsException if {@code index} is negative
      */
     public void setVariable(int index, Object value) {
+        if (GlobalSlot.isGlobal(index)) {
+            GlobalVariableStore.set(GlobalSlot.toIndex(index), value);
+            return;
+        }
         ensureCapacity(index + 1);
         localVariables.set(index, value);
     }
 
     /**
      * Stores a value at the specified index (alias for {@link #setVariable}).
-     * <p>This method is provided for VM instruction decoder compatibility.
+     * <p>
+     * This method is intended for VM instruction decoder compatibility.
+     * </p>
      *
-     * @param index the index to set
+     * @param index the index to store the value at
      * @param value the value to store
      */
     public void store(int index, Object value) {
@@ -76,11 +100,13 @@ public class LocalVariableStore {
     }
 
     /**
-     * Loads the value from the specified index (alias for {@link #getVariable}).
-     * <p>This method is provided for VM instruction decoder compatibility.
+     * Loads and returns the value at the specified index (alias for {@link #getVariable}).
+     * <p>
+     * This method is intended for VM instruction decoder compatibility.
+     * </p>
      *
-     * @param index the index to retrieve
-     * @return the value at the given index
+     * @param index the index to retrieve the value from
+     * @return the value at the specified index, or {@code null} if not set
      */
     public Object load(int index) {
         return getVariable(index);
@@ -88,34 +114,43 @@ public class LocalVariableStore {
 
     /**
      * Returns the value at the specified index.
-     * <p>If the list is not large enough, it is automatically expanded,
-     * filling new slots with {@code null} values.
+     * <p>
+     * If the index refers to a global slot, retrieves from the global variable store.
+     * Otherwise, expands the local variable table as needed.
+     * </p>
      *
-     * @param index the index to retrieve (0-based)
-     * @return the value at the specified index, or {@code null} if not set
+     * @param index the zero-based index to retrieve the value from
+     * @return the value at the specified index, or {@code null} if unset
      * @throws IndexOutOfBoundsException if {@code index} is negative
      */
     public Object getVariable(int index) {
-        // Automatic expansion to avoid LOAD out-of-bounds exception.
-        if (index < 0)
-            throw new IndexOutOfBoundsException("Negative LV index: " + index);
+        if (GlobalSlot.isGlobal(index)) {
+            return GlobalVariableStore.get(GlobalSlot.toIndex(index));
+        }
+        if (index < 0) {
+            throw new IndexOutOfBoundsException("Negative local variable index: " + index);
+        }
         ensureCapacity(index + 1);
         return localVariables.get(index);
     }
 
     /**
-     * Returns the backing {@link ArrayList} storing the local variables.
-     * <p>Direct modification is not recommended. Prefer read-only usage.
+     * Returns the backing {@link ArrayList} containing local variable values.
+     * <p>
+     * <b>Note:</b> Direct modification is not recommended; prefer read-only usage.
+     * </p>
      *
-     * @return the internal list of local variables
+     * @return the backing list of local variables
      */
     public ArrayList<Object> getLocalVariables() {
         return localVariables;
     }
 
     /**
-     * Prints the contents of each slot in the local variable table to the logger.
-     * <p>If the table is empty, a corresponding message is printed instead.
+     * Prints the contents of each slot in the local variable table using the logger.
+     * <p>
+     * If the table is empty, a message is logged instead.
+     * </p>
      */
     public void printLv() {
         if (localVariables.isEmpty()) {
@@ -124,28 +159,30 @@ public class LocalVariableStore {
         }
         LoggingUtils.logInfo("\n### VM Local Variable Table:", "");
         for (int i = 0; i < localVariables.size(); i++) {
-            LoggingUtils.logInfo("",
-                    String.format("%d: %s", i, localVariables.get(i)));
+            LoggingUtils.logInfo("", String.format("%d: %s", i, localVariables.get(i)));
         }
     }
 
     /* ---------- Internal Helpers ---------- */
 
     /**
-     * Clears all variables in the table.
-     * <p>This method is typically called when a stack frame is popped.
+     * Clears all variables in the local variable table.
+     * <p>
+     * Typically invoked when a stack frame is popped or reset.
+     * </p>
      */
     public void clearVariables() {
         localVariables.clear();
     }
 
     /**
-     * Compacts the table by removing only trailing {@code null} slots.
-     * <p>This should be called after program termination, for cleaner debug output.
-     * Does not affect non-null slots or internal indices during execution.
+     * Compacts the local variable table by removing only trailing {@code null} slots.
+     * <p>
+     * Intended for use after program termination, to provide cleaner debug output.
+     * Does not affect non-{@code null} slots or indices in use during execution.
+     * </p>
      */
     public void compact() {
-        // Only delete the "tail" null values, not filter the entire table.
         int i = localVariables.size() - 1;
         while (i >= 0 && localVariables.get(i) == null) {
             localVariables.remove(i);
@@ -155,9 +192,11 @@ public class LocalVariableStore {
 
     /**
      * Ensures that the backing list has at least the specified minimum capacity.
-     * <p>New slots are filled with {@code null} values if the list needs to grow.
+     * <p>
+     * If the list needs to grow, new slots are filled with {@code null}.
+     * </p>
      *
-     * @param minCapacity the minimum capacity required
+     * @param minCapacity the minimum required capacity
      */
     private void ensureCapacity(int minCapacity) {
         while (localVariables.size() < minCapacity) {
@@ -166,10 +205,12 @@ public class LocalVariableStore {
     }
 
     /**
-     * Handles debug mode hooks. If debug mode is enabled and not running inside a
-     * GraalVM native-image, this method will open a Swing-based variable inspector
-     * window for debugging purposes.
-     * <p>In native-image environments, this window is not displayed.
+     * Handles debug mode integration. If debug mode is enabled and not running in
+     * a GraalVM native image, this method displays a Swing-based variable inspector
+     * for debugging purposes.
+     * <p>
+     * In native-image environments, this method does nothing.
+     * </p>
      */
     private void handleMode() {
         if (SnowConfig.isDebug()) {

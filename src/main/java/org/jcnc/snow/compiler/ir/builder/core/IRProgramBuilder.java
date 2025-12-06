@@ -4,6 +4,8 @@ import org.jcnc.snow.common.NumberLiteralHelper;
 import org.jcnc.snow.compiler.ir.builder.statement.FunctionBuilder;
 import org.jcnc.snow.compiler.ir.common.GlobalConstTable;
 import org.jcnc.snow.compiler.ir.common.GlobalFunctionTable;
+import org.jcnc.snow.compiler.ir.common.GlobalVariableTable;
+import org.jcnc.snow.compiler.ir.common.GlobalVariableTable.GlobalVariable;
 import org.jcnc.snow.compiler.ir.core.IRFunction;
 import org.jcnc.snow.compiler.ir.core.IRProgram;
 import org.jcnc.snow.compiler.parser.ast.*;
@@ -15,94 +17,99 @@ import org.jcnc.snow.compiler.parser.ast.base.StatementNode;
 import java.util.*;
 
 /**
- * IRProgramBuilder 负责将 AST 顶层节点（如模块、函数、语句等）转换为可执行的 {@link IRProgram}。
+ * IRProgramBuilder 负责将 AST 的顶层结构（模块、函数、语句等）构建为可执行的 IRProgram。
  *
- * <p>
- * 主要工作内容包括：
- * </p>
+ * <p>核心流程包括：</p>
  * <ul>
- *   <li>预扫描所有模块，将 <code>declare const</code> 常量登记到全局常量表，支持跨模块常量折叠。</li>
- *   <li>预扫描并注册所有 struct 的字段布局（字段→下标），供 IR 阶段对象字段读写使用。</li>
- *   <li>对模块内的普通函数加上模块前缀（ModuleName.func），保证命名唯一，并将本模块全局声明注入到函数体前部。</li>
- *   <li>将 struct 的 init 与 methods 降级为普通 IR 函数并注册为 <code>StructName.__init__N</code>、<code>StructName.method_N</code>；同时在其参数列表首位插入隐式 <code>this: StructName</code>。</li>
- *   <li>将独立顶层语句自动包装为特殊的 "_start" 函数（脚本模式支持）。</li>
+ *   <li>预扫描所有模块，加载编译期常量至全局常量表，实现跨模块常量折叠。</li>
+ *   <li>注册所有 struct 的字段布局，并处理继承关系，为成员访问与布局查询提供支持。</li>
+ *   <li>预注册所有 struct 的构造函数及成员方法的签名，用于构建阶段的类型查询。</li>
+ *   <li>将 struct 的方法降级为普通函数（重命名并注入隐式 this 参数）并加入 IR 程序。</li>
+ *   <li>为模块内函数自动添加模块名前缀并按需注入全局声明。</li>
+ *   <li>将顶层语句包装为特殊入口函数 "_start" 便于脚本式执行。</li>
  * </ul>
  *
- * <p>
- * 该类为不可变工具类，仅包含静态行为，不持有状态。
- * </p>
+ * <p>本类为无状态工具类（除全局注入追踪），外部不应持有其实例。</p>
+ *
+ * <p><b>注意：</b></p>
+ * <ul>
+ *   <li>禁止外部直接操作全局表，应通过本类的预处理流程完成。</li>
+ *   <li>如遇无法处理的顶层节点类型，将抛出 IllegalStateException。</li>
+ * </ul>
  */
 public final class IRProgramBuilder {
 
     /**
-     * 将解析生成的 AST 根节点列表转换为 IRProgram。
+     * 已经注入全局初始化的模块名集合，避免重复注入。
+     */
+    private final Set<String> injectedModuleGlobals = new HashSet<>();
+
+    /**
+     * 根据 AST 根节点列表构建 IRProgram。
      *
-     * @param roots 顶层 AST 根节点列表（ModuleNode / FunctionNode / StatementNode）
-     * @return 构建好的 IRProgram
-     * @throws IllegalStateException 遇到不支持的顶层节点类型时抛出
+     * <p>
+     * 主流程如下：
+     * <ol>
+     *     <li>预先登记全局常量，便于后续常量折叠。</li>
+     *     <li>注册所有 struct 的字段布局。</li>
+     *     <li>预注册 struct 构造/方法签名，支持同结构体方法间引用。</li>
+     *     <li>依次遍历顶层节点，构建函数与特殊入口。</li>
+     * </ol>
+     * </p>
      *
-     *                               <p>主流程：</p>
-     *                               <ol>
-     *                                 <li>登记全局常量（便于后续常量折叠）。</li>
-     *                                 <li>注册所有 struct 的字段布局（为成员读写和 this.xx 做准备）。</li>
-     *                                 <li>遍历根节点：模块 → 先降级并注册 struct 的构造/方法，再处理模块函数；顶层函数直接构建；顶层语句打包为 "_start" 构建。</li>
-     *                               </ol>
+     * @param roots AST 顶层节点列表，类型为 ModuleNode / FunctionNode / StatementNode
+     * @return 构建完成的 IRProgram 对象
+     * @throws IllegalStateException 若遇到不支持的顶层节点类型
      */
     public IRProgram buildProgram(List<Node> roots) {
-        // 1. 先登记全局常量，便于后续常量折叠
+        // 1. 预登记全局常量
         preloadGlobals(roots);
-        // 2. 注册所有结构体的字段布局（为成员访问做准备）
+        // 2. 注册所有结构体字段布局
         preloadStructLayouts(roots);
-        // 3. 预注册所有 struct 的构造与方法签名，便于函数内互调时查找
+        // 3. 预注册 struct 的构造与方法签名
         preloadStructCallables(roots);
 
-        // 创建 IR 程序对象
         IRProgram irProgram = new IRProgram();
-        // 4. 遍历并处理所有顶层节点
+        // 4. 遍历所有顶层节点，分类型处理
         for (Node node : roots) {
             switch (node) {
                 case ModuleNode moduleNode -> {
-                    // 4.1 先降级并注册本模块所有 struct 的构造/方法（struct 方法降级）
+                    Collection<GlobalVariable> moduleGlobals =
+                            GlobalVariableTable.ofModule(moduleNode.name());
+                    boolean moduleHasEntry = moduleHasEntryFunction(moduleNode);
+                    // 降级并注册本模块所有 struct 构造/方法
                     if (moduleNode.structs() != null) {
                         for (StructNode structNode : moduleNode.structs()) {
-                            lowerAndRegisterStruct(structNode, irProgram);
+                            lowerAndRegisterStruct(structNode, irProgram, moduleNode.name(), moduleGlobals);
                         }
                     }
-                    // 4.2 再处理模块里的普通函数，模块内函数名全限定，注入全局声明
+                    // 处理模块内的普通函数
                     if (moduleNode.functions() != null) {
                         for (FunctionNode f : moduleNode.functions()) {
-                            irProgram.add(buildFunctionWithGlobals(moduleNode, f));
+                            irProgram.add(buildFunctionWithGlobals(moduleNode, f, moduleGlobals, moduleHasEntry));
                         }
                     }
                 }
-                case FunctionNode functionNode ->
-                    // 4.3 处理顶层函数节点：直接构建为 IRFunction 并加入
-                        irProgram.add(buildFunction(functionNode));
+                case FunctionNode functionNode -> irProgram.add(buildFunction(functionNode, Collections.emptyList()));
                 case StatementNode statementNode ->
-                    // 4.4 处理脚本式顶层语句：封装成 "_start" 函数后构建并添加
-                        irProgram.add(buildFunction(wrapTopLevel(statementNode)));
-                default ->
-                    // 4.5 遇到未知类型节点，抛出异常
-                        throw new IllegalStateException("Unsupported top-level node: " + node);
+                        irProgram.add(buildFunction(wrapTopLevel(statementNode), Collections.emptyList()));
+                default -> throw new IllegalStateException("Unsupported top-level node: " + node);
             }
         }
         return irProgram;
     }
 
-    // ===================== 预扫描：注册结构体字段布局 =====================
-
     /**
-     * 为每个结构体注册字段布局（字段名 → 槽位索引），并在有继承时将父类布局复制并续接。
+     * 注册每个结构体的字段布局，处理继承关系，将字段名映射到槽位下标。
      *
-     * <p>规则：</p>
+     * <p>规则说明：</p>
      * <ol>
-     *   <li>若存在父类：先取到父类布局（如果能找到），将其按顺序复制到当前布局中；起始索引 = 父类字段数。</li>
-     *   <li>再将当前结构体声明的字段按声明顺序追加；如果字段名与父类重复，跳过以避免覆盖。</li>
-     *   <li>最后将布局以 <code>StructName</code> 为键注册到 {@link IRBuilderScope} 的全局布局表。</li>
-     *   <li>同时调用 {@link IRBuilderScope#registerStructParent} 登记继承关系（子类 → 父类）。</li>
+     *   <li>如有父类，先复制父类布局和类型表，索引续接。</li>
+     *   <li>子类字段与父类重名时跳过，防止覆盖。</li>
+     *   <li>最终注册到全局布局表，并登记继承关系。</li>
      * </ol>
      *
-     * @param roots AST 顶层节点列表，包含模块/结构体信息
+     * @param roots AST 顶层节点列表
      */
     private void preloadStructLayouts(List<Node> roots) {
         for (Node n : roots) {
@@ -115,10 +122,9 @@ public final class IRProgramBuilder {
                 Map<String, String> fieldTypes = new LinkedHashMap<>();
                 int idx = 0;
 
-                // 1. 若有父类，先复制父类布局，并将索引起点置为父类字段数
+                // 处理父类布局及字段类型
                 String parentName = s.parent();
                 if (parentName != null && !parentName.isBlank()) {
-                    // 注册继承关系，供 super(...) 调用解析
                     IRBuilderScope.registerStructParent(s.name(), parentName);
 
                     Map<String, Integer> parentLayout = IRBuilderScope.getStructLayout(parentName);
@@ -132,7 +138,7 @@ public final class IRProgramBuilder {
                     }
                 }
 
-                // 2. 续接当前结构体声明的字段；若与父类同名，跳过（避免覆盖父类槽位）
+                // 注册子类字段，避免重名
                 if (fields != null) {
                     for (DeclarationNode d : fields) {
                         String name = d.getName();
@@ -145,7 +151,6 @@ public final class IRProgramBuilder {
                     }
                 }
 
-                // 3. 注册最终布局
                 IRBuilderScope.registerStructLayout(s.name(), layout);
                 IRBuilderScope.registerStructFieldTypes(s.name(), fieldTypes);
             }
@@ -153,8 +158,8 @@ public final class IRProgramBuilder {
     }
 
     /**
-     * 预注册所有 struct 的构造函数和方法签名，
-     * 保证在构建函数体时即可查询到同结构体内其他方法的返回值与参数信息。
+     * 预注册 struct 的所有构造函数与方法签名。
+     * 便于在构建函数体时可直接查找其他方法返回值和参数信息。
      *
      * @param roots AST 顶层节点列表
      */
@@ -163,7 +168,7 @@ public final class IRProgramBuilder {
             if (!(n instanceof ModuleNode mod) || mod.structs() == null) continue;
 
             for (StructNode s : mod.structs()) {
-                // 构造函数：Struct.__init__N(this, ...)
+                // 处理构造函数
                 if (s.inits() != null) {
                     for (FunctionNode init : s.inits()) {
                         List<String> paramTypes = new ArrayList<>(init.parameters().size() + 1);
@@ -173,7 +178,7 @@ public final class IRProgramBuilder {
                         GlobalFunctionTable.register(loweredName, init.returnType(), paramTypes);
                     }
                 }
-                // 普通方法：Struct.method_M(this, ...)，M = 参数总数（含 this）
+                // 处理普通方法
                 if (s.methods() != null) {
                     for (FunctionNode m : s.methods()) {
                         List<String> paramTypes = new ArrayList<>(m.parameters().size() + 1);
@@ -188,29 +193,28 @@ public final class IRProgramBuilder {
         }
     }
 
-
-    // ===================== Struct 降级：方法/构造 → 普通函数 =====================
-
     /**
-     * 将一个 Struct 的所有构造函数（inits）和方法（methods）降级为普通 Function，并注册进 IRProgram：
-     * <ul>
-     *     <li>构造函数：StructName.__init__N(this:StructName, ...)，N为参数个数</li>
-     *     <li>方法：StructName.method_N(this:StructName, ...)，N为参数个数（含this）</li>
-     * </ul>
-     * <p>降级规则：</p>
+     * 将 struct 的所有构造函数（inits）和方法（methods）降级为普通函数，并注册进 IRProgram。
+     * <p>
+     * 降级规则：
      * <ol>
-     *     <li>构造/方法函数名前缀加上结构体名（便于唯一定位）。</li>
-     *     <li>参数列表最前添加隐式 this:StructName 参数。</li>
-     *     <li>重载方法名追加“_N”后缀，N为参数总个数，防止覆盖。</li>
+     *     <li>函数名加结构体前缀，保证唯一。</li>
+     *     <li>参数列表首位插入隐式 this:StructName 参数。</li>
+     *     <li>方法名追加参数数后缀，防止重载冲突。</li>
      * </ol>
      *
-     * @param structNode 当前结构体节点
-     * @param out        注册到的 IRProgram
+     * @param structNode    当前结构体节点
+     * @param out           注册到的 IRProgram
+     * @param moduleName    模块名
+     * @param moduleGlobals 模块全局变量集合
      */
-    private void lowerAndRegisterStruct(StructNode structNode, IRProgram out) {
+    private void lowerAndRegisterStruct(StructNode structNode,
+                                        IRProgram out,
+                                        String moduleName,
+                                        Collection<GlobalVariable> moduleGlobals) {
         String structName = structNode.name();
 
-        // 1. 多构造函数：降级为 StructName.__init__N
+        // 处理构造函数
         if (structNode.inits() != null) {
             for (FunctionNode initFn : structNode.inits()) {
                 String loweredName = structName + ".__init__" + initFn.parameters().size();
@@ -219,35 +223,34 @@ public final class IRProgramBuilder {
                         loweredName,
                         structName
                 );
-                out.add(buildFunction(loweredInit));
+                out.add(buildFunction(loweredInit, moduleGlobals));
             }
         }
 
-        // 2. 降级处理所有普通方法
+        // 处理普通方法
         if (structNode.methods() != null) {
             for (FunctionNode m : structNode.methods()) {
-                int argCount = m.parameters().size() + 1; // +1 for this
+                int argCount = m.parameters().size() + 1; // +1 为 this
                 String loweredName = structName + "." + m.name() + "_" + argCount;
                 FunctionNode loweredMethod = lowerStructCallable(
                         m,
                         loweredName,
                         structName
                 );
-                out.add(buildFunction(loweredMethod));
+                out.add(buildFunction(loweredMethod, moduleGlobals));
             }
         }
     }
 
     /**
-     * 生成一个带隐式 this:StructName 参数的函数节点副本，并重命名为 loweredName。
+     * 生成带隐式 this:StructName 参数的函数节点副本，并重命名。
      *
      * @param original    原始 FunctionNode
-     * @param loweredName 降级后的新函数名（如 StructName.method）
-     * @param structName  结构体名，用于 this 参数类型
-     * @return 重新包装后的函数节点
+     * @param loweredName 降级后函数名
+     * @param structName  结构体名
+     * @return 新的 FunctionNode 实例
      */
     private FunctionNode lowerStructCallable(FunctionNode original, String loweredName, String structName) {
-        // 在参数列表首位插入隐式 this 参数（类型为结构体名）
         List<ParameterNode> newParams = new ArrayList<>(original.parameters().size() + 1);
         newParams.add(new ParameterNode("this", structName, original.context()));
         newParams.addAll(original.parameters());
@@ -261,14 +264,9 @@ public final class IRProgramBuilder {
         );
     }
 
-    // ===================== 预扫描：全局常量收集 =====================
-
     /**
-     * 扫描所有模块节点，将其中声明的 const 全局变量（即编译期常量）
-     * 以 "模块名.常量名" 形式注册到全局常量表。
-     * <p>
-     * 支持跨模块常量折叠，便于 IR 生成时做常量传播与优化。
-     * </p>
+     * 预扫描所有模块节点，将声明的 const 全局变量注册为编译期常量，形式为 "模块名.常量名"。
+     * 支持跨模块常量折叠，便于后续 IR 优化。
      *
      * @param roots AST 顶层节点列表
      */
@@ -278,12 +276,16 @@ public final class IRProgramBuilder {
                 String moduleName = mod.name();
                 if (mod.globals() == null) continue;
                 for (DeclarationNode decl : mod.globals()) {
-                    // 只处理带初始值的 const 常量（编译期常量），忽略 run-time/无初始值
-                    if (!decl.isConst() || decl.getInitializer().isEmpty()) continue;
-                    ExpressionNode init = decl.getInitializer().get();
-                    Object value = evalLiteral(init);
-                    if (value != null) {
-                        GlobalConstTable.register(moduleName + "." + decl.getName(), value);
+                    // 只处理编译期常量
+                    if (decl.isConst()) {
+                        if (decl.getInitializer().isEmpty()) continue;
+                        ExpressionNode init = decl.getInitializer().get();
+                        Object value = evalLiteral(init);
+                        if (value != null) {
+                            GlobalConstTable.register(moduleName + "." + decl.getName(), value);
+                        }
+                    } else {
+                        GlobalVariableTable.register(moduleName + "." + decl.getName(), decl.getType());
                     }
                 }
             }
@@ -291,25 +293,21 @@ public final class IRProgramBuilder {
     }
 
     /**
-     * 字面量提取与类型折叠工具。
-     * <p>
-     * 用于将表达式节点还原为 Java 原生类型（int、long、double、String等），仅支持直接字面量。
-     * 不支持复杂表达式、非常量等情况，无法静态折叠则返回 null。
+     * 字面量表达式计算工具。
+     * 支持数值、字符串、布尔、简单负号表达式折叠，不支持复杂表达式。
      *
-     * @param expr 要计算的表达式节点（要求是字面量）
-     * @return 提取到的原生常量值；若不支持则返回 null
+     * @param expr 表达式节点
+     * @return Java 原生常量值，不支持则返回 null
      */
     private Object evalLiteral(ExpressionNode expr) {
         return switch (expr) {
             case NumberLiteralNode num -> {
-                // 数字字面量：支持下划线、类型后缀（如 123_456L）
                 String raw = num.value();
                 NumberLiteralHelper.NormalizedLiteral normalized = NumberLiteralHelper.normalize(raw, true);
                 String digits = normalized.text();
                 String core = normalized.digits();
                 char suffix = NumberLiteralHelper.extractTypeSuffix(raw);
                 try {
-                    // 支持浮点数、科学计数法
                     if (NumberLiteralHelper.looksLikeFloat(digits)) {
                         yield Double.parseDouble(digits);
                     }
@@ -324,10 +322,9 @@ public final class IRProgramBuilder {
                     yield null;
                 }
             }
-            case StringLiteralNode str -> str.value(); // 字符串字面量直接返回
-            case BoolLiteralNode b -> b.getValue() ? 1 : 0; // 布尔常量转为 1/0
+            case StringLiteralNode str -> str.value();
+            case BoolLiteralNode b -> b.getValue() ? 1 : 0;
             case UnaryExpressionNode un -> {
-                // 仅处理前缀负号的一元表达式，如 -123 / -1.5f / -1L / -1s
                 if ("-".equals(un.operator())) {
                     Object inner = evalLiteral(un.operand());
                     if (inner instanceof Integer i) yield -i;
@@ -339,52 +336,54 @@ public final class IRProgramBuilder {
                 }
                 yield null;
             }
-            default -> null; // 其他情况不支持常量折叠
+            default -> null;
         };
     }
 
-    // ===================== IRFunction 构建辅助 =====================
-
     /**
-     * 构建带有模块全局声明“注入”的函数，并将函数名加上模块前缀，保证模块内函数名唯一。
-     * <p>
-     * 如果模块有全局声明，则这些声明会被插入到函数体前部（<b>会过滤掉与参数同名的全局声明</b>，防止变量遮蔽）。
-     * </p>
+     * 构建带有全局声明注入的函数，函数名加模块前缀，保证唯一。
+     * 如需注入全局声明，会优先过滤与参数同名的声明，防止遮蔽。
      *
-     * @param moduleNode   所属模块节点
-     * @param functionNode 待构建的函数节点
-     * @return 包含全局声明的 IRFunction
+     * @param moduleNode    所属模块节点
+     * @param functionNode  函数节点
+     * @param moduleGlobals 模块全局变量集合
+     * @return 构建的 IRFunction
      */
-    private IRFunction buildFunctionWithGlobals(ModuleNode moduleNode, FunctionNode functionNode) {
-        // 1. 拼接模块名和函数名，生成全限定名
+    private IRFunction buildFunctionWithGlobals(ModuleNode moduleNode,
+                                                FunctionNode functionNode,
+                                                Collection<GlobalVariable> moduleGlobals,
+                                                boolean moduleHasEntry) {
         String qualifiedName = moduleNode.name() + "." + functionNode.name();
-        // 2. 若无全局声明，直接重命名构建
-        if (moduleNode.globals() == null || moduleNode.globals().isEmpty()) {
-            return buildFunction(renameFunction(functionNode, qualifiedName));
-        }
+        boolean injectGlobals = shouldInjectGlobals(moduleNode.name(), functionNode.name(), moduleHasEntry);
 
-        // 3. 过滤掉与参数重名的全局声明（优先参数作用域，避免变量遮蔽）
-        Set<String> paramNames = new HashSet<>();
-        for (ParameterNode p : functionNode.parameters()) {
-            paramNames.add(p.name());
-        }
-        List<StatementNode> filteredGlobals = new ArrayList<>();
-        for (DeclarationNode g : moduleNode.globals()) {
-            // 避免全局声明和参数重名，优先参数
-            if (!paramNames.contains(g.getName())) {
-                filteredGlobals.add(g);
+        List<StatementNode> newBody = functionNode.body();
+        if (moduleNode.globals() != null && !moduleNode.globals().isEmpty()) {
+            Set<String> paramNames = new HashSet<>();
+            for (ParameterNode p : functionNode.parameters()) {
+                paramNames.add(p.name());
+            }
+            List<StatementNode> constGlobals = new ArrayList<>();
+            List<StatementNode> mutableGlobals = new ArrayList<>();
+            for (DeclarationNode g : moduleNode.globals()) {
+                if (paramNames.contains(g.getName())) continue;
+                if (g.isConst()) constGlobals.add(g);
+                else mutableGlobals.add(g);
+            }
+
+            List<StatementNode> prefix = new ArrayList<>();
+            if (!constGlobals.isEmpty()) {
+                prefix.addAll(constGlobals);
+            }
+            if (injectGlobals && !mutableGlobals.isEmpty()) {
+                prefix.addAll(mutableGlobals);
+            }
+
+            if (!prefix.isEmpty()) {
+                newBody = new ArrayList<>(prefix.size() + functionNode.body().size());
+                newBody.addAll(prefix);
+                newBody.addAll(functionNode.body());
             }
         }
-
-        // 4. 若无可插入的全局声明，直接重命名构建
-        if (filteredGlobals.isEmpty()) {
-            return buildFunction(renameFunction(functionNode, qualifiedName));
-        }
-
-        // 5. 合并全局声明与函数体，前插全局声明
-        List<StatementNode> newBody = new ArrayList<>(filteredGlobals.size() + functionNode.body().size());
-        newBody.addAll(filteredGlobals);
-        newBody.addAll(functionNode.body());
         FunctionNode wrapped = new FunctionNode(
                 qualifiedName,
                 functionNode.parameters(),
@@ -392,15 +391,16 @@ public final class IRProgramBuilder {
                 newBody,
                 functionNode.context()
         );
-        return buildFunction(wrapped);
+        return buildFunction(wrapped, moduleGlobals);
     }
 
     /**
-     * 生成一个重命名的 FunctionNode（只修改函数名，其他属性保持不变）。
+     * 创建一个新的函数节点，其内容与原函数完全一致，仅更改函数名。
+     * 原节点的参数、返回类型、函数体及上下文信息均保持不变。
      *
-     * @param fn      原始函数节点
-     * @param newName 新的函数名（全限定名）
-     * @return 重命名后的函数节点
+     * @param fn      原始的 FunctionNode
+     * @param newName 新函数名
+     * @return 一个名称被替换后的新 FunctionNode
      */
     private FunctionNode renameFunction(FunctionNode fn, String newName) {
         return new FunctionNode(
@@ -413,23 +413,84 @@ public final class IRProgramBuilder {
     }
 
     /**
-     * 构建 IRFunction。
+     * 判断某个函数在构建时是否应注入模块级全局变量声明。
+     * <p>规则：</p>
+     * <ul>
+     *   <li>每个模块的全局变量只会被注入一次。</li>
+     *   <li>若模块存在入口函数（main），则只对该入口函数注入。</li>
+     *   <li>若模块不存在入口函数，则对出现的第一个函数注入。</li>
+     * </ul>
      *
-     * @param functionNode 待构建的 FunctionNode
-     * @return 构建后的 IRFunction
-     *
-     * <p>本方法仅作中转，直接委托给 FunctionBuilder。</p>
+     * @param moduleName 模块名
+     * @param fnName     函数名
+     * @param moduleHasEntry 模块是否包含入口函数
+     * @return 是否应对该函数注入全局变量
      */
-    private IRFunction buildFunction(FunctionNode functionNode) {
-        return new FunctionBuilder().build(functionNode);
+    private boolean shouldInjectGlobals(String moduleName, String fnName, boolean moduleHasEntry) {
+        if (moduleName == null || moduleName.isBlank()) return false;
+        if (injectedModuleGlobals.contains(moduleName)) {
+            return false;
+        }
+        boolean isEntry = isEntryFunction(fnName);
+        if (moduleHasEntry) {
+            if (isEntry) {
+                injectedModuleGlobals.add(moduleName);
+                return true;
+            }
+            return false;
+        }
+        // 模块没有入口函数，随第一个函数注入
+        injectedModuleGlobals.add(moduleName);
+        return true;
     }
 
     /**
-     * 将顶层语句节点封装成特殊的 "_start" 函数。
-     * 主要用于脚本模式支持，使得顶层语句也可以被 IR 执行引擎统一处理。
+     * 判断给定模块是否包含入口函数。
+     * 入口函数定义为名为 "main" 或以 ".main" 结尾的函数。
+     *
+     * @param moduleNode 模块 AST 节点
+     * @return 若存在入口函数则返回 true，否则返回 false
+     */
+    private static boolean moduleHasEntryFunction(ModuleNode moduleNode) {
+        if (moduleNode == null || moduleNode.functions() == null) {
+            return false;
+        }
+        for (FunctionNode fn : moduleNode.functions()) {
+            if (isEntryFunction(fn.name())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 判断指定名称是否代表入口函数。
+     * 入口函数规则：名称为 "main"，或以 ".main" 结尾（模块前缀形式）。
+     *
+     * @param fnName 函数名
+     * @return 是否为入口函数
+     */
+    private static boolean isEntryFunction(String fnName) {
+        return "main".equals(fnName) || (fnName != null && fnName.endsWith(".main"));
+    }
+
+    /**
+     * 构建 IRFunction 实例。
+     * 直接委托 {@link FunctionBuilder#build(FunctionNode)}。
+     *
+     * @param functionNode  函数节点
+     * @param moduleGlobals 模块全局变量集合
+     * @return 构建的 IRFunction
+     */
+    private IRFunction buildFunction(FunctionNode functionNode, Collection<GlobalVariable> moduleGlobals) {
+        return new FunctionBuilder(moduleGlobals).build(functionNode);
+    }
+
+    /**
+     * 将顶层语句节点封装为 "_start" 函数，便于统一执行。
      *
      * @param stmt 顶层语句节点
-     * @return 封装后的 FunctionNode
+     * @return 封装后的函数节点
      */
     private FunctionNode wrapTopLevel(StatementNode stmt) {
         return new FunctionNode(
@@ -437,7 +498,6 @@ public final class IRProgramBuilder {
                 List.of(),
                 "void",
                 List.of(stmt),
-                // 用(-1,-1,"")占位，避免依赖真实位置信息
                 new NodeContext(-1, -1, "")
         );
     }

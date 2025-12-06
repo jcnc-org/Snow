@@ -1,0 +1,31 @@
+module: main
+    import: std_io
+    globals:
+        declare global_value: int = -1
+
+    function: main
+        returns: void
+        body:
+            std_io.println("修改前: " + global_value)
+            global_value = 100
+            std_io.println("修改后: " + global_value)
+            std_io.println("如你所见，确实能够修改")
+            std_io.println("但是让我们调用一下函数，看看还能否修改？\n")
+
+            modify_global_value()
+
+            std_io.println("\n函数调用完了，让我们来看看全局变量的值如何？")
+            std_io.println("调用函数修改后: " + global_value)
+        end body
+    end function
+
+    function: modify_global_value
+        returns: void
+        body:
+            std_io.println("在函数中:")
+            std_io.println("修改前: " + global_value)
+            global_value = 200
+            std_io.println("修改后: " + global_value)
+        end body
+    end function
+end module
