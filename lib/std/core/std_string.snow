@@ -4,7 +4,6 @@
 */
 module: std_string
     import: os_fd
-    import: fd
     import: std_parse
     import: os_array
     import: os_sys
@@ -552,11 +551,11 @@ module: std_string
             declare str: string
         returns: byte[]
         body:
-            declare pair: int[] = fd.pipe()
-            declare len: int = fd.write(pair[1], str)
-            fd.close(pair[1])
-            declare data: any = fd.read(pair[0], len)
-            fd.close(pair[0])
+            declare pair: int[] = os_fd.pipe()
+            declare len: int = os_fd.write_bytes(pair[1], str)
+            os_fd.close(pair[1])
+            declare data: any = os_fd.read_bytes(pair[0], len)
+            os_fd.close(pair[0])
 
             declare res: byte[] = []
             loop:
