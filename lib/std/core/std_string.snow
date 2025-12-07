@@ -7,6 +7,7 @@ module: std_string
     import: fd
     import: std_parse
     import: os_array
+    import: os_sys
 
     /**
     @struct std_string
@@ -745,8 +746,8 @@ module: std_string
         body:
             // 将 int 转为单字节数组再解码为字符串，避免写入 int 时被 toString() 成数字字符
             declare b: byte = std_parse.parseByte("" + ch)  // 显式收缩为 byte，避免以 Integer 形式写入
-            declare buf: any = syscall("0x1903", 1)  // RANDOM_BYTES(1) → byte[]
-            declare _rc: int = syscall("0x1803", buf, 0, b)  // ARR_SET(buf,0,b)，返回值仅为平衡栈
+            declare buf: any = os_sys.random_bytes(1)  // RANDOM_BYTES(1) → byte[]
+            declare _rc: int = os_array.set(buf, 0, b)  // ARR_SET(buf,0,b)，返回值仅为平衡栈
             return "" + buf
         end body
     end function
