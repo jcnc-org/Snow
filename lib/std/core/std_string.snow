@@ -5,7 +5,7 @@
 module: std_string
     import: os_fd
     import: std_parse
-    import: os_array
+    import: std_array
     import: os_sys
 
     /**
@@ -53,7 +53,7 @@ module: std_string
 
         /**
         @function length
-        @summary 返回字符串长度
+        @summary 返回字符串长度（按字节长度）
         */
         function: length
             returns: int
@@ -131,7 +131,7 @@ module: std_string
 
         /**
         @function toUpperCase
-        @summary 将字符串转为大写
+        @summary 将字符串转为大写（仅 A-Z/a-z）
         */
         function: toUpperCase
             returns: string
@@ -142,7 +142,7 @@ module: std_string
 
         /**
         @function toLowerCase
-        @summary 将字符串转为小写
+        @summary 将字符串转为小写（仅 A-Z/a-z）
         */
         function: toLowerCase
             returns: string
@@ -233,7 +233,7 @@ module: std_string
 
     /**
     @function length
-    @summary 获取字符串长度
+    @summary 获取字符串长度（按字节长度）
     @param str 目标字符串
     */
     function: length
@@ -241,7 +241,8 @@ module: std_string
             declare str: string
         returns: int
         body:
-            return os_array.length(str)
+            declare arr: std_array = new std_array(str)
+            return arr.length()
         end body
     end function
 
@@ -255,7 +256,8 @@ module: std_string
             declare str: string
         returns: boolean
         body:
-            declare len: int = os_array.length(str)
+            declare arr: std_array = new std_array(str)
+            declare len: int = arr.length()
             return len == 0
         end body
     end function
@@ -274,8 +276,9 @@ module: std_string
             declare endIdx: int
         returns: string
         body:
-            declare len: int = os_array.length(str)
-            
+            declare arr: std_array = new std_array(str)
+            declare len: int = arr.length()
+
             // 边界检查
             if start < 0 then
                 start = 0
@@ -289,7 +292,7 @@ module: std_string
 
             declare data: byte[] = std_string.toBytes(str)
 
-            // 构建子字符串
+            // 构建子字符串（按字节截取）
             declare result: string = ""
             declare i: int = start
             loop:
@@ -303,14 +306,14 @@ module: std_string
                     result = result + std_string._charToString(data[i])
                 end body
             end loop
-            
+
             return result
         end body
     end function
 
     /**
     @function indexOf
-    @summary 查找子字符串首次出现的位置
+    @summary 查找子字符串首次出现的位置（按字节比较）
     @param str 源字符串
     @param substr 要查找的子字符串
     @return 位置索引，未找到返回 -1
@@ -321,16 +324,18 @@ module: std_string
             declare substr: string
         returns: int
         body:
-            declare strLen: int = os_array.length(str)
-            declare subLen: int = os_array.length(substr)
-            
+            declare strArr: std_array = new std_array(str)
+            declare subArr: std_array = new std_array(substr)
+            declare strLen: int = strArr.length()
+            declare subLen: int = subArr.length()
+
             if subLen == 0 then
                 return 0
             end if
             if subLen > strLen then
                 return -1
             end if
-            
+
             // 转换为字节数组进行比较
             declare strData: byte[] = std_string.toBytes(str)
             declare subData: byte[] = std_string.toBytes(substr)
@@ -361,13 +366,13 @@ module: std_string
                             end if
                         end body
                     end loop
-                    
+
                     if match == true then
                         return i
                     end if
                 end body
             end loop
-            
+
             return -1
         end body
     end function
@@ -388,83 +393,84 @@ module: std_string
         end body
     end function
 
-     /**
-     @function trim
-     @summary 去除字符串首尾的空白字符（空格、制表符、换行、回车）
-     @param str 源字符串
-     */
-     function: trim
-         params:
-             declare str: string
-         returns: string
-         body:
-             declare len: int = os_array.length(str)
-             if len == 0 then
-                 return ""
-             end if
+    /**
+    @function trim
+    @summary 去除字符串首尾的空白字符（空格、制表符、换行、回车）
+    @param str 源字符串
+    */
+    function: trim
+        params:
+            declare str: string
+        returns: string
+        body:
+            declare arr: std_array = new std_array(str)
+            declare len: int = arr.length()
+            if len == 0 then
+                return ""
+            end if
 
-             // 转为字节数组
-             declare data: byte[] = std_string.toBytes(str)
+            // 转为字节数组
+            declare data: byte[] = std_string.toBytes(str)
 
-             // 找到首个非空白字符
-             declare start: int = 0
-             loop:
-                 init:
-                     start = start
-                 cond:
-                     start < len
-                 step:
-                     start = start + 1
-                 body:
-                     if std_string._isWhitespace(data[start]) == false then
-                         break
-                     end if
-                 end body
-             end loop
+            // 找到首个非空白字符
+            declare start: int = 0
+            loop:
+                init:
+                    start = start
+                cond:
+                    start < len
+                step:
+                    start = start + 1
+                body:
+                    if std_string._isWhitespace(data[start]) == false then
+                        break
+                    end if
+                end body
+            end loop
 
-             // 整个字符串都是空白
-             if start == len then
-                 return ""
-             end if
+            // 整个字符串都是空白
+            if start == len then
+                return ""
+            end if
 
-             // 找到末尾非空白字符
-             declare endIdx: int = len - 1
-             loop:
-                 init:
-                     endIdx = endIdx
-                 cond:
-                     endIdx >= start
-                 step:
-                     endIdx = endIdx - 1
-                 body:
-                     if std_string._isWhitespace(data[endIdx]) == false then
-                         break
-                     end if
-                 end body
-             end loop
+            // 找到末尾非空白字符
+            declare endIdx: int = len - 1
+            loop:
+                init:
+                    endIdx = endIdx
+                cond:
+                    endIdx >= start
+                step:
+                    endIdx = endIdx - 1
+                body:
+                    if std_string._isWhitespace(data[endIdx]) == false then
+                        break
+                    end if
+                end body
+            end loop
 
-             // 构建结果字符串
-             declare result: string = ""
-             declare i: int = start
-             loop:
-                 init:
-                     i = i
-                 cond:
-                     i <= endIdx
-                 step:
-                     i = i + 1
-                 body:
-                     result = result + std_string._charToString(data[i])
-                 end body
-             end loop
+            // 构建结果字符串
+            declare result: string = ""
+            declare i: int = start
+            loop:
+                init:
+                    i = i
+                cond:
+                    i <= endIdx
+                step:
+                    i = i + 1
+                body:
+                    result = result + std_string._charToString(data[i])
+                end body
+            end loop
 
-             return result
-         end body
-     end function
+            return result
+        end body
+    end function
 
     /**
     @function toUpperCase
-    @summary 将字符串转为大写
+    @summary 将字符串转为大写（按字节处理，仅 ASCII）
     @param str 源字符串
     */
     function: toUpperCase
@@ -472,13 +478,14 @@ module: std_string
             declare str: string
         returns: string
         body:
-            declare len: int = os_array.length(str)
+            declare arr: std_array = new std_array(str)
+            declare len: int = arr.length()
             if len == 0 then
                 return ""
             end if
-            
+
             declare data: byte[] = std_string.toBytes(str)
-            
+
             declare result: string = ""
             declare i: int = 0
             loop:
@@ -497,14 +504,14 @@ module: std_string
                     result = result + std_string._charToString(ch)
                 end body
             end loop
-            
+
             return result
         end body
     end function
 
     /**
     @function toLowerCase
-    @summary 将字符串转为小写
+    @summary 将字符串转为小写（按字节处理，仅 ASCII）
     @param str 源字符串
     */
     function: toLowerCase
@@ -512,13 +519,14 @@ module: std_string
             declare str: string
         returns: string
         body:
-            declare len: int = os_array.length(str)
+            declare arr: std_array = new std_array(str)
+            declare len: int = arr.length()
             if len == 0 then
                 return ""
             end if
-            
+
             declare data: byte[] = std_string.toBytes(str)
-            
+
             declare result: string = ""
             declare i: int = 0
             loop:
@@ -537,7 +545,7 @@ module: std_string
                     result = result + std_string._charToString(ch)
                 end body
             end loop
-            
+
             return result
         end body
     end function
@@ -558,6 +566,10 @@ module: std_string
             os_fd.close(pair[0])
 
             declare res: byte[] = []
+
+            // 使用 std_array 包装 data 进行读取
+            declare dataArr: std_array = new std_array(data)
+
             loop:
                 init:
                     // XXX: 此处利用 snow 内部机制，先对最后一个下标赋值，可直接扩容至 len 长度
@@ -567,7 +579,9 @@ module: std_string
                 step:
                     i = i - 1
                 body:
-                    res[i] = os_array.get(data, i)
+                    declare v: any = dataArr.get(i)
+                    // 这里利用原生下标赋值扩容
+                    res[i] = v
                 end body
             end loop
 
@@ -584,7 +598,8 @@ module: std_string
             declare bytes: byte[]
         returns: string
         body:
-            declare len: int = os_array.length(bytes)
+            declare arr: std_array = new std_array(bytes)
+            declare len: int = arr.length()
             declare str: string = ""
             loop:
                 init:
@@ -594,7 +609,7 @@ module: std_string
                 step:
                     i = i + 1
                 body:
-                    declare ch: int = os_array.get(bytes, i)
+                    declare ch: int = arr.get(i)
                     str = str + std_string._charToString(ch)
                 end body
             end loop
@@ -615,16 +630,18 @@ module: std_string
             declare prefix: string
         returns: boolean
         body:
-            declare strLen: int = os_array.length(str)
-            declare prefixLen: int = os_array.length(prefix)
-            
+            declare strArr: std_array = new std_array(str)
+            declare preArr: std_array = new std_array(prefix)
+            declare strLen: int = strArr.length()
+            declare prefixLen: int = preArr.length()
+
             if prefixLen > strLen then
                 return false
             end if
             if prefixLen == 0 then
                 return true
             end if
-            
+
             declare strData: byte[] = std_string.toBytes(str)
             declare prefixData: byte[] = std_string.toBytes(prefix)
 
@@ -642,7 +659,7 @@ module: std_string
                     end if
                 end body
             end loop
-            
+
             return true
         end body
     end function
@@ -659,23 +676,25 @@ module: std_string
             declare suffix: string
         returns: boolean
         body:
-            declare strLen: int = os_array.length(str)
-            declare suffixLen: int = os_array.length(suffix)
-            
+            declare strArr: std_array = new std_array(str)
+            declare sufArr: std_array = new std_array(suffix)
+            declare strLen: int = strArr.length()
+            declare suffixLen: int = sufArr.length()
+
             if suffixLen > strLen then
                 return false
             end if
             if suffixLen == 0 then
                 return true
             end if
-            
+
             declare strData: byte[] = std_string.toBytes(str)
             declare suffixData: byte[] = std_string.toBytes(suffix)
-            
-            declare offset: int = 0
-            declare tempLen: int = strLen
+
+            // 计算 str 中后缀开始的位置
+            declare offset: int = strLen
             declare tempSuffixLen: int = suffixLen
-            offset = tempLen
+
             loop:
                 init:
                     tempSuffixLen = tempSuffixLen
@@ -687,6 +706,7 @@ module: std_string
                     offset = offset - 1
                 end body
             end loop
+
             declare i: int = 0
             loop:
                 init:
@@ -701,7 +721,7 @@ module: std_string
                     end if
                 end body
             end loop
-            
+
             return true
         end body
     end function
@@ -745,8 +765,9 @@ module: std_string
         body:
             // 将 int 转为单字节数组再解码为字符串，避免写入 int 时被 toString() 成数字字符
             declare b: byte = std_parse.parseByte("" + ch)  // 显式收缩为 byte，避免以 Integer 形式写入
-            declare buf: any = os_sys.random_bytes(1)  // RANDOM_BYTES(1) → byte[]
-            declare _rc: int = os_array.set(buf, 0, b)  // ARR_SET(buf,0,b)，返回值仅为平衡栈
+            declare buf: any = os_sys.random_bytes(1)       // RANDOM_BYTES(1) → byte[]
+            declare bufArr: std_array = new std_array(buf)
+            bufArr.set(0, b)
             return "" + buf
         end body
     end function
