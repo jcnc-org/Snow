@@ -5,6 +5,7 @@
 module: std_parse
     import: os_fd
     import: std_string
+    import: os_array
 
     /**
     @function _digitValue
@@ -34,7 +35,7 @@ module: std_parse
         returns: double
         body:
             declare data: byte[] = std_string.toBytes(s)
-            declare len: int = syscall("0x1801", data)
+            declare len: int = os_array.length(data)
             declare idx: int = 0
 
             // 跳过前导空白（手动推进索引，避免 step 语义干扰）
@@ -151,7 +152,7 @@ module: std_parse
         returns: float
         body:
             declare data: byte[] = std_string.toBytes(s)
-            declare len: int = syscall("0x1801", data)
+            declare len: int = os_array.length(data)
             declare idx: int = 0
 
             loop:
@@ -266,7 +267,7 @@ module: std_parse
 	    returns: long
 	    body:
 	        declare data: byte[] = std_string.toBytes(s)
-            declare len: int = syscall("0x1801", data)
+            declare len: int = os_array.length(data)
             declare idx: int = 0
 
 	        // 跳过前导空白
@@ -347,7 +348,7 @@ module: std_parse
 	    returns: short
 	    body:
 	        declare data: byte[] = std_string.toBytes(s)
-            declare len: int = syscall("0x1801", data)
+            declare len: int = os_array.length(data)
             declare idx: int = 0
 
 	        // 跳过前导空白
@@ -429,7 +430,7 @@ module: std_parse
         returns: int
         body:
             declare data: byte[] = std_string.toBytes(s)
-            declare len: int = syscall("0x1801", data)
+            declare len: int = os_array.length(data)
             declare idx: int = 0
 
             // 跳过前导空白
@@ -510,7 +511,7 @@ module: std_parse
             returns: byte
             body:
                 declare data: byte[] = std_string.toBytes(s)
-                declare len: int = syscall("0x1801", data)
+                declare len: int = os_array.length(data)
                 declare idx: int = 0
 
                 // 跳过前导空白
