@@ -10,6 +10,7 @@ module: os_fs
     import: fd
     import: os_fd
     import: std_string
+    import: os_array
 
     /**
     @function current_dir
@@ -329,7 +330,7 @@ module: os_fs
                         break
                     end if
 
-                    declare chunkLen: int = syscall("0x1801", chunk)
+                    declare chunkLen: int = os_array.length(chunk)
                     if chunkLen == 0 then
                         break
                     end if
@@ -344,8 +345,8 @@ module: os_fs
                         step:
                             ci = ci + 1
                         body:
-                            declare b: int = syscall("0x1802", chunk, ci)
-                            syscall("0x1810", buf, b)
+                            declare b: int = os_array.get(chunk, ci)
+                            os_array.push(buf, b)
                         end body
                     end loop
 
@@ -456,7 +457,7 @@ module: os_fs
                             break
                         end if
 
-                        declare chunkLen: int = syscall("0x1801", chunk)
+                        declare chunkLen: int = os_array.length(chunk)
                         if chunkLen == 0 then
                             break
                         end if
@@ -470,8 +471,8 @@ module: os_fs
                             step:
                                 i = i + 1
                             body:
-                                declare b: int = syscall("0x1802", chunk, i)
-                                syscall("0x1810", data, b)
+                                declare b: int = os_array.get(chunk, i)
+                                os_array.push(data, b)
                             end body
                         end loop
                     end body
