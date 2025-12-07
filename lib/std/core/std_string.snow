@@ -6,6 +6,7 @@ module: std_string
     import: os_fd
     import: fd
     import: std_parse
+    import: os_array
 
     /**
     @struct std_string
@@ -240,7 +241,7 @@ module: std_string
             declare str: string
         returns: int
         body:
-            return syscall("0x1801", str)
+            return os_array.length(str)
         end body
     end function
 
@@ -254,7 +255,7 @@ module: std_string
             declare str: string
         returns: boolean
         body:
-            declare len: int = syscall("0x1801", str)
+            declare len: int = os_array.length(str)
             return len == 0
         end body
     end function
@@ -273,7 +274,7 @@ module: std_string
             declare endIdx: int
         returns: string
         body:
-            declare len: int = syscall("0x1801", str)
+            declare len: int = os_array.length(str)
             
             // 边界检查
             if start < 0 then
@@ -320,8 +321,8 @@ module: std_string
             declare substr: string
         returns: int
         body:
-            declare strLen: int = syscall("0x1801", str)
-            declare subLen: int = syscall("0x1801", substr)
+            declare strLen: int = os_array.length(str)
+            declare subLen: int = os_array.length(substr)
             
             if subLen == 0 then
                 return 0
@@ -397,7 +398,7 @@ module: std_string
              declare str: string
          returns: string
          body:
-             declare len: int = syscall("0x1801", str)
+             declare len: int = os_array.length(str)
              if len == 0 then
                  return ""
              end if
@@ -471,7 +472,7 @@ module: std_string
             declare str: string
         returns: string
         body:
-            declare len: int = syscall("0x1801", str)
+            declare len: int = os_array.length(str)
             if len == 0 then
                 return ""
             end if
@@ -511,7 +512,7 @@ module: std_string
             declare str: string
         returns: string
         body:
-            declare len: int = syscall("0x1801", str)
+            declare len: int = os_array.length(str)
             if len == 0 then
                 return ""
             end if
@@ -566,7 +567,7 @@ module: std_string
                 step:
                     i = i - 1
                 body:
-                    res[i] = syscall("0x1802", data, i)
+                    res[i] = os_array.get(data, i)
                 end body
             end loop
 
@@ -583,7 +584,7 @@ module: std_string
             declare bytes: byte[]
         returns: string
         body:
-            declare len: int = syscall("0x1801", bytes)
+            declare len: int = os_array.length(bytes)
             declare str: string = ""
             loop:
                 init:
@@ -593,7 +594,7 @@ module: std_string
                 step:
                     i = i + 1
                 body:
-                    declare ch: int = syscall("0x1802", bytes, i)
+                    declare ch: int = os_array.get(bytes, i)
                     str = str + std_string._charToString(ch)
                 end body
             end loop
@@ -614,8 +615,8 @@ module: std_string
             declare prefix: string
         returns: boolean
         body:
-            declare strLen: int = syscall("0x1801", str)
-            declare prefixLen: int = syscall("0x1801", prefix)
+            declare strLen: int = os_array.length(str)
+            declare prefixLen: int = os_array.length(prefix)
             
             if prefixLen > strLen then
                 return false
@@ -658,8 +659,8 @@ module: std_string
             declare suffix: string
         returns: boolean
         body:
-            declare strLen: int = syscall("0x1801", str)
-            declare suffixLen: int = syscall("0x1801", suffix)
+            declare strLen: int = os_array.length(str)
+            declare suffixLen: int = os_array.length(suffix)
             
             if suffixLen > strLen then
                 return false
