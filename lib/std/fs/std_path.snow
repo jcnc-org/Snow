@@ -4,6 +4,7 @@
 */
 module: std_path
     import: std_string
+    import: os_array
 
     /**
     @function join
@@ -23,7 +24,7 @@ module: std_path
             end if
 
             declare subBytes: byte[] = std_string.toBytes(sub)
-            declare subLen: int = syscall("0x1801", subBytes)
+            declare subLen: int = os_array.length(subBytes)
             if subLen > 0 && std_path._isSeparator(subBytes[0]) then
                 return std_path.normalize(sub)
             end if
@@ -189,7 +190,7 @@ module: std_path
             end if
 
             declare bytes: byte[] = std_string.toBytes(path)
-            declare len: int = syscall("0x1801", bytes)
+            declare len: int = os_array.length(bytes)
             declare absolute: boolean = false
             if len > 0 && std_path._isSeparator(bytes[0]) then
                 absolute = true
@@ -228,12 +229,12 @@ module: std_path
                                         segCount = segCount - 1
                                     else
                                         if absolute == false then
-                                            syscall("0x1803", segments, segCount, current)
+                                            os_array.push(segments, current)
                                             segCount = segCount + 1
                                         end if
                                     end if
                                 else
-                                    syscall("0x1803", segments, segCount, current)
+                                    os_array.push(segments, current)
                                     segCount = segCount + 1
                                 end if
                             end if
@@ -269,7 +270,7 @@ module: std_path
                     if result != "" && std_path._endsWithSep(result) == false then
                         result = result + "/"
                     end if
-                    declare segVal: string = "" + syscall("0x1802", segments, idx)
+                    declare segVal: string = "" + os_array.get(segments, idx)
                     result = result + segVal
                 end body
             end loop
