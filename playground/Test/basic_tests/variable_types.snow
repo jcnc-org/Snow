@@ -1,6 +1,6 @@
 module: VariableTypes
     import: std_io
-    
+
     function: main
         returns: void
         body:
@@ -13,7 +13,7 @@ module: VariableTypes
             declare d: double = 3.141592653589793
             declare bool: boolean = true
             declare str: string = "Hello Snow"
-            
+
             // 输出变量值
             std_io.println("byte: " + b)
             std_io.println("short: " + s)

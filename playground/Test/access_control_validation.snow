@@ -1,6 +1,6 @@
 module: AccessControlValidation
     import: std_io
-    
+
     globals:
         declare _secret: int = 42      // 仅模块内部可见
         declare visible: int = 1       // 公有

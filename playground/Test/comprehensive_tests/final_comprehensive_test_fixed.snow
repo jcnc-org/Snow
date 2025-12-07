@@ -1,12 +1,12 @@
 module: FinalComprehensiveTestFixed
     import: std_io
     import: syscall.time
-    
+
     struct: Point
         fields:
             declare x: int
             declare y: int
-        
+
         init:
             params:
                 declare xVal: int
@@ -16,21 +16,21 @@ module: FinalComprehensiveTestFixed
                 this.y = yVal
             end body
         end init
-        
+
         function: getX
             returns: int
             body:
                 return this.x
             end body
         end function
-        
+
         function: getY
             returns: int
             body:
                 return this.y
             end body
         end function
-        
+
         function: move
             params:
                 declare dx: int
@@ -42,11 +42,11 @@ module: FinalComprehensiveTestFixed
             end body
         end function
     end struct
-    
+
     struct: ColoredPoint extends Point
         fields:
             declare color: string
-        
+
         init:
             params:
                 declare xVal: int
@@ -57,14 +57,14 @@ module: FinalComprehensiveTestFixed
                 this.color = c
             end body
         end init
-        
+
         function: getColor
             returns: string
             body:
                 return this.color
             end body
         end function
-        
+
         function: move
             params:
                 declare dx: int
@@ -76,50 +76,50 @@ module: FinalComprehensiveTestFixed
             end body
         end function
     end struct
-    
+
     globals:
         declare globalCounter: int = 0
         declare _privateGlobal: string = "Private"
-    
+
     function: main
         returns: void
         body:
             std_io.println("=== Final Comprehensive Snow Language Test ===")
-            
+
             // 测试基本数据类型
             testBasicTypes()
-            
+
             // 测试控制结构
             testControlStructures()
-            
+
             // 测试函数
             testFunctions()
-            
+
             // 测试结构体
             testStructs()
-            
+
             // 测试继承
             testInheritance()
-            
+
             // 测试数组
             testArrays()
-            
+
             // 测试多维数组
             testMultidimensionalArrays()
-            
+
             // 测试系统调用
             testSyscalls()
-            
+
             // 测试全局变量
             testGlobals()
-            
+
             // 测试访问控制
             testAccessControl()
-            
+
             std_io.println("=== All tests completed successfully! ===")
         end body
     end function
-    
+
     function: testBasicTypes
         returns: void
         body:
@@ -132,7 +132,7 @@ module: FinalComprehensiveTestFixed
             declare d: double = 3.141592653589793
             declare bool: boolean = true
             declare str: string = "Hello Snow"
-            
+
             std_io.println("byte: " + b)
             std_io.println("short: " + s)
             std_io.println("int: " + i)
@@ -143,7 +143,7 @@ module: FinalComprehensiveTestFixed
             std_io.println("string: " + str)
         end body
     end function
-    
+
     function: testControlStructures
         returns: void
         body:
@@ -154,7 +154,7 @@ module: FinalComprehensiveTestFixed
             else
                 std_io.println("n is not greater than 5")
             end if
-            
+
             std_io.println("Counting from 1 to 3:")
             loop:
                 init:
@@ -169,7 +169,7 @@ module: FinalComprehensiveTestFixed
             end loop
         end body
     end function
-    
+
     function: add
         params:
             declare a: int
@@ -179,7 +179,7 @@ module: FinalComprehensiveTestFixed
             return a + b
         end body
     end function
-    
+
     function: testFunctions
         returns: void
         body:
@@ -188,19 +188,19 @@ module: FinalComprehensiveTestFixed
             std_io.println("3 + 5 = " + result)
         end body
     end function
-    
+
     function: testStructs
         returns: void
         body:
             std_io.println("--- Testing Structs ---")
             declare p: Point = new Point(10, 20)
             std_io.println("Point coordinates: (" + p.getX() + ", " + p.getY() + ")")
-            
-            p.move(5, - 3)
+
+            p.move(5, -3)
             std_io.println("After move: (" + p.getX() + ", " + p.getY() + ")")
         end body
     end function
-    
+
     function: testInheritance
         returns: void
         body:
@@ -208,12 +208,12 @@ module: FinalComprehensiveTestFixed
             declare cp: ColoredPoint = new ColoredPoint(15, 25, "red")
             std_io.println("Colored point coordinates: (" + cp.getX() + ", " + cp.getY() + ")")
             std_io.println("Colored point color: " + cp.getColor())
-            
-            cp.move(10, - 5)
+
+            cp.move(10, -5)
             std_io.println("After move: (" + cp.getX() + ", " + cp.getY() + ")")
         end body
     end function
-    
+
     function: testArrays
         returns: void
         body:
@@ -221,10 +221,10 @@ module: FinalComprehensiveTestFixed
             declare arr: int[] = [1, 2, 3, 4, 5]
             std_io.println("First element: " + arr[0])
             std_io.println("Third element: " + arr[2])
-            
+
             arr[0] = 10
             std_io.println("Modified first element: " + arr[0])
-            
+
             // 遍历数组
             declare arrLength: int = 5
             loop:
@@ -240,20 +240,20 @@ module: FinalComprehensiveTestFixed
             end loop
         end body
     end function
-    
+
     function: testMultidimensionalArrays
         returns: void
         body:
             std_io.println("--- Testing Multidimensional Arrays ---")
             declare matrix: int[][] = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
-            
+
             std_io.println("matrix[0][0]: " + matrix[0][0])
             std_io.println("matrix[1][2]: " + matrix[1][2])
             std_io.println("matrix[2][1]: " + matrix[2][1])
-            
+
             matrix[0][0] = 10
             std_io.println("Modified matrix[0][0]: " + matrix[0][0])
-            
+
             // 遍历多维数组
             loop:
                 init:
@@ -279,7 +279,7 @@ module: FinalComprehensiveTestFixed
             end loop
         end body
     end function
-    
+
     function: testSyscalls
         returns: void
         body:
@@ -288,7 +288,7 @@ module: FinalComprehensiveTestFixed
             std_io.println("Start time: " + startTime)
         end body
     end function
-    
+
     function: testGlobals
         returns: void
         body:
@@ -298,14 +298,14 @@ module: FinalComprehensiveTestFixed
             std_io.println("Incremented global counter: " + globalCounter)
         end body
     end function
-    
+
     function: _privateFunction
         returns: string
         body:
             return "This is a private function"
         end body
     end function
-    
+
     function: testAccessControl
         returns: void
         body:

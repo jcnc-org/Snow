@@ -1,6 +1,6 @@
 module: ModuleStructureValidation
     import: std_io
-    
+
     // 正确的顺序：结构体在globals之前
     struct: Point
         fields:
@@ -23,7 +23,7 @@ module: ModuleStructureValidation
                 return this.x
             end body
         end function
-        
+
         function: getY
             returns: int
             body:
@@ -31,7 +31,7 @@ module: ModuleStructureValidation
             end body
         end function
     end struct
-    
+
     globals:
         declare globalCounter: int = 0
 

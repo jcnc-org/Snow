@@ -6,19 +6,19 @@ module: Benchmark
         returns: void
         body:
             std_io.println("Starting performance benchmark...")
-            
+
             // 测试1: 简单算术运算
             benchmarkArithmetic()
-            
+
             // 测试2: 字符串操作
             benchmarkStringOps()
-            
+
             // 测试3: 循环性能
             benchmarkLoops()
-            
+
             // 测试4: 函数调用开销
             benchmarkFunctionCalls()
-            
+
             std_io.println("Benchmark completed.")
         end body
     end function
@@ -27,7 +27,7 @@ module: Benchmark
         returns: void
         body:
             declare startTime: long = time.mono_ms()
-            
+
             declare result: int = 0
             loop:
                 init:
@@ -40,7 +40,7 @@ module: Benchmark
                     result = result + i * 2 - 1
                 end body
             end loop
-            
+
             declare endTime: long = time.mono_ms()
             std_io.println("Arithmetic test: " + (endTime - startTime) + " ms, result = " + result)
         end body
@@ -50,7 +50,7 @@ module: Benchmark
         returns: void
         body:
             declare startTime: long = time.mono_ms()
-            
+
             declare str: string = ""
             loop:
                 init:
@@ -63,7 +63,7 @@ module: Benchmark
                     str = str + "a"
                 end body
             end loop
-            
+
             declare endTime: long = time.mono_ms()
             // 使用系统调用获取字符串长度
             declare length: int = syscall("0x1801", str)
@@ -75,7 +75,7 @@ module: Benchmark
         returns: void
         body:
             declare startTime: long = time.mono_ms()
-            
+
             declare sum: int = 0
             loop:
                 init:
@@ -88,7 +88,7 @@ module: Benchmark
                     sum = sum + 1
                 end body
             end loop
-            
+
             declare endTime: long = time.mono_ms()
             std_io.println("Loop performance test: " + (endTime - startTime) + " ms, sum = " + sum)
         end body
@@ -98,7 +98,7 @@ module: Benchmark
         returns: void
         body:
             declare startTime: long = time.mono_ms()
-            
+
             declare result: int = 0
             loop:
                 init:
@@ -111,7 +111,7 @@ module: Benchmark
                     result = result + simpleFunction(i)
                 end body
             end loop
-            
+
             declare endTime: long = time.mono_ms()
             std_io.println("Function calls test: " + (endTime - startTime) + " ms, result = " + result)
         end body
