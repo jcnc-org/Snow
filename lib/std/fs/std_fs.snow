@@ -5,6 +5,7 @@
 module: std_fs
     import: os_fs
     import: os_fd
+    import: os_array
 
     /**
     @function exists
@@ -150,7 +151,7 @@ module: std_fs
                             break
                         end if
 
-                        declare chunkLen: int = syscall("0x1801", chunk)
+                        declare chunkLen: int = os_array.length(chunk)
                         if chunkLen == 0 then
                             break
                         end if
@@ -164,8 +165,8 @@ module: std_fs
                             step:
                                 i = i + 1
                             body:
-                                declare b: int = syscall("0x1802", chunk, i)
-                                syscall("0x1810", data, b)
+                                declare b: int = os_array.get(chunk, i)
+                                os_array.push(data, b)
                             end body
                         end loop
                     end body
