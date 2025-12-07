@@ -5,7 +5,7 @@
 module: std_fs
     import: os_fs
     import: os_fd
-    import: os_array
+    import: std_array
 
     /**
     @function exists
@@ -125,17 +125,18 @@ module: std_fs
 
         /**
         @function read_all_bytes
-        @summary 读取文件全部内容为字节数组。
+        @summary 读取文件全部内容为 std_array 包装的动态字节数组。
         */
         function: read_all_bytes
             returns: byte[]
             body:
                 if fd == -1 then
-                    declare empty: byte[] = []
-                    return empty
+                    declare emptyArr: std_array = std_array.newArray()
+                    return emptyArr.toRawArray()
                 end if
 
-                declare data: byte[] = []
+                // 改造：使用 std_array 替代 byte[] 作为动态缓冲容器
+                declare buffer: std_array = std_array.newArray()
 
                 loop:
                     init:
@@ -146,16 +147,22 @@ module: std_fs
                         keep = keep
                     body:
                         declare chunk: any = os_fd.read_bytes(fd, 4096)
+
+                        // os_fd.read_bytes 返回 -1 表示 EOF
                         declare chunkStr: string = "" + chunk
                         if chunkStr == "-1" then
                             break
                         end if
 
-                        declare chunkLen: int = os_array.length(chunk)
+                        // 将 chunk 数组用 std_array 包装
+                        declare chunkArr: std_array = std_array.fromRawArray(chunk)
+                        declare chunkLen: int = chunkArr.length()
+
                         if chunkLen == 0 then
                             break
                         end if
 
+                        // 按字节复制到 buffer
                         declare i: int = 0
                         loop:
                             init:
@@ -165,14 +172,13 @@ module: std_fs
                             step:
                                 i = i + 1
                             body:
-                                declare b: int = os_array.get(chunk, i)
-                                os_array.push(data, b)
+                                buffer.append(chunkArr.get(i))
                             end body
                         end loop
                     end body
                 end loop
 
-                return data
+                return buffer.toRawArray()
             end body
         end function
 
