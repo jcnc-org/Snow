@@ -1,6 +1,6 @@
 /**
 @module os_fd
-@summary 文件描述符与基础 I/O 的稳定接口层。
+@summary fd 的稳定接口层。
 @details
     在 syscall.fd 的基础上提供常用标志常量与便捷 open/close 组合，简化上层使用。
 */
@@ -191,6 +191,100 @@ module: os_fd
         returns: int
         body:
             return fd.ftruncate(handle, length)
+        end body
+    end function
+
+    /**
+    @function stat
+    @summary 获取路径对应文件的属性信息。
+    */
+    function: stat
+        params:
+            declare path: any
+        returns: map
+        body:
+            return fd.stat(path)
+        end body
+    end function
+
+    /**
+    @function fstat
+    @summary 根据 fd 获取文件的属性信息。
+    */
+    function: fstat
+        params:
+            declare handle: int
+        returns: map
+        body:
+            return fd.fstat(handle)
+        end body
+    end function
+
+    /**
+    @function unlink
+    @summary 删除路径对应的文件或符号链接。
+    */
+    function: unlink
+        params:
+            declare path: any
+        returns: void
+        body:
+            fd.unlink(path)
+        end body
+    end function
+
+    /**
+    @function rename
+    @summary 重命名或移动文件/目录。
+    */
+    function: rename
+        params:
+            declare oldPath: any
+            declare newPath: any
+        returns: int
+        body:
+            return fd.rename(oldPath, newPath)
+        end body
+    end function
+
+    /**
+    @function link
+    @summary 创建硬链接。
+    */
+    function: link
+        params:
+            declare oldPath: any
+            declare newPath: any
+        returns: int
+        body:
+            return fd.link(oldPath, newPath)
+        end body
+    end function
+
+    /**
+    @function symlink
+    @summary 创建符号链接。
+    */
+    function: symlink
+        params:
+            declare target: any
+            declare linkPath: any
+        returns: int
+        body:
+            return fd.symlink(target, linkPath)
+        end body
+    end function
+
+    /**
+    @function readlink
+    @summary 读取符号链接指向的目标路径。
+    */
+    function: readlink
+        params:
+            declare path: any
+        returns: string
+        body:
+            return fd.readlink(path)
         end body
     end function
 

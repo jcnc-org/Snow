@@ -1,13 +1,12 @@
 /**
 @module os_fs
-@summary 文件系统与路径操作的稳定封装。
+@summary fs 的稳定封装。
 @details
     基于 syscall.fs 与 syscall.fd，统一常见目录/文件操作的语义。
 */
 module: os_fs
 
     import: fs
-    import: fd
     import: os_fd
     import: std_string
     import: os_array
@@ -87,7 +86,7 @@ module: os_fs
             declare path: any
         returns: void
         body:
-            fd.unlink(path)
+            os_fd.unlink(path)
         end body
     end function
 
@@ -113,7 +112,7 @@ module: os_fs
             declare path: any
         returns: map
         body:
-            return fd.stat(path)
+            return os_fd.stat(path)
         end body
     end function
 
@@ -127,7 +126,7 @@ module: os_fs
             declare target: any
         returns: int
         body:
-            return fd.rename(source, target)
+            return os_fd.rename(source, target)
         end body
     end function
 
@@ -141,7 +140,7 @@ module: os_fs
             declare target: any
         returns: int
         body:
-            return fd.link(source, target)
+            return os_fd.link(source, target)
         end body
     end function
 
@@ -155,7 +154,7 @@ module: os_fs
             declare linkpath: any
         returns: int
         body:
-            return fd.symlink(target, linkpath)
+            return os_fd.symlink(target, linkpath)
         end body
     end function
 
@@ -168,7 +167,7 @@ module: os_fs
             declare path: any
         returns: string
         body:
-            return fd.readlink(path)
+            return os_fd.readlink(path)
         end body
     end function
 
@@ -224,7 +223,11 @@ module: os_fs
             declare path: any
             declare length: long
         body:
-            fd.truncate(path, length)
+            declare handle: int = os_fd.open_write(path, true, false)
+            if handle != -1 then
+                os_fd.truncate(handle, length)
+                os_fd.close(handle)
+            end if
         end body
     end function
 
@@ -251,7 +254,7 @@ module: os_fs
             declare path: any
         returns: boolean
         body:
-            declare info: any = fd.stat(path)
+            declare info: any = os_fd.stat(path)
             declare infoStr: string = "" + info
             if infoStr == "-1" then
                 return false
