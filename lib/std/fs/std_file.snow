@@ -1,8 +1,8 @@
 /**
-@module std_fs
-@summary 文件系统的标准库封装，基于 os_fs 提供常用便捷接口。
+@module std_file
+@summary 文件系统的标准库封装。
 */
-module: std_fs
+module: std_file
     import: os_fs
     import: os_fd
     import: std_array
