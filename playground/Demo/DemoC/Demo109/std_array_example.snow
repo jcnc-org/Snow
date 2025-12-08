@@ -1,9 +1,9 @@
 /**
-@module std_array_example
-@summary std_array 方法演示
-@description 演示 std_array 标准库提供的常用数组操作方法
+@module Array_example
+@summary Array 方法演示
+@description 演示 Array 标准库提供的常用数组操作方法
 */
-module: std_array_example
+module: Array_example
 
     import: std_array
     import: std_io
@@ -11,12 +11,12 @@ module: std_array_example
     function: main
         returns: void
         body:
-            std_io.println("=== std_array 标准库演示 ===")
+            std_io.println("=== Array 标准库演示 ===")
             std_io.println("")
 
             // 演示 1: 创建和初始化
             std_io.println("[1] 创建数组并添加元素")
-            declare arr: std_array = std_array.newArray()
+            declare arr: Array = std_array.newArray()
             arr.append(10)
             arr.append(20)
             arr.append(30)
@@ -51,7 +51,7 @@ module: std_array_example
 
             // 演示 5: 空数组检查
             std_io.println("[5] 空数组检查")
-            declare empty_arr: std_array = std_array.newArray()
+            declare empty_arr: Array = std_array.newArray()
             std_io.println("新数组是否为空: " + empty_arr.isEmpty())
             std_io.println("原数组是否为空: " + arr.isEmpty())
             std_io.println("")
@@ -78,7 +78,7 @@ module: std_array_example
 
             // 演示 7: 使用迭代器遍历
             std_io.println("[7] 遍历数组（使用迭代器）")
-            declare it: std_array_iterator = arr.iterator()
+            declare it: ArrayIterator = arr.iterator()
             declare first: boolean = true
             std_io.print("数组内容: [")
             loop:
@@ -138,12 +138,12 @@ module: std_array_example
 
             // 演示 10: clone / copy / equals
             std_io.println("[10] clone / copy / equals 示例")
-            declare cloned: std_array = arr.clone()
+            declare cloned: Array = arr.clone()
             std_io.println("克隆出的 cloned: " + cloned.toString())
             std_io.println("arr.equals(cloned): " + arr.equals(cloned))
 
             // 使用 copy（语义等同于 clone）
-            declare copied: std_array = arr.copy()
+            declare copied: Array = arr.copy()
             std_io.println("复制出的 copied: " + copied.toString())
             std_io.println("arr.equals(copied): " + arr.equals(copied))
 
@@ -164,17 +164,17 @@ module: std_array_example
             std_io.println("")
 
             // 演示 12: 从原始数组创建 & 访问内部原始数组
-            std_io.println("[12] 从原始 any[] 创建 std_array，并访问内部原始数组")
+            std_io.println("[12] 从原始 any[] 创建 Array，并访问内部原始数组")
             declare raw_arr: any[] = [100, 200, 300]
-            declare wrapped: std_array = std_array.fromRawArray(raw_arr)
+            declare wrapped: Array = std_array.fromRawArray(raw_arr)
             std_io.println("从 [100, 200, 300] 创建 wrapped")
             std_io.println("wrapped.length(): " + wrapped.length())
             std_io.println("wrapped 第一个元素: " + wrapped.getFirst())
 
             declare internal: any = wrapped.toRawArray()
             std_io.println("通过 toRawArray() 提取内部原始数组引用")
-            // 再包一层，使用 std_array 的 length 计算长度
-            declare internal_wrapped: std_array = std_array.fromRawArray(internal)
+            // 再包一层，使用 Array 的 length 计算长度
+            declare internal_wrapped: Array = std_array.fromRawArray(internal)
             std_io.println("原始数组长度: " + internal_wrapped.length())
             std_io.println("")
 

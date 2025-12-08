@@ -125,18 +125,18 @@ module: std_file
 
         /**
         @function read_all_bytes
-        @summary 读取文件全部内容为 std_array 包装的动态字节数组。
+        @summary 读取文件全部内容为 Array 包装的动态字节数组。
         */
         function: read_all_bytes
             returns: byte[]
             body:
                 if fd == -1 then
-                    declare emptyArr: std_array = std_array.newArray()
+                    declare emptyArr: Array = new Array()
                     return emptyArr.toRawArray()
                 end if
 
-                // 改造：使用 std_array 替代 byte[] 作为动态缓冲容器
-                declare buffer: std_array = std_array.newArray()
+                // 改造：使用 Array 替代 byte[] 作为动态缓冲容器
+                declare buffer: Array = new Array()
 
                 loop:
                     init:
@@ -154,8 +154,8 @@ module: std_file
                             break
                         end if
 
-                        // 将 chunk 数组用 std_array 包装
-                        declare chunkArr: std_array = std_array.fromRawArray(chunk)
+                        // 将 chunk 数组用 Array 包装
+                        declare chunkArr: Array = new Array(chunk)
                         declare chunkLen: int = chunkArr.length()
 
                         if chunkLen == 0 then

@@ -10,13 +10,13 @@ module: std_array
     import: os_array
 
     /**
-    @struct std_array_iterator
-    @summary std_array 的简单迭代器实现
+    @struct ArrayIterator
+    @summary Array 的简单迭代器实现
     @description
         持有底层数组引用和当前索引，提供 hasNext/next 方法，
         便于在循环中顺序遍历元素。
     */
-    struct: std_array_iterator
+    struct: ArrayIterator
 
         fields:
             /**
@@ -75,13 +75,13 @@ module: std_array
     end struct
 
     /**
-    @struct std_array
+    @struct Array
     @summary Snow 通用动态数组封装
     @description
         - 内部持有一个列表引用（通常为 any[]）
         - 所有操作都通过 os_array 稳定层完成
     */
-    struct: std_array
+    struct: Array
 
         fields:
             /**
@@ -103,7 +103,7 @@ module: std_array
 
         /**
         @init with_initial_data
-        @summary 从已有数组/列表创建 std_array 包装
+        @summary 从已有数组/列表创建 Array 包装
         @param initial_data 任意可被 os_array 识别的数组/列表
         */
         init:
@@ -423,22 +423,22 @@ module: std_array
         /**
         @function iterator
         @summary 创建一个迭代器，用于遍历当前数组
-        @returns std_array_iterator 实例
+        @returns ArrayIterator 实例
         */
         function: iterator
-            returns: std_array_iterator
+            returns: ArrayIterator
             body:
-                return new std_array_iterator(data)
+                return new ArrayIterator(data)
             end body
         end function
 
         /**
         @function clone
         @summary 创建当前数组的浅拷贝（内容复制，底层存储分离）
-        @returns 一个新的 std_array，包含相同元素
+        @returns 一个新的 Array，包含相同元素
         */
         function: clone
-            returns: std_array
+            returns: Array
             body:
                 declare len: int = length()
                 declare newData: any[] = []
@@ -457,17 +457,17 @@ module: std_array
                     end body
                 end loop
 
-                return new std_array(newData)
+                return new Array(newData)
             end body
         end function
 
         /**
         @function copy
         @summary 复制当前数组（语义等同于 clone）
-        @returns 一个新的 std_array，包含相同元素
+        @returns 一个新的 Array，包含相同元素
         */
         function: copy
-            returns: std_array
+            returns: Array
             body:
                 return clone()
             end body
@@ -475,17 +475,17 @@ module: std_array
 
         /**
         @function equals
-        @summary 比较两个 std_array 是否“元素相等”
+        @summary 比较两个 Array 是否“元素相等”
         @description
             - 若长度不同则返回 false；
             - 若对应位置元素字符串化后都相等，则返回 true；
             - 否则返回 false。
-        @param other 要比较的另一个 std_array
+        @param other 要比较的另一个 Array
         @returns 若相等返回 true，否则 false
         */
         function: equals
             params:
-                declare other: std_array
+                declare other: Array
             returns: boolean
             body:
                 declare len1: int = length()
@@ -518,13 +518,13 @@ module: std_array
         /**
         @function toString
         @summary 返回便于调试的字符串表示
-        @returns 类似 "std_array(len=3)[1, 2, 3]" 的字符串
+        @returns 类似 "Array(len=3)[1, 2, 3]" 的字符串
         */
         function: toString
             returns: string
             body:
                 declare len: int = length()
-                declare s: string = "std_array(len=" + ("" + len) + ")["
+                declare s: string = "Array(len=" + ("" + len) + ")["
 
                 loop:
                     init:
@@ -550,7 +550,7 @@ module: std_array
         /**
         @function toRawArray
         @summary 取得内部原始数组/列表引用
-        @returns 内部 data 引用（注意：为同一引用，修改会影响 std_array）
+        @returns 内部 data 引用（注意：为同一引用，修改会影响 Array）
         */
         function: toRawArray
             returns: any
@@ -563,18 +563,18 @@ module: std_array
 
     /**
     @function newArray
-    @summary 创建空 std_array
+    @summary 创建空 Array
     */
     function: newArray
-        returns: std_array
+        returns: Array
         body:
-            return new std_array()
+            return new Array()
         end body
     end function
 
     /**
     @function newArrayWithCapacity
-    @summary 创建指定初始容量的 std_array
+    @summary 创建指定初始容量的 Array
     @description
         当前实现中 capacity 仅作语义占位，
         实际容量管理由底层实现负责，返回的数组初始长度仍为 0。
@@ -582,24 +582,24 @@ module: std_array
     function: newArrayWithCapacity
         params:
             declare capacity: int
-        returns: std_array
+        returns: Array
         body:
             // 目前没有显式容量 API，先返回空数组实例
-            return new std_array()
+            return new Array()
         end body
     end function
 
     /**
     @function fromRawArray
-    @summary 从原始数组/列表创建 std_array 包装
+    @summary 从原始数组/列表创建 Array 包装
     @param raw 原始数组/列表
     */
     function: fromRawArray
         params:
             declare raw: any
-        returns: std_array
+        returns: Array
         body:
-            return new std_array(raw)
+            return new Array(raw)
         end body
     end function
 
