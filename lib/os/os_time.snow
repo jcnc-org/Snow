@@ -5,6 +5,7 @@
 module: os_time
 
 	import: time
+
 	/**
 	@function now_ns
 	@summary 返回墙钟时间（纳秒）。
