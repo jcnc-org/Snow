@@ -31,11 +31,11 @@ module: std_array
 			*/
 			declare index: int
 
-			/**
-			@init with_data
-			@summary 使用原始数组/列表创建迭代器
-			@param arrayData 要遍历的底层数组/列表
-			*/
+		/**
+		@init with_data
+		@summary 使用原始数组/列表创建迭代器
+		@param arrayData 要遍历的底层数组/列表
+		*/
 		init:
 			params:
 				declare arrayData: any
@@ -90,10 +90,10 @@ module: std_array
 			*/
 			declare data: any
 
-			/**
-			@init default
-			@summary 无参构造函数，创建空数组
-			*/
+		/**
+		@init default
+		@summary 无参构造函数，创建空数组
+		*/
 		init:
 			body:
 				declare tmp: any[] = []

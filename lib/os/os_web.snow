@@ -15,10 +15,10 @@ module: os_web
 		declare const SHUT_WR: int = 1
 		declare const SHUT_RDWR: int = 2
 
-		/**
-		@function socket
-		@summary 创建原始 socket。
-		*/
+	/**
+	@function socket
+	@summary 创建原始 socket。
+	*/
 	function: socket
 		params:
 			declare family: int

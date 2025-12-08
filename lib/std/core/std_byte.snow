@@ -9,19 +9,19 @@ module: std_byte
 		declare const MIN_VALUE: byte = 0x80
 		declare const MAX_VALUE: byte = 0x7f
 
-		/**
-		@struct std_byte
-		@summary byte 的包装类
-		*/
+	/**
+	@struct std_byte
+	@summary byte 的包装类
+	*/
 	struct: std_byte
 
 		fields:
 			declare value: byte
 
-			/**
-			@init default
-			@summary 无参构造函数，默认创建值为 0 的 std_byte
-			*/
+		/**
+		@init default
+		@summary 无参构造函数，默认创建值为 0 的 std_byte
+		*/
 		init:
 			body:
 				value = 0

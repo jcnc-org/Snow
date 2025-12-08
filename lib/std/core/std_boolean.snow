@@ -13,10 +13,10 @@ module: std_boolean
 		fields:
 			declare value: boolean
 
-			/**
-			@init default
-			@summary 无参构造，默认为 false
-			*/
+		/**
+		@init default
+		@summary 无参构造，默认为 false
+		*/
 		init:
 			body:
 				value = false

@@ -9,19 +9,19 @@ module: std_short
 		declare const MIN_VALUE: short = 0x8000
 		declare const MAX_VALUE: short = 0x7fff
 
-		/**
-		@struct std_short
-		@summary short 的包装类
-		*/
+	/**
+	@struct std_short
+	@summary short 的包装类
+	*/
 	struct: std_short
 
 		fields:
 			declare value: short
 
-			/**
-			@init default
-			@summary 无参构造函数，默认创建值为 0 的 std_short
-			*/
+		/**
+		@init default
+		@summary 无参构造函数，默认创建值为 0 的 std_short
+		*/
 		init:
 			body:
 				value = 0

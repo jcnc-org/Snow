@@ -23,10 +23,10 @@ module: os_fd
 		declare const SEEK_CUR: int = 1
 		declare const SEEK_END: int = 2
 
-		/**
-		@function open_read
-		@summary 以只读模式打开文件。
-		*/
+	/**
+	@function open_read
+	@summary 以只读模式打开文件。
+	*/
 	function: open_read
 		params:
 			declare path: any

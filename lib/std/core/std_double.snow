@@ -9,19 +9,19 @@ module: std_double
 		declare const MIN_VALUE: double = 4.9E-324
 		declare const MAX_VALUE: double = 1.7976931348623157E308
 
-		/**
-		@struct std_double
-		@summary double 的包装类
-		*/
+	/**
+	@struct std_double
+	@summary double 的包装类
+	*/
 	struct: std_double
 
 		fields:
 			declare value: double
 
-			/**
-			@init default
-			@summary 无参构造函数，创建值为 0 的 的 std_double
-			*/
+		/**
+		@init default
+		@summary 无参构造函数，创建值为 0 的 的 std_double
+		*/
 		init:
 			body:
 				value = 0

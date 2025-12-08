@@ -14,13 +14,13 @@ module: time
 		declare REALTIME: int = 0
 		declare MONO: int = 1
 
-		/**
-		@function clock_gettime
-		@summary 返回给定时钟的纳秒时间戳。
-		@param clockId 时钟ID，REALTIME=0：自 Unix 纪元以来的墙钟时间（单位 ns），MONO=1：单调时钟（适合测量间隔）
-		@returns 成功时返回纳秒时间
-		@throws IllegalArgumentException 若 clockId 非法或不被支持时抛出异常
-		*/
+	/**
+	@function clock_gettime
+	@summary 返回给定时钟的纳秒时间戳。
+	@param clockId 时钟ID，REALTIME=0：自 Unix 纪元以来的墙钟时间（单位 ns），MONO=1：单调时钟（适合测量间隔）
+	@returns 成功时返回纳秒时间
+	@throws IllegalArgumentException 若 clockId 非法或不被支持时抛出异常
+	*/
 	function: clock_gettime
 		params:
 			declare clockId: int

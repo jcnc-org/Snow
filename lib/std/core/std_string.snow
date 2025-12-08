@@ -17,10 +17,10 @@ module: std_string
 		fields:
 			declare value: string
 
-			/**
-			@init default
-			@summary 无参构造函数，默认创建值为空字符串的 std_string
-			*/
+		/**
+		@init default
+		@summary 无参构造函数，默认创建值为空字符串的 std_string
+		*/
 		init:
 			body:
 				value = ""

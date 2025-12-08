@@ -9,19 +9,19 @@ module: std_long
 		declare const MIN_VALUE: long = 0x80000000_00000000L
 		declare const MAX_VALUE: long = 0x7FFFFFFF_FFFFFFFFL
 
-		/**
-		@struct std_long
-		@summary long 的包装类
-		*/
+	/**
+	@struct std_long
+	@summary long 的包装类
+	*/
 	struct: std_long
 
 		fields:
 			declare value: long
 
-			/**
-			@init default
-			@summary 无参构造函数，默认创建值为 0 的 std_long
-			*/
+		/**
+		@init default
+		@summary 无参构造函数，默认创建值为 0 的 std_long
+		*/
 		init:
 			body:
 				value = 0

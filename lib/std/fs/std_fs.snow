@@ -83,10 +83,10 @@ module: std_fs
 			declare fd: int
 			declare path: string
 
-			/**
-			@init default
-			@summary 默认构造，fd 设为 -1。
-			*/
+		/**
+		@init default
+		@summary 默认构造，fd 设为 -1。
+		*/
 		init:
 			body:
 				fd = -1

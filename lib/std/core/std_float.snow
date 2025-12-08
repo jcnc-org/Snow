@@ -9,19 +9,19 @@ module: std_float
 		declare const MIN_VALUE: float = 1.4E-45
 		declare const MAX_VALUE: float = 3.4028235E38
 
-		/**
-		@struct std_float
-		@summary float 的包装类
-		*/
+	/**
+	@struct std_float
+	@summary float 的包装类
+	*/
 	struct: std_float
 
 		fields:
 			declare value: float
 
-			/**
-			@init default
-			@summary 无参构造函数，默认创建值为 0 的 std_float
-			*/
+		/**
+		@init default
+		@summary 无参构造函数，默认创建值为 0 的 std_float
+		*/
 		init:
 			body:
 				value = 0

@@ -9,10 +9,10 @@ module: os_io
 	globals:
 		declare const NEWLINE: string = "\n"
 
-		/**
-		@function read_line
-		@summary 从标准输入读取一行文本；EOF 返回 ""；I/O 错误透传异常。
-		*/
+	/**
+	@function read_line
+	@summary 从标准输入读取一行文本；EOF 返回 ""；I/O 错误透传异常。
+	*/
 	function: read_line
 		params:
 		returns: string

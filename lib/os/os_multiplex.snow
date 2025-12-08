@@ -15,10 +15,10 @@ module: os_multiplex
 		declare const EVENT_WRITE: int = 2
 		declare const EVENT_CONNECT: int = 4
 
-		/**
-		@function select
-		@summary 监听可读/可写/异常集合。
-		*/
+	/**
+	@function select
+	@summary 监听可读/可写/异常集合。
+	*/
 	function: select
 		params:
 			declare read_set: any
