@@ -9,7 +9,7 @@ module: os_fs
     import: fs
     import: os_fd
     import: std_string
-    import: os_array
+    import: std_array
 
     /**
     @function current_dir
@@ -333,12 +333,13 @@ module: os_fs
                         break
                     end if
 
-                    declare chunkLen: int = os_array.length(chunk)
+                    declare chunkArr: std_array = new std_array(chunk)
+                    declare chunkLen: int = chunkArr.length()
                     if chunkLen == 0 then
                         break
                     end if
 
-                    declare buf: byte[] = []
+                    declare buf: std_array = new std_array()
                     declare ci: int = 0
                     loop:
                         init:
@@ -348,12 +349,28 @@ module: os_fs
                         step:
                             ci = ci + 1
                         body:
-                            declare b: int = os_array.get(chunk, ci)
-                            os_array.push(buf, b)
+                            declare b: int = chunkArr.get(ci)
+                            buf.append(b)
                         end body
                     end loop
 
-                    content = content + std_string.fromBytes(buf)
+                    declare bufData: byte[] = []
+                    declare bi: int = 0
+                    declare bufLen: int = buf.length()
+                    loop:
+                        init:
+                            bi = bi
+                        cond:
+                            bi < bufLen
+                        step:
+                            bi = bi + 1
+                        body:
+                            declare byteVal: int = buf.get(bi)
+                            bufData[bi] = byteVal
+                        end body
+                    end loop
+
+                    content = content + std_string.fromBytes(bufData)
                 end body
             end loop
 
