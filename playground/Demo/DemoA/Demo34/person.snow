@@ -1,21 +1,19 @@
-module: Graduate
-    import: Student
-    struct: Graduate extends Student
+module: person
+    struct: Person
         fields:
-            declare year: int
+            declare name: int
         init:
             params:
                 declare name: int
-                declare year: int
             body:
-                super(name)
-                this.year = year
+                this.name = name
             end body
         end init
+
         function: getName
             returns: int
             body:
-                return super.getName() + this.year
+                return this.name
             end body
         end function
     end struct
