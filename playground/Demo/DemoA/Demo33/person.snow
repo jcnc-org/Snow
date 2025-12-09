@@ -1,4 +1,4 @@
-module: Person
+module: person
     struct: Person
         fields:
             declare name: int
