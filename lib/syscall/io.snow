@@ -15,7 +15,6 @@ module: io
     @throws Exception I/O 错误时抛出异常
     */
     function: stdinRead
-        params: // 无参数
         returns: string
         body:
             declare result: string = syscall("0x1200")
