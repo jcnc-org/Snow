@@ -5,10 +5,10 @@
 module: std_boolean
 
     /**
-    @struct std_boolean
+    @struct Boolean
     @summary boolean 的包装类
     */
-    struct: std_boolean
+    struct: Boolean
 
         fields:
             declare value: boolean
@@ -54,7 +54,7 @@ module: std_boolean
         */
         function: equals
             params:
-                declare other: std_boolean
+                declare other: Boolean
             returns: boolean
             body:
                 return value == other.value
@@ -82,28 +82,28 @@ module: std_boolean
 
     /**
     @function valueOfBoolean
-    @summary 将 boolean 装箱为 std_boolean 对象
+    @summary 将 boolean 装箱为 Boolean 对象
     */
     function: valueOfBoolean
         params:
             declare b: boolean
-        returns: std_boolean
+        returns: Boolean
         body:
-            return new std_boolean(b)
+            return new Boolean(b)
         end body
     end function
 
     /**
     @function valueOfString
-    @summary 将字符串转为 std_boolean 对象
+    @summary 将字符串转为 Boolean 对象
     */
     function: valueOfString
         params:
             declare s: string
-        returns: std_boolean
+        returns: Boolean
         body:
             declare b: boolean = std_boolean.parseBoolean(s)
-            return new std_boolean(b)
+            return new Boolean(b)
         end body
     end function
 
