@@ -151,11 +151,12 @@ public class Context {
      * 支持内建类型、数组类型（带 "[]" 后缀）、用户自定义结构体类型。
      * 类型解析的查找顺序为：<br>
      * 1. 内建类型；<br>
-     * 2. 当前模块定义的结构体类型；<br>
-     * 3. 当前模块导入模块中的结构体类型；<br>
-     * 4. 全局所有模块的结构体类型。
+     * 2. 限定名（如 module.Type）；<br>
+     * 3. 当前模块定义的结构体类型；<br>
+     * 4. 当前模块导入模块中的结构体类型；<br>
+     * 5. 全局所有模块的结构体类型。
      *
-     * @param typeName 类型名称字符串，如 "int"、"Foo"、"Bar[][]"
+     * @param typeName 类型名称字符串，如 "int"、"Foo"、"Bar[][]"、"module.Type"
      * @return 解析出的 {@link Type} 实例，若找不到则返回 null
      */
     public Type parseType(String typeName) {
@@ -174,13 +175,24 @@ public class Context {
 
         // 2) 如果不是内建类型，则尝试查找结构体类型
         if (base == null) {
-            // 2.1 当前模块下的结构体
-            if (currentModuleName != null && modules.containsKey(currentModuleName)) {
+            // 2.1 先尝试限定名解析（如 module.Type）
+            int dotIndex = name.indexOf('.');
+            if (dotIndex > 0 && dotIndex < name.length() - 1) {
+                String moduleName = name.substring(0, dotIndex);
+                String structName = name.substring(dotIndex + 1);
+                ModuleInfo targetModule = modules.get(moduleName);
+                if (targetModule != null) {
+                    base = targetModule.getStructs().get(structName);
+                }
+            }
+            
+            // 2.2 当前模块下的结构体
+            if (base == null && currentModuleName != null && modules.containsKey(currentModuleName)) {
                 ModuleInfo mi = modules.get(currentModuleName);
                 if (mi.getStructs().containsKey(name)) {
                     base = mi.getStructs().get(name);
                 } else {
-                    // 2.2 当前模块导入的模块中的结构体
+                    // 2.3 当前模块导入的模块中的结构体
                     for (String imp : mi.getImports()) {
                         ModuleInfo im = modules.get(imp);
                         if (im != null && im.getStructs().containsKey(name)) {

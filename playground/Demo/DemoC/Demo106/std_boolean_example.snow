@@ -9,22 +9,22 @@ module: std_boolean_example
 
     function: main
         body:
-            declare b0: Boolean = new Boolean()
-            declare b1: Boolean = new Boolean(true)
+            declare b0: std_boolean.Boolean = new std_boolean.Boolean()
+            declare b1: std_boolean.Boolean = new std_boolean.Boolean(true)
 
             std_io.println("default ctor            -> " + std_boolean.toString(b0.booleanValue()))
             std_io.println("ctor(true)              -> " + std_boolean.toString(b1.booleanValue()))
 
             std_io.println("equals false vs true    -> " + std_boolean.toString(b0.equals(b1)))
-            std_io.println("equals true vs true     -> " + std_boolean.toString(b1.equals(new Boolean(true))))
+            std_io.println("equals true vs true     -> " + std_boolean.toString(b1.equals(new std_boolean.Boolean(true))))
 
             declare parsedTrue: boolean = std_boolean.parseBoolean("True")
             declare parsedFalse: boolean = std_boolean.parseBoolean("anything")
             std_io.println("parse \"True\"            -> " + std_boolean.toString(parsedTrue))
             std_io.println("parse \"anything\"        -> " + std_boolean.toString(parsedFalse))
 
-            declare boxedFalse: Boolean = std_boolean.valueOfBoolean(false)
-            declare boxedFromString: Boolean = std_boolean.valueOfString("TRUE")
+            declare boxedFalse: std_boolean.Boolean = std_boolean.valueOfBoolean(false)
+            declare boxedFromString: std_boolean.Boolean = std_boolean.valueOfString("TRUE")
             std_io.println("valueOfBoolean(false)   -> " + std_boolean.toString(boxedFalse.booleanValue()))
             std_io.println("valueOfString(\"TRUE\")   -> " + std_boolean.toString(boxedFromString.booleanValue()))
 

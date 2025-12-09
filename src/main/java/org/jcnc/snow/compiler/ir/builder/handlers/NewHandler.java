@@ -88,7 +88,14 @@ public class NewHandler implements ExpressionHandler<NewExpressionNode> {
 
         // 3. 若类型为结构体，则自动调用构造函数 T.__init__N
         if (IRBuilderScope.getStructLayout(node.typeName()) != null) {
-            String ctorName = node.typeName() + ".__init__" + argRegs.size();
+            // 提取简单类型名（去掉模块前缀）
+            String simpleTypeName = node.typeName();
+            int lastDot = simpleTypeName.lastIndexOf('.');
+            if (lastDot >= 0 && lastDot + 1 < simpleTypeName.length()) {
+                simpleTypeName = simpleTypeName.substring(lastDot + 1);
+            }
+            
+            String ctorName = simpleTypeName + ".__init__" + argRegs.size();
             List<IRValue> ctorArgs = new ArrayList<>();
             ctorArgs.add(dest);
             ctorArgs.addAll(argRegs);

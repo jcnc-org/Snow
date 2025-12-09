@@ -96,7 +96,13 @@ public class CallHandler implements ExpressionHandler<CallExpressionNode> {
                         finalArgs.addAll(explicitRegs);
                     } else {
                         // 有类型信息，先查 this 寄存器，再拼方法名
-                        callee = recvType + "." + m.member();
+                        // 提取简单类型名（去掉模块前缀）
+                        String simpleType = recvType;
+                        int lastDot = simpleType.lastIndexOf('.');
+                        if (lastDot >= 0 && lastDot + 1 < simpleType.length()) {
+                            simpleType = simpleType.substring(lastDot + 1);
+                        }
+                        callee = simpleType + "." + m.member();
                         IRVirtualRegister thisReg = b.ctx().getScope().lookup(recvName);
                         if (thisReg == null)
                             throw new IllegalStateException("Undefined identifier: " + recvName);
@@ -115,7 +121,13 @@ public class CallHandler implements ExpressionHandler<CallExpressionNode> {
                 IRVirtualRegister objReg = b.build(m.object());
                 String recvType = b.ctx().getScope().getRegisterType(objReg);
                 if (recvType != null && !recvType.isBlank()) {
-                    callee = recvType + "." + m.member();
+                    // 提取简单类型名（去掉模块前缀）
+                    String simpleType = recvType;
+                    int lastDot = simpleType.lastIndexOf('.');
+                    if (lastDot >= 0 && lastDot + 1 < simpleType.length()) {
+                        simpleType = simpleType.substring(lastDot + 1);
+                    }
+                    callee = simpleType + "." + m.member();
                 } else {
                     callee = m.member();
                 }
