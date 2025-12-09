@@ -1,6 +1,6 @@
 /**
 @module std_double
-@summary std_double 结构体 - 对 double 基本数据类型的封装
+@summary Double 结构体 - 对 double 基本数据类型的封装
 */
 module: std_double
     import: std_parse
@@ -10,17 +10,17 @@ module: std_double
         declare const MAX_VALUE: double = 1.7976931348623157E308
 
     /**
-    @struct std_double
+    @struct Double
     @summary double 的包装类
     */
-    struct: std_double
+    struct: Double
 
         fields:
             declare value: double
 
         /**
         @init default
-        @summary 无参构造函数，创建值为 0 的 的 std_double
+        @summary 无参构造函数，创建值为 0 的 的 Double
         */
         init:
             body:
@@ -30,7 +30,7 @@ module: std_double
 
         /**
         @init with_value
-        @summary 带参构造函数，根据给定值创建 std_double
+        @summary 带参构造函数，根据给定值创建 Double
         @param val 初始 double 值
         */
         init:
@@ -54,26 +54,26 @@ module: std_double
 
         /**
         @function abs
-        @summary 返回当前 double 绝对值的 std_double 实例
+        @summary 返回当前 double 绝对值的 Double 实例
         */
         function: abs
-            returns: std_double
+            returns: Double
             body:
                 declare result: double = value
                 if result < 0 then
                     result = -result
                 end if
-                return new std_double(result)
+                return new Double(result)
             end body
         end function
 
         /**
         @function equals
-        @summary 比较两个 std_double 是否相等
+        @summary 比较两个 Double 是否相等
         */
         function: equals
             params:
-                declare other: std_double
+                declare other: Double
             returns: boolean
             body:
                 return value == other.value
@@ -87,7 +87,7 @@ module: std_double
         function: toString
             returns: string
             body:
-                return std_double.toString(value)
+                return Double.toString(value)
             end body
         end function
 
@@ -95,28 +95,28 @@ module: std_double
 
     /**
     @function valueOf
-    @summary 将 double 装箱为 std_double
+    @summary 将 double 装箱为 Double
     */
     function: valueOf
         params:
             declare d: double
-        returns: std_double
+        returns: Double
         body:
-            return new std_double(d)
+            return new Double(d)
         end body
     end function
 
     /**
     @function valueOfString
-    @summary 将字符串解析并包装为 std_double
+    @summary 将字符串解析并包装为 Double
     */
     function: valueOfString
         params:
             declare s: string
-        returns: std_double
+        returns: Double
         body:
             declare d: double = std_parse.parseDouble(s)
-            return new std_double(d)
+            return new Double(d)
         end body
     end function
 
