@@ -1,10 +1,12 @@
 module: main
-    import: std_io, Student, Person
+    import: std_io
+    import: student
+    import: person
 
     function: main
         returns: void
         body:
-            declare a: Student = new Student(1)
+            declare a: student.Student = new person.Student(1)
 
             std_io.println(a.getName())
 
