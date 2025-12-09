@@ -1,7 +1,7 @@
 module: student
     import: person
 
-    struct: person.Student extends person.Person
+    struct: Student extends person.Person
         fields:
             declare id: int
 
