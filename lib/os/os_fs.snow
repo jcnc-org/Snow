@@ -333,13 +333,13 @@ module: os_fs
                         break
                     end if
 
-                    declare chunkArr: Array = new Array(chunk)
+                    declare chunkArr: std_array.Array = new std_array.Array(chunk)
                     declare chunkLen: int = chunkArr.length()
                     if chunkLen == 0 then
                         break
                     end if
 
-                    declare buf: Array = new Array()
+                    declare buf: std_array.Array = new std_array.Array()
                     declare ci: int = 0
                     loop:
                         init:

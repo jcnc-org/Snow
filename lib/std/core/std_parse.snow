@@ -25,21 +25,21 @@ module: std_parse
 
     /**
     @function _arrLen
-    @summary 内部工具：获取字节数组长度（基于 Array）
+    @summary 内部工具：获取字节数组长度（基于 std_array.Array）
     */
     function: _arrLen
         params:
             declare data: byte[]
         returns: int
         body:
-            declare arr: Array = new Array(data)
+            declare arr: std_array.Array = new std_array.Array(data)
             return arr.length()
         end body
     end function
 
     /**
     @function _arrGet
-    @summary 内部工具：获取字节数组元素（基于 Array）
+    @summary 内部工具：获取字节数组元素（基于 std_array.Array）
     */
     function: _arrGet
         params:
@@ -47,7 +47,7 @@ module: std_parse
             declare idx: int
         returns: int
         body:
-            declare arr: Array = new Array(data)
+            declare arr: std_array.Array = new std_array.Array(data)
             return arr.get(idx)
         end body
     end function

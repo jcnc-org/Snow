@@ -241,7 +241,7 @@ module: std_string
             declare str: string
         returns: int
         body:
-            declare arr: Array = new Array(str)
+            declare arr: std_array.Array = new std_array.Array(str)
             return arr.length()
         end body
     end function
@@ -256,7 +256,7 @@ module: std_string
             declare str: string
         returns: boolean
         body:
-            declare arr: Array = new Array(str)
+            declare arr: std_array.Array = new std_array.Array(str)
             declare len: int = arr.length()
             return len == 0
         end body
@@ -276,7 +276,7 @@ module: std_string
             declare endIdx: int
         returns: string
         body:
-            declare arr: Array = new Array(str)
+            declare arr: std_array.Array = new std_array.Array(str)
             declare len: int = arr.length()
 
             // 边界检查
@@ -324,8 +324,8 @@ module: std_string
             declare substr: string
         returns: int
         body:
-            declare strArr: Array = new Array(str)
-            declare subArr: Array = new Array(substr)
+            declare strArr: std_array.Array = new std_array.Array(str)
+            declare subArr: std_array.Array = new std_array.Array(substr)
             declare strLen: int = strArr.length()
             declare subLen: int = subArr.length()
 
@@ -403,7 +403,7 @@ module: std_string
             declare str: string
         returns: string
         body:
-            declare arr: Array = new Array(str)
+            declare arr: std_array.Array = new std_array.Array(str)
             declare len: int = arr.length()
             if len == 0 then
                 return ""
@@ -478,7 +478,7 @@ module: std_string
             declare str: string
         returns: string
         body:
-            declare arr: Array = new Array(str)
+            declare arr: std_array.Array = new std_array.Array(str)
             declare len: int = arr.length()
             if len == 0 then
                 return ""
@@ -519,7 +519,7 @@ module: std_string
             declare str: string
         returns: string
         body:
-            declare arr: Array = new Array(str)
+            declare arr: std_array.Array = new std_array.Array(str)
             declare len: int = arr.length()
             if len == 0 then
                 return ""
@@ -567,8 +567,8 @@ module: std_string
 
             declare res: byte[] = []
 
-            // 使用 Array 包装 data 进行读取
-            declare dataArr: Array = new Array(data)
+            // 使用 std_array.Array 包装 data 进行读取
+            declare dataArr: std_array.Array = new std_array.Array(data)
 
             loop:
                 init:
@@ -598,7 +598,7 @@ module: std_string
             declare bytes: byte[]
         returns: string
         body:
-            declare arr: Array = new Array(bytes)
+            declare arr: std_array.Array = new std_array.Array(bytes)
             declare len: int = arr.length()
             declare str: string = ""
             loop:
@@ -630,8 +630,8 @@ module: std_string
             declare prefix: string
         returns: boolean
         body:
-            declare strArr: Array = new Array(str)
-            declare preArr: Array = new Array(prefix)
+            declare strArr: std_array.Array = new std_array.Array(str)
+            declare preArr: std_array.Array = new std_array.Array(prefix)
             declare strLen: int = strArr.length()
             declare prefixLen: int = preArr.length()
 
@@ -676,8 +676,8 @@ module: std_string
             declare suffix: string
         returns: boolean
         body:
-            declare strArr: Array = new Array(str)
-            declare sufArr: Array = new Array(suffix)
+            declare strArr: std_array.Array = new std_array.Array(str)
+            declare sufArr: std_array.Array = new std_array.Array(suffix)
             declare strLen: int = strArr.length()
             declare suffixLen: int = sufArr.length()
 
@@ -766,7 +766,7 @@ module: std_string
             // 将 int 转为单字节数组再解码为字符串，避免写入 int 时被 toString() 成数字字符
             declare b: byte = std_parse.parseByte("" + ch)  // 显式收缩为 byte，避免以 Integer 形式写入
             declare buf: any = os_sys.random_bytes(1)       // RANDOM_BYTES(1) → byte[]
-            declare bufArr: Array = new Array(buf)
+            declare bufArr: std_array.Array = new std_array.Array(buf)
             bufArr.set(0, b)
             return "" + buf
         end body
