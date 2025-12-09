@@ -1,4 +1,4 @@
-module: AccessControlValidation
+module: access_control_validation
     import: std_io
 
     globals:

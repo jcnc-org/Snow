@@ -7,7 +7,7 @@ module: app
         params:
             declare args:any
         body:
-            io.stdout_write("准备 exec 子进程...\n")
+            io.stdoutWrite("准备 exec 子进程...\n")
 
             // 命令参数
             declare argv:any[] = ["-version"]

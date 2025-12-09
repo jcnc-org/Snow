@@ -21,12 +21,12 @@
 module: sync
 
     /**
-    @function mutex_new
+    @function mutexNew
     @summary 创建并返回一个新的互斥量 ID。
     @returns 成功返回新互斥量的 ID
     @throws Exception 资源不足或内部错误时抛出异常
     */
-    function: mutex_new
+    function: mutexNew
         returns: int
         body:
             return syscall("0x1600")
@@ -34,13 +34,13 @@ module: sync
     end function
 
     /**
-    @function mutex_lock
+    @function mutexLock
     @summary 阻塞直到获取互斥量。
     @param mid 互斥量 ID
     @returns 成功返回 0
     @throws Exception 无效 ID 或线程被中断时抛出异常
     */
-    function: mutex_lock
+    function: mutexLock
         params:
             declare mid: int
         returns: int
@@ -50,13 +50,13 @@ module: sync
     end function
 
     /**
-    @function mutex_trylock
+    @function mutexTrylock
     @summary 立即尝试获取互斥量。
     @param mid 互斥量 ID
     @returns 成功返回 1，失败返回 0
     @throws Exception 无效 ID 时抛出异常
     */
-    function: mutex_trylock
+    function: mutexTrylock
         params:
             declare mid: int
         returns: int
@@ -66,13 +66,13 @@ module: sync
     end function
 
     /**
-    @function mutex_unlock
+    @function mutexUnlock
     @summary 释放互斥量。
     @param mid 互斥量 ID
     @returns 成功返回 0
     @throws Exception 若线程未持有锁则抛出异常
     */
-    function: mutex_unlock
+    function: mutexUnlock
         params:
             declare mid: int
         returns: int
@@ -82,11 +82,11 @@ module: sync
     end function
 
     /**
-    @function cond_new
+    @function condNew
     @summary 创建条件变量。
     @returns 成功返回新条件变量的 ID
     */
-    function: cond_new
+    function: condNew
         returns: int
         body:
             return syscall("0x1604")
@@ -94,7 +94,7 @@ module: sync
     end function
 
     /**
-    @function cond_wait
+    @function condWait
     @summary 等待条件变量，返回前重新加锁。
     @param cid 条件变量 ID
     @param mid 互斥量 ID
@@ -102,7 +102,7 @@ module: sync
     @returns 0=唤醒，1=超时，-1=中断
     @throws Exception 无效 ID 时抛出异常
     */
-    function: cond_wait
+    function: condWait
         params:
             declare cid: int
             declare mid: int
@@ -114,13 +114,13 @@ module: sync
     end function
 
     /**
-    @function cond_signal
+    @function condSignal
     @summary 唤醒一个等待线程。
     @param cid 条件变量 ID
     @returns 成功返回 0
     @throws Exception 无效 ID 时抛出异常
     */
-    function: cond_signal
+    function: condSignal
         params:
             declare cid: int
         returns: int
@@ -130,13 +130,13 @@ module: sync
     end function
 
     /**
-    @function cond_broadcast
+    @function condBroadcast
     @summary 唤醒所有等待线程。
     @param cid 条件变量 ID
     @returns 成功返回 0
     @throws Exception 无效 ID 时抛出异常
     */
-    function: cond_broadcast
+    function: condBroadcast
         params:
             declare cid: int
         returns: int
@@ -146,12 +146,12 @@ module: sync
     end function
 
     /**
-    @function sem_new
+    @function semNew
     @summary 创建一个指定初值的信号量。
     @param init1 信号量初始值
     @returns 成功返回新信号量的 ID
     */
-    function: sem_new
+    function: semNew
         params:
             declare init1: int
         returns: int
@@ -161,14 +161,14 @@ module: sync
     end function
 
     /**
-    @function sem_wait
+    @function semWait
     @summary 等待信号量。
     @param sid 信号量 ID
     @param timeout 可选超时时间（毫秒）
     @returns 1=成功，0=超时，-1=中断
     @throws Exception 无效 ID 时抛出异常
     */
-    function: sem_wait
+    function: semWait
         params:
             declare sid: int
             declare timeout: int
@@ -179,12 +179,12 @@ module: sync
     end function
 
     /**
-    @function sem_post
+    @function semPost
     @summary 释放信号量。
     @param sid 信号量 ID
     @returns 成功返回 0
     */
-    function: sem_post
+    function: semPost
         params:
             declare sid: int
         returns: int
@@ -194,11 +194,11 @@ module: sync
     end function
 
     /**
-    @function rwlock_new
+    @function rwlockNew
     @summary 创建读写锁。
     @returns 成功返回新读写锁的 ID
     */
-    function: rwlock_new
+    function: rwlockNew
         returns: int
         body:
             return syscall("0x160B")
@@ -206,12 +206,12 @@ module: sync
     end function
 
     /**
-    @function rwlock_rlock
+    @function rwlockRlock
     @summary 加读锁。
     @param rwl 读写锁 ID
     @returns 成功返回 0
     */
-    function: rwlock_rlock
+    function: rwlockRlock
         params:
             declare rwl: int
         returns: int
@@ -221,12 +221,12 @@ module: sync
     end function
 
     /**
-    @function rwlock_wlock
+    @function rwlockWlock
     @summary 加写锁。
     @param rwl 读写锁 ID
     @returns 成功返回 0
     */
-    function: rwlock_wlock
+    function: rwlockWlock
         params:
             declare rwl: int
         returns: int
@@ -236,13 +236,13 @@ module: sync
     end function
 
     /**
-    @function rwlock_unlock
+    @function rwlockUnlock
     @summary 释放读写锁。
     @param rwl 读写锁 ID
     @returns 成功返回 0
     @throws Exception 若线程未持有任何锁则抛出异常
     */
-    function: rwlock_unlock
+    function: rwlockUnlock
         params:
             declare rwl: int
         returns: int

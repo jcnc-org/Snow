@@ -1,9 +1,9 @@
 module: app
-    import: syscall.fs
-    import: syscall.fd
+    import: fs
+    import: fd
     import: std_io.fs
-    import: syscall.fs
-    import: syscall.fd
+    import: fs
+    import: fd
     import: std_io.fd
     import: std_io
     import: os_fs
@@ -18,7 +18,7 @@ module: app
             fs.chmod("demoDir", 493)
             std_io.println("已修改 demoDir 权限为 755")
 
-            os_fs.remove_dir("demoDir")
+            os_fs.removeDir("demoDir")
         end body
     end function
 end module

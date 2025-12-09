@@ -86,7 +86,7 @@ module: SyntaxValidation
             end loop
 
             // 测试系统调用
-            declare ms: long = time.mono_ms()
+            declare ms: long = time.monoMs()
             std_io.println("Current time: " + ms)
         end body
     end function

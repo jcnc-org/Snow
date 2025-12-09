@@ -7,7 +7,7 @@ module: server
         returns: void
         body:
             // 1. 创建 TCP 监听 socket
-            declare listener: int = os_web.tcp_socket()
+            declare listener: int = os_web.tcpSocket()
             std_io.println("listener fd = " + listener)
 
             // 2. 绑定到本地 127.0.0.1:8080

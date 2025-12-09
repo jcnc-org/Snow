@@ -7,96 +7,96 @@ module: os_time
     import: time
 
     /**
-    @function now_ns
+    @function nowNs
     @summary 返回墙钟时间（纳秒）。
     */
-    function: now_ns
+    function: nowNs
         returns: long
         body:
-            return time.now_ns()
+            return time.nowNs()
         end body
     end function
 
     /**
-    @function now_ms
+    @function nowMs
     @summary 返回墙钟时间（毫秒）。
     */
-    function: now_ms
+    function: nowMs
         returns: long
         body:
-            return time.now_ms()
+            return time.nowMs()
         end body
     end function
 
     /**
-    @function mono_ns
+    @function monoNs
     @summary 返回单调时钟（纳秒）。
     */
-    function: mono_ns
+    function: monoNs
         returns: long
         body:
-            return time.mono_ns()
+            return time.monoNs()
         end body
     end function
 
     /**
-    @function mono_ms
+    @function monoMs
     @summary 返回单调时钟（毫秒）。
     */
-    function: mono_ms
+    function: monoMs
         returns: long
         body:
-            return time.mono_ms()
+            return time.monoMs()
         end body
     end function
 
     /**
-    @function sleep_ms
+    @function sleepMs
     @summary 挂起当前线程指定毫秒。
     */
-    function: sleep_ms
+    function: sleepMs
         params:
             declare ms: int
         returns: int
         body:
-            return time.sleep_ms(ms)
+            return time.sleepMs(ms)
         end body
     end function
 
     /**
-    @function sleep_us
+    @function sleepUs
     @summary 挂起当前线程指定微秒。
     */
-    function: sleep_us
+    function: sleepUs
         params:
             declare us: int
         returns: int
         body:
-            return time.sleep_us(us)
+            return time.sleepUs(us)
         end body
     end function
 
     /**
-    @function sleep_ns
+    @function sleepNs
     @summary 挂起当前线程指定纳秒。
     */
-    function: sleep_ns
+    function: sleepNs
         params:
             declare ns: long
         returns: int
         body:
-            return time.sleep_ns(ns)
+            return time.sleepNs(ns)
         end body
     end function
 
     /**
-    @function tick_ms
+    @function tickMs
     @summary 返回单调计数（毫秒）。
     */
-    function: tick_ms
+    function: tickMs
         returns: long
         body:
-            return time.tick_ms()
+            return time.tickMs()
         end body
     end function
 

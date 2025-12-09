@@ -31,10 +31,10 @@ module: os_web
     end function
 
     /**
-    @function tcp_socket
+    @function tcpSocket
     @summary 创建 IPv4 TCP 套接字。
     */
-    function: tcp_socket
+    function: tcpSocket
         returns: int
         body:
             return web.socket(AF_INET, SOCK_STREAM, 0)
@@ -42,10 +42,10 @@ module: os_web
     end function
 
     /**
-    @function udp_socket
+    @function udpSocket
     @summary 创建 IPv4 UDP 套接字。
     */
-    function: udp_socket
+    function: udpSocket
         returns: int
         body:
             return web.socket(AF_INET, SOCK_DGRAM, 0)
@@ -113,7 +113,7 @@ module: os_web
         end body
     end function
 
-    function: send_to
+    function: sendTo
         params:
             declare fd: int
             declare data: any
@@ -121,17 +121,17 @@ module: os_web
             declare port: int
         returns: int
         body:
-            return web.sendto(fd, data, addr, port)
+            return web.sendTo(fd, data, addr, port)
         end body
     end function
 
-    function: recv_from
+    function: recvFrom
         params:
             declare fd: int
             declare n: int
         returns: any
         body:
-            return web.recvfrom(fd, n)
+            return web.recvFrom(fd, n)
         end body
     end function
 
@@ -145,7 +145,7 @@ module: os_web
         end body
     end function
 
-    function: shutdown_read
+    function: shutdownRead
         params:
             declare fd: int
         returns: int
@@ -154,7 +154,7 @@ module: os_web
         end body
     end function
 
-    function: shutdown_write
+    function: shutdownWrite
         params:
             declare fd: int
         returns: int
@@ -163,7 +163,7 @@ module: os_web
         end body
     end function
 
-    function: shutdown_both
+    function: shutdownBoth
         params:
             declare fd: int
         returns: int
@@ -172,7 +172,7 @@ module: os_web
         end body
     end function
 
-    function: set_option
+    function: setOption
         params:
             declare fd: int
             declare level: int
@@ -180,36 +180,36 @@ module: os_web
             declare value: any
         returns: int
         body:
-            return web.setsockopt(fd, level, opt, value)
+            return web.setSockOpt(fd, level, opt, value)
         end body
     end function
 
-    function: get_option
+    function: getOption
         params:
             declare fd: int
             declare level: int
             declare opt: int
         returns: any
         body:
-            return web.getsockopt(fd, level, opt)
+            return web.getSockOpt(fd, level, opt)
         end body
     end function
 
-    function: peer_name
+    function: peerName
         params:
             declare fd: int
         returns: any
         body:
-            return web.getpeername(fd)
+            return web.getPeerName(fd)
         end body
     end function
 
-    function: local_name
+    function: localName
         params:
             declare fd: int
         returns: any
         body:
-            return web.getsockname(fd)
+            return web.getSockName(fd)
         end body
     end function
 
@@ -224,7 +224,7 @@ module: os_web
             declare hints: any
         returns: any[]
         body:
-            return web.getaddrinfo(host, service, hints)
+            return web.getAddrInfo(host, service, hints)
         end body
     end function
 

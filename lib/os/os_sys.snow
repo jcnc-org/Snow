@@ -7,23 +7,23 @@ module: os_sys
     import: sys
 
     /**
-    @function getenv
+    @function getEnv
     @summary 返回环境变量值，若不存在则为 null。
     */
-    function: getenv
+    function: getEnv
         params:
             declare key: string
         returns: string
         body:
-            return sys.getenv(key)
+            return sys.getEnv(key)
         end body
     end function
 
     /**
-    @function setenv
+    @function setEnv
     @summary 设置环境变量；value 为空表示删除。
     */
-    function: setenv
+    function: setEnv
         params:
             declare key: string
             declare value: any
@@ -34,64 +34,64 @@ module: os_sys
             if overwrite == true then
                 flag = 1
             end if
-            return sys.setenv(key, value, flag)
+            return sys.setEnv(key, value, flag)
         end body
     end function
 
     /**
-    @function cpu_count
+    @function cpuCount
     @summary 返回可用 CPU 数量。
     */
-    function: cpu_count
+    function: cpuCount
         returns: int
         body:
-            return sys.cpu_count()
+            return sys.cpuCount()
         end body
     end function
 
     /**
-    @function random_bytes
+    @function randomBytes
     @summary 返回长度为 n 的随机字节数组。
     */
-    function: random_bytes
+    function: randomBytes
         params:
             declare n: int
         returns: any
         body:
-            return sys.random_bytes(n)
+            return sys.randomBytes(n)
         end body
     end function
 
     /**
-    @function last_error_message
+    @function lastErrorMessage
     @summary 返回最近一次系统调用的错误描述。
     */
-    function: last_error_message
+    function: lastErrorMessage
         returns: string
         body:
-            return sys.last_error_message()
+            return sys.lastErrorMessage()
         end body
     end function
 
     /**
-    @function last_error_code
+    @function lastErrorCode
     @summary 返回最近一次系统调用的错误码。
     */
-    function: last_error_code
+    function: lastErrorCode
         returns: int
         body:
-            return sys.last_error_code()
+            return sys.lastErrorCode()
         end body
     end function
 
     /**
-    @function memory_info
+    @function memoryInfo
     @summary 返回 JVM/系统内存信息（Map）。
     */
-    function: memory_info
+    function: memoryInfo
         returns: any
         body:
-            return sys.memory_info()
+            return sys.memoryInfo()
         end body
     end function
 

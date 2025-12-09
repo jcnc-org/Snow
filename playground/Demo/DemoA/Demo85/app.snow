@@ -13,35 +13,35 @@ module: demo_sys
         end body
     end function
 
-    function: demo_getenv_setenv
+    function: demo_getenv_getEnv
         body:
-            hr("GETENV / SETENV")
+            hr("GETENV / getEnv")
 
             // 读取一个常见变量（可能为空或不存在）
             declare k1: string = "OS"
-            declare v1: string = sys.getenv(k1)
+            declare v1: string = sys.getEnv(k1)
             std_io.println("GETENV '" + k1 + "' => " + v1)
 
             // 读取一个不存在的变量，期望返回 null
             declare k2: string = "SNOW_DEMO_NOT_EXIST"
-            declare v2: string = sys.getenv(k2)
+            declare v2: string = sys.getEnv(k2)
             std_io.println("GETENV '" + k2 + "' => " + v2)
 
             // 设置一个变量（覆盖=1）
-            declare rc: int = sys.setenv("SNOW_DEMO_KEY", "42", 1)
-            std_io.println("SETENV 'SNOW_DEMO_KEY' = '42', overwrite=1 => rc=" + rc)
-            std_io.println("GETENV 'SNOW_DEMO_KEY' => " + sys.getenv("SNOW_DEMO_KEY"))
+            declare rc: int = sys.setEnv("SNOW_DEMO_KEY", "42", 1)
+            std_io.println("setEnv 'SNOW_DEMO_KEY' = '42', overwrite=1 => rc=" + rc)
+            std_io.println("GETENV 'SNOW_DEMO_KEY' => " + sys.getEnv("SNOW_DEMO_KEY"))
 
             // 尝试不覆盖（overwrite=0），应保持原值不变
-            rc = sys.setenv("SNOW_DEMO_KEY", "777", 0)
-            std_io.println("SETENV 'SNOW_DEMO_KEY' = '777', overwrite=0 => rc=" + rc)
-            std_io.println("GETENV 'SNOW_DEMO_KEY' => " + sys.getenv("SNOW_DEMO_KEY"))
+            rc = sys.setEnv("SNOW_DEMO_KEY", "777", 0)
+            std_io.println("setEnv 'SNOW_DEMO_KEY' = '777', overwrite=0 => rc=" + rc)
+            std_io.println("GETENV 'SNOW_DEMO_KEY' => " + sys.getEnv("SNOW_DEMO_KEY"))
 
             // 删除变量（val=null，覆盖=1）
             declare none: any = ""
-            rc = sys.setenv("SNOW_DEMO_KEY", none, 1)
-            std_io.println("SETENV 'SNOW_DEMO_KEY' = null (delete), overwrite=1 => rc=" + rc)
-            std_io.println("GETENV 'SNOW_DEMO_KEY' => " + sys.getenv("SNOW_DEMO_KEY"))
+            rc = sys.setEnv("SNOW_DEMO_KEY", none, 1)
+            std_io.println("setEnv 'SNOW_DEMO_KEY' = null (delete), overwrite=1 => rc=" + rc)
+            std_io.println("GETENV 'SNOW_DEMO_KEY' => " + sys.getEnv("SNOW_DEMO_KEY"))
         end body
     end function
 
@@ -49,23 +49,23 @@ module: demo_sys
         body:
             hr("NCPU / MEMINFO")
 
-            declare n: int = sys.cpu_count()
+            declare n: int = sys.cpuCount()
             std_io.println("NCPU => " + n)
 
-            declare mi: any = sys.memory_info()
+            declare mi: any = sys.memoryInfo()
             std_io.println("MEMINFO => " + mi)
         end body
     end function
 
-    function: demo_random_bytes
+    function: demo_randomBytes
         body:
-            hr("RANDOM_BYTES")
+            hr("randomBytes")
 
             declare n: int = 16
-            declare bytes: any = sys.random_bytes(n)
-            std_io.println("RANDOM_BYTES(" + n + ") 原始输出如下（可能包含不可见字符）:")
-            io.stdout_write(bytes)
-            io.stdout_write("\n")
+            declare bytes: any = sys.randomBytes(n)
+            std_io.println("randomBytes(" + n + ") 原始输出如下（可能包含不可见字符）:")
+            io.stdoutWrite(bytes)
+            io.stdoutWrite("\n")
         end body
     end function
 
@@ -74,8 +74,8 @@ module: demo_sys
             hr("ERRSTR / ERRNO（最近一次系统调用错误信息）")
 
             // 直接读取（若之前没有错误，通常为空/0）
-            declare es: string = sys.last_error_message()
-            declare en: int = sys.last_error_code()
+            declare es: string = sys.lastErrorMessage()
+            declare en: int = sys.lastErrorCode()
             std_io.println("ERRSTR => " + es)
             std_io.println("ERRNO  => " + en)
         end body
@@ -84,9 +84,9 @@ module: demo_sys
     function: main
         body:
             std_io.println("== sys 调用演示开始 ==")
-            demo_getenv_setenv()
+            demo_getenv_getEnv()
             demo_ncpu_meminfo()
-            demo_random_bytes()
+            demo_randomBytes()
             demo_errinfo()
             std_io.println("== sys 调用演示结束 ==")
         end body

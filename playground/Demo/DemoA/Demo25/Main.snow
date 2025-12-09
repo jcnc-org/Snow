@@ -1,18 +1,18 @@
-module: Main
+module: main
     import: std_io
-    import: ModuleA
+    import: module_a
     globals:
         declare c: int = 10
     function: main
         returns: void
         body:
-            c = ModuleA.getA()
+            c = module_a.getA()
             std_io.print(c)
         end body
     end function
 end module
 
-module: ModuleA
+module: module_a
     globals:
         declare a: int = 2
     function: getA

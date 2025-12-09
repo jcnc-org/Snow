@@ -12,14 +12,14 @@ module: main
 
             // 路径工具演示
             std_io.println("[1] 计算工作目录...")
-            declare cwd: string = os_fs.current_dir()
+            declare cwd: string = os_fs.currentDir()
             std_io.println("[1] cwd=" + cwd)
 
             declare workDir: string = cwd + "/demo_fs116"
             std_io.println("[1] workDir=" + workDir)
             if std_file.exists(workDir) == false then
                 std_io.println("[1] 创建目录 " + workDir)
-                os_fs.make_dir(workDir)
+                os_fs.makeDir(workDir)
             end if
             std_io.println("工作目录: " + workDir)
 
@@ -35,16 +35,16 @@ module: main
             // std_file 读写示例
             std_io.println("写入文本文件...")
             declare filePath: string = workDir + "/hello.txt"
-            std_file.write_text(filePath, "line1\nline2")
+            std_file.writeText(filePath, "line1\nline2")
             std_io.println("exists: " + std_file.exists(filePath))
-            std_io.println("is_file: " + std_file.is_file(filePath))
-            std_io.println("is_dir(workDir): " + std_file.is_dir(workDir))
-            std_io.println("read_text:\n" + std_file.read_text(filePath))
+            std_io.println("isFile: " + std_file.isFile(filePath))
+            std_io.println("isDir(workDir): " + std_file.isDir(workDir))
+            std_io.println("readText:\n" + std_file.readText(filePath))
 
             // File 结构体读写
             declare f: std_file.File = new std_file.File()
             f.open(filePath, "a")
-            f.write_bytes("\nappend by File")
+            f.writeBytes("\nappend by File")
             f.close()
 
             f.open(filePath, "r")
@@ -54,8 +54,8 @@ module: main
             std_io.println("read_all_bytes ->\n" + content)
 
             // 收尾清理
-            os_fs.remove_file(filePath)
-            os_fs.remove_dir(workDir)
+            os_fs.removeFile(filePath)
+            os_fs.removeDir(workDir)
         end body
     end function
 end module

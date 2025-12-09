@@ -1,4 +1,4 @@
-module: Math
+module: math
     function: add
         params:
             declare n1: int

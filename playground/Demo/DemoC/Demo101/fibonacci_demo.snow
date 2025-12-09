@@ -118,17 +118,17 @@ module: fibonacci_demo
         returns: void
         body:
             declare terms: int = 20
-            declare iterativeStart: long = os_time.tick_ms()
+            declare iterativeStart: long = os_time.tickMs()
             print_iterative_series(terms)
-            declare iterativeElapsed: long = os_time.tick_ms() - iterativeStart
+            declare iterativeElapsed: long = os_time.tickMs() - iterativeStart
             std_io.print("迭代段耗时(打印): ")
             std_io.print(iterativeElapsed)
             std_io.println(" ms")
 
             std_io.println("")
-            declare recursiveStart: long = os_time.tick_ms()
+            declare recursiveStart: long = os_time.tickMs()
             print_recursive_series(terms)
-            declare recursiveElapsed: long = os_time.tick_ms() - recursiveStart
+            declare recursiveElapsed: long = os_time.tickMs() - recursiveStart
             std_io.print("递归段耗时(校验): ")
             std_io.print(recursiveElapsed)
             std_io.println(" ms")
@@ -138,9 +138,9 @@ module: fibonacci_demo
             std_io.print(targetIndex)
             std_io.println(")")
 
-            declare singleStart: long = os_time.tick_ms()
+            declare singleStart: long = os_time.tickMs()
             declare targetValue: int = fib_iterative(targetIndex)
-            declare singleElapsed: long = os_time.tick_ms() - singleStart
+            declare singleElapsed: long = os_time.tickMs() - singleStart
 
             std_io.print("F(")
             std_io.print(targetIndex)

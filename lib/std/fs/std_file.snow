@@ -21,55 +21,55 @@ module: std_file
     end function
 
     /**
-    @function is_file
+    @function isFile
     @summary 判断路径是否为普通文件。
     */
-    function: is_file
+    function: isFile
         params:
             declare path: string
         returns: boolean
         body:
-            return os_fs.is_file(path)
+            return os_fs.isFile(path)
         end body
     end function
 
     /**
-    @function is_dir
+    @function isDir
     @summary 判断路径是否为目录。
     */
-    function: is_dir
+    function: isDir
         params:
             declare path: string
         returns: boolean
         body:
-            return os_fs.is_dir(path)
+            return os_fs.isDir(path)
         end body
     end function
 
     /**
-    @function read_text
+    @function readText
     @summary 读取文本文件全部内容。
     */
-    function: read_text
+    function: readText
         params:
             declare path: string
         returns: string
         body:
-            return os_fs.read_text(path)
+            return os_fs.readText(path)
         end body
     end function
 
     /**
-    @function write_text
+    @function writeText
     @summary 将字符串写入文件（必要时创建/截断）。
     */
-    function: write_text
+    function: writeText
         params:
             declare path: string
             declare content: string
         returns: void
         body:
-            os_fs.write_text(path, content)
+            os_fs.writeText(path, content)
         end body
     end function
 
@@ -108,15 +108,15 @@ module: std_file
                 declare m: string = mode
 
                 if m == "r" then
-                    fd = os_fd.open_read(path)
+                    fd = os_fd.openRead(path)
                 else
                     if m == "w" then
-                        fd = os_fd.open_write(path, true, true)
+                        fd = os_fd.openWrite(path, true, true)
                     else
                         if m == "a" then
-                            fd = os_fd.open_append(path)
+                            fd = os_fd.openAppend(path)
                         else
-                            fd = os_fd.open_readwrite(path, true, false)
+                            fd = os_fd.openReadwrite(path, true, false)
                         end if
                     end if
                 end if
@@ -146,9 +146,9 @@ module: std_file
                     step:
                         keep = keep
                     body:
-                        declare chunk: any = os_fd.read_bytes(fd, 4096)
+                        declare chunk: any = os_fd.readBytes(fd, 4096)
 
-                        // os_fd.read_bytes 返回 -1 表示 EOF
+                        // os_fd.readBytes 返回 -1 表示 EOF
                         declare chunkStr: string = "" + chunk
                         if chunkStr == "-1" then
                             break
@@ -183,10 +183,10 @@ module: std_file
         end function
 
         /**
-        @function write_bytes
+        @function writeBytes
         @summary 向文件写入字节或字符串。
         */
-        function: write_bytes
+        function: writeBytes
             params:
                 declare bytes: any
             returns: int
@@ -194,7 +194,7 @@ module: std_file
                 if fd == -1 then
                     return 0
                 end if
-                return os_fd.write_bytes(fd, bytes)
+                return os_fd.writeBytes(fd, bytes)
             end body
         end function
 

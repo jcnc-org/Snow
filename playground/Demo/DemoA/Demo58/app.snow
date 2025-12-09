@@ -1,9 +1,9 @@
 module: app
-    import: syscall.fs
-    import: syscall.fd
+    import: fs
+    import: fd
     import: std_io.fd
-    import: syscall.fs
-    import: syscall.fd
+    import: fs
+    import: fd
     import: std_io.fs
     import: std_io
     import: os_fs
@@ -20,8 +20,8 @@ module: app
             fs.mkdir("demoDir/subDir", 0)
             std_io.println("已创建目录 demoDir/subDir")
 
-            os_fs.remove_dir("demoDir/subDir")
-            os_fs.remove_dir("demoDir")
+            os_fs.removeDir("demoDir/subDir")
+            os_fs.removeDir("demoDir")
         end body
     end function
 end module

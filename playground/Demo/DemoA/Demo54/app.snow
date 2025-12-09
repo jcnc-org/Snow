@@ -1,9 +1,9 @@
 module: app
-    import: syscall.fs
-    import: syscall.fd
+    import: fs
+    import: fd
     import: std_io.fd
-    import: syscall.fs
-    import: syscall.fd
+    import: fs
+    import: fd
     import: std_io.fs
     import: std_io
     import: os_fs
@@ -27,8 +27,8 @@ module: app
             fd.close(fd1)
 
             std_io.println("写入完成，现在 source.txt 和 link.txt 内容相同")
-            os_fs.remove_file("link.txt")
-            os_fs.remove_file("source.txt")
+            os_fs.removeFile("link.txt")
+            os_fs.removeFile("source.txt")
         end body
     end function
 end module

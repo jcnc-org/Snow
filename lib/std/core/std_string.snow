@@ -560,9 +560,9 @@ module: std_string
         returns: byte[]
         body:
             declare pair: int[] = os_fd.pipe()
-            declare len: int = os_fd.write_bytes(pair[1], str)
+            declare len: int = os_fd.writeBytes(pair[1], str)
             os_fd.close(pair[1])
-            declare data: any = os_fd.read_bytes(pair[0], len)
+            declare data: any = os_fd.readBytes(pair[0], len)
             os_fd.close(pair[0])
 
             declare res: byte[] = []
@@ -765,7 +765,7 @@ module: std_string
         body:
             // 将 int 转为单字节数组再解码为字符串，避免写入 int 时被 toString() 成数字字符
             declare b: byte = std_parse.parseByte("" + ch)  // 显式收缩为 byte，避免以 Integer 形式写入
-            declare buf: any = os_sys.random_bytes(1)       // RANDOM_BYTES(1) → byte[]
+            declare buf: any = os_sys.randomBytes(1)       // randomBytes(1) → byte[]
             declare bufArr: std_array.Array = new std_array.Array(buf)
             bufArr.set(0, b)
             return "" + buf

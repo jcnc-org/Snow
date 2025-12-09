@@ -1,6 +1,6 @@
 module: app
-    import: syscall.fs
-    import: syscall.fd
+    import: fs
+    import: fd
     import: std_io
     import: os_fs
 
@@ -37,7 +37,7 @@ module: app
             fd.close(fd2)
 
             std_io.println("完成 dup + seek 测试")
-            os_fs.remove_file("dup_seek_demo.txt")
+            os_fs.removeFile("dup_seek_demo.txt")
         end body
     end function
 end module

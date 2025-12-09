@@ -284,7 +284,7 @@ module: FinalComprehensiveTestFixed
         returns: void
         body:
             std_io.println("--- Testing Syscalls ---")
-            declare startTime: long = time.mono_ms()
+            declare startTime: long = time.monoMs()
             std_io.println("Start time: " + startTime)
         end body
     end function

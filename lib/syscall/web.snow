@@ -151,7 +151,7 @@ module: web
     end function
 
     /**
-    @function sendto
+    @function sendTo
     @summary 向指定地址/端口发送一个 UDP 报文。
     @param fd 文件描述符
     @param data 要发送的数据
@@ -160,7 +160,7 @@ module: web
     @returns 实际发送的字节数
     @throws Exception 套接字未绑定、I/O 失败时抛出异常
     */
-    function: sendto
+    function: sendTo
         params:
             declare fd: int
             declare data: any
@@ -173,14 +173,14 @@ module: web
     end function
 
     /**
-    @function recvfrom
+    @function recvFrom
     @summary 接收一个 UDP 报文，返回数据和来源地址。
     @param fd 文件描述符
     @param n 要读取的最大字节数
     @returns 接收到的数据及对端信息，格式为 [data, addr, port]
     @throws Exception I/O 失败时抛出异常
     */
-    function: recvfrom
+    function: recvFrom
         params:
             declare fd: int
             declare n: int
@@ -226,7 +226,7 @@ module: web
     end function
 
     /**
-    @function setsockopt
+    @function setSockOpt
     @summary 修改套接字的控制选项，如缓冲区大小、TCP_NODELAY 等。
     @param fd 文件描述符
     @param level 选项级别
@@ -235,7 +235,7 @@ module: web
     @returns 成功返回 0
     @throws Exception 选项不支持、值非法时抛出异常
     */
-    function: setsockopt
+    function: setSockOpt
         params:
             declare fd: int
             declare level: int
@@ -248,7 +248,7 @@ module: web
     end function
 
     /**
-    @function getsockopt
+    @function getSockOpt
     @summary 读取套接字的控制选项值。
     @param fd 文件描述符
     @param level 选项级别
@@ -256,7 +256,7 @@ module: web
     @returns 选项的当前值
     @throws Exception 选项不支持、套接字无效时抛出异常
     */
-    function: getsockopt
+    function: getSockOpt
         params:
             declare fd: int
             declare level: int
@@ -268,13 +268,13 @@ module: web
     end function
 
     /**
-    @function getpeername
+    @function getPeerName
     @summary 返回连接的远程主机地址与端口。
     @param fd 文件描述符
     @returns 对端地址和端口
     @throws Exception 套接字未连接、I/O 失败时抛出异常
     */
-    function: getpeername
+    function: getPeerName
         params:
             declare fd: int
         returns: any
@@ -284,13 +284,13 @@ module: web
     end function
 
     /**
-    @function getsockname
+    @function getSockName
     @summary 返回套接字绑定的本地地址与端口。
     @param fd 文件描述符
     @returns 本端地址和端口
     @throws Exception 套接字未绑定、I/O 失败时抛出异常
     */
-    function: getsockname
+    function: getSockName
         params:
             declare fd: int
         returns: any
@@ -300,7 +300,7 @@ module: web
     end function
 
     /**
-    @function getaddrinfo
+    @function getAddrInfo
     @summary 执行 DNS 解析，返回可用的地址列表。
     @param host 主机名
     @param service 服务名
@@ -308,7 +308,7 @@ module: web
     @returns 地址数组，每项包含 addr、port、family 等
     @throws Exception 主机未知、服务非法、解析失败时抛出异常
     */
-    function: getaddrinfo
+    function: getAddrInfo
         params:
             declare host: string
             declare service: string

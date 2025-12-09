@@ -1,4 +1,4 @@
-module: MultidimensionalArrayValidation
+module: multidimensional_array_validation
     import: std_io
 
     function: main

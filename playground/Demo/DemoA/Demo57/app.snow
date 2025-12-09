@@ -1,9 +1,9 @@
 module: app
-    import: syscall.fs
-    import: syscall.fd
+    import: fs
+    import: fd
     import: std_io.fd
-    import: syscall.fs
-    import: syscall.fd
+    import: fs
+    import: fd
     import: std_io.fs
     import: std_io
     import: os_fs
@@ -25,7 +25,7 @@ module: app
             std_io.println("fd 已切回阻塞模式")
 
             fd.close(fd1)
-            os_fs.remove_file("demo.txt")
+            os_fs.removeFile("demo.txt")
         end body
     end function
 end module

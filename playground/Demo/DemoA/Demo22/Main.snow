@@ -1,17 +1,17 @@
-module: Main
-    import: ModuleA
+module: main
+    import: module_a
     import: std_io
 
     function: main
         returns: void
         body:
-            declare sum: int = ModuleA.a + 2
+            declare sum: int = module_a.a + 2
             std_io.print(sum + 1)
         end body
     end function
 end module
 
-module: ModuleA
+module: module_a
     globals:
         declare const a: int = 10
 end module

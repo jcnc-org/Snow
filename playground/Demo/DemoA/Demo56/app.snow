@@ -1,9 +1,9 @@
 module: app
-    import: syscall.fs
-    import: syscall.fd
+    import: fs
+    import: fd
     import: std_io.fd
-    import: syscall.fs
-    import: syscall.fd
+    import: fs
+    import: fd
     import: std_io.fs
     import: std_io
     import: os_fs
@@ -17,15 +17,15 @@ module: app
             std_io.println("已创建源文件 real.txt")
 
             // 创建符号链接 alias.txt 指向 real.txt
-            fd.symlink("real.txt", "alias.txt")
+            fd.symLink("real.txt", "alias.txt")
             std_io.println("已创建符号链接 alias.txt -> real.txt")
 
             // 读取符号链接的目标
             declare target: any
-            target = fd.readlink("alias.txt")
+            target = fd.readLink("alias.txt")
             std_io.println("alias.txt 指向的目标是: " + target)
-            os_fs.remove_file("alias.txt")
-            os_fs.remove_file("real.txt")
+            os_fs.removeFile("alias.txt")
+            os_fs.removeFile("real.txt")
         end body
     end function
 end module

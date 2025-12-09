@@ -1,6 +1,6 @@
-module: SimpleBenchmark
+module: simple_benchmark
     import: std_io
-    import: syscall.time
+    import: time
 
     function: main
         returns: void
@@ -26,7 +26,7 @@ module: SimpleBenchmark
         returns: void
         body:
             std_io.print("Arithmetic test... ")
-            declare startTime: long = time.mono_ms()
+            declare startTime: long = time.monoMs()
 
             declare result: int = 0
             loop:
@@ -41,7 +41,7 @@ module: SimpleBenchmark
                 end body
             end loop
 
-            declare endTime: long = time.mono_ms()
+            declare endTime: long = time.monoMs()
             std_io.println("completed in " + (endTime - startTime) + " ms")
         end body
     end function
@@ -50,7 +50,7 @@ module: SimpleBenchmark
         returns: void
         body:
             std_io.print("String operations test... ")
-            declare startTime: long = time.mono_ms()
+            declare startTime: long = time.monoMs()
 
             declare str: string = ""
             loop:
@@ -65,7 +65,7 @@ module: SimpleBenchmark
                 end body
             end loop
 
-            declare endTime: long = time.mono_ms()
+            declare endTime: long = time.monoMs()
             declare length: int = syscall("0x1801", str)
             std_io.println("completed in " + (endTime - startTime) + " ms (length: " + length + ")")
         end body
@@ -75,7 +75,7 @@ module: SimpleBenchmark
         returns: void
         body:
             std_io.print("Loop test... ")
-            declare startTime: long = time.mono_ms()
+            declare startTime: long = time.monoMs()
 
             declare sum: int = 0
             loop:
@@ -90,7 +90,7 @@ module: SimpleBenchmark
                 end body
             end loop
 
-            declare endTime: long = time.mono_ms()
+            declare endTime: long = time.monoMs()
             std_io.println("completed in " + (endTime - startTime) + " ms")
         end body
     end function
@@ -99,7 +99,7 @@ module: SimpleBenchmark
         returns: void
         body:
             std_io.print("Function calls test... ")
-            declare startTime: long = time.mono_ms()
+            declare startTime: long = time.monoMs()
 
             declare result: int = 0
             loop:
@@ -114,7 +114,7 @@ module: SimpleBenchmark
                 end body
             end loop
 
-            declare endTime: long = time.mono_ms()
+            declare endTime: long = time.monoMs()
             std_io.println("completed in " + (endTime - startTime) + " ms")
         end body
     end function

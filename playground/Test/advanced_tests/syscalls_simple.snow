@@ -6,7 +6,7 @@ module: SyscallsSimple
         returns: void
         body:
             // 测试时间相关的系统调用
-            declare startTime: long = time.mono_ms()
+            declare startTime: long = time.monoMs()
             std_io.println("Start time: " + startTime)
 
             // 测试syscall函数

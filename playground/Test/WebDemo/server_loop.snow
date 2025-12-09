@@ -1,4 +1,4 @@
-module: server
+module: server_loop
     import: os_web
     import: std_io
     import: fd
@@ -7,7 +7,7 @@ module: server
         returns: void
         body:
             // 1. 创建 TCP 监听 socket
-            declare listener: int = os_web.tcp_socket()
+            declare listener: int = os_web.tcpSocket()
             std_io.println("listener fd = " + listener)
 
             // 2. 绑定到本地 127.0.0.1:8080
@@ -17,7 +17,7 @@ module: server
             // 3. 启动监听
             rc = os_web.listen(listener, 5)
             std_io.println("listen rc = " + rc)
-            std_io.println("server listening on 127.0.0.1:8080 ...")
+            std_io.println("server_loop listening on 127.0.0.1:8080 ...")
 
             // 4. 进入主服务循环，永远处理客户端
             loop:
@@ -42,7 +42,7 @@ module: server
                     std_io.println("recv from client: " + data)
 
                     // 6. 回一条响应
-                    declare reply: string = "Hello from Snow server!\r\n"
+                    declare reply: string = "Hello from Snow server_loop!\r\n"
                     os_web.send(client, reply)
 
                     // 7. 关闭这个客户端连接（但不关闭 listener）
@@ -53,7 +53,7 @@ module: server
 
             // 理论上永远到不了这里
             fd.close(listener)
-            std_io.println("server shutdown.")
+            std_io.println("server_loop shutdown.")
         end body
     end function
 end module

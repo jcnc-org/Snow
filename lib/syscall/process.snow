@@ -6,8 +6,8 @@
   0x1501 FORK    分叉当前进程
   0x1502 EXEC    执行映像替换
   0x1503 WAIT    等待子进程结束
-  0x1504 GETPID  获取当前进程号
-  0x1505 GETPPID 获取父进程号
+  0x1504 getPid  获取当前进程号
+  0x1505 getPpid 获取父进程号
 */
 module: process
 
@@ -78,12 +78,12 @@ module: process
     end function
 
     /**
-    @function getpid
+    @function getPid
     @summary 获取当前进程的进程号。
     @returns 当前进程的 PID（int）
     @throws Exception 获取失败时抛出异常
     */
-    function: getpid
+    function: getPid
         returns: int
         body:
             declare pid: int = syscall("0x1504")
@@ -92,12 +92,12 @@ module: process
     end function
 
     /**
-    @function getppid
+    @function getPpid
     @summary 获取当前进程的父进程号。
     @returns 父进程的 PID（int），若不存在父进程则返回 0
     @throws Exception 获取失败时抛出异常
     */
-    function: getppid
+    function: getPpid
         returns: int
         body:
             declare ppid: int = syscall("0x1505")

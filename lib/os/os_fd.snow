@@ -2,7 +2,7 @@
 @module os_fd
 @summary fd 的稳定接口层。
 @details
-    在 syscall.fd 的基础上提供常用标志常量与便捷 open/close 组合，简化上层使用。
+    在 fd 的基础上提供常用标志常量与便捷 open/close 组合，简化上层使用。
 */
 module: os_fd
 
@@ -24,10 +24,10 @@ module: os_fd
         declare const SEEK_END: int = 2
 
     /**
-    @function open_read
+    @function openRead
     @summary 以只读模式打开文件。
     */
-    function: open_read
+    function: openRead
         params:
             declare path: any
         returns: int
@@ -37,12 +37,12 @@ module: os_fd
     end function
 
     /**
-    @function open_write
+    @function openWrite
     @summary 以只写模式打开文件；默认创建并截断。
     @param create 若为 true 则在文件不存在时创建
     @param truncate 若为 true 则打开时截断文件
     */
-    function: open_write
+    function: openWrite
         params:
             declare path: any
             declare create: boolean
@@ -61,10 +61,10 @@ module: os_fd
     end function
 
     /**
-    @function open_append
+    @function openAppend
     @summary 以追加模式打开文件，不存在时创建。
     */
-    function: open_append
+    function: openAppend
         params:
             declare path: any
         returns: int
@@ -75,10 +75,10 @@ module: os_fd
     end function
 
     /**
-    @function open_readwrite
+    @function openReadwrite
     @summary 以读写模式打开文件，可选创建与截断。
     */
-    function: open_readwrite
+    function: openReadwrite
         params:
             declare path: any
             declare create: boolean
@@ -108,10 +108,10 @@ module: os_fd
     end function
 
     /**
-    @function read_bytes
+    @function readBytes
     @summary 从 fd 读取最多 n 字节。
     */
-    function: read_bytes
+    function: readBytes
         params:
             declare handle: int
             declare n: int
@@ -122,10 +122,10 @@ module: os_fd
     end function
 
     /**
-    @function write_bytes
+    @function writeBytes
     @summary 向 fd 写入数据（字符串或字节数组）。
     */
-    function: write_bytes
+    function: writeBytes
         params:
             declare handle: int
             declare data: any
@@ -162,11 +162,11 @@ module: os_fd
     end function
 
     /**
-    @function set_blocking
+    @function setBlocking
     @summary 将 fd 设置为阻塞或非阻塞。
     @param blocking true 表示阻塞，false 表示非阻塞
     */
-    function: set_blocking
+    function: setBlocking
         params:
             declare handle: int
             declare blocking: boolean
@@ -221,15 +221,15 @@ module: os_fd
     end function
 
     /**
-    @function unlink
+    @function unLink
     @summary 删除路径对应的文件或符号链接。
     */
-    function: unlink
+    function: unLink
         params:
             declare path: any
         returns: void
         body:
-            fd.unlink(path)
+            fd.unLink(path)
         end body
     end function
 
@@ -262,29 +262,29 @@ module: os_fd
     end function
 
     /**
-    @function symlink
+    @function symLink
     @summary 创建符号链接。
     */
-    function: symlink
+    function: symLink
         params:
             declare target: any
             declare linkPath: any
         returns: int
         body:
-            return fd.symlink(target, linkPath)
+            return fd.symLink(target, linkPath)
         end body
     end function
 
     /**
-    @function readlink
+    @function readLink
     @summary 读取符号链接指向的目标路径。
     */
-    function: readlink
+    function: readLink
         params:
             declare path: any
         returns: string
         body:
-            return fd.readlink(path)
+            return fd.readLink(path)
         end body
     end function
 

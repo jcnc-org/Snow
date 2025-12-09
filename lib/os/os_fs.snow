@@ -2,7 +2,7 @@
 @module os_fs
 @summary fs 的稳定封装。
 @details
-    基于 syscall.fs 与 syscall.fd，统一常见目录/文件操作的语义。
+    基于 fs 与 fd，统一常见目录/文件操作的语义。
 */
 module: os_fs
 
@@ -12,10 +12,10 @@ module: os_fs
     import: std_array
 
     /**
-    @function current_dir
+    @function currentDir
     @summary 返回当前工作目录的绝对路径。
     */
-    function: current_dir
+    function: currentDir
         returns: string
         body:
             return fs.getcwd()
@@ -23,10 +23,10 @@ module: os_fs
     end function
 
     /**
-    @function change_dir
+    @function changeDir
     @summary 切换当前工作目录。
     */
-    function: change_dir
+    function: changeDir
         params:
             declare path: any
         returns: int
@@ -36,10 +36,10 @@ module: os_fs
     end function
 
     /**
-    @function make_dir
+    @function makeDir
     @summary 创建目录（默认权限由平台决定）。
     */
-    function: make_dir
+    function: makeDir
         params:
             declare path: any
         returns: int
@@ -51,10 +51,10 @@ module: os_fs
     end function
 
     /**
-    @function make_dir_mode
+    @function makeDirMode
     @summary 创建目录并指定权限（如 0o755）。
     */
-    function: make_dir_mode
+    function: makeDirMode
         params:
             declare path: any
             declare mode: int
@@ -65,10 +65,10 @@ module: os_fs
     end function
 
     /**
-    @function remove_dir
+    @function removeDir
     @summary 删除空目录。
     */
-    function: remove_dir
+    function: removeDir
         params:
             declare path: any
         returns: int
@@ -78,23 +78,23 @@ module: os_fs
     end function
 
     /**
-    @function remove_file
+    @function removeFile
     @summary 删除文件或符号链接。
     */
-    function: remove_file
+    function: removeFile
         params:
             declare path: any
         returns: void
         body:
-            os_fd.unlink(path)
+            os_fd.unLink(path)
         end body
     end function
 
     /**
-    @function list_dir
+    @function listDir
     @summary 列出目录内容（非递归）。
     */
-    function: list_dir
+    function: listDir
         params:
             declare path: any
         returns: any
@@ -145,37 +145,37 @@ module: os_fs
     end function
 
     /**
-    @function symlink
+    @function symLink
     @summary 创建符号链接。
     */
-    function: symlink
+    function: symLink
         params:
             declare target: any
             declare linkpath: any
         returns: int
         body:
-            return os_fd.symlink(target, linkpath)
+            return os_fd.symLink(target, linkpath)
         end body
     end function
 
     /**
-    @function readlink
+    @function readLink
     @summary 读取符号链接指向的目标。
     */
-    function: readlink
+    function: readLink
         params:
             declare path: any
         returns: string
         body:
-            return os_fd.readlink(path)
+            return os_fd.readLink(path)
         end body
     end function
 
     /**
-    @function set_permissions
+    @function setPermissions
     @summary 设置路径权限，若平台不支持则静默退化。
     */
-    function: set_permissions
+    function: setPermissions
         params:
             declare path: any
             declare mode: int
@@ -186,10 +186,10 @@ module: os_fs
     end function
 
     /**
-    @function set_fd_permissions
+    @function setFdPermissions
     @summary 为已打开的 fd 设置权限，若平台不支持则静默退化。
     */
-    function: set_fd_permissions
+    function: setFdPermissions
         params:
             declare handle: int
             declare mode: int
@@ -200,10 +200,10 @@ module: os_fs
     end function
 
     /**
-    @function update_times
+    @function updateTimes
     @summary 更新路径的 atime/mtime（毫秒 Epoch）。
     */
-    function: update_times
+    function: updateTimes
         params:
             declare path: any
             declare mtime: long
@@ -215,15 +215,15 @@ module: os_fs
     end function
 
     /**
-    @function truncate_path
+    @function truncatePath
     @summary 将路径对应文件截断到指定长度。
     */
-    function: truncate_path
+    function: truncatePath
         params:
             declare path: any
             declare length: long
         body:
-            declare handle: int = os_fd.open_write(path, true, false)
+            declare handle: int = os_fd.openWrite(path, true, false)
             if handle != -1 then
                 os_fd.truncate(handle, length)
                 os_fd.close(handle)
@@ -240,7 +240,7 @@ module: os_fs
             declare path: any
         body:
             declare handle: int = -1
-            handle = os_fd.open_write(path, true, false)
+            handle = os_fd.openWrite(path, true, false)
             os_fd.close(handle)
         end body
     end function
@@ -264,10 +264,10 @@ module: os_fs
     end function
 
     /**
-    @function is_file
+    @function isFile
     @summary 判断路径是否为常规文件。
     */
-    function: is_file
+    function: isFile
         params:
             declare path: any
         returns: boolean
@@ -287,10 +287,10 @@ module: os_fs
     end function
 
     /**
-    @function is_dir
+    @function isDir
     @summary 判断路径是否为目录。
     */
-    function: is_dir
+    function: isDir
         params:
             declare path: any
         returns: boolean
@@ -305,15 +305,15 @@ module: os_fs
     end function
 
     /**
-    @function read_text
+    @function readText
     @summary 读取文本文件的全部内容，按 UTF-8 返回字符串。
     */
-    function: read_text
+    function: readText
         params:
             declare path: any
         returns: string
         body:
-            declare handle: int = os_fd.open_read(path)
+            declare handle: int = os_fd.openRead(path)
             if handle == -1 then
                 return ""
             end if
@@ -327,7 +327,7 @@ module: os_fs
                 step:
                     keep = keep
                 body:
-                    declare chunk: any = os_fd.read_bytes(handle, 4096)
+                    declare chunk: any = os_fd.readBytes(handle, 4096)
                     declare chunkStr: string = "" + chunk
                     if chunkStr == "-1" then
                         break
@@ -380,20 +380,20 @@ module: os_fs
     end function
 
     /**
-    @function write_text
+    @function writeText
     @summary 将字符串完整写入指定路径（如需会创建/截断）。
     */
-    function: write_text
+    function: writeText
         params:
             declare path: any
             declare content: string
         returns: void
         body:
-            declare handle: int = os_fd.open_write(path, true, true)
+            declare handle: int = os_fd.openWrite(path, true, true)
             if handle == -1 then
                 return
             end if
-            os_fd.write_bytes(handle, content)
+            os_fd.writeBytes(handle, content)
             os_fd.close(handle)
         end body
     end function

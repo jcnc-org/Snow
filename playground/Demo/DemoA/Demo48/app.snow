@@ -1,9 +1,9 @@
 module: app
-    import: syscall.fs
-    import: syscall.fd
+    import: fs
+    import: fd
     import: std_io.fs
-    import: syscall.fs
-    import: syscall.fd
+    import: fs
+    import: fd
     import: std_io.fd
     import: std_io
     import: os_fs
@@ -38,7 +38,7 @@ module: app
             fd.close(fd3)
 
             std_io.println("完成 dup2 测试")
-            os_fs.remove_file("dup2_demo.txt")
+            os_fs.removeFile("dup2_demo.txt")
         end body
     end function
 end module
