@@ -1,6 +1,6 @@
 /**
 @module std_short
-@summary std_short 结构体 - 对 short 基本数据类型的封装
+@summary Short 结构体 - 对 short 基本数据类型的封装
 */
 module: std_short
     import: std_parse
@@ -10,17 +10,17 @@ module: std_short
         declare const MAX_VALUE: short = 0x7fff
 
     /**
-    @struct std_short
+    @struct Short
     @summary short 的包装类
     */
-    struct: std_short
+    struct: Short
 
         fields:
             declare value: short
 
         /**
         @init default
-        @summary 无参构造函数，默认创建值为 0 的 std_short
+        @summary 无参构造函数，默认创建值为 0 的 Short
         */
         init:
             body:
@@ -30,7 +30,7 @@ module: std_short
 
         /**
         @init with_value
-        @summary 带参构造函数，根据给定值创建 std_short
+        @summary 带参构造函数，根据给定值创建 Short
         @param val 初始 short 值
         */
         init:
@@ -54,26 +54,26 @@ module: std_short
 
         /**
         @function abs
-        @summary 返回当前 short 绝对值的 std_short 实例
+        @summary 返回当前 short 绝对值的 Short 实例
         */
         function: abs
-            returns: std_short
+            returns: Short
             body:
                 declare result: short = value
                 if result < 0 then
                     result = -result
                 end if
-                return new std_short(result)
+                return new Short(result)
             end body
         end function
 
         /**
         @function equals
-        @summary 比较两个 std_short 是否相等
+        @summary 比较两个 Short 是否相等
         */
         function: equals
             params:
-                declare other: std_short
+                declare other: Short
             returns: boolean
             body:
                 return value == other.value
@@ -95,28 +95,28 @@ module: std_short
 
     /**
     @function valueOf
-    @summary 将 short 装箱为 std_short
+    @summary 将 short 装箱为 Short
     */
     function: valueOf
         params:
             declare d: short
-        returns: std_short
+        returns: Short
         body:
-            return new std_short(d)
+            return new Short(d)
         end body
     end function
 
     /**
     @function valueOfString
-    @summary 将字符串解析并包装为 std_short
+    @summary 将字符串解析并包装为 Short
     */
     function: valueOfString
         params:
             declare s: string
-        returns: std_short
+        returns: Short
         body:
             declare d: short = std_parse.parseShort(s)
-            return new std_short(d)
+            return new Short(d)
         end body
     end function
 
