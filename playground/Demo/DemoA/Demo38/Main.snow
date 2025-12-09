@@ -1,6 +1,6 @@
 module: app
-    import: syscall.fs
-    import: syscall.fd
+    import: fs
+    import: fd
     import: std_io
 
     function: main

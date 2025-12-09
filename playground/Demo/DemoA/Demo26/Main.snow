@@ -1,6 +1,4 @@
 module: Main
-    import: syscall.fs
-    import: syscall.fd
     import: std_io
 
     function: main
