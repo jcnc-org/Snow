@@ -1,4 +1,4 @@
-module: Benchmark
+module: benchmark
     import: std_io
     import: time
 
@@ -19,7 +19,7 @@ module: Benchmark
             // 测试4: 函数调用开销
             benchmarkFunctionCalls()
 
-            std_io.println("Benchmark completed.")
+            std_io.println("benchmark completed.")
         end body
     end function
 

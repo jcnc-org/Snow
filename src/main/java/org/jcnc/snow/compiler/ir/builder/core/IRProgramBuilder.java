@@ -45,6 +45,36 @@ public final class IRProgramBuilder {
     private final Set<String> injectedModuleGlobals = new HashSet<>();
 
     /**
+     * 判断给定模块是否包含入口函数。
+     * 入口函数定义为名为 "main" 或以 ".main" 结尾的函数。
+     *
+     * @param moduleNode 模块 AST 节点
+     * @return 若存在入口函数则返回 true，否则返回 false
+     */
+    private static boolean moduleHasEntryFunction(ModuleNode moduleNode) {
+        if (moduleNode == null || moduleNode.functions() == null) {
+            return false;
+        }
+        for (FunctionNode fn : moduleNode.functions()) {
+            if (isEntryFunction(fn.name())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 判断指定名称是否代表入口函数。
+     * 入口函数规则：名称为 "main"，或以 ".main" 结尾（模块前缀形式）。
+     *
+     * @param fnName 函数名
+     * @return 是否为入口函数
+     */
+    private static boolean isEntryFunction(String fnName) {
+        return "main".equals(fnName) || (fnName != null && fnName.endsWith(".main"));
+    }
+
+    /**
      * 根据 AST 根节点列表构建 IRProgram。
      *
      * <p>
@@ -421,57 +451,28 @@ public final class IRProgramBuilder {
      *   <li>若模块不存在入口函数，则对出现的第一个函数注入。</li>
      * </ul>
      *
-     * @param moduleName 模块名
-     * @param fnName     函数名
+     * @param moduleName     模块名
+     * @param fnName         函数名
      * @param moduleHasEntry 模块是否包含入口函数
      * @return 是否应对该函数注入全局变量
      */
     private boolean shouldInjectGlobals(String moduleName, String fnName, boolean moduleHasEntry) {
-        if (moduleName == null || moduleName.isBlank()) return false;
-        if (injectedModuleGlobals.contains(moduleName)) {
+        if (moduleName == null || moduleName.isBlank()) {
             return false;
         }
-        boolean isEntry = isEntryFunction(fnName);
+
+        // 模块存在入口函数：仅在入口函数中注入一次
         if (moduleHasEntry) {
-            if (isEntry) {
+            if (isEntryFunction(fnName) && !injectedModuleGlobals.contains(moduleName)) {
                 injectedModuleGlobals.add(moduleName);
                 return true;
             }
             return false;
         }
-        // 模块没有入口函数，随第一个函数注入
-        injectedModuleGlobals.add(moduleName);
+
+        // 模块没有入口函数：无法确定哪个函数会最先被调用，
+        // 为了确保全局变量一定完成初始化，对该模块的所有函数都做一次注入。
         return true;
-    }
-
-    /**
-     * 判断给定模块是否包含入口函数。
-     * 入口函数定义为名为 "main" 或以 ".main" 结尾的函数。
-     *
-     * @param moduleNode 模块 AST 节点
-     * @return 若存在入口函数则返回 true，否则返回 false
-     */
-    private static boolean moduleHasEntryFunction(ModuleNode moduleNode) {
-        if (moduleNode == null || moduleNode.functions() == null) {
-            return false;
-        }
-        for (FunctionNode fn : moduleNode.functions()) {
-            if (isEntryFunction(fn.name())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * 判断指定名称是否代表入口函数。
-     * 入口函数规则：名称为 "main"，或以 ".main" 结尾（模块前缀形式）。
-     *
-     * @param fnName 函数名
-     * @return 是否为入口函数
-     */
-    private static boolean isEntryFunction(String fnName) {
-        return "main".equals(fnName) || (fnName != null && fnName.endsWith(".main"));
     }
 
     /**

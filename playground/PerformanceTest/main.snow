@@ -1,12 +1,12 @@
 module: Main
     import: std_io
-    import: Benchmark
+    import: benchmark
 
     function: main
         returns: void
         body:
             // 运行基准测试
-            Benchmark.runBenchmark()
+            benchmark.runBenchmark()
         end body
     end function
 
