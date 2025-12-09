@@ -87,7 +87,7 @@ module: std_double
         function: toString
             returns: string
             body:
-                return Double.toString(value)
+                return std_double.toString(value)
             end body
         end function
 
