@@ -1,6 +1,6 @@
 /**
 @module std_string
-@summary std_string 结构体 - 对 string 基本数据类型的封装
+@summary String 结构体 - 对 string 基本数据类型的封装
 */
 module: std_string
     import: os_fd
@@ -9,17 +9,17 @@ module: std_string
     import: os_sys
 
     /**
-    @struct std_string
+    @struct String
     @summary string 的包装类
     */
-    struct: std_string
+    struct: String
 
         fields:
             declare value: string
 
         /**
         @init default
-        @summary 无参构造函数，默认创建值为空字符串的 std_string
+        @summary 无参构造函数，默认创建值为空字符串的 String
         */
         init:
             body:
@@ -29,7 +29,7 @@ module: std_string
 
         /**
         @init with_value
-        @summary 带参构造函数，根据给定值创建 std_string
+        @summary 带参构造函数，根据给定值创建 String
         @param val 初始 string 值
         */
         init:
@@ -192,11 +192,11 @@ module: std_string
 
         /**
         @function equals
-        @summary 比较两个 std_string 是否相等
+        @summary 比较两个 String 是否相等
         */
         function: equals
             params:
-                declare other: std_string
+                declare other: String
             returns: boolean
             body:
                 declare val1: string = value
@@ -220,14 +220,14 @@ module: std_string
 
     /**
     @function valueOf
-    @summary 将 string 装箱为 std_string
+    @summary 将 string 装箱为 String
     */
     function: valueOf
         params:
             declare s: string
-        returns: std_string
+        returns: String
         body:
-            return new std_string(s)
+            return new String(s)
         end body
     end function
 
