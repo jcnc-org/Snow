@@ -42,7 +42,7 @@ module: main
             std_io.println("read_text:\n" + std_file.read_text(filePath))
 
             // File 结构体读写
-            declare f: File = new File()
+            declare f: std_file.File = new std_file.File()
             f.open(filePath, "a")
             f.write_bytes("\nappend by File")
             f.close()

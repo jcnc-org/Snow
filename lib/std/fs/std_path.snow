@@ -24,7 +24,7 @@ module: std_path
             end if
 
             declare subBytes: byte[] = std_string.toBytes(sub)
-            declare subArr: Array = new Array(subBytes)
+            declare subArr: std_array.Array = new std_array.Array(subBytes)
             declare subLen: int = subArr.length()
             if subLen > 0 && std_path._isSeparator(subBytes[0]) then
                 return std_path.normalize(sub)
@@ -191,14 +191,14 @@ module: std_path
             end if
 
             declare bytes: byte[] = std_string.toBytes(path)
-            declare bytesArr: Array = new Array(bytes)
+            declare bytesArr: std_array.Array = new std_array.Array(bytes)
             declare len: int = bytesArr.length()
             declare absolute: boolean = false
             if len > 0 && std_path._isSeparator(bytes[0]) then
                 absolute = true
             end if
 
-            declare segments: Array = new Array()
+            declare segments: std_array.Array = new std_array.Array()
             declare segCount: int = 0
             declare current: string = ""
 
