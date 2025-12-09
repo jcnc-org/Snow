@@ -6,7 +6,7 @@ module: main
     function: main
         returns: void
         body:
-            declare a: student.Student = new person.Student(1)
+            declare a: student.Student = new student.Student(1)
 
             std_io.println(a.getName())
 

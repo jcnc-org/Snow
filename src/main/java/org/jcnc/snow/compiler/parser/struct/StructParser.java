@@ -54,11 +54,16 @@ public class StructParser implements TopLevelParser {
         ts.expect(":");
         String structName = ts.expectType(TokenType.IDENTIFIER).getLexeme();
 
-        // 解析可选 extends
+        // 解析可选 extends（支持限定名 module.Struct）
         String parentName = null;
         if ("extends".equals(ts.peek().getLexeme())) {
             ts.expect("extends");
             parentName = ts.expectType(TokenType.IDENTIFIER).getLexeme();
+            // 支持限定名：module.Struct
+            if (".".equals(ts.peek().getLexeme())) {
+                ts.expect(".");
+                parentName += "." + ts.expectType(TokenType.IDENTIFIER).getLexeme();
+            }
         }
 
         ts.expectType(TokenType.NEWLINE);
