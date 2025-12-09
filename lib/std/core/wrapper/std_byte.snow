@@ -1,6 +1,6 @@
 /**
 @module std_byte
-@summary std_byte 结构体 - 对 byte 基本数据类型的封装
+@summary Byte 结构体 - 对 byte 基本数据类型的封装
 */
 module: std_byte
     import: std_parse
@@ -10,17 +10,17 @@ module: std_byte
         declare const MAX_VALUE: byte = 0x7f
 
     /**
-    @struct std_byte
+    @struct Byte
     @summary byte 的包装类
     */
-    struct: std_byte
+    struct: Byte
 
         fields:
             declare value: byte
 
         /**
         @init default
-        @summary 无参构造函数，默认创建值为 0 的 std_byte
+        @summary 无参构造函数，默认创建值为 0 的 Byte
         */
         init:
             body:
@@ -30,7 +30,7 @@ module: std_byte
 
         /**
         @init with_value
-        @summary 带参构造函数，根据给定值创建 std_byte
+        @summary 带参构造函数，根据给定值创建 Byte
         @param val 初始 byte 值
         */
         init:
@@ -54,26 +54,26 @@ module: std_byte
 
         /**
         @function abs
-        @summary 返回当前 byte 绝对值的 std_byte 实例
+        @summary 返回当前 byte 绝对值的 Byte 实例
         */
         function: abs
-            returns: std_byte
+            returns: Byte
             body:
                 declare result: byte = value
                 if result < 0 then
                     result = -result
                 end if
-                return new std_byte(result)
+                return new Byte(result)
             end body
         end function
 
         /**
         @function equals
-        @summary 比较两个 std_byte 是否相等
+        @summary 比较两个 Byte 是否相等
         */
         function: equals
             params:
-                declare other: std_byte
+                declare other: Byte
             returns: boolean
             body:
                 return value == other.value
@@ -95,28 +95,28 @@ module: std_byte
 
     /**
     @function valueOf
-    @summary 将 byte 装箱为 std_byte
+    @summary 将 byte 装箱为 Byte
     */
     function: valueOf
         params:
             declare d: byte
-        returns: std_byte
+        returns: Byte
         body:
-            return new std_byte(d)
+            return new Byte(d)
         end body
     end function
 
     /**
     @function valueOfString
-    @summary 将字符串解析并包装为 std_byte
+    @summary 将字符串解析并包装为 Byte
     */
     function: valueOfString
         params:
             declare s: string
-        returns: std_byte
+        returns: Byte
         body:
             declare d: byte = std_parse.parseByte(s)
-            return new std_byte(d)
+            return new Byte(d)
         end body
     end function
 
