@@ -63,18 +63,17 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
      */
     private static char normalizeTypePrefix(String name) {
         if (name == null) return 'I';
-        String n = name.toLowerCase(Locale.ROOT);
-        return switch (n) {
+        return switch (name) {
             case "byte" -> 'B';
             case "short" -> 'S';
-            case "int", "integer", "bool", "boolean" -> 'I';
+            case "int", "boolean" -> 'I';
             case "long" -> 'L';
             case "float" -> 'F';
             case "double" -> 'D';
             case "string" -> 'R';
             case "void" -> 'V';
 
-            default -> 'R';
+            default -> 'R';  // 所有结构体类型(如 Boolean)都是引用类型
         };
     }
 
