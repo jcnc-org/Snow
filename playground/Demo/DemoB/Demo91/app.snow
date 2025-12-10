@@ -1,7 +1,7 @@
 /**
-@module app
-@summary 测试 os_fd 模块的全部接口。
-*/
+ * @module app
+ * @summary 测试 os_fd 模块的全部接口。
+ */
 module: app
     import: os_fd
     import: os_fs

@@ -1,7 +1,7 @@
 /**
-@module std_boolean_example
-@summary 演示 std_boolean 全部接口
-*/
+ * @module std_boolean_example
+ * @summary 演示 std_boolean 全部接口
+ */
 module: std_boolean_example
 
     import: std_boolean

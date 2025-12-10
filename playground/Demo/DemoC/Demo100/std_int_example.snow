@@ -1,7 +1,7 @@
 /**
-@module std_int_example
-@summary std_int 方法演示
-*/
+ * @module std_int_example
+ * @summary std_int 方法演示
+ */
 module: std_int_example
 
     import: std_int

@@ -1,18 +1,18 @@
 /**
-@module fibonacci_demo
-@summary 使用 Snow 计算斐波拉契数列
-@details
-    演示如何在 Snow 中同时使用迭代与递归两种方式计算斐波拉契数列，
-    并展示前若干项以及特定位置的值。
-*/
+ * @module fibonacci_demo
+ * @summary 使用 Snow 计算斐波拉契数列
+ * @details
+ * 演示如何在 Snow 中同时使用迭代与递归两种方式计算斐波拉契数列，
+ * 并展示前若干项以及特定位置的值。
+ */
 module: fibonacci_demo
 
     import: std_io
     import: os_time
 
     /**
-    @summary 迭代方式求第 n 个斐波拉契数
-    */
+     * @summary 迭代方式求第 n 个斐波拉契数
+     */
     function: fib_iterative
         params:
             declare n: int
@@ -44,8 +44,8 @@ module: fibonacci_demo
     end function
 
     /**
-    @summary 递归方式求第 n 个斐波拉契数
-    */
+     * @summary 递归方式求第 n 个斐波拉契数
+     */
     function: fib_recursive
         params:
             declare n: int
@@ -59,8 +59,8 @@ module: fibonacci_demo
     end function
 
     /**
-    @summary 打印迭代版斐波拉契数列
-    */
+     * @summary 打印迭代版斐波拉契数列
+     */
     function: print_iterative_series
         params:
             declare count: int
@@ -88,8 +88,8 @@ module: fibonacci_demo
     end function
 
     /**
-    @summary 使用递归校验前 count 项
-    */
+     * @summary 使用递归校验前 count 项
+     */
     function: print_recursive_series
         params:
             declare count: int

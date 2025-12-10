@@ -1,8 +1,8 @@
 /**
-@module std_string_example
-@summary std_string 方法演示
-@description 演示 std_string 标准库提供的常用字符串操作方法
-*/
+ * @module std_string_example
+ * @summary std_string 方法演示
+ * @description 演示 std_string 标准库提供的常用字符串操作方法
+ */
 module: std_string_example
 
     import: std_string

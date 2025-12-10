@@ -1,8 +1,8 @@
 /**
-@module os_array_example
-@summary os_array 方法演示
-@description 演示 os_array 模块提供的各种数组操作能力。
-*/
+ * @module os_array_example
+ * @summary os_array 方法演示
+ * @description 演示 os_array 模块提供的各种数组操作能力。
+ */
 module: os_array_example
 
     import: os_array

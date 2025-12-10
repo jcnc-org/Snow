@@ -1,8 +1,8 @@
 /**
-@module std_array_example
-@summary Array 方法演示
-@description 演示 Array 标准库提供的常用数组操作方法
-*/
+ * @module std_array_example
+ * @summary Array 方法演示
+ * @description 演示 Array 标准库提供的常用数组操作方法
+ */
 module: std_array_example
 
     import: std_array

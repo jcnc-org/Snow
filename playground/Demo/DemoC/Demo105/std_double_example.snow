@@ -1,7 +1,7 @@
 /**
-@module std_double_example
-@summary std_double 方法演示
-*/
+ * @module std_double_example
+ * @summary std_double 方法演示
+ */
 module: std_double_example
 
     import: std_double
