@@ -69,7 +69,6 @@ module: std_file
                     return emptyArr.toRawArray()
                 end if
 
-                // 改造：使用 Array 替代 byte[] 作为动态缓冲容器
                 declare buffer: Array = new Array()
 
                 loop:
