@@ -219,6 +219,19 @@ public class FunctionParser implements TopLevelParser {
             throw new UnexpectedToken("期望 TYPE 或 IDENTIFIER，但得到 " + t.getType() + " ('" + t.getLexeme() + "')", t.getLine(), t.getCol());
         }
         StringBuilder typeName = new StringBuilder(typeToken.getLexeme());
+        // 支持限定类型名：module.Type 或 module.sub.Type
+        while (ts.peek().getType() == TokenType.DOT) {
+            ts.next(); // consume '.'
+            typeName.append('.');
+            if (ts.peek().getType() == TokenType.IDENTIFIER) {
+                typeName.append(ts.next().getLexeme());
+            } else {
+                var t = ts.peek();
+                throw new UnexpectedToken(
+                        "限定类型名中点号后必须跟标识符，但得到 " + t.getType() + " ('" + t.getLexeme() + "')",
+                        t.getLine(), t.getCol());
+            }
+        }
         while (ts.peek().getType() == TokenType.LBRACKET) {
             ts.next(); // [
             if (ts.peek().getType() != TokenType.RBRACKET) {
