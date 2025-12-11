@@ -8,6 +8,7 @@ module: std_byte_example
     import: std_math
     import: std_io
     import: std_parse
+    import: std_option
 
     function: main
         body:
@@ -19,7 +20,7 @@ module: std_byte_example
 
             std_io.println("\n=== valueOf* 与静态 toString() ===")
             declare boxedFrombyte: std_byte.Byte = std_byte.valueOf(42)
-            declare boxedFromString: std_byte.Byte = std_byte.valueOfString("3276600")
+            declare boxedFromString: std_byte.Byte = std_byte.valueOfString("12")
             std_io.println("valueOf(42) -> " + boxedFrombyte.byteValue())
             std_io.println("valueOfString(\"12\") -> " + boxedFromString.byteValue())
             std_io.println("std_byte.toString(7) -> " + std_byte.toString(7))
@@ -36,6 +37,25 @@ module: std_byte_example
 
             std_io.println("\n=== 数学/解析工具 ===")
             std_io.println("std_parse.parseByte(\"-71\") -> " + std_parse.parseByte("-71"))
+            std_io.println("std_parse.parseByteRadix(\"7B\", 16) -> " + std_parse.parseByteRadix("7B", 16))
+            declare trimmed: std_option.OptionByte = std_parse.tryParseByte("   -12  ")
+            if trimmed.isSome() then
+                std_io.println("tryParseByte(\"   -12  \") -> Some(" + trimmed.value + ")")
+            else
+                std_io.println("tryParseByte(\"   -12  \") -> None")
+            end if
+            declare invalid: std_option.OptionByte = std_parse.tryParseByte("300oops")
+            if invalid.isSome() then
+                std_io.println("tryParseByte(\"300oops\") -> Some(" + invalid.value + ")")
+            else
+                std_io.println("tryParseByte(\"300oops\") -> None")
+            end if
+            declare radixOpt: std_option.OptionByte = std_parse.tryParseByteRadix("7F", 16)
+            if radixOpt.isSome() then
+                std_io.println("tryParseByteRadix(\"7F\", 16) -> Some(" + radixOpt.value + ")")
+            else
+                std_io.println("tryParseByteRadix(\"7F\", 16) -> None")
+            end if
             std_io.println("std_math.compareByte(1, 5) -> " + std_math.compareByte(1, 5))
             std_io.println("std_math.compareByte(7, 2) -> " + std_math.compareByte(7, 2))
             std_io.println("std_math.maxByte(-15, 20) -> " + std_math.maxByte(-15, 20))
