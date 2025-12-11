@@ -8,6 +8,7 @@ module: std_int_example
     import: std_math
     import: std_io
     import: std_parse
+    import: std_option
 
     function: main
         body:
@@ -21,7 +22,7 @@ module: std_int_example
             declare boxedFromint: std_int.Int = std_int.valueOf(42)
             declare boxedFromString: std_int.Int = std_int.valueOfString("3276600")
             std_io.println("valueOf(42) -> " + boxedFromint.intValue())
-            std_io.println("valueOfString(\"12\") -> " + boxedFromString.intValue())
+            std_io.println("valueOfString(\"3276600\") -> " + boxedFromString.intValue())
             std_io.println("std_int.toString(7) -> " + std_int.toString(7))
 
             std_io.println("\n=== 实例方法 abs()/equals()/toString() ===")
@@ -36,6 +37,25 @@ module: std_int_example
 
             std_io.println("\n=== 数学/解析工具 ===")
             std_io.println("std_parse.parseInt(\"-71\") -> " + std_parse.parseInt("-71"))
+            std_io.println("std_parse.parseIntRadix(\"1A\", 16) -> " + std_parse.parseIntRadix("1A", 16))
+            declare trimmed: std_option.OptionInt = std_parse.tryParseInt("   +88  ")
+            if trimmed.isSome() then
+                std_io.println("tryParseInt(\"   +88  \") -> Some(" + trimmed.value + ")")
+            else
+                std_io.println("tryParseInt(\"   +88  \") -> None")
+            end if
+            declare invalid: std_option.OptionInt = std_parse.tryParseInt("100oops")
+            if invalid.isSome() then
+                std_io.println("tryParseInt(\"100oops\") -> Some(" + invalid.value + ")")
+            else
+                std_io.println("tryParseInt(\"100oops\") -> None")
+            end if
+            declare radixOpt: std_option.OptionInt = std_parse.tryParseIntRadix("ZZ", 36)
+            if radixOpt.isSome() then
+                std_io.println("tryParseIntRadix(\"ZZ\", 36) -> Some(" + radixOpt.value + ")")
+            else
+                std_io.println("tryParseIntRadix(\"ZZ\", 36) -> None")
+            end if
             std_io.println("std_math.compareInt(1, 5) -> " + std_math.compareInt(1, 5))
             std_io.println("std_math.compareInt(7, 2) -> " + std_math.compareInt(7, 2))
             std_io.println("std_math.maxInt(-15, 20) -> " + std_math.maxInt(-15, 20))
