@@ -216,6 +216,36 @@ module: std_string
             end body
         end function
 
+        /**
+        @function split
+        @summary 按分隔符拆分字符串，返回字符串数组
+        @param delimiter 分隔符字符串
+        */
+        function: split
+            params:
+                declare delimiter: string
+            returns: any
+            body:
+                return std_string.split(value, delimiter)
+            end body
+        end function
+
+        /**
+        @function replace
+        @summary 将所有出现的 target 替换为 replacement
+        @param target 目标子串
+        @param replacement 替换字符串
+        */
+        function: replace
+            params:
+                declare target: string
+                declare replacement: string
+            returns: string
+            body:
+                return std_string.replace(value, target, replacement)
+            end body
+        end function
+
     end struct
 
     /**
@@ -390,6 +420,179 @@ module: std_string
         returns: boolean
         body:
             return std_string.indexOf(str, substr) != -1
+        end body
+    end function
+
+    /**
+    @function split
+    @summary 按分隔符拆分字符串，返回字符串数组
+    @param str 源字符串
+    @param delimiter 分隔符
+    */
+    function: split
+        params:
+            declare str: string
+            declare delimiter: string
+        returns: any
+        body:
+            declare result: std_array.Array = new std_array.Array()
+            declare delimLen: int = std_string.length(delimiter)
+
+            // 分隔符为空时，逐字符拆分
+            if delimLen == 0 then
+                declare data: byte[] = std_string.toBytes(str)
+                declare dataArr: std_array.Array = new std_array.Array(data)
+                declare len: int = dataArr.length()
+                loop:
+                    init:
+                        declare i: int = 0
+                    cond:
+                        i < len
+                    step:
+                        i = i + 1
+                    body:
+                        result.append(std_string._charToString(dataArr.get(i)))
+                    end body
+                end loop
+                return result
+            end if
+
+            declare data: byte[] = std_string.toBytes(str)
+            declare strLen: int = std_string.length(str)
+            declare delimData: byte[] = std_string.toBytes(delimiter)
+
+            declare last: int = 0
+            declare i: int = 0
+
+            // 扫描查找分隔符位置
+            loop:
+                init:
+                    i = i
+                cond:
+                    i <= strLen - delimLen
+                step:
+                    i = i + 1
+                body:
+                    declare match: boolean = true
+                    declare j: int = 0
+                    loop:
+                        init:
+                            j = j
+                        cond:
+                            j < delimLen
+                        step:
+                            j = j + 1
+                        body:
+                            if data[i + j] != delimData[j] then
+                                match = false
+                                break
+                            end if
+                        end body
+                    end loop
+
+                    if match == true then
+                        // 复制 last..i 之间的子串
+                        declare part: string = ""
+                        declare k: int = last
+                        loop:
+                            init:
+                                k = k
+                            cond:
+                                k < i
+                            step:
+                                k = k + 1
+                            body:
+                                part = part + std_string._charToString(data[k])
+                            end body
+                        end loop
+                        result.append(part)
+
+                        i = i + delimLen - 1   // 跳过分隔符（-1 因为循环末尾还会 +1）
+                        last = i + 1
+                    end if
+                end body
+            end loop
+
+            // 追加末尾剩余部分（允许为空，保持尾部分隔符行为）
+            declare tail: string = ""
+            declare k: int = last
+            loop:
+                init:
+                    k = k
+                cond:
+                    k < strLen
+                step:
+                    k = k + 1
+                body:
+                    tail = tail + std_string._charToString(data[k])
+                end body
+            end loop
+            result.append(tail)
+
+            return result.toRawArray()
+        end body
+    end function
+
+    /**
+    @function join
+    @summary 使用分隔符连接字符串数组
+    @param parts 字符串数组（Array）
+    @param separator 分隔符
+    */
+    function: join
+        params:
+            declare parts: any          // 支持 Array 或 raw any[]
+            declare separator: string
+        returns: string
+        body:
+            declare arr: std_array.Array = new std_array.Array(parts)
+            declare len: int = arr.length()
+            if len == 0 then
+                return ""
+            end if
+
+            declare result: string = ""
+            loop:
+                init:
+                    declare i: int = 0
+                cond:
+                    i < len
+                step:
+                    i = i + 1
+                body:
+                    if i > 0 then
+                        result = result + separator
+                    end if
+                    declare elem: any = arr.get(i)
+                    result = result + ("" + elem)
+                end body
+            end loop
+
+            return result
+        end body
+    end function
+
+    /**
+    @function replace
+    @summary 将所有出现的 target 替换为 replacement
+    @param str 源字符串
+    @param target 目标子串
+    @param replacement 替换内容
+    */
+    function: replace
+        params:
+            declare str: string
+            declare target: string
+            declare replacement: string
+        returns: string
+        body:
+            declare targetLen: int = std_string.length(target)
+            if targetLen == 0 then
+                return str
+            end if
+
+            declare partsRaw: any = std_string.split(str, target)
+            return std_string.join(partsRaw, replacement)
         end body
     end function
 

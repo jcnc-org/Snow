@@ -7,6 +7,7 @@ module: std_string_example
 
     import: std_string
     import: std_io
+    import: std_array
 
     function: main
         body:
@@ -72,8 +73,25 @@ module: std_string_example
             std_io.println("toUpperCase() -> [" + caseStr.toUpperCase() + "]")
             std_io.println("toLowerCase() -> [" + caseStr.toLowerCase() + "]")
 
-            // 9. toBytes 和 fromBytes
-            std_io.println("\n=== 9. toBytes() 和 fromBytes() 字符串与字节数组转换 ===")
+            // 9. replace 全量替换
+            std_io.println("\n=== 9. replace(target, replacement) 全量替换 ===")
+            declare replaceStr: std_string.String = new std_string.String("Snow Language Snow")
+            std_io.println("原字符串: [" + replaceStr.stringValue() + "]")
+            std_io.println("replace(\"Snow\", \"Ice\") -> [" + replaceStr.replace("Snow", "Ice") + "]")
+            std_io.println("replace(\" \", \"_\") -> [" + replaceStr.replace(" ", "_") + "]")
+
+            // 10. split / join
+            std_io.println("\n=== 10. split() / join() 拆分与拼接 ===")
+            declare csv: string = "alpha,beta,,gamma"
+            declare partsRaw: any = std_string.split(csv, ",")
+            declare parts: std_array.Array = std_array.fromRawArray(partsRaw)
+            std_io.println("原字符串: [" + csv + "]")
+            std_io.println("split(\",\") -> " + parts.toString())
+            declare joined: string = std_string.join(partsRaw, "|")
+            std_io.println("join(\"|\") -> [" + joined + "]")
+
+            // 11. toBytes 和 fromBytes
+            std_io.println("\n=== 11. toBytes() 和 fromBytes() 字符串与字节数组转换 ===")
             declare rawStr: std_string.String = new std_string.String("Hello World")
             declare bytes: byte[] = rawStr.toBytes()
             std_io.println("原字符串: [" + rawStr.stringValue() + "]")
@@ -86,8 +104,8 @@ module: std_string_example
             syscall("0x1803", bytes, 10, 115) // s
             std_io.println("修改后 fromBytes() -> [" + std_string.fromBytes(bytes) + "]")
 
-            // 10. startsWith 和 endsWith
-            std_io.println("\n=== 10. startsWith() 和 endsWith() 前后缀判断 ===")
+            // 12. startsWith 和 endsWith
+            std_io.println("\n=== 12. startsWith() 和 endsWith() 前后缀判断 ===")
             declare prefixStr: std_string.String = new std_string.String("Hello Snow Language")
             std_io.println("原字符串: [" + prefixStr.stringValue() + "]")
             std_io.println("startsWith(\"Hello\") -> " + prefixStr.startsWith("Hello"))
@@ -95,16 +113,16 @@ module: std_string_example
             std_io.println("endsWith(\"Language\") -> " + prefixStr.endsWith("Language"))
             std_io.println("endsWith(\"Snow\") -> " + prefixStr.endsWith("Snow"))
 
-            // 11. equals 相等判断
-            std_io.println("\n=== 11. equals() 相等判断 ===")
+            // 13. equals 相等判断
+            std_io.println("\n=== 13. equals() 相等判断 ===")
             declare str1: std_string.String = new std_string.String("Snow")
             declare str2: std_string.String = new std_string.String("Snow")
             declare str3: std_string.String = new std_string.String("Java")
             std_io.println("\"Snow\" equals \"Snow\" -> " + str1.equals(str2))
             std_io.println("\"Snow\" equals \"Java\" -> " + str1.equals(str3))
 
-            // 12. 静态方法调用
-            std_io.println("\n=== 12. 静态方法直接调用 ===")
+            // 14. 静态方法调用
+            std_io.println("\n=== 14. 静态方法直接调用 ===")
             declare directTest: string = "  Test Direct Call  "
             std_io.println("原字符串: [" + directTest + "]")
             std_io.println("std_string.length() -> " + std_string.length(directTest))
@@ -112,8 +130,8 @@ module: std_string_example
             std_io.println("std_string.toUpperCase() -> [" + std_string.toUpperCase(directTest) + "]")
             std_io.println("std_string.isEmpty() -> " + std_string.isEmpty(directTest))
 
-            // 13. 组合使用示例
-            std_io.println("\n=== 13. 组合使用示例 ===")
+            // 15. 组合使用示例
+            std_io.println("\n=== 15. 组合使用示例 ===")
             declare rawInput: string = "   Snow Programming Language   "
             std_io.println("原始输入: [" + rawInput + "]")
 
@@ -128,6 +146,14 @@ module: std_string_example
 
             declare firstWord: string = std_string.substring(trimmed, 0, 4)
             std_io.println("4. substring(0, 4) -> [" + firstWord + "]")
+
+            declare replaced: string = std_string.replace(trimmed, "Snow", "Ice")
+            std_io.println("5. replace(\"Snow\", \"Ice\") -> [" + replaced + "]")
+
+            declare wordsRaw: any = std_string.split(trimmed, " ")
+            declare words: std_array.Array = std_array.fromRawArray(wordsRaw)
+            std_io.println("6. split(\" \") -> " + words.toString())
+            std_io.println("7. join(\"-\") -> [" + std_string.join(wordsRaw, "-") + "]")
 
             std_io.println("\n=== std_string 演示完成 ===")
         end body

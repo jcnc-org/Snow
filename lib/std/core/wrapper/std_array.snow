@@ -433,6 +433,104 @@ module: std_array
         end function
 
         /**
+        @function slice
+        @summary 复制指定区间的子数组 [start, end)
+        @param start 起始索引（包含，若为负则视为 0）
+        @param endIdx 结束索引（不包含，超出长度会被截断）
+        */
+        function: slice
+            params:
+                declare start: int
+                declare endIdx: int
+            returns: Array
+            body:
+                declare len: int = length()
+                if start < 0 then
+                    start = 0
+                end if
+                if endIdx > len then
+                    endIdx = len
+                end if
+                if start >= endIdx then
+                    return new Array()
+                end if
+
+                declare newData: any[] = []
+                loop:
+                    init:
+                        declare i: int = start
+                    cond:
+                        i < endIdx
+                    step:
+                        i = i + 1
+                    body:
+                        os_array.push(newData, get(i))
+                    end body
+                end loop
+
+                return new Array(newData)
+            end body
+        end function
+
+        /**
+        @function subList
+        @summary 取得区间子数组（等同于 slice）
+        */
+        function: subList
+            params:
+                declare start: int
+                declare endIdx: int
+            returns: Array
+            body:
+                return slice(start, endIdx)
+            end body
+        end function
+
+        /**
+        @function concat
+        @summary 拼接当前数组与另一个数组，返回新 Array
+        @param other 要追加的数组
+        */
+        function: concat
+            params:
+                declare other: Array
+            returns: Array
+            body:
+                declare len1: int = length()
+                declare len2: int = other.length()
+                declare newData: any[] = []
+
+                // 拷贝当前数组
+                loop:
+                    init:
+                        declare i: int = 0
+                    cond:
+                        i < len1
+                    step:
+                        i = i + 1
+                    body:
+                        os_array.push(newData, get(i))
+                    end body
+                end loop
+
+                // 拷贝另一个数组
+                loop:
+                    init:
+                        declare j: int = 0
+                    cond:
+                        j < len2
+                    step:
+                        j = j + 1
+                    body:
+                        os_array.push(newData, other.get(j))
+                    end body
+                end loop
+
+                return new Array(newData)
+            end body
+        end function
+
+        /**
         @function clone
         @summary 创建当前数组的浅拷贝（内容复制，底层存储分离）
         @returns 一个新的 Array，包含相同元素
