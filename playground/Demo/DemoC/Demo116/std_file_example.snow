@@ -48,10 +48,10 @@ module: main
             f.close()
 
             f.open(filePath, "r")
-            declare bytes: byte[] = f.read_all_bytes()
+            declare bytes: byte[] = f.readAllBytes()
             f.close()
             declare content: string = std_string.fromBytes(bytes)
-            std_io.println("read_all_bytes ->\n" + content)
+            std_io.println("readAllBytes ->\n" + content)
 
             // 收尾清理
             os_fs.removeFile(filePath)

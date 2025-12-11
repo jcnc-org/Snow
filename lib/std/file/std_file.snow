@@ -58,10 +58,10 @@ module: std_file
         end function
 
         /**
-         * @function read_all_bytes
+         * @function readAllBytes
          * @summary 读取文件全部内容为 Array 包装的动态字节数组。
          */
-        function: read_all_bytes
+        function: readAllBytes
             returns: byte[]
             body:
                 if fd == -1 then
