@@ -7,7 +7,7 @@ module: client
         returns: void
         body:
             // 1. 创建 TCP 套接字
-            declare s: int = os_web.tcp_socket()
+            declare s: int = os_web.tcpSocket()
             std_io.println("socket fd = " + s)
 
             // 2. 连接本地服务

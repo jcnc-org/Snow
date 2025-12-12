@@ -1,0 +1,214 @@
+/**
+ * @module std_file
+ * @summary 文件系统的标准库封装。
+ */
+module: std_file
+    import: os_fs
+    import: os_fd
+    import: std_array
+
+    /**
+     * @struct File
+     * @summary 文件句柄的简单封装。
+     */
+    struct: File
+
+        fields:
+            declare fd: int
+            declare path: string
+
+        /**
+         * @init default
+         * @summary 默认构造，fd 设为 -1。
+         */
+        init:
+            body:
+                fd = -1
+                path = ""
+            end body
+        end init
+
+        /**
+         * @function open
+         * @summary 按模式打开文件（r/w/a/rw）。
+         */
+        function: open
+            params:
+                declare target: any
+                declare mode: string
+            returns: void
+            body:
+                path = "" + target
+                declare m: string = mode
+
+                if m == "r" then
+                    fd = os_fd.openRead(path)
+                else
+                    if m == "w" then
+                        fd = os_fd.openWrite(path, true, true)
+                    else
+                        if m == "a" then
+                            fd = os_fd.openAppend(path)
+                        else
+                            fd = os_fd.openReadwrite(path, true, false)
+                        end if
+                    end if
+                end if
+            end body
+        end function
+
+        /**
+         * @function readAllBytes
+         * @summary 读取文件全部内容为 Array 包装的动态字节数组。
+         */
+        function: readAllBytes
+            returns: byte[]
+            body:
+                if fd == -1 then
+                    declare emptyArr: Array = new Array()
+                    return emptyArr.toRawArray()
+                end if
+
+                declare buffer: Array = new Array()
+
+                loop:
+                    init:
+                        declare keep: boolean = true
+                    cond:
+                        keep
+                    step:
+                        keep = keep
+                    body:
+                        declare chunk: any = os_fd.readBytes(fd, 4096)
+
+                        // os_fd.readBytes 返回 -1 表示 EOF
+                        declare chunkStr: string = "" + chunk
+                        if chunkStr == "-1" then
+                            break
+                        end if
+
+                        // 将 chunk 数组用 Array 包装
+                        declare chunkArr: Array = new Array(chunk)
+                        declare chunkLen: int = chunkArr.length()
+
+                        if chunkLen == 0 then
+                            break
+                        end if
+
+                        // 按字节复制到 buffer
+                        declare i: int = 0
+                        loop:
+                            init:
+                                i = i
+                            cond:
+                                i < chunkLen
+                            step:
+                                i = i + 1
+                            body:
+                                buffer.append(chunkArr.get(i))
+                            end body
+                        end loop
+                    end body
+                end loop
+
+                return buffer.toRawArray()
+            end body
+        end function
+
+        /**
+         * @function writeBytes
+         * @summary 向文件写入字节或字符串。
+         */
+        function: writeBytes
+            params:
+                declare bytes: any
+            returns: int
+            body:
+                if fd == -1 then
+                    return 0
+                end if
+                return os_fd.writeBytes(fd, bytes)
+            end body
+        end function
+
+        /**
+         * @function close
+         * @summary 关闭文件句柄。
+         */
+        function: close
+            returns: void
+            body:
+                os_fd.close(fd)
+                fd = -1
+            end body
+        end function
+
+    end struct
+
+    /**
+     * @function exists
+     * @summary 判断路径是否存在。
+     */
+    function: exists
+        params:
+            declare path: string
+        returns: boolean
+        body:
+            return os_fs.exists(path)
+        end body
+    end function
+
+    /**
+     * @function isFile
+     * @summary 判断路径是否为普通文件。
+     */
+    function: isFile
+        params:
+            declare path: string
+        returns: boolean
+        body:
+            return os_fs.isFile(path)
+        end body
+    end function
+
+    /**
+     * @function isDir
+     * @summary 判断路径是否为目录。
+     */
+    function: isDir
+        params:
+            declare path: string
+        returns: boolean
+        body:
+            return os_fs.isDir(path)
+        end body
+    end function
+
+    /**
+     * @function readText
+     * @summary 读取文本文件全部内容。
+     */
+    function: readText
+        params:
+            declare path: string
+        returns: string
+        body:
+            return os_fs.readText(path)
+        end body
+    end function
+
+    /**
+     * @function writeText
+     * @summary 将字符串写入文件（必要时创建/截断）。
+     */
+    function: writeText
+        params:
+            declare path: string
+            declare content: string
+        returns: void
+        body:
+            os_fs.writeText(path, content)
+        end body
+    end function
+
+end module

@@ -7,39 +7,39 @@ module: os_sync
     import: sync
 
     /**
-    @function mutex_new
+    @function mutexNew
     @summary 创建互斥量，返回 ID。
     */
-    function: mutex_new
+    function: mutexNew
         returns: int
         body:
-            return sync.mutex_new()
+            return sync.mutexNew()
         end body
     end function
 
     /**
-    @function mutex_lock
+    @function mutexLock
     @summary 阻塞获取互斥量。
     */
-    function: mutex_lock
+    function: mutexLock
         params:
-            declare mid:int
+            declare mid: int
         returns: int
         body:
-            return sync.mutex_lock(mid)
+            return sync.mutexLock(mid)
         end body
     end function
 
     /**
-    @function mutex_trylock
+    @function mutexTrylock
     @summary 尝试获取互斥量，成功返回 true。
     */
-    function: mutex_trylock
+    function: mutexTrylock
         params:
-            declare mid:int
+            declare mid: int
         returns: boolean
         body:
-            declare rc:int = sync.mutex_trylock(mid)
+            declare rc: int = sync.mutexTrylock(mid)
             if rc == 1 then
                 return true
             end if
@@ -48,157 +48,157 @@ module: os_sync
     end function
 
     /**
-    @function mutex_unlock
+    @function mutexUnlock
     @summary 释放互斥量。
     */
-    function: mutex_unlock
+    function: mutexUnlock
         params:
-            declare mid:int
+            declare mid: int
         returns: int
         body:
-            return sync.mutex_unlock(mid)
+            return sync.mutexUnlock(mid)
         end body
     end function
 
     /**
-    @function cond_new
+    @function condNew
     @summary 创建条件变量。
     */
-    function: cond_new
+    function: condNew
         returns: int
         body:
-            return sync.cond_new()
+            return sync.condNew()
         end body
     end function
 
     /**
-    @function cond_wait
+    @function condWait
     @summary 等待条件变量，timeout_ms<0 表示无限等待。
     */
-    function: cond_wait
+    function: condWait
         params:
-            declare cid:int
-            declare mid:int
-            declare timeout_ms:int
+            declare cid: int
+            declare mid: int
+            declare timeout_ms: int
         returns: int
         body:
-            return sync.cond_wait(cid, mid, timeout_ms)
+            return sync.condWait(cid, mid, timeout_ms)
         end body
     end function
 
     /**
-    @function cond_signal
+    @function condSignal
     @summary 唤醒一个等待线程。
     */
-    function: cond_signal
+    function: condSignal
         params:
-            declare cid:int
+            declare cid: int
         returns: int
         body:
-            return sync.cond_signal(cid)
+            return sync.condSignal(cid)
         end body
     end function
 
     /**
-    @function cond_broadcast
+    @function condBroadcast
     @summary 唤醒所有等待线程。
     */
-    function: cond_broadcast
+    function: condBroadcast
         params:
-            declare cid:int
+            declare cid: int
         returns: int
         body:
-            return sync.cond_broadcast(cid)
+            return sync.condBroadcast(cid)
         end body
     end function
 
     /**
-    @function sem_new
+    @function semNew
     @summary 创建信号量，初值为 init1。
     */
-    function: sem_new
+    function: semNew
         params:
-            declare init1:int
+            declare init1: int
         returns: int
         body:
-            return sync.sem_new(init1)
+            return sync.semNew(init1)
         end body
     end function
 
     /**
-    @function sem_wait
+    @function semWait
     @summary 等待信号量，timeout_ms<0 表示永久等待。
     */
-    function: sem_wait
+    function: semWait
         params:
-            declare sid:int
-            declare timeout_ms:int
+            declare sid: int
+            declare timeout_ms: int
         returns: int
         body:
-            return sync.sem_wait(sid, timeout_ms)
+            return sync.semWait(sid, timeout_ms)
         end body
     end function
 
     /**
-    @function sem_post
+    @function semPost
     @summary 释放信号量。
     */
-    function: sem_post
+    function: semPost
         params:
-            declare sid:int
+            declare sid: int
         returns: int
         body:
-            return sync.sem_post(sid)
+            return sync.semPost(sid)
         end body
     end function
 
     /**
-    @function rwlock_new
+    @function rwlockNew
     @summary 创建读写锁。
     */
-    function: rwlock_new
+    function: rwlockNew
         returns: int
         body:
-            return sync.rwlock_new()
+            return sync.rwlockNew()
         end body
     end function
 
     /**
-    @function rwlock_rlock
+    @function rwlockRlock
     @summary 获取读锁。
     */
-    function: rwlock_rlock
+    function: rwlockRlock
         params:
-            declare rwl:int
+            declare rwl: int
         returns: int
         body:
-            return sync.rwlock_rlock(rwl)
+            return sync.rwlockRlock(rwl)
         end body
     end function
 
     /**
-    @function rwlock_wlock
+    @function rwlockWlock
     @summary 获取写锁。
     */
-    function: rwlock_wlock
+    function: rwlockWlock
         params:
-            declare rwl:int
+            declare rwl: int
         returns: int
         body:
-            return sync.rwlock_wlock(rwl)
+            return sync.rwlockWlock(rwl)
         end body
     end function
 
     /**
-    @function rwlock_unlock
+    @function rwlockUnlock
     @summary 释放读写锁。
     */
-    function: rwlock_unlock
+    function: rwlockUnlock
         params:
-            declare rwl:int
+            declare rwl: int
         returns: int
         body:
-            return sync.rwlock_unlock(rwl)
+            return sync.rwlockUnlock(rwl)
         end body
     end function
 

@@ -6,11 +6,11 @@ module: app
         params:
             declare args: any
         body:
-            declare pid: int = process.getpid()
-            declare ppid: int = process.getppid()
+            declare pid: int = process.getPid()
+            declare ppid: int = process.getPpid()
 
-            io.stdout_write("当前进程 PID = " + pid + "\n")
-            io.stdout_write("父进程 PPID = " + ppid + "\n")
+            io.stdoutWrite("当前进程 PID = " + pid + "\n")
+            io.stdoutWrite("父进程 PPID = " + ppid + "\n")
         end body
     end function
 end module

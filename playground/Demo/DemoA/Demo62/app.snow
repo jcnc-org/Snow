@@ -1,9 +1,9 @@
 module: app
-    import: syscall.fs
-    import: syscall.fd
+    import: fs
+    import: fd
     import: std_io.fs
-    import: syscall.fs
-    import: syscall.fd
+    import: fs
+    import: fd
     import: std_io.fd
     import: std_io
     import: os_fs
@@ -28,7 +28,7 @@ module: app
             // 查询文件属性验证
             info = fd.stat(path)
             std_io.println("stat: " + info)
-            os_fs.remove_file(path)
+            os_fs.removeFile(path)
         end body
     end function
 end module

@@ -1,0 +1,136 @@
+/**
+@module std_long
+@summary Long 结构体 - 对 long 基本数据类型的封装
+*/
+module: std_long
+    import: std_parse
+
+    globals:
+        declare const MIN_VALUE: long = 0x80000000_00000000L
+        declare const MAX_VALUE: long = 0x7FFFFFFF_FFFFFFFFL
+
+    /**
+    @struct Long
+    @summary long 的包装类
+    */
+    struct: Long
+
+        fields:
+            declare value: long
+
+        /**
+        @init default
+        @summary 无参构造函数，默认创建值为 0 的 Long
+        */
+        init:
+            body:
+                value = 0
+            end body
+        end init
+
+        /**
+        @init with_value
+        @summary 带参构造函数，根据给定值创建 Long
+        @param val 初始 long 值
+        */
+        init:
+            params:
+                declare val: long
+            body:
+                value = val
+            end body
+        end init
+
+        /**
+        @function longValue
+        @summary 获取包装的 long 值（拆箱）
+        */
+        function: longValue
+            returns: long
+            body:
+                return value
+            end body
+        end function
+
+        /**
+        @function abs
+        @summary 返回当前 long 绝对值的 Long 实例
+        */
+        function: abs
+            returns: Long
+            body:
+                declare result: long = value
+                if result < 0 then
+                    result = -result
+                end if
+                return new Long(result)
+            end body
+        end function
+
+        /**
+        @function equals
+        @summary 比较两个 Long 是否相等
+        */
+        function: equals
+            params:
+                declare other: Long
+            returns: boolean
+            body:
+                return value == other.value
+            end body
+        end function
+
+        /**
+        @function toString
+        @summary 将当前 long 值转为字符串
+        */
+        function: toString
+            returns: string
+            body:
+                return std_long.toString(value)
+            end body
+        end function
+
+    end struct
+
+    /**
+    @function valueOf
+    @summary 将 long 装箱为 Long
+    */
+    function: valueOf
+        params:
+            declare d: long
+        returns: Long
+        body:
+            return new Long(d)
+        end body
+    end function
+
+    /**
+    @function valueOfString
+    @summary 将字符串解析并包装为 Long
+    */
+    function: valueOfString
+        params:
+            declare s: string
+        returns: Long
+        body:
+            declare d: long = std_parse.parseLong(s)
+            return new Long(d)
+        end body
+    end function
+
+    /**
+    @function toString
+    @summary 将 long 转换为字符串
+    */
+    function: toString
+        params:
+            declare d: long
+        returns: string
+        body:
+            return "" + d   // Snow 使用 + 转换为字符串
+        end body
+    end function
+
+end module

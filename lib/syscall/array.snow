@@ -26,7 +26,7 @@ module: array
             declare arr: any
         returns: int
         body:
-            declare len:int = syscall("0x1801", arr)
+            declare len: int = syscall("0x1801", arr)
             return len
         end body
     end function
@@ -45,7 +45,7 @@ module: array
             declare index: int
         returns: any
         body:
-            declare elem:any = syscall("0x1802", arr, index)
+            declare elem: any = syscall("0x1802", arr, index)
             return elem
         end body
     end function
@@ -66,7 +66,7 @@ module: array
             declare value: any
         returns: int
         body:
-            declare rc:int = syscall("0x1803", arr, index, value)
+            declare rc: int = syscall("0x1803", arr, index, value)
             return rc
         end body
     end function
@@ -81,11 +81,11 @@ module: array
     */
     function: push
         params:
-            declare arr:any
-            declare value:any
+            declare arr: any
+            declare value: any
         returns: int
         body:
-            declare newLen:int = syscall("0x1810", arr, value)
+            declare newLen: int = syscall("0x1810", arr, value)
             return newLen
         end body
     end function
@@ -100,10 +100,10 @@ module: array
     */
     function: pop
         params:
-            declare arr:any
+            declare arr: any
         returns: any
         body:
-            declare elem:any = syscall("0x1811", arr)
+            declare elem: any = syscall("0x1811", arr)
             return elem
         end body
     end function
@@ -119,12 +119,12 @@ module: array
     */
     function: insert
         params:
-            declare arr:any
-            declare index:int
-            declare value:any
+            declare arr: any
+            declare index: int
+            declare value: any
         returns: int
         body:
-            declare len:int = syscall("0x1812", arr, index, value)
+            declare len: int = syscall("0x1812", arr, index, value)
             return len
         end body
     end function
@@ -139,11 +139,11 @@ module: array
     */
     function: remove
         params:
-            declare arr:any
-            declare index:int
+            declare arr: any
+            declare index: int
         returns: any
         body:
-            declare elem:any = syscall("0x1813", arr, index)
+            declare elem: any = syscall("0x1813", arr, index)
             return elem
         end body
     end function
@@ -158,11 +158,11 @@ module: array
     */
     function: resize
         params:
-            declare arr:any
-            declare newLen:int
+            declare arr: any
+            declare newLen: int
         returns: int
         body:
-            declare rc:int = syscall("0x1814", arr, newLen)
+            declare rc: int = syscall("0x1814", arr, newLen)
             return rc
         end body
     end function
@@ -176,10 +176,10 @@ module: array
     */
     function: clear
         params:
-            declare arr:any
+            declare arr: any
         returns: int
         body:
-            declare rc:int = syscall("0x1815", arr)
+            declare rc: int = syscall("0x1815", arr)
             return rc
         end body
     end function

@@ -31,9 +31,9 @@ module: web
     */
     function: socket
         params:
-            declare family:int
-            declare type:int
-            declare proto:int
+            declare family: int
+            declare type: int
+            declare proto: int
         returns: int
         body:
             return syscall("0x1400", family, type, proto)
@@ -51,9 +51,9 @@ module: web
     */
     function: bind
         params:
-            declare fd:int
-            declare addr:string
-            declare port:int
+            declare fd: int
+            declare addr: string
+            declare port: int
         returns: int
         body:
             return syscall("0x1401", fd, addr, port)
@@ -70,8 +70,8 @@ module: web
     */
     function: listen
         params:
-            declare fd:int
-            declare backlog:int
+            declare fd: int
+            declare backlog: int
         returns: int
         body:
             return syscall("0x1402", fd, backlog)
@@ -87,7 +87,7 @@ module: web
     */
     function: accept
         params:
-            declare fd:int
+            declare fd: int
         returns: any
         body:
             return syscall("0x1403", fd)
@@ -105,9 +105,9 @@ module: web
     */
     function: connect
         params:
-            declare fd:int
-            declare addr:string
-            declare port:int
+            declare fd: int
+            declare addr: string
+            declare port: int
         returns: int
         body:
             return syscall("0x1404", fd, addr, port)
@@ -124,8 +124,8 @@ module: web
     */
     function: send
         params:
-            declare fd:int
-            declare data:any
+            declare fd: int
+            declare data: any
         returns: int
         body:
             return syscall("0x1405", fd, data)
@@ -142,8 +142,8 @@ module: web
     */
     function: recv
         params:
-            declare fd:int
-            declare n:int
+            declare fd: int
+            declare n: int
         returns: any
         body:
             return syscall("0x1406", fd, n)
@@ -151,7 +151,7 @@ module: web
     end function
 
     /**
-    @function sendto
+    @function sendTo
     @summary 向指定地址/端口发送一个 UDP 报文。
     @param fd 文件描述符
     @param data 要发送的数据
@@ -160,12 +160,12 @@ module: web
     @returns 实际发送的字节数
     @throws Exception 套接字未绑定、I/O 失败时抛出异常
     */
-    function: sendto
+    function: sendTo
         params:
-            declare fd:int
-            declare data:any
-            declare addr:string
-            declare port:int
+            declare fd: int
+            declare data: any
+            declare addr: string
+            declare port: int
         returns: int
         body:
             return syscall("0x1407", fd, data, addr, port)
@@ -173,39 +173,39 @@ module: web
     end function
 
     /**
-    @function recvfrom
+    @function recvFrom
     @summary 接收一个 UDP 报文，返回数据和来源地址。
     @param fd 文件描述符
     @param n 要读取的最大字节数
     @returns 接收到的数据及对端信息，格式为 [data, addr, port]
     @throws Exception I/O 失败时抛出异常
     */
-	function: recvfrom
-	    params:
-	        declare fd:int
-	        declare n:int
-	    returns: int[]
-	    body:
-	        declare tup:int
-	        declare data:int
-	        declare addr:int
-	        declare port:int
-	        declare out:int[]
+    function: recvFrom
+        params:
+            declare fd: int
+            declare n: int
+        returns: int[]
+        body:
+            declare tup: int
+            declare data: int
+            declare addr: int
+            declare port: int
+            declare out: int[]
 
-	        tup  = syscall("0x1408", fd, n)      // VM 返回 Object[]
-	        data = syscall("0x1802", tup, 0)     // ARR_GET(tup, 0)
-	        addr = syscall("0x1802", tup, 1)
-	        port = syscall("0x1802", tup, 2)
+            tup = syscall("0x1408", fd, n)      // VM 返回 Object[]
+            data = syscall("0x1802", tup, 0)     // ARR_GET(tup, 0)
+            addr = syscall("0x1802", tup, 1)
+            port = syscall("0x1802", tup, 2)
 
-	        // 构造数组，先用常量占位，再逐个写入
-	        out = [0, 0,0]
-	        out[0] = data
-	        out[1] = addr
-	        out[2] = port
+            // 构造数组，先用常量占位，再逐个写入
+            out = [0, 0, 0]
+            out[0] = data
+            out[1] = addr
+            out[2] = port
 
-	        return out
-	    end body
-	end function
+            return out
+        end body
+    end function
 
     /**
     @function shutdown
@@ -217,8 +217,8 @@ module: web
     */
     function: shutdown
         params:
-            declare fd:int
-            declare how:int
+            declare fd: int
+            declare how: int
         returns: int
         body:
             return syscall("0x1409", fd, how)
@@ -226,7 +226,7 @@ module: web
     end function
 
     /**
-    @function setsockopt
+    @function setSockOpt
     @summary 修改套接字的控制选项，如缓冲区大小、TCP_NODELAY 等。
     @param fd 文件描述符
     @param level 选项级别
@@ -235,12 +235,12 @@ module: web
     @returns 成功返回 0
     @throws Exception 选项不支持、值非法时抛出异常
     */
-    function: setsockopt
+    function: setSockOpt
         params:
-            declare fd:int
-            declare level:int
-            declare opt:int
-            declare value:any
+            declare fd: int
+            declare level: int
+            declare opt: int
+            declare value: any
         returns: int
         body:
             return syscall("0x140A", fd, level, opt, value)
@@ -248,7 +248,7 @@ module: web
     end function
 
     /**
-    @function getsockopt
+    @function getSockOpt
     @summary 读取套接字的控制选项值。
     @param fd 文件描述符
     @param level 选项级别
@@ -256,11 +256,11 @@ module: web
     @returns 选项的当前值
     @throws Exception 选项不支持、套接字无效时抛出异常
     */
-    function: getsockopt
+    function: getSockOpt
         params:
-            declare fd:int
-            declare level:int
-            declare opt:int
+            declare fd: int
+            declare level: int
+            declare opt: int
         returns: any
         body:
             return syscall("0x140B", fd, level, opt)
@@ -268,15 +268,15 @@ module: web
     end function
 
     /**
-    @function getpeername
+    @function getPeerName
     @summary 返回连接的远程主机地址与端口。
     @param fd 文件描述符
     @returns 对端地址和端口
     @throws Exception 套接字未连接、I/O 失败时抛出异常
     */
-    function: getpeername
+    function: getPeerName
         params:
-            declare fd:int
+            declare fd: int
         returns: any
         body:
             return syscall("0x140C", fd)
@@ -284,15 +284,15 @@ module: web
     end function
 
     /**
-    @function getsockname
+    @function getSockName
     @summary 返回套接字绑定的本地地址与端口。
     @param fd 文件描述符
     @returns 本端地址和端口
     @throws Exception 套接字未绑定、I/O 失败时抛出异常
     */
-    function: getsockname
+    function: getSockName
         params:
-            declare fd:int
+            declare fd: int
         returns: any
         body:
             return syscall("0x140D", fd)
@@ -300,7 +300,7 @@ module: web
     end function
 
     /**
-    @function getaddrinfo
+    @function getAddrInfo
     @summary 执行 DNS 解析，返回可用的地址列表。
     @param host 主机名
     @param service 服务名
@@ -308,17 +308,17 @@ module: web
     @returns 地址数组，每项包含 addr、port、family 等
     @throws Exception 主机未知、服务非法、解析失败时抛出异常
     */
-    function: getaddrinfo
+    function: getAddrInfo
         params:
-            declare host:string
-            declare service:string
-            declare hints:any
+            declare host: string
+            declare service: string
+            declare hints: any
         returns: any[]
         body:
-            declare tup:int
-            declare out:any[]
-            declare i:int
-            declare n:int
+            declare tup: int
+            declare out: any[]
+            declare i: int
+            declare n: int
 
             // VM 返回二维数组 Object[][] → Snow 层 tup
             tup = syscall("0x140E", host, service, hints)
@@ -337,19 +337,19 @@ module: web
                 step:
                     i = i + 1
                 body:
-                    declare item:any = syscall("0x1802", tup, i)  // ARR_GET(tup, i)
+                    declare item: any = syscall("0x1802", tup, i)  // ARR_GET(tup, i)
 
-                    declare addr:any = syscall("0x1802", item, 0)
-                    declare port:any = syscall("0x1802", item, 1)
-                    declare fam:any  = syscall("0x1802", item, 2)
+                    declare addr: any = syscall("0x1802", item, 0)
+                    declare port: any = syscall("0x1802", item, 1)
+                    declare fam: any = syscall("0x1802", item, 2)
 
-                    declare one:any[] = [0, 0, 0]
+                    declare one: any[] = [0, 0, 0]
                     one[0] = addr
                     one[1] = port
                     one[2] = fam
 
                     // 按索引写入，避免 ANY[] 与 ANY[] 的拼接
-                    declare elem:any = one
+                    declare elem: any = one
                     out[i] = elem
                 end body
             end loop

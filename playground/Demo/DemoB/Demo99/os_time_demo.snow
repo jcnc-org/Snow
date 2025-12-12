@@ -7,33 +7,33 @@ module: app
             std_io.println("=== 测试 os_time 模块 ===")
 
             // 当前时间（纳秒 / 毫秒）
-            std_io.println("now_ns=" + os_time.now_ns())
-            std_io.println("now_ms=" + os_time.now_ms())
+            std_io.println("nowNs=" + os_time.nowNs())
+            std_io.println("nowMs=" + os_time.nowMs())
 
             // 单调时钟（纳秒 / 毫秒）
-            std_io.println("mono_ns=" + os_time.mono_ns())
-            std_io.println("mono_ms=" + os_time.mono_ms())
+            std_io.println("monoNs=" + os_time.monoNs())
+            std_io.println("monoMs=" + os_time.monoMs())
 
-            // tick_ms 计数
-            declare start: long = os_time.tick_ms()
-            std_io.println("tick_ms(start)=" + start)
+            // tickMs 计数
+            declare start: long = os_time.tickMs()
+            std_io.println("tickMs(start)=" + start)
 
             // 睡眠测试
             std_io.println("sleep 50ms ...")
-            os_time.sleep_ms(50)
+            os_time.sleepMs(50)
             std_io.println("awake (50ms)")
 
             std_io.println("sleep 200000us ...")
-            os_time.sleep_us(200000)
+            os_time.sleepUs(200000)
             std_io.println("awake (200ms)")
 
             std_io.println("sleep 100000000ns ...")
-            os_time.sleep_ns(100000000)
+            os_time.sleepNs(100000000)
             std_io.println("awake (100ms)")
 
             // 结束时间
-            declare end_time: long = os_time.tick_ms()
-            std_io.println("tick_ms(end)=" + end_time)
+            declare end_time: long = os_time.tickMs()
+            std_io.println("tickMs(end)=" + end_time)
             std_io.println("总耗时约=" + (end_time - start) + "ms")
 
             std_io.println("=== 测试完成 ===")

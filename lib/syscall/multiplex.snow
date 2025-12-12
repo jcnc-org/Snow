@@ -3,10 +3,10 @@
 @summary 多路复用/事件系统调用模块，封装I/O多路复用操作。
 @syscalls
   0x1300 SELECT       I/O 多路复用 select
-  0x1301 EPOLL_CREATE 创建 epoll 实例
+  0x1301 epollCreate 创建 epoll 实例
   0x1302 EPOLL_CTL    管理 epoll 监控项
-  0x1303 EPOLL_WAIT   等待 epoll 事件
-  0x1304 IO_WAIT      跨平台 I/O 多路等待
+  0x1303 epollWait   等待 epoll 事件
+  0x1304 ioWait      跨平台 I/O 多路等待
 */
 module: multiplex
 
@@ -22,10 +22,10 @@ module: multiplex
     */
     function: select
         params:
-            declare readSet:any
-            declare writeSet:any
-            declare exceptSet:any
-            declare timeout_ms:int
+            declare readSet: any
+            declare writeSet: any
+            declare exceptSet: any
+            declare timeout_ms: int
         returns: any
         body:
             return syscall("0x1300", readSet, writeSet, exceptSet, timeout_ms)
@@ -33,15 +33,15 @@ module: multiplex
     end function
 
     /**
-    @function epoll_create
+    @function epollCreate
     @summary 创建一个 epoll 实例，返回新的 epfd。
     @param flags 可选参数
     @returns 成功时返回新的 epfd
     @throws Exception flags 非法、资源不足或底层 I/O 错误时抛出异常
     */
-    function: epoll_create
+    function: epollCreate
         params:
-            declare flags:int   // 可选
+            declare flags: int   // 可选
         returns: int
         body:
             return syscall("0x1301", flags)
@@ -60,10 +60,10 @@ module: multiplex
     */
     function: epoll_ctl
         params:
-            declare epfd:int
-            declare op:int
-            declare fd:int
-            declare events:int
+            declare epfd: int
+            declare op: int
+            declare fd: int
+            declare events: int
         returns: int
         body:
             return syscall("0x1302", epfd, op, fd, events)
@@ -71,7 +71,7 @@ module: multiplex
     end function
 
     /**
-    @function epoll_wait
+    @function epollWait
     @summary 阻塞或超时等待 epoll 实例中就绪的 I/O 事件。
     @param epfd epoll 实例文件描述符
     @param max 最大返回事件数
@@ -79,11 +79,11 @@ module: multiplex
     @returns 成功时返回就绪事件数组，每个事件为 {fd:int, events:int}
     @throws Exception epfd 无效、max 非法或底层 I/O 错误时抛出异常
     */
-    function: epoll_wait
+    function: epollWait
         params:
-            declare epfd:int
-            declare max:int
-            declare timeout_ms:int
+            declare epfd: int
+            declare max: int
+            declare timeout_ms: int
         returns: any
         body:
             return syscall("0x1303", epfd, max, timeout_ms)
@@ -91,17 +91,17 @@ module: multiplex
     end function
 
     /**
-    @function io_wait
+    @function ioWait
     @summary 跨平台 I/O 多路等待，对指定 fd 集合监听事件。
     @param fds 要监听的 fd 集合
     @param timeout_ms 超时时间（毫秒）
     @returns 成功时返回就绪事件数组，每个事件为 {fd:int, events:int}
     @throws Exception fds 参数非法、timeout 非法或底层 I/O 错误时抛出异常
     */
-    function: io_wait
+    function: ioWait
         params:
-            declare fds:any
-            declare timeout_ms:int
+            declare fds: any
+            declare timeout_ms: int
         returns: any
         body:
             return syscall("0x1304", fds, timeout_ms)

@@ -1,6 +1,6 @@
 module: app
-    import: syscall.fs
-    import: syscall.fd
+    import: fs
+    import: fd
     import: syscall.io
     import: std_io
     import: os_fs
@@ -14,7 +14,7 @@ module: app
             declare line: any
 
             // 从标准输入读取一行文本
-            line = io.stdin_read()
+            line = io.stdinRead()
 
             // 以只写 + 创建 + 追加模式打开/创建文件
             // flags = O_WRONLY | O_CREAT | O_APPEND = 1 | 64 | 1024 = 1089
@@ -28,7 +28,7 @@ module: app
 
             // 打印写入的字节数
             std_io.println("字节数:" + n)
-            os_fs.remove_file("output.txt")
+            os_fs.removeFile("output.txt")
         end body
     end function
 end module

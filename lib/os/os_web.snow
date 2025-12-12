@@ -7,13 +7,13 @@ module: os_web
     import: web
 
     globals:
-        declare const AF_INET:int     = 2
-        declare const AF_INET6:int    = 10
-        declare const SOCK_STREAM:int = 1
-        declare const SOCK_DGRAM:int  = 2
-        declare const SHUT_RD:int     = 0
-        declare const SHUT_WR:int     = 1
-        declare const SHUT_RDWR:int   = 2
+        declare const AF_INET: int = 2
+        declare const AF_INET6: int = 10
+        declare const SOCK_STREAM: int = 1
+        declare const SOCK_DGRAM: int = 2
+        declare const SHUT_RD: int = 0
+        declare const SHUT_WR: int = 1
+        declare const SHUT_RDWR: int = 2
 
     /**
     @function socket
@@ -21,9 +21,9 @@ module: os_web
     */
     function: socket
         params:
-            declare family:int
-            declare type:int
-            declare proto:int
+            declare family: int
+            declare type: int
+            declare proto: int
         returns: int
         body:
             return web.socket(family, type, proto)
@@ -31,10 +31,10 @@ module: os_web
     end function
 
     /**
-    @function tcp_socket
+    @function tcpSocket
     @summary 创建 IPv4 TCP 套接字。
     */
-    function: tcp_socket
+    function: tcpSocket
         returns: int
         body:
             return web.socket(AF_INET, SOCK_STREAM, 0)
@@ -42,10 +42,10 @@ module: os_web
     end function
 
     /**
-    @function udp_socket
+    @function udpSocket
     @summary 创建 IPv4 UDP 套接字。
     */
-    function: udp_socket
+    function: udpSocket
         returns: int
         body:
             return web.socket(AF_INET, SOCK_DGRAM, 0)
@@ -54,9 +54,9 @@ module: os_web
 
     function: bind
         params:
-            declare fd:int
-            declare addr:string
-            declare port:int
+            declare fd: int
+            declare addr: string
+            declare port: int
         returns: int
         body:
             return web.bind(fd, addr, port)
@@ -65,8 +65,8 @@ module: os_web
 
     function: listen
         params:
-            declare fd:int
-            declare backlog:int
+            declare fd: int
+            declare backlog: int
         returns: int
         body:
             return web.listen(fd, backlog)
@@ -75,7 +75,7 @@ module: os_web
 
     function: accept
         params:
-            declare fd:int
+            declare fd: int
         returns: any
         body:
             return web.accept(fd)
@@ -84,9 +84,9 @@ module: os_web
 
     function: connect
         params:
-            declare fd:int
-            declare addr:string
-            declare port:int
+            declare fd: int
+            declare addr: string
+            declare port: int
         returns: int
         body:
             return web.connect(fd, addr, port)
@@ -95,8 +95,8 @@ module: os_web
 
     function: send
         params:
-            declare fd:int
-            declare data:any
+            declare fd: int
+            declare data: any
         returns: int
         body:
             return web.send(fd, data)
@@ -105,111 +105,111 @@ module: os_web
 
     function: recv
         params:
-            declare fd:int
-            declare n:int
+            declare fd: int
+            declare n: int
         returns: any
         body:
             return web.recv(fd, n)
         end body
     end function
 
-    function: send_to
+    function: sendTo
         params:
-            declare fd:int
-            declare data:any
-            declare addr:string
-            declare port:int
+            declare fd: int
+            declare data: any
+            declare addr: string
+            declare port: int
         returns: int
         body:
-            return web.sendto(fd, data, addr, port)
+            return web.sendTo(fd, data, addr, port)
         end body
     end function
 
-    function: recv_from
+    function: recvFrom
         params:
-            declare fd:int
-            declare n:int
+            declare fd: int
+            declare n: int
         returns: any
         body:
-            return web.recvfrom(fd, n)
+            return web.recvFrom(fd, n)
         end body
     end function
 
     function: shutdown
         params:
-            declare fd:int
-            declare how:int
+            declare fd: int
+            declare how: int
         returns: int
         body:
             return web.shutdown(fd, how)
         end body
     end function
 
-    function: shutdown_read
+    function: shutdownRead
         params:
-            declare fd:int
+            declare fd: int
         returns: int
         body:
             return web.shutdown(fd, SHUT_RD)
         end body
     end function
 
-    function: shutdown_write
+    function: shutdownWrite
         params:
-            declare fd:int
+            declare fd: int
         returns: int
         body:
             return web.shutdown(fd, SHUT_WR)
         end body
     end function
 
-    function: shutdown_both
+    function: shutdownBoth
         params:
-            declare fd:int
+            declare fd: int
         returns: int
         body:
             return web.shutdown(fd, SHUT_RDWR)
         end body
     end function
 
-    function: set_option
+    function: setOption
         params:
-            declare fd:int
-            declare level:int
-            declare opt:int
-            declare value:any
+            declare fd: int
+            declare level: int
+            declare opt: int
+            declare value: any
         returns: int
         body:
-            return web.setsockopt(fd, level, opt, value)
+            return web.setSockOpt(fd, level, opt, value)
         end body
     end function
 
-    function: get_option
+    function: getOption
         params:
-            declare fd:int
-            declare level:int
-            declare opt:int
+            declare fd: int
+            declare level: int
+            declare opt: int
         returns: any
         body:
-            return web.getsockopt(fd, level, opt)
+            return web.getSockOpt(fd, level, opt)
         end body
     end function
 
-    function: peer_name
+    function: peerName
         params:
-            declare fd:int
+            declare fd: int
         returns: any
         body:
-            return web.getpeername(fd)
+            return web.getPeerName(fd)
         end body
     end function
 
-    function: local_name
+    function: localName
         params:
-            declare fd:int
+            declare fd: int
         returns: any
         body:
-            return web.getsockname(fd)
+            return web.getSockName(fd)
         end body
     end function
 
@@ -219,12 +219,12 @@ module: os_web
     */
     function: resolve
         params:
-            declare host:string
-            declare service:string
-            declare hints:any
+            declare host: string
+            declare service: string
+            declare hints: any
         returns: any[]
         body:
-            return web.getaddrinfo(host, service, hints)
+            return web.getAddrInfo(host, service, hints)
         end body
     end function
 

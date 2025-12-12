@@ -6,6 +6,7 @@
   内部调用底层 {@link process} 模块的系统调用。
 */
 module: os_process
+
     import: process
 
     /**
@@ -16,7 +17,7 @@ module: os_process
     */
     function: exit
         params:
-            declare code:int
+            declare code: int
         body:
             process.exit(code)
         end body
@@ -31,10 +32,10 @@ module: os_process
     */
     function: fork
         params:
-            declare argv:any[]
+            declare argv: any[]
         returns: int
         body:
-            declare pid:int = process.fork(argv)
+            declare pid: int = process.fork(argv)
             return pid
         end body
     end function
@@ -49,9 +50,9 @@ module: os_process
     */
     function: exec
         params:
-            declare env:any
-            declare argv:any[]
-            declare path:string
+            declare env: any
+            declare argv: any[]
+            declare path: string
         body:
             process.exec(env, argv, path)
         end body
@@ -66,38 +67,38 @@ module: os_process
     */
     function: wait
         params:
-            declare pid:int
+            declare pid: int
         returns: int
         body:
-            declare status:int = process.wait(pid)
+            declare status: int = process.wait(pid)
             return status
         end body
     end function
 
     /**
-    @function getpid
+    @function getPid
     @summary 获取当前进程的进程号。
     @returns 当前进程的 PID（int）
     @throws Exception 获取失败时抛出异常
     */
-    function: getpid
+    function: getPid
         returns: int
         body:
-            declare pid:int = process.getpid()
+            declare pid: int = process.getPid()
             return pid
         end body
     end function
 
     /**
-    @function getppid
+    @function getPpid
     @summary 获取当前进程的父进程号。
     @returns 父进程的 PID（int），若不存在父进程则返回 0
     @throws Exception 获取失败时抛出异常
     */
-    function: getppid
+    function: getPpid
         returns: int
         body:
-            declare ppid:int = process.getppid()
+            declare ppid: int = process.getPpid()
             return ppid
         end body
     end function

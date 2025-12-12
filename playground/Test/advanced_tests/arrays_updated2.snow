@@ -1,6 +1,6 @@
 module: ArraysUpdated2
     import: std_io
-    
+
     function: main
         returns: void
         body:
@@ -8,11 +8,11 @@ module: ArraysUpdated2
             declare arr: int[] = [1, 2, 3, 4, 5]
             std_io.println("First element: " + arr[0])
             std_io.println("Third element: " + arr[2])
-            
+
             // 修改数组元素
             arr[0] = 10
             std_io.println("Modified first element: " + arr[0])
-            
+
             // 遍历数组，需要手动指定长度
             declare arrLength: int = 5
             loop:

@@ -1,8 +1,8 @@
 /**
 @module os_fd
-@summary 文件描述符与基础 I/O 的稳定接口层。
+@summary fd 的稳定接口层。
 @details
-    在 syscall.fd 的基础上提供常用标志常量与便捷 open/close 组合，简化上层使用。
+    在 fd 的基础上提供常用标志常量与便捷 open/close 组合，简化上层使用。
 */
 module: os_fd
 
@@ -10,26 +10,26 @@ module: os_fd
 
     globals:
         // open(2) 语义常量（与 JVM OpenFlags 保持一致）
-        declare const O_RDONLY:int = 0
-        declare const O_WRONLY:int = 1
-        declare const O_RDWR:int   = 2
-        declare const O_CREAT:int  = 64
-        declare const O_EXCL:int   = 128
-        declare const O_TRUNC:int  = 512
-        declare const O_APPEND:int = 1024
+        declare const O_RDONLY: int = 0
+        declare const O_WRONLY: int = 1
+        declare const O_RDWR: int = 2
+        declare const O_CREAT: int = 64
+        declare const O_EXCL: int = 128
+        declare const O_TRUNC: int = 512
+        declare const O_APPEND: int = 1024
 
         // seek 语义常量
-        declare const SEEK_SET:int = 0
-        declare const SEEK_CUR:int = 1
-        declare const SEEK_END:int = 2
+        declare const SEEK_SET: int = 0
+        declare const SEEK_CUR: int = 1
+        declare const SEEK_END: int = 2
 
     /**
-    @function open_read
+    @function openRead
     @summary 以只读模式打开文件。
     */
-    function: open_read
+    function: openRead
         params:
-            declare path:any
+            declare path: any
         returns: int
         body:
             return fd.open(path, O_RDONLY)
@@ -37,19 +37,19 @@ module: os_fd
     end function
 
     /**
-    @function open_write
+    @function openWrite
     @summary 以只写模式打开文件；默认创建并截断。
     @param create 若为 true 则在文件不存在时创建
     @param truncate 若为 true 则打开时截断文件
     */
-    function: open_write
+    function: openWrite
         params:
-            declare path:any
-            declare create:boolean
-            declare truncate:boolean
+            declare path: any
+            declare create: boolean
+            declare truncate: boolean
         returns: int
         body:
-            declare flags:int = O_WRONLY
+            declare flags: int = O_WRONLY
             if create == true then
                 flags = flags + O_CREAT
             end if
@@ -61,31 +61,31 @@ module: os_fd
     end function
 
     /**
-    @function open_append
+    @function openAppend
     @summary 以追加模式打开文件，不存在时创建。
     */
-    function: open_append
+    function: openAppend
         params:
-            declare path:any
+            declare path: any
         returns: int
         body:
-            declare flags:int = O_WRONLY + O_CREAT + O_APPEND
+            declare flags: int = O_WRONLY + O_CREAT + O_APPEND
             return fd.open(path, flags)
         end body
     end function
 
     /**
-    @function open_readwrite
+    @function openReadwrite
     @summary 以读写模式打开文件，可选创建与截断。
     */
-    function: open_readwrite
+    function: openReadwrite
         params:
-            declare path:any
-            declare create:boolean
-            declare truncate:boolean
+            declare path: any
+            declare create: boolean
+            declare truncate: boolean
         returns: int
         body:
-            declare flags:int = O_RDWR
+            declare flags: int = O_RDWR
             if create == true then
                 flags = flags + O_CREAT
             end if
@@ -108,13 +108,13 @@ module: os_fd
     end function
 
     /**
-    @function read_bytes
+    @function readBytes
     @summary 从 fd 读取最多 n 字节。
     */
-    function: read_bytes
+    function: readBytes
         params:
-            declare handle:int
-            declare n:int
+            declare handle: int
+            declare n: int
         returns: any
         body:
             return fd.read(handle, n)
@@ -122,13 +122,13 @@ module: os_fd
     end function
 
     /**
-    @function write_bytes
+    @function writeBytes
     @summary 向 fd 写入数据（字符串或字节数组）。
     */
-    function: write_bytes
+    function: writeBytes
         params:
-            declare handle:int
-            declare data:any
+            declare handle: int
+            declare data: any
         returns: int
         body:
             return fd.write(handle, data)
@@ -141,9 +141,9 @@ module: os_fd
     */
     function: seek
         params:
-            declare handle:int
-            declare offset:long
-            declare whence:int
+            declare handle: int
+            declare offset: long
+            declare whence: int
         body:
             fd.seek(handle, offset, whence)
         end body
@@ -155,24 +155,24 @@ module: os_fd
     */
     function: close
         params:
-            declare handle:int
+            declare handle: int
         body:
-		     fd.close(handle)
+            fd.close(handle)
         end body
     end function
 
     /**
-    @function set_blocking
+    @function setBlocking
     @summary 将 fd 设置为阻塞或非阻塞。
     @param blocking true 表示阻塞，false 表示非阻塞
     */
-    function: set_blocking
+    function: setBlocking
         params:
-            declare handle:int
-            declare blocking:boolean
+            declare handle: int
+            declare blocking: boolean
         returns: int
         body:
-            declare mode:int = 1
+            declare mode: int = 1
             if blocking == true then
                 mode = 0
             end if
@@ -186,11 +186,105 @@ module: os_fd
     */
     function: truncate
         params:
-            declare handle:int
-            declare length:long
+            declare handle: int
+            declare length: long
         returns: int
         body:
             return fd.ftruncate(handle, length)
+        end body
+    end function
+
+    /**
+    @function stat
+    @summary 获取路径对应文件的属性信息。
+    */
+    function: stat
+        params:
+            declare path: any
+        returns: map
+        body:
+            return fd.stat(path)
+        end body
+    end function
+
+    /**
+    @function fstat
+    @summary 根据 fd 获取文件的属性信息。
+    */
+    function: fstat
+        params:
+            declare handle: int
+        returns: map
+        body:
+            return fd.fstat(handle)
+        end body
+    end function
+
+    /**
+    @function unLink
+    @summary 删除路径对应的文件或符号链接。
+    */
+    function: unLink
+        params:
+            declare path: any
+        returns: void
+        body:
+            fd.unLink(path)
+        end body
+    end function
+
+    /**
+    @function rename
+    @summary 重命名或移动文件/目录。
+    */
+    function: rename
+        params:
+            declare oldPath: any
+            declare newPath: any
+        returns: int
+        body:
+            return fd.rename(oldPath, newPath)
+        end body
+    end function
+
+    /**
+    @function link
+    @summary 创建硬链接。
+    */
+    function: link
+        params:
+            declare oldPath: any
+            declare newPath: any
+        returns: int
+        body:
+            return fd.link(oldPath, newPath)
+        end body
+    end function
+
+    /**
+    @function symLink
+    @summary 创建符号链接。
+    */
+    function: symLink
+        params:
+            declare target: any
+            declare linkPath: any
+        returns: int
+        body:
+            return fd.symLink(target, linkPath)
+        end body
+    end function
+
+    /**
+    @function readLink
+    @summary 读取符号链接指向的目标路径。
+    */
+    function: readLink
+        params:
+            declare path: any
+        returns: string
+        body:
+            return fd.readLink(path)
         end body
     end function
 

@@ -53,8 +53,15 @@ public class CallHandler implements ExpressionHandler<CallExpressionNode> {
                 if (parent == null)
                     throw new IllegalStateException(thisType + " 没有父类，无法调用 super(...)");
 
+                // 提取父类简单类型名（去掉模块前缀）
+                String simpleParent = parent;
+                int lastDot = simpleParent.lastIndexOf('.');
+                if (lastDot >= 0 && lastDot + 1 < simpleParent.length()) {
+                    simpleParent = simpleParent.substring(lastDot + 1);
+                }
+
                 // 构造父类构造函数调用
-                callee = parent + ".__init__" + explicitRegs.size();
+                callee = simpleParent + ".__init__" + explicitRegs.size();
                 IRVirtualRegister thisReg = b.ctx().getScope().lookup("this");
                 if (thisReg == null)
                     throw new IllegalStateException("未绑定 this");
@@ -75,7 +82,14 @@ public class CallHandler implements ExpressionHandler<CallExpressionNode> {
                     if (parent == null)
                         throw new IllegalStateException(thisType + " 没有父类");
 
-                    callee = parent + "." + m.member();
+                    // 提取父类简单类型名（去掉模块前缀）
+                    String simpleParent = parent;
+                    int lastDot = simpleParent.lastIndexOf('.');
+                    if (lastDot >= 0 && lastDot + 1 < simpleParent.length()) {
+                        simpleParent = simpleParent.substring(lastDot + 1);
+                    }
+
+                    callee = simpleParent + "." + m.member();
                     IRVirtualRegister thisReg = b.ctx().getScope().lookup("this");
                     if (thisReg == null)
                         throw new IllegalStateException("未绑定 this");
@@ -96,7 +110,13 @@ public class CallHandler implements ExpressionHandler<CallExpressionNode> {
                         finalArgs.addAll(explicitRegs);
                     } else {
                         // 有类型信息，先查 this 寄存器，再拼方法名
-                        callee = recvType + "." + m.member();
+                        // 提取简单类型名（去掉模块前缀）
+                        String simpleType = recvType;
+                        int lastDot = simpleType.lastIndexOf('.');
+                        if (lastDot >= 0 && lastDot + 1 < simpleType.length()) {
+                            simpleType = simpleType.substring(lastDot + 1);
+                        }
+                        callee = simpleType + "." + m.member();
                         IRVirtualRegister thisReg = b.ctx().getScope().lookup(recvName);
                         if (thisReg == null)
                             throw new IllegalStateException("Undefined identifier: " + recvName);
@@ -115,7 +135,13 @@ public class CallHandler implements ExpressionHandler<CallExpressionNode> {
                 IRVirtualRegister objReg = b.build(m.object());
                 String recvType = b.ctx().getScope().getRegisterType(objReg);
                 if (recvType != null && !recvType.isBlank()) {
-                    callee = recvType + "." + m.member();
+                    // 提取简单类型名（去掉模块前缀）
+                    String simpleType = recvType;
+                    int lastDot = simpleType.lastIndexOf('.');
+                    if (lastDot >= 0 && lastDot + 1 < simpleType.length()) {
+                        simpleType = simpleType.substring(lastDot + 1);
+                    }
+                    callee = simpleType + "." + m.member();
                 } else {
                     callee = m.member();
                 }

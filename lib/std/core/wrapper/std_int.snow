@@ -1,0 +1,136 @@
+/**
+@module std_int
+@summary Int 结构体 - 对 int 基本数据类型的封装
+*/
+module: std_int
+    import: std_parse
+
+    globals:
+        declare const MIN_VALUE: int = 0x80000000
+        declare const MAX_VALUE: int = 0x7FFFFFFF
+
+    /**
+    @struct Int
+    @summary int 的包装类
+    */
+    struct: Int
+
+        fields:
+            declare value: int
+
+        /**
+        @init default
+        @summary 无参构造函数，默认创建值为 0 的 Int
+        */
+        init:
+            body:
+                value = 0
+            end body
+        end init
+
+        /**
+        @init with_value
+        @summary 带参构造函数，根据给定值创建 Int
+        @param val 初始 int 值
+        */
+        init:
+            params:
+                declare val: int
+            body:
+                value = val
+            end body
+        end init
+
+        /**
+        @function intValue
+        @summary 获取包装的 int 值（拆箱）
+        */
+        function: intValue
+            returns: int
+            body:
+                return value
+            end body
+        end function
+
+        /**
+        @function abs
+        @summary 返回当前 int 绝对值的 Int 实例
+        */
+        function: abs
+            returns: Int
+            body:
+                declare result: int = value
+                if result < 0 then
+                    result = -result
+                end if
+                return new Int(result)
+            end body
+        end function
+
+        /**
+        @function equals
+        @summary 比较两个 Int 是否相等
+        */
+        function: equals
+            params:
+                declare other: Int
+            returns: boolean
+            body:
+                return value == other.value
+            end body
+        end function
+
+        /**
+        @function toString
+        @summary 将当前 int 值转为字符串
+        */
+        function: toString
+            returns: string
+            body:
+                return std_int.toString(value)
+            end body
+        end function
+
+    end struct
+
+    /**
+    @function valueOf
+    @summary 将 int 装箱为 Int
+    */
+    function: valueOf
+        params:
+            declare d: int
+        returns: Int
+        body:
+            return new Int(d)
+        end body
+    end function
+
+    /**
+    @function valueOfString
+    @summary 将字符串解析并包装为 Int
+    */
+    function: valueOfString
+        params:
+            declare s: string
+        returns: Int
+        body:
+            declare d: int = std_parse.parseInt(s)
+            return new Int(d)
+        end body
+    end function
+
+    /**
+    @function toString
+    @summary 将 int 转换为字符串
+    */
+    function: toString
+        params:
+            declare d: int
+        returns: string
+        body:
+            return "" + d   // Snow 使用 + 转换为字符串
+        end body
+    end function
+
+end module

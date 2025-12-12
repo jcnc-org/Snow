@@ -61,11 +61,26 @@ public class DeclarationStatementParser implements StatementParser {
         // 检查并消费冒号 “:”
         tokens.expect(":");
 
-        // 解析变量类型（类型标识符或自定义结构体名）
+        // 解析变量类型（类型标识符或自定义结构体名，支持限定名如 module.Type）
         StringBuilder type = new StringBuilder();
         if (tokens.peek().getType() == TokenType.TYPE || tokens.peek().getType() == TokenType.IDENTIFIER) {
             // 类型可以是基础类型或结构体名
             type.append(tokens.next().getLexeme());
+            
+            // 支持限定名：module.Type 或 module.submodule.Type
+            while (tokens.match(".")) {
+                type.append('.');
+                if (tokens.peek().getType() == TokenType.IDENTIFIER) {
+                    type.append(tokens.next().getLexeme());
+                } else {
+                    var t = tokens.peek();
+                    throw new org.jcnc.snow.compiler.parser.context.UnexpectedToken(
+                            "限定类型名中点号后必须跟标识符，但实际得到的是 "
+                                    + t.getType() + " ('" + t.getLexeme() + "')",
+                            t.getLine(), t.getCol()
+                    );
+                }
+            }
         } else {
             // 类型不是合法的 Token，抛出异常
             var t = tokens.peek();

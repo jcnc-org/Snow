@@ -12,8 +12,8 @@ module: os_thread
     */
     function: create
         params:
-            declare entry:any
-            declare arg:any
+            declare entry: any
+            declare arg: any
         returns: int
         body:
             return thread.create(entry, arg)
@@ -26,7 +26,7 @@ module: os_thread
     */
     function: join
         params:
-            declare tid:int
+            declare tid: int
         returns: any
         body:
             return thread.join(tid)
@@ -39,7 +39,7 @@ module: os_thread
     */
     function: sleep
         params:
-            declare ms:int
+            declare ms: int
         returns: int
         body:
             return thread.sleep(ms)

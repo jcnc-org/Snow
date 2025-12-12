@@ -20,7 +20,7 @@ module: std_io
             declare x: any
         returns: int
         body:
-            return os_io.stdout_write("" + x)
+            return os_io.stdoutWrite("" + x)
         end body
     end function
 
@@ -36,7 +36,7 @@ module: std_io
             declare x: any
         returns: int
         body:
-            return os_io.stdout_write(("" + x) + os_io.NEWLINE)
+            return os_io.stdoutWrite(("" + x) + os_io.NEWLINE)
         end body
     end function
 
@@ -52,7 +52,7 @@ module: std_io
             declare x: any
         returns: int
         body:
-            return os_io.stderr_write("" + x)
+            return os_io.stderrWrite("" + x)
         end body
     end function
 
@@ -68,7 +68,7 @@ module: std_io
             declare x: any
         returns: int
         body:
-            return os_io.stderr_write(("" + x) + os_io.NEWLINE)
+            return os_io.stderrWrite(("" + x) + os_io.NEWLINE)
         end body
     end function
 

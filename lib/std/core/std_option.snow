@@ -1,0 +1,319 @@
+/**
+@module std_option
+@summary 基础可选值类型，提供 OptionInt/OptionLong/OptionShort/OptionByte/OptionFloat/OptionDouble。
+*/
+module: std_option
+
+    /**
+    @struct OptionInt
+    @summary 可选 int，present=false 表示无值。
+    */
+    struct: OptionInt
+        fields:
+            declare present: boolean
+            declare value: int
+
+        init:
+            body:
+                present = false
+                value = 0
+            end body
+        end init
+
+        init:
+            params:
+                declare val: int
+            body:
+                present = true
+                value = val
+            end body
+        end init
+
+        function: isSome
+            returns: boolean
+            body:
+                return present
+            end body
+        end function
+
+        function: isNone
+            returns: boolean
+            body:
+                return present == false
+            end body
+        end function
+    end struct
+
+    /**
+    @struct OptionLong
+    */
+    struct: OptionLong
+        fields:
+            declare present: boolean
+            declare value: long
+        init:
+            body:
+                present = false
+                value = 0L
+            end body
+        end init
+        init:
+            params:
+                declare val: long
+            body:
+                present = true
+                value = val
+            end body
+        end init
+        function: isSome
+            returns: boolean
+            body:
+                return present
+            end body
+        end function
+        function: isNone
+            returns: boolean
+            body:
+                return present == false
+            end body
+        end function
+    end struct
+
+    /**
+    @struct OptionShort
+    */
+    struct: OptionShort
+        fields:
+            declare present: boolean
+            declare value: short
+        init:
+            body:
+                present = false
+                value = 0
+            end body
+        end init
+        init:
+            params:
+                declare val: short
+            body:
+                present = true
+                value = val
+            end body
+        end init
+        function: isSome
+            returns: boolean
+            body:
+                return present
+            end body
+        end function
+        function: isNone
+            returns: boolean
+            body:
+                return present == false
+            end body
+        end function
+    end struct
+
+    /**
+    @struct OptionByte
+    */
+    struct: OptionByte
+        fields:
+            declare present: boolean
+            declare value: byte
+        init:
+            body:
+                present = false
+                value = 0
+            end body
+        end init
+        init:
+            params:
+                declare val: byte
+            body:
+                present = true
+                value = val
+            end body
+        end init
+        function: isSome
+            returns: boolean
+            body:
+                return present
+            end body
+        end function
+        function: isNone
+            returns: boolean
+            body:
+                return present == false
+            end body
+        end function
+    end struct
+
+    /**
+    @struct OptionFloat
+    */
+    struct: OptionFloat
+        fields:
+            declare present: boolean
+            declare value: float
+        init:
+            body:
+                present = false
+                value = 0f
+            end body
+        end init
+        init:
+            params:
+                declare val: float
+            body:
+                present = true
+                value = val
+            end body
+        end init
+        function: isSome
+            returns: boolean
+            body:
+                return present
+            end body
+        end function
+        function: isNone
+            returns: boolean
+            body:
+                return present == false
+            end body
+        end function
+    end struct
+
+    /**
+    @struct OptionDouble
+    */
+    struct: OptionDouble
+        fields:
+            declare present: boolean
+            declare value: double
+        init:
+            body:
+                present = false
+                value = 0
+            end body
+        end init
+        init:
+            params:
+                declare val: double
+            body:
+                present = true
+                value = val
+            end body
+        end init
+        function: isSome
+            returns: boolean
+            body:
+                return present
+            end body
+        end function
+        function: isNone
+            returns: boolean
+            body:
+                return present == false
+            end body
+        end function
+    end struct
+
+    // 工厂方法
+    function: someInt
+        params:
+            declare v: int
+        returns: OptionInt
+        body:
+            return new OptionInt(v)
+        end body
+    end function
+
+    function: noneInt
+        returns: OptionInt
+        body:
+            return new OptionInt()
+        end body
+    end function
+
+    function: someLong
+        params:
+            declare v: long
+        returns: OptionLong
+        body:
+            return new OptionLong(v)
+        end body
+    end function
+
+    function: noneLong
+        returns: OptionLong
+        body:
+            return new OptionLong()
+        end body
+    end function
+
+    function: someShort
+        params:
+            declare v: short
+        returns: OptionShort
+        body:
+            return new OptionShort(v)
+        end body
+    end function
+
+    function: noneShort
+        returns: OptionShort
+        body:
+            return new OptionShort()
+        end body
+    end function
+
+    function: someByte
+        params:
+            declare v: byte
+        returns: OptionByte
+        body:
+            return new OptionByte(v)
+        end body
+    end function
+
+    function: noneByte
+        returns: OptionByte
+        body:
+            return new OptionByte()
+        end body
+    end function
+
+    function: someFloat
+        params:
+            declare v: float
+        returns: OptionFloat
+        body:
+            return new OptionFloat(v)
+        end body
+    end function
+
+    function: noneFloat
+        returns: OptionFloat
+        body:
+            return new OptionFloat()
+        end body
+    end function
+
+    function: someDouble
+        params:
+            declare v: double
+        returns: OptionDouble
+        body:
+            return new OptionDouble(v)
+        end body
+    end function
+
+    function: noneDouble
+        returns: OptionDouble
+        body:
+            return new OptionDouble()
+        end body
+    end function
+
+end module

@@ -6,14 +6,14 @@ module: app
         params:
             declare msg: string
         body:
-            io.stdout_write("running in thread: " + msg + "\n")
+            io.stdoutWrite("running in thread: " + msg + "\n")
         end body
     end function
 
     function: main
         body:
             declare tid: int = thread.create("app.worker", "hello")
-            io.stdout_write("spawned tid=" + tid + "\n")
+            io.stdoutWrite("spawned tid=" + tid + "\n")
         end body
     end function
 end module

@@ -47,9 +47,7 @@ public class NewObjectParselet implements PrefixParselet {
     public ExpressionNode parse(ParserContext ctx, Token token) {
         TokenStream ts = ctx.getTokens();
 
-        // ==========================
-        // 1) 解析类型名
-        // ==========================
+        // 1. 解析类型名（支持限定名如 module.Type）
         // 类型名只能为内建类型（TYPE）或用户结构体名（IDENTIFIER）
         if (ts.peek().getType() != TokenType.TYPE && ts.peek().getType() != TokenType.IDENTIFIER) {
             var t = ts.peek();
@@ -59,11 +57,25 @@ public class NewObjectParselet implements PrefixParselet {
                     t.getLine(), t.getCol()
             );
         }
-        String typeName = ts.next().getLexeme();
+        StringBuilder typeName = new StringBuilder();
+        typeName.append(ts.next().getLexeme());
+        
+        // 支持限定名：module.Type 或 module.submodule.Type
+        while (ts.match(".")) {
+            typeName.append('.');
+            if (ts.peek().getType() == TokenType.IDENTIFIER) {
+                typeName.append(ts.next().getLexeme());
+            } else {
+                var t = ts.peek();
+                throw new UnexpectedToken(
+                        "限定类型名中点号后必须跟标识符，但实际得到的是 " +
+                                t.getType() + " ('" + t.getLexeme() + "')",
+                        t.getLine(), t.getCol()
+                );
+            }
+        }
 
-        // ==========================
-        // 2) 解析构造参数列表
-        // ==========================
+        // 2. 解析构造参数列表
         ts.expect("("); // 必须有左括号
 
         List<ExpressionNode> args = new ArrayList<>();
@@ -75,10 +87,8 @@ public class NewObjectParselet implements PrefixParselet {
             ts.expect(")"); // 结尾必须为右括号
         }
 
-        // ==========================
-        // 3) 封装为 AST 节点并返回
-        // ==========================
+        // 3. 封装为 AST 节点并返回
         NodeContext nc = new NodeContext(token.getLine(), token.getCol(), ctx.getSourceName());
-        return new NewExpressionNode(typeName, args, nc);
+        return new NewExpressionNode(typeName.toString(), args, nc);
     }
 }

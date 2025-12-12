@@ -9,7 +9,7 @@
   0x1004 CLOSE        关闭 fd
   0x1005 STAT         获取路径对应文件的基本属性
   0x1006 FSTAT        根据 fd 获取文件的基本属性
-  0x1007 UNLINK       删除路径
+  0x1007 unLink       删除路径
   0x1008 DUP          复制一个已打开的 fd，返回新的 fd（指向同一底层通道）
   0x1009 DUP2         将 newfd 变为 oldfd 的副本（若 newfd 已占用会先关闭）
   0x100A PIPE         创建匿名管道，返回一对 fd：读端与写端
@@ -17,8 +17,8 @@
   0x100C FTRUNCATE    将 fd 对应文件截断到指定长度
   0x100D RENAME       重命名（或移动）文件/目录；若目标存在则覆盖
   0x100E LINK         创建硬链接：newPath 指向 oldPath
-  0x100F SYMLINK      创建符号链接：在 linkPath 处创建指向 target 的 symlink
-  0x1010 READLINK     读取符号链接的目标路径
+  0x100F symLink      创建符号链接：在 linkPath 处创建指向 target 的 symLink
+  0x1010 readLink     读取符号链接的目标路径
   0x1011 SET_NONBLOCK 设置 fd 的非阻塞/阻塞模式（仅对 SelectableChannel 生效）
 */
 module: fd
@@ -33,7 +33,7 @@ module: fd
     function: read
         params:
             declare fd: int
-            declare n:  int
+            declare n: int
         returns: any
         body:
             return syscall("0x1001", fd, n)
@@ -68,7 +68,7 @@ module: fd
     */
     function: write
         params:
-            declare fd:   int
+            declare fd: int
             declare data: any
         returns: int
         body:
@@ -87,7 +87,7 @@ module: fd
     */
     function: seek
         params:
-            declare fd:     int
+            declare fd: int
             declare offset: long
             declare whence: int
         returns: void
@@ -145,13 +145,13 @@ module: fd
     end function
 
     /**
-    @function unlink
+    @function unLink
     @summary 删除路径（通过 Files.delete(path) 实现，若为非空目录会抛出相应异常）。
     @param path 文件路径（字符串或路径对象）
     @returns 无返回值
     @throws EINVAL 路径类型错误; ENOENT 目标不存在; EPERM 权限不足; EIO I/O 失败
     */
-    function: unlink
+    function: unLink
         params:
             declare path: any
         returns: void
@@ -209,8 +209,8 @@ module: fd
             declare out: int[]
 
             pair = syscall("0x100A")           // PIPE → int[]: [readfd, writefd]
-            rfd  = syscall("0x1802", pair, 0)  // ARR_GET(pair, 0)
-            wfd  = syscall("0x1802", pair, 1)  // ARR_GET(pair, 1)
+            rfd = syscall("0x1802", pair, 0)  // ARR_GET(pair, 0)
+            wfd = syscall("0x1802", pair, 1)  // ARR_GET(pair, 1)
 
             // 用常量元素创建数组，再逐个赋值（允许非常量写入）
             out = [0, 0]
@@ -294,14 +294,14 @@ module: fd
     end function
 
     /**
-    @function symlink
-    @summary 创建符号链接：在 linkPath 处创建指向 target 的 symlink。
+    @function symLink
+    @summary 创建符号链接：在 linkPath 处创建指向 target 的 symLink。
     @param target 目标路径（字符串或路径对象）
     @param linkPath 符号链接路径（字符串或路径对象）
     @returns 成功返回 0
     @throws EINVAL 参数类型错误; EPERM 文件系统/平台限制; EACCES 权限不足; EIO I/O 失败
     */
-    function: symlink
+    function: symLink
         params:
             declare target: any
             declare linkPath: any
@@ -312,13 +312,13 @@ module: fd
     end function
 
     /**
-    @function readlink
+    @function readLink
     @summary 读取符号链接的目标路径。
     @param path 符号链接路径（字符串或路径对象）
     @returns 目标路径字符串
     @throws EINVAL 参数类型错误; EINVAL 目标不是符号链接; EACCES 权限不足; EIO I/O 失败
     */
-    function: readlink
+    function: readLink
         params:
             declare path: any
         returns: string

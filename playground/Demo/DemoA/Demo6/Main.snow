@@ -1,4 +1,4 @@
-module: Main
+module: main
     import: std_io
 
     function: main

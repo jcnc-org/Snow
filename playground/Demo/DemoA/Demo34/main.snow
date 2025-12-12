@@ -1,0 +1,13 @@
+module: main
+    import: std_io, student, person, graduate
+
+    function: main
+        returns: void
+        body:
+            declare a: person.Person = new student.Student(1)
+            std_io.println(a.getName())
+            declare p: person.Person = new graduate.Graduate(10, 2024)
+            std_io.println(p.getName())
+        end body
+    end function
+end module

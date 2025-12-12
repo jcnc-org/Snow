@@ -1,7 +1,7 @@
-module: ComprehensiveExample
+module: comprehensive_example
     import: std_io
-    import: syscall.time
-    
+    import: time
+
     // 结构体必须在globals之前定义
     struct: Animal
         fields:
@@ -24,7 +24,7 @@ module: ComprehensiveExample
                 return this.name
             end body
         end function
-        
+
         function: getAge
             returns: int
             body:
@@ -36,7 +36,7 @@ module: ComprehensiveExample
     struct: Dog extends Animal
         fields:
             declare breed: int
-        
+
         init:
             params:
                 declare n: int
@@ -54,7 +54,7 @@ module: ComprehensiveExample
                 return this.breed
             end body
         end function
-        
+
         function: bark
             returns: string
             body:
@@ -62,7 +62,7 @@ module: ComprehensiveExample
             end body
         end function
     end struct
-    
+
     struct: Point
         fields:
             declare x: int
@@ -84,14 +84,14 @@ module: ComprehensiveExample
                 return this.x
             end body
         end function
-        
+
         function: getY
             returns: int
             body:
                 return this.y
             end body
         end function
-        
+
         function: move
             params:
                 declare dx: int
@@ -103,41 +103,41 @@ module: ComprehensiveExample
             end body
         end function
     end struct
-    
+
     globals:
         declare globalCounter: int = 0
         declare _privateGlobal: string = "Private"
-    
+
     function: main
         returns: void
         body:
             std_io.println("=== Comprehensive Snow Language Example ===")
-            
+
             // 测试基本数据类型
             testBasicTypes()
-            
+
             // 测试控制结构
             testControlStructures()
-            
+
             // 测试函数
             testFunctions()
-            
+
             // 测试结构体和继承
             testStructsAndInheritance()
-            
+
             // 测试数组
             testArrays()
-            
+
             // 测试系统调用
             testSyscalls()
-            
+
             // 测试全局变量和访问控制
             testGlobalsAndAccessControl()
-            
+
             std_io.println("=== All tests completed successfully! ===")
         end body
     end function
-    
+
     function: testBasicTypes
         returns: void
         body:
@@ -150,7 +150,7 @@ module: ComprehensiveExample
             declare d: double = 3.141592653589793
             declare bool: boolean = true
             declare str: string = "Hello Snow"
-            
+
             std_io.println("byte: " + b)
             std_io.println("short: " + s)
             std_io.println("int: " + i)
@@ -161,7 +161,7 @@ module: ComprehensiveExample
             std_io.println("string: " + str)
         end body
     end function
-    
+
     function: testControlStructures
         returns: void
         body:
@@ -172,7 +172,7 @@ module: ComprehensiveExample
             else
                 std_io.println("n is not greater than 5")
             end if
-            
+
             std_io.println("Counting from 1 to 3:")
             loop:
                 init:
@@ -187,7 +187,7 @@ module: ComprehensiveExample
             end loop
         end body
     end function
-    
+
     function: add
         params:
             declare a: int
@@ -197,7 +197,7 @@ module: ComprehensiveExample
             return a + b
         end body
     end function
-    
+
     function: testFunctions
         returns: void
         body:
@@ -206,18 +206,18 @@ module: ComprehensiveExample
             std_io.println("3 + 5 = " + result)
         end body
     end function
-    
+
     function: testStructsAndInheritance
         returns: void
         body:
             std_io.println("--- Testing Structs and Inheritance ---")
-            
+
             // 测试Point结构体
             declare p: Point = new Point(10, 20)
             std_io.println("Point coordinates: (" + p.getX() + ", " + p.getY() + ")")
-            p.move(5, - 3)
+            p.move(5, -3)
             std_io.println("After move: (" + p.getX() + ", " + p.getY() + ")")
-            
+
             // 测试继承
             declare dog: Dog = new Dog(1, 3, 2)
             std_io.println("Dog name: " + dog.getName())
@@ -226,19 +226,19 @@ module: ComprehensiveExample
             std_io.println("Dog says: " + dog.bark())
         end body
     end function
-    
+
     function: testArrays
         returns: void
         body:
             std_io.println("--- Testing Arrays ---")
-            
+
             // 一维数组
             declare arr: int[] = [1, 2, 3, 4, 5]
             std_io.println("First element: " + arr[0])
             std_io.println("Third element: " + arr[2])
             arr[0] = 10
             std_io.println("Modified first element: " + arr[0])
-            
+
             // 手动管理数组长度
             declare arrLength: int = 5
             loop:
@@ -252,7 +252,7 @@ module: ComprehensiveExample
                     std_io.println("arr[" + i + "] = " + arr[i])
                 end body
             end loop
-            
+
             // 多维数组
             declare matrix: int[][] = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
             std_io.println("matrix[0][0]: " + matrix[0][0])
@@ -262,16 +262,16 @@ module: ComprehensiveExample
             std_io.println("Modified matrix[0][0]: " + matrix[0][0])
         end body
     end function
-    
+
     function: testSyscalls
         returns: void
         body:
             std_io.println("--- Testing Syscalls ---")
-            declare startTime: long = time.mono_ms()
+            declare startTime: long = time.monoMs()
             std_io.println("Start time: " + startTime)
         end body
     end function
-    
+
     function: testGlobalsAndAccessControl
         returns: void
         body:
@@ -279,19 +279,19 @@ module: ComprehensiveExample
             std_io.println("Global counter: " + globalCounter)
             globalCounter = globalCounter + 1
             std_io.println("Incremented global counter: " + globalCounter)
-            
+
             // 访问公有成员
             std_io.println("Public function result: " + publicFunc())
         end body
     end function
-    
+
     function: _privateFunction
         returns: string
         body:
             return "This is a private function"
         end body
     end function
-    
+
     function: publicFunc
         returns: int
         body:

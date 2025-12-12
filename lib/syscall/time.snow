@@ -5,14 +5,14 @@
   0x1700 CLOCK_GETTIME 获取时钟纳秒时间戳（REALTIME=0, MONO=1）
   0x1701 NANOSLEEP     让当前线程按纳秒挂起
   0x1702 TIMEOFDAY     兼容式获取 (sec, usec)
-  0x1703 TICK_MS       获取单调时钟的毫秒计数（用于计时）
+  0x1703 tickMs       获取单调时钟的毫秒计数（用于计时）
 */
 module: time
 
     // 常用时钟 ID
     globals:
-        declare REALTIME:int = 0
-        declare MONO:int     = 1
+        declare REALTIME: int = 0
+        declare MONO: int = 1
 
     /**
     @function clock_gettime
@@ -23,7 +23,7 @@ module: time
     */
     function: clock_gettime
         params:
-            declare clockId:int
+            declare clockId: int
         returns: long
         body:
             return syscall("0x1700", clockId)
@@ -31,13 +31,13 @@ module: time
     end function
 
     /**
-    @function sleep_ns
+    @function sleepNs
     @summary 让当前线程挂起指定的纳秒数。
     @param ns 要挂起的纳秒数
     @returns 成功返回 0
     @throws InterruptedException 被中断时可能抛出异常，调用者应处理或恢复中断状态
     */
-    function: sleep_ns
+    function: sleepNs
         params:
             declare ns: long
         returns: int
@@ -59,11 +59,11 @@ module: time
     end function
 
     /**
-    @function tick_ms
+    @function tickMs
     @summary 返回单调计数的毫秒数（适合计算时间间隔，不是绝对时间）。
     @returns 成功返回单调毫秒数
     */
-    function: tick_ms
+    function: tickMs
         returns: long
         body:
             return syscall("0x1703")
@@ -73,11 +73,11 @@ module: time
     // ─────────────── 便捷封装（基于上面四个原始 syscall） ───────────────
 
     /**
-    @function now_ns
+    @function nowNs
     @summary 以纳秒返回墙钟时间（REALTIME）。
     @returns 墙钟时间纳秒数
     */
-    function: now_ns
+    function: nowNs
         returns: long
         body:
             return clock_gettime(REALTIME)
@@ -85,11 +85,11 @@ module: time
     end function
 
     /**
-    @function mono_ns
+    @function monoNs
     @summary 以纳秒返回单调时钟（MONO）。
     @returns 单调时钟纳秒数
     */
-    function: mono_ns
+    function: monoNs
         returns: long
         body:
             return clock_gettime(MONO)
@@ -97,11 +97,11 @@ module: time
     end function
 
     /**
-    @function now_ms
+    @function nowMs
     @summary 以毫秒返回墙钟时间。
     @returns 墙钟时间毫秒数
     */
-    function: now_ms
+    function: nowMs
         returns: long
         body:
             // 1_000_000 ns = 1 ms
@@ -111,11 +111,11 @@ module: time
     end function
 
     /**
-    @function mono_ms
+    @function monoMs
     @summary 以毫秒返回单调时钟。
     @returns 单调时钟毫秒数
     */
-    function: mono_ms
+    function: monoMs
         returns: long
         body:
             declare ns: long = clock_gettime(MONO)
@@ -147,41 +147,41 @@ module: time
             declare ns: long = clock_gettime(REALTIME)
             declare us: long = ns / 1000
             // 取当前秒内的微秒
-            declare usec:long = us % 1000000
+            declare usec: long = us % 1000000
             return usec
         end body
     end function
 
     /**
-    @function sleep_ms
+    @function sleepMs
     @summary 以毫秒为单位的睡眠。
     @param ms 要睡眠的毫秒数
     @returns 成功返回 0
     */
-    function: sleep_ms
+    function: sleepMs
         params:
-            declare ms:int
+            declare ms: int
         returns: int
         body:
             // 避免中间溢出：先转 long 再乘
             declare ns: long = (ms + 0) * 1000000
-            return sleep_ns(ns)
+            return sleepNs(ns)
         end body
     end function
 
     /**
-    @function sleep_us
+    @function sleepUs
     @summary 以微秒为单位的睡眠。
     @param us 要睡眠的微秒数
     @returns 成功返回 0
     */
-    function: sleep_us
+    function: sleepUs
         params:
-            declare us:int
+            declare us: int
         returns: int
         body:
             declare ns: long = (us + 0) * 1000
-            return sleep_ns(ns)
+            return sleepNs(ns)
         end body
     end function
 

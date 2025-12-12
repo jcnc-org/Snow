@@ -1,6 +1,4 @@
-module: Main
-    import: syscall.fs
-    import: syscall.fd
+module: main
     import: std_io
     // Animal结构体
     struct: Animal
@@ -9,7 +7,7 @@ module: Main
             declare name: string
             declare age: int
 
-            // 构造函数
+        // 构造函数
         init:
             params:
                 n: string

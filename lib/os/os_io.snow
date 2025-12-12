@@ -4,10 +4,10 @@
 */
 module: os_io
 
-	import: io
+    import: io
 
     globals:
-        declare const NEWLINE :string = "\n"
+        declare const NEWLINE: string = "\n"
 
     /**
     @function read_line
@@ -17,59 +17,59 @@ module: os_io
         params:
         returns: string
         body:
-            return io.stdin_read()
+            return io.stdinRead()
         end body
     end function
 
     /**
-    @function stdout_write
+    @function stdoutWrite
     @summary 写入 stdout（任意对象将转字符串，按 UTF-8 写入）
     */
-    function: stdout_write
+    function: stdoutWrite
         params:
-            declare data:any
+            declare data: any
         returns: int
         body:
-            return io.stdout_write(data)
+            return io.stdoutWrite(data)
         end body
     end function
 
     /**
-    @function stderr_write
+    @function stderrWrite
     @summary 写入 stderr（任意对象将转字符串，按 UTF-8 写入）
     */
-    function: stderr_write
+    function: stderrWrite
         params:
-            declare data:any
+            declare data: any
         returns: int
         body:
-            return io.stderr_write(data)
+            return io.stderrWrite(data)
         end body
     end function
 
     /**
-    @function stdout_writeln
+    @function stdoutWriteln
     @summary 写入 stdout 并自动追加换行。
     */
-    function: stdout_writeln
+    function: stdoutWriteln
         params:
-            declare data:any
+            declare data: any
         returns: int
         body:
-            return io.stdout_write(("" + data) + NEWLINE)
+            return io.stdoutWrite(("" + data) + NEWLINE)
         end body
     end function
 
     /**
-    @function stderr_writeln
+    @function stderrWriteln
     @summary 写入 stderr 并自动追加换行。
     */
-    function: stderr_writeln
+    function: stderrWriteln
         params:
-            declare data:any
+            declare data: any
         returns: int
         body:
-            return io.stderr_write(("" + data) + NEWLINE)
+            return io.stderrWrite(("" + data) + NEWLINE)
         end body
     end function
 end module

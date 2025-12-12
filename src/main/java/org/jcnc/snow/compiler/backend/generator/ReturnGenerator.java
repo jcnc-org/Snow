@@ -92,15 +92,15 @@ public class ReturnGenerator implements InstructionGenerator<ReturnInstruction> 
         if (retType == null || retType.isBlank()) {
             return 'V';
         }
-        return switch (retType.toLowerCase(Locale.ROOT)) {
+        return switch (retType) {
             case "byte" -> 'B';
             case "short" -> 'S';
-            case "int", "integer", "bool", "boolean" -> 'I';
+            case "int", "boolean" -> 'I';
             case "long" -> 'L';
             case "float" -> 'F';
             case "double" -> 'D';
             case "void" -> 'V';
-            default -> 'R';
+            default -> 'R';  // 所有结构体类型(如 Boolean)都是引用类型
         };
     }
 

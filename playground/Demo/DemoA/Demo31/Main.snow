@@ -1,6 +1,5 @@
-module: Main
-    import: syscall.fs
-    import: syscall.fd
+module: main
+
     import: std_io
 
     // 父类 Person

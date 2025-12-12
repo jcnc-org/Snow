@@ -18,8 +18,8 @@ module: thread
     */
     function: create
         params:
-            declare entry:any
-            declare arg:any
+            declare entry: any
+            declare arg: any
         returns: int
         body:
             return syscall("0x1506", entry, arg)
@@ -35,7 +35,7 @@ module: thread
     */
     function: join
         params:
-            declare tid:int
+            declare tid: int
         returns: any
         body:
             return syscall("0x1507", tid)
@@ -51,7 +51,7 @@ module: thread
     */
     function: sleep
         params:
-            declare ms:int
+            declare ms: int
         returns: int
         body:
             return syscall("0x1508", ms)

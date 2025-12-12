@@ -1,8 +1,8 @@
 /**
-@module syscall_array_example
-@summary syscall_array 方法演示
-@description 演示 array 模块提供的数组系统调用（0x1801–0x1815）
-*/
+ * @module syscall_array_example
+ * @summary syscall_array 方法演示
+ * @description 演示 array 模块提供的数组系统调用（0x1801–0x1815）
+ */
 module: syscall_array_example
 
     import: array

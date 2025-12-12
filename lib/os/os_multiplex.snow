@@ -7,13 +7,13 @@ module: os_multiplex
     import: multiplex
 
     globals:
-        declare const EPOLL_ADD:int = 1
-        declare const EPOLL_MOD:int = 2
-        declare const EPOLL_DEL:int = 3
+        declare const epollAdd: int = 1
+        declare const epollMod: int = 2
+        declare const epollDel: int = 3
 
-        declare const EVENT_READ:int  = 1
-        declare const EVENT_WRITE:int = 2
-        declare const EVENT_CONNECT:int = 4
+        declare const EVENT_READ: int = 1
+        declare const EVENT_WRITE: int = 2
+        declare const EVENT_CONNECT: int = 4
 
     /**
     @function select
@@ -21,10 +21,10 @@ module: os_multiplex
     */
     function: select
         params:
-            declare read_set:any
-            declare write_set:any
-            declare except_set:any
-            declare timeout_ms:int
+            declare read_set: any
+            declare write_set: any
+            declare except_set: any
+            declare timeout_ms: int
         returns: any
         body:
             return multiplex.select(read_set, write_set, except_set, timeout_ms)
@@ -32,72 +32,72 @@ module: os_multiplex
     end function
 
     /**
-    @function epoll_create
+    @function epollCreate
     @summary 创建 epoll 实例。
     */
-    function: epoll_create
+    function: epollCreate
         params:
-            declare flags:int
+            declare flags: int
         returns: int
         body:
-            return multiplex.epoll_create(flags)
+            return multiplex.epollCreate(flags)
         end body
     end function
 
-    function: epoll_add
+    function: epollAdd
         params:
-            declare epfd:int
-            declare fd:int
-            declare events:int
+            declare epfd: int
+            declare fd: int
+            declare events: int
         returns: int
         body:
-            return multiplex.epoll_ctl(epfd, EPOLL_ADD, fd, events)
+            return multiplex.epoll_ctl(epfd, epollAdd, fd, events)
         end body
     end function
 
-    function: epoll_mod
+    function: epollMod
         params:
-            declare epfd:int
-            declare fd:int
-            declare events:int
+            declare epfd: int
+            declare fd: int
+            declare events: int
         returns: int
         body:
-            return multiplex.epoll_ctl(epfd, EPOLL_MOD, fd, events)
+            return multiplex.epoll_ctl(epfd, epollMod, fd, events)
         end body
     end function
 
-    function: epoll_del
+    function: epollDel
         params:
-            declare epfd:int
-            declare fd:int
+            declare epfd: int
+            declare fd: int
         returns: int
         body:
-            return multiplex.epoll_ctl(epfd, EPOLL_DEL, fd, 0)
+            return multiplex.epoll_ctl(epfd, epollDel, fd, 0)
         end body
     end function
 
-    function: epoll_wait
+    function: epollWait
         params:
-            declare epfd:int
-            declare max_events:int
-            declare timeout_ms:int
+            declare epfd: int
+            declare max_events: int
+            declare timeout_ms: int
         returns: any
         body:
-            return multiplex.epoll_wait(epfd, max_events, timeout_ms)
+            return multiplex.epollWait(epfd, max_events, timeout_ms)
         end body
     end function
 
     /**
-    @function io_wait
+    @function ioWait
     @summary 平台无关的多路等待。
     */
-    function: io_wait
+    function: ioWait
         params:
-            declare fds:any
-            declare timeout_ms:int
+            declare fds: any
+            declare timeout_ms: int
         returns: any
         body:
-            return multiplex.io_wait(fds, timeout_ms)
+            return multiplex.ioWait(fds, timeout_ms)
         end body
     end function
 

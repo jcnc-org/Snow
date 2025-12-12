@@ -1,6 +1,6 @@
 module: ControlStructures
     import: std_io
-    
+
     function: main
         returns: void
         body:
@@ -11,14 +11,14 @@ module: ControlStructures
             else
                 std_io.println("n is not greater than 5")
             end if
-            
+
             // 测试嵌套条件语句
             if n == 10 then
                 if n > 5 then
                     std_io.println("n is 10 and greater than 5")
                 end if
             end if
-            
+
             // 测试循环语句
             std_io.println("Counting from 1 to 5:")
             loop:
@@ -32,7 +32,7 @@ module: ControlStructures
                     std_io.println("i = " + i)
                 end body
             end loop
-            
+
             // 测试break和continue
             std_io.println("Testing break and continue:")
             loop:
@@ -46,11 +46,11 @@ module: ControlStructures
                     if j == 3 then
                         continue
                     end if
-                    
+
                     if j == 7 then
                         break
                     end if
-                    
+
                     std_io.println("j = " + j)
                 end body
             end loop

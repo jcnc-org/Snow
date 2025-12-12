@@ -1,34 +1,35 @@
 /**
-@module std_long_example
-@summary std_long 方法演示
-*/
+ * @module std_long_example
+ * @summary std_long 方法演示
+ */
 module: std_long_example
 
     import: std_long
     import: std_math
     import: std_io
     import: std_parse
+    import: std_option
 
     function: main
         body:
             std_io.println("=== 构造与拆箱 longValue() ===")
-            declare defaultlong: std_long = new std_long()
-            declare pilong: std_long = new std_long(3)
+            declare defaultlong: std_long.Long = new std_long.Long()
+            declare pilong: std_long.Long = new std_long.Long(3)
             std_io.println("默认构造 -> " + defaultlong.longValue())
             std_io.println("带参构造(3) -> " + pilong.longValue())
 
             std_io.println("\n=== valueOf* 与静态 toString() ===")
-            declare boxedFromlong: std_long = std_long.valueOf(42L)
-            declare boxedFromString: std_long = std_long.valueOfString("12")
+            declare boxedFromlong: std_long.Long = std_long.valueOf(42L)
+            declare boxedFromString: std_long.Long = std_long.valueOfString("12")
             std_io.println("valueOf(42) -> " + boxedFromlong.longValue())
             std_io.println("valueOfString(\"12\") -> " + boxedFromString.longValue())
             std_io.println("std_long.toString(7) -> " + std_long.toString(7L))
 
             std_io.println("\n=== 实例方法 abs()/equals()/toString() ===")
-            declare neglong: std_long = new std_long(-120L)
-            declare eqA: std_long = new std_long(10L)
-            declare eqB: std_long = new std_long(10L)
-            declare eqC: std_long = new std_long(8L)
+            declare neglong: std_long.Long = new std_long.Long(-120L)
+            declare eqA: std_long.Long = new std_long.Long(10L)
+            declare eqB: std_long.Long = new std_long.Long(10L)
+            declare eqC: std_long.Long = new std_long.Long(8L)
             std_io.println("abs(-120) -> " + neglong.abs().longValue())
             std_io.println("equals(10,10) -> " + eqA.equals(eqB))
             std_io.println("equals(10,8) -> " + eqA.equals(eqC))
@@ -36,6 +37,25 @@ module: std_long_example
 
             std_io.println("\n=== 数学/解析工具 ===")
             std_io.println("std_parse.parseLong(\"-71\") -> " + std_parse.parseLong("-71"))
+            std_io.println("std_parse.parseLongRadix(\"1A\", 16) -> " + std_parse.parseLongRadix("1A", 16))
+            declare trimmed: std_option.OptionLong = std_parse.tryParseLong("   +88  ")
+            if trimmed.isSome() then
+                std_io.println("tryParseLong(\"   +88  \") -> Some(" + trimmed.value + ")")
+            else
+                std_io.println("tryParseLong(\"   +88  \") -> None")
+            end if
+            declare invalid: std_option.OptionLong = std_parse.tryParseLong("100oops")
+            if invalid.isSome() then
+                std_io.println("tryParseLong(\"100oops\") -> Some(" + invalid.value + ")")
+            else
+                std_io.println("tryParseLong(\"100oops\") -> None")
+            end if
+            declare radixOpt: std_option.OptionLong = std_parse.tryParseLongRadix("ZZZZ", 36)
+            if radixOpt.isSome() then
+                std_io.println("tryParseLongRadix(\"ZZZZ\", 36) -> Some(" + radixOpt.value + ")")
+            else
+                std_io.println("tryParseLongRadix(\"ZZZZ\", 36) -> None")
+            end if
             std_io.println("std_math.compareLong(1, 5) -> " + std_math.compareLong(1L, 5L))
             std_io.println("std_math.compareLong(7, 2) -> " + std_math.compareLong(7L, 2L))
             std_io.println("std_math.maxLong(-15, 20) -> " + std_math.maxLong(-15L, 20L))
