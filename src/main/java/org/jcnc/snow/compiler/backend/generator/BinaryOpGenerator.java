@@ -71,6 +71,26 @@ public class BinaryOpGenerator implements InstructionGenerator<BinaryOperationIn
 
     /*  接口实现  */
 
+    /**
+     * 根据 IR 操作码名提取预期类型前缀。
+     */
+    private static char typeFromOpcode(String irName) {
+        int idx = irName.indexOf('_');
+        if (idx < 0 || idx + 1 >= irName.length()) {
+            return 0;
+        }
+        return switch (irName.charAt(idx + 1)) {
+            case 'B' -> 'B';
+            case 'S' -> 'S';
+            case 'I' -> 'I';
+            case 'L' -> 'L';
+            case 'F' -> 'F';
+            case 'D' -> 'D';
+            case 'R' -> 'R';
+            default -> 0;
+        };
+    }
+
     @Override
     public Class<BinaryOperationInstruction> supportedClass() {
         return BinaryOperationInstruction.class;
@@ -189,25 +209,5 @@ public class BinaryOpGenerator implements InstructionGenerator<BinaryOperationIn
         // 5. 写入目标槽位
         out.emit(OpHelper.opcode("I_STORE") + " " + dSlot);
         out.setSlotType(dSlot, 'I'); // 布尔 ➜ int
-    }
-
-    /**
-     * 根据 IR 操作码名提取预期类型前缀。
-     */
-    private static char typeFromOpcode(String irName) {
-        int idx = irName.indexOf('_');
-        if (idx < 0 || idx + 1 >= irName.length()) {
-            return 0;
-        }
-        return switch (irName.charAt(idx + 1)) {
-            case 'B' -> 'B';
-            case 'S' -> 'S';
-            case 'I' -> 'I';
-            case 'L' -> 'L';
-            case 'F' -> 'F';
-            case 'D' -> 'D';
-            case 'R' -> 'R';
-            default -> 0;
-        };
     }
 }

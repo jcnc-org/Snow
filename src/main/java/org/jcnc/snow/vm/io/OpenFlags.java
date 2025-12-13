@@ -68,6 +68,7 @@ public final class OpenFlags {
      * 追加写
      */
     public static final int O_APPEND = 0x400;
+
     private OpenFlags() {
     }
 

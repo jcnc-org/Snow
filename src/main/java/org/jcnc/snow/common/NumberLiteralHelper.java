@@ -126,31 +126,6 @@ public final class NumberLiteralHelper {
     }
 
     /**
-     * 表示规整后的字面量。
-     *
-     * @param text  去除下划线与可选类型后缀后的文本（保留 0x/0X 前缀）
-     * @param radix 数值进制（10 或 16）
-     */
-    public record NormalizedLiteral(String text, int radix) {
-
-        /**
-         * 是否为十六进制字面量。
-         */
-        public boolean isHex() {
-            return radix == 16;
-        }
-
-        /**
-         * 获取纯数字部分（若为十六进制则去掉 0x/0X）。
-         *
-         * @return 不带前缀的数字部分
-         */
-        public String digits() {
-            return isHex() && text.length() >= 2 ? text.substring(2) : text;
-        }
-    }
-
-    /**
      * 将规整后的十进制或十六进制数字转换为 int。
      *
      * @param digits 不包含前缀的数字文本
@@ -176,5 +151,30 @@ public final class NumberLiteralHelper {
             return Long.parseUnsignedLong(digits, radix);
         }
         return Long.parseLong(digits);
+    }
+
+    /**
+     * 表示规整后的字面量。
+     *
+     * @param text  去除下划线与可选类型后缀后的文本（保留 0x/0X 前缀）
+     * @param radix 数值进制（10 或 16）
+     */
+    public record NormalizedLiteral(String text, int radix) {
+
+        /**
+         * 是否为十六进制字面量。
+         */
+        public boolean isHex() {
+            return radix == 16;
+        }
+
+        /**
+         * 获取纯数字部分（若为十六进制则去掉 0x/0X）。
+         *
+         * @return 不带前缀的数字部分
+         */
+        public String digits() {
+            return isHex() && text.length() >= 2 ? text.substring(2) : text;
+        }
     }
 }

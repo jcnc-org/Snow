@@ -26,18 +26,17 @@ import java.util.concurrent.ConcurrentHashMap;
  * </p>
  */
 public final class EnvRegistry {
-    private EnvRegistry() {
-    }
-
     /**
      * 内部哨兵值，用于表达“被删除”，ConcurrentHashMap 不支持 null value。
      */
     private static final String DELETED = "\u0000__SNOW_ENV_DELETED__";
-
     /**
      * 覆盖表（线程安全），key 使用系统环境变量大小写（原样）。
      */
     private static final ConcurrentHashMap<String, String> overlay = new ConcurrentHashMap<>();
+
+    private EnvRegistry() {
+    }
 
     /**
      * 获取指定环境变量的值。

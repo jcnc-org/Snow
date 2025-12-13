@@ -59,7 +59,7 @@ public class NewObjectParselet implements PrefixParselet {
         }
         StringBuilder typeName = new StringBuilder();
         typeName.append(ts.next().getLexeme());
-        
+
         // 支持限定名：module.Type 或 module.submodule.Type
         while (ts.match(".")) {
             typeName.append('.');

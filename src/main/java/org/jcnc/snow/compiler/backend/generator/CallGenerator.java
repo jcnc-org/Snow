@@ -374,11 +374,11 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
      * 加载参数寄存器到操作数栈。
      * 检查参数类型，取槽位和类型，不存在时采用 defaultType。
      *
-     * @param out         VM 指令构建器
-     * @param slotMap     虚拟寄存器到槽位映射
-     * @param arg         参数
+     * @param out        VM 指令构建器
+     * @param slotMap    虚拟寄存器到槽位映射
+     * @param arg        参数
      * @param targetType 默认类型前缀
-     * @param fn          所属函数名
+     * @param fn         所属函数名
      * @throws IllegalStateException 如果类型或槽位未找到
      */
     private void loadArgument(VMProgramBuilder out, Map<IRVirtualRegister, Integer> slotMap, IRValue arg, char targetType, String fn) {

@@ -54,37 +54,6 @@ import java.util.ArrayList;
  */
 public class ExecHandler implements SyscallHandler {
 
-    /**
-     * 将子进程的一个输出流（stdout 或 stderr）持续复制到给定的 PrintStream。
-     * 我们用线程异步转发，保证即使在 native-image 下也能看到子进程的输出。
-     */
-    private static final class StreamForwarder extends Thread {
-        private final InputStream src;
-        private final PrintStream dst;
-
-        StreamForwarder(InputStream src, PrintStream dst, String name) {
-            super(name);
-            this.src = src;
-            this.dst = dst;
-            // 它只是帮忙转发输出，不决定进程生命周期，设为 daemon 即可
-            setDaemon(true);
-        }
-
-        @Override
-        public void run() {
-            byte[] buf = new byte[1024];
-            try (InputStream in = src) {
-                int n;
-                while ((n = in.read(buf)) != -1) {
-                    dst.write(buf, 0, n);
-                    dst.flush();
-                }
-            } catch (IOException ignored) {
-                // 子进程结束 / 管道关闭 是正常情况
-            }
-        }
-    }
-
     @Override
     public void handle(OperandStack stack,
                        LocalVariableStore locals,
@@ -98,7 +67,7 @@ public class ExecHandler implements SyscallHandler {
         // 2. 取参（注意顺序：Snow 调用顺序是 (env, argv, path)，压栈后 path 在栈顶）
         Object pathObj = stack.pop(); // path
         Object argvObj = stack.pop(); // argv
-        Object envObj  = stack.pop(); // env
+        Object envObj = stack.pop(); // env
 
         // 3. 检查 path 类型
         if (!(pathObj instanceof String path)) {
@@ -157,12 +126,45 @@ public class ExecHandler implements SyscallHandler {
         // 10. 尽量等转发线程吃完最后一口输出（短 join，不处理 interrupt）
         try {
             outForwarder.join(100);
-        } catch (InterruptedException ignored) { }
+        } catch (InterruptedException ignored) {
+        }
         try {
             errForwarder.join(100);
-        } catch (InterruptedException ignored) { }
+        } catch (InterruptedException ignored) {
+        }
 
         // 11. 终止当前 VM（不会返回到 Snow 代码）
         Runtime.getRuntime().halt(0);
+    }
+
+    /**
+     * 将子进程的一个输出流（stdout 或 stderr）持续复制到给定的 PrintStream。
+     * 我们用线程异步转发，保证即使在 native-image 下也能看到子进程的输出。
+     */
+    private static final class StreamForwarder extends Thread {
+        private final InputStream src;
+        private final PrintStream dst;
+
+        StreamForwarder(InputStream src, PrintStream dst, String name) {
+            super(name);
+            this.src = src;
+            this.dst = dst;
+            // 它只是帮忙转发输出，不决定进程生命周期，设为 daemon 即可
+            setDaemon(true);
+        }
+
+        @Override
+        public void run() {
+            byte[] buf = new byte[1024];
+            try (InputStream in = src) {
+                int n;
+                while ((n = in.read(buf)) != -1) {
+                    dst.write(buf, 0, n);
+                    dst.flush();
+                }
+            } catch (IOException ignored) {
+                // 子进程结束 / 管道关闭 是正常情况
+            }
+        }
     }
 }

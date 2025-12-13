@@ -16,11 +16,6 @@ public final class SnowConfig {
      */
     public static Mode MODE = Mode.RUN;
     /**
-     * 是否输出指令级 trace。
-     */
-    private static boolean instructionTraceEnabled = false;
-
-    /**
      * 标准库路径，默认为项目根目录下的 lib 文件夹
      * <p>
      * 查找优先级：
@@ -31,6 +26,10 @@ public final class SnowConfig {
      * 5. 可执行文件所在目录推断的SDK目录
      */
     public static Path STDLIB_PATH = Paths.get("lib").toAbsolutePath();
+    /**
+     * 是否输出指令级 trace。
+     */
+    private static boolean instructionTraceEnabled = false;
 
     /**
      * 私有构造方法，防止实例化。
@@ -76,21 +75,21 @@ public final class SnowConfig {
     }
 
     /**
-     * 启用或关闭指令级 trace。
-     *
-     * @param enabled true 则输出分支/跳转 trace
-     */
-    public static void setInstructionTraceEnabled(boolean enabled) {
-        instructionTraceEnabled = enabled;
-    }
-
-    /**
      * 当前是否开启指令级 trace。
      *
      * @return true 则输出分支/跳转 trace
      */
     public static boolean isInstructionTraceEnabled() {
         return instructionTraceEnabled;
+    }
+
+    /**
+     * 启用或关闭指令级 trace。
+     *
+     * @param enabled true 则输出分支/跳转 trace
+     */
+    public static void setInstructionTraceEnabled(boolean enabled) {
+        instructionTraceEnabled = enabled;
     }
 
     /**

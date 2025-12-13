@@ -123,15 +123,15 @@ public final class SyscallFactory {
         SYSCALLS[SyscallOpCode.TICK_MS] = new TickMsHandler();
 
         // ================= 数组 =================
-        SYSCALLS[SyscallOpCode.ARR_LEN]    = new ArrLenHandler();
-        SYSCALLS[SyscallOpCode.ARR_GET]    = new ArrGetHandler();
-        SYSCALLS[SyscallOpCode.ARR_SET]    = new ArrSetHandler();
-        SYSCALLS[SyscallOpCode.ARR_PUSH]   = new ArrPushHandler();
-        SYSCALLS[SyscallOpCode.ARR_POP]    = new ArrPopHandler();
+        SYSCALLS[SyscallOpCode.ARR_LEN] = new ArrLenHandler();
+        SYSCALLS[SyscallOpCode.ARR_GET] = new ArrGetHandler();
+        SYSCALLS[SyscallOpCode.ARR_SET] = new ArrSetHandler();
+        SYSCALLS[SyscallOpCode.ARR_PUSH] = new ArrPushHandler();
+        SYSCALLS[SyscallOpCode.ARR_POP] = new ArrPopHandler();
         SYSCALLS[SyscallOpCode.ARR_INSERT] = new ArrInsertHandler();
         SYSCALLS[SyscallOpCode.ARR_REMOVE] = new ArrRemoveHandler();
         SYSCALLS[SyscallOpCode.ARR_RESIZE] = new ArrResizeHandler();
-        SYSCALLS[SyscallOpCode.ARR_CLEAR]  = new ArrClearHandler();
+        SYSCALLS[SyscallOpCode.ARR_CLEAR] = new ArrClearHandler();
 
         // ================= 系统信息 =================
         SYSCALLS[SyscallOpCode.GETENV] = new GetEnvHandler();

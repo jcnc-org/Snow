@@ -231,12 +231,13 @@ public class ASTJsonSerializer {
     private static Object exprToMap(ExpressionNode expr) {
         return switch (expr) {
             // 二元表达式
-            case BinaryExpressionNode(ExpressionNode left, String operator, ExpressionNode right, NodeContext context) ->
-                    exprMap("BinaryExpression",
-                            "left", exprToMap(left),
-                            "operator", operator,
-                            "right", exprToMap(right)
-                    );
+            case BinaryExpressionNode(
+                    ExpressionNode left, String operator, ExpressionNode right, NodeContext context
+            ) -> exprMap("BinaryExpression",
+                    "left", exprToMap(left),
+                    "operator", operator,
+                    "right", exprToMap(right)
+            );
             // 一元表达式
             case UnaryExpressionNode(String operator, ExpressionNode operand, NodeContext context) ->
                     exprMap("UnaryExpression",

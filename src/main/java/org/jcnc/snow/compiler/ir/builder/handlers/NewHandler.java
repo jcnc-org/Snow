@@ -94,7 +94,7 @@ public class NewHandler implements ExpressionHandler<NewExpressionNode> {
             if (lastDot >= 0 && lastDot + 1 < simpleTypeName.length()) {
                 simpleTypeName = simpleTypeName.substring(lastDot + 1);
             }
-            
+
             String ctorName = simpleTypeName + ".__init__" + argRegs.size();
             List<IRValue> ctorArgs = new ArrayList<>();
             ctorArgs.add(dest);

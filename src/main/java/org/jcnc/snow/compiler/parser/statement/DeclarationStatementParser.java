@@ -66,7 +66,7 @@ public class DeclarationStatementParser implements StatementParser {
         if (tokens.peek().getType() == TokenType.TYPE || tokens.peek().getType() == TokenType.IDENTIFIER) {
             // 类型可以是基础类型或结构体名
             type.append(tokens.next().getLexeme());
-            
+
             // 支持限定名：module.Type 或 module.submodule.Type
             while (tokens.match(".")) {
                 type.append('.');
