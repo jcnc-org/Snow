@@ -10,7 +10,7 @@ import java.util.List;
 
 /**
  * {@code ArrLenHandler} 实现 ARR_LEN (0x1801) 系统调用，
- * 用于获取数组、列表、字符串的长度。
+ * 用于获取数组、列表的长度。
  *
  * <p><b>Stack：</b>
  * 入参 {@code (arr:any)} →
@@ -18,8 +18,8 @@ import java.util.List;
  * </p>
  *
  * <p><b>语义：</b>
- * 返回数组、{@link List}、{@link CharSequence}（如 String）的长度。
- * 支持 null、数组、列表、字符串等常见类型。
+ * 返回数组、{@link List} 的长度。
+ * 支持 null、数组、列表等常见类型。
  * </p>
  *
  * <p><b>返回：</b>
@@ -44,10 +44,8 @@ public class ArrLenHandler implements SyscallHandler {
             len = list.size();
         } else if (arrObj.getClass().isArray()) {
             len = Array.getLength(arrObj);
-        } else if (arrObj instanceof CharSequence s) {
-            len = s.length();
         } else {
-            throw new IllegalArgumentException("ARR_LEN: not an array/list/string: " + arrObj);
+            throw new IllegalArgumentException("ARR_LEN: not an array/list: " + arrObj);
         }
 
         stack.push(len); // 压回长度（int）

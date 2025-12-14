@@ -1,6 +1,6 @@
 /**
 @module os_array
-@summary 数组操作的过程式稳定层。
+@summary 数组/列表操作的过程式稳定层。
 */
 module: os_array
 
@@ -8,7 +8,7 @@ module: os_array
 
     /**
     @function length
-    @summary 获取数组、列表或字符串的长度；null 返回 0。
+    @summary 获取数组或列表的长度；null 返回 0。
     */
     function: length
         params:

@@ -54,6 +54,9 @@ public final class BuiltinTypeRegistry {
         t.put("void", BuiltinType.VOID);      // 无返回值类型
         // 任意类型（万能类型，类似 dynamic 或 any）
         t.put("any", BuiltinType.ANY);        // 任意类型
+        // 临时兼容：标准库中大量使用 map 作为返回类型注解，但目前编译器未实现一等 Map 类型。
+        // 先将 map 视为 any，避免签名登记阶段系统性降级与误报。
+        t.put("map", BuiltinType.ANY);
         // 构建只读映射，防止外部修改
         BUILTIN_TYPES = Collections.unmodifiableMap(t);
     }

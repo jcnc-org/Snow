@@ -982,9 +982,9 @@ public final class SyscallOpCode {
     /**
      * 兼容式获取当前时间（秒 + 微秒 部分）。
      *
-     * <p><b>Stack</b>：入参 {@code ()} → 出参 {@code (sec:long, usec:int)}</p>
-     * <p><b>语义</b>：返回自 Unix 纪元（1970-01-01T00:00:00Z）以来的秒数（{@code sec}）和当前秒内的微秒部分（{@code usec}, 0..999_999）。</p>
-     * <p><b>返回</b>：成功返回两个值：{@code sec:long} 和 {@code usec:int}（注意压栈顺序由实现约定）。</p>
+     * <p><b>Stack</b>：入参 {@code ()} → 出参 {@code (pair:any)}</p>
+     * <p><b>语义</b>：返回 {@code [sec:long, usec:int]}，其中 sec 为自 Unix 纪元以来的秒数，usec 为当前秒内微秒部分（0..999_999）。</p>
+     * <p><b>返回</b>：成功返回一个二元数组（Object[]）。</p>
      * <p><b>异常</b>：通常不抛出异常，但实现可能在极特殊环境下抛出运行时异常。</p>
      */
     public static final int TIMEOFDAY = 0x1702;
@@ -1007,9 +1007,9 @@ public final class SyscallOpCode {
      *
      * <p><b>Stack</b>：入参 {@code (arr:any)} → 出参 {@code (len:int)}</p>
      *
-     * <p><b>语义</b>：返回数组/列表/字符串的长度。
+     * <p><b>语义</b>：返回数组/列表的长度。
      * <ul>
-     *   <li>支持 {@link java.util.List}、原生 Java 数组、{@link CharSequence}</li>
+     *   <li>支持 {@link java.util.List}、原生 Java 数组</li>
      *   <li>若为 {@code null} 则视为长度 0</li>
      * </ul>
      * </p>
@@ -1271,5 +1271,35 @@ public final class SyscallOpCode {
      * <p><b>异常</b>：收集平台级指标时若遇到权限或平台差异，处理器会忽略这些额外项并仍返回 JVM heap 信息；因此通常不会向上抛出异常。</p>
      */
     public static final int MEMINFO = 0x1906;
+    // endregion
+
+    // region String/Text Runtime Builtins (0x1A00 – 0x1AFF)
+    /**
+     * Returns the UTF-8 byte length of a string.
+     *
+     * <p><b>Stack</b>：入参 {@code (str:string)} → 出参 {@code (len:int)}</p>
+     */
+    public static final int STR_LEN = 0x1A00;
+
+    /**
+     * Encodes a string to UTF-8 bytes.
+     *
+     * <p><b>Stack</b>：入参 {@code (str:string)} → 出参 {@code (bytes:byte[])}</p>
+     */
+    public static final int STR_TO_UTF8 = 0x1A01;
+
+    /**
+     * Decodes UTF-8 bytes into a string.
+     *
+     * <p><b>Stack</b>：入参 {@code (bytes:byte[])} → 出参 {@code (str:string)}</p>
+     */
+    public static final int UTF8_TO_STR = 0x1A02;
+
+    /**
+     * Creates a single-character string from a Unicode code point.
+     *
+     * <p><b>Stack</b>：入参 {@code (codePoint:int)} → 出参 {@code (str:string)}</p>
+     */
+    public static final int STR_FROM_CODEPOINT = 0x1A03;
     // endregion
 }

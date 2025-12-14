@@ -3,10 +3,8 @@
 @summary String 结构体 - 对 string 基本数据类型的封装
 */
 module: std_string
-    import: os_fd
-    import: std_parse
     import: std_array
-    import: os_sys
+    import: os_string
 
     /**
     @struct String
@@ -271,8 +269,7 @@ module: std_string
             declare str: string
         returns: int
         body:
-            declare arr: std_array.Array = new std_array.Array(str)
-            return arr.length()
+            return os_string.length(str)
         end body
     end function
 
@@ -286,8 +283,7 @@ module: std_string
             declare str: string
         returns: boolean
         body:
-            declare arr: std_array.Array = new std_array.Array(str)
-            declare len: int = arr.length()
+            declare len: int = std_string.length(str)
             return len == 0
         end body
     end function
@@ -306,8 +302,7 @@ module: std_string
             declare endIdx: int
         returns: string
         body:
-            declare arr: std_array.Array = new std_array.Array(str)
-            declare len: int = arr.length()
+            declare len: int = std_string.length(str)
 
             // 边界检查
             if start < 0 then
@@ -354,10 +349,8 @@ module: std_string
             declare substr: string
         returns: int
         body:
-            declare strArr: std_array.Array = new std_array.Array(str)
-            declare subArr: std_array.Array = new std_array.Array(substr)
-            declare strLen: int = strArr.length()
-            declare subLen: int = subArr.length()
+            declare strLen: int = std_string.length(str)
+            declare subLen: int = std_string.length(substr)
 
             if subLen == 0 then
                 return 0
@@ -606,8 +599,7 @@ module: std_string
             declare str: string
         returns: string
         body:
-            declare arr: std_array.Array = new std_array.Array(str)
-            declare len: int = arr.length()
+            declare len: int = std_string.length(str)
             if len == 0 then
                 return ""
             end if
@@ -681,8 +673,7 @@ module: std_string
             declare str: string
         returns: string
         body:
-            declare arr: std_array.Array = new std_array.Array(str)
-            declare len: int = arr.length()
+            declare len: int = std_string.length(str)
             if len == 0 then
                 return ""
             end if
@@ -722,8 +713,7 @@ module: std_string
             declare str: string
         returns: string
         body:
-            declare arr: std_array.Array = new std_array.Array(str)
-            declare len: int = arr.length()
+            declare len: int = std_string.length(str)
             if len == 0 then
                 return ""
             end if
@@ -762,33 +752,7 @@ module: std_string
             declare str: string
         returns: byte[]
         body:
-            declare pair: int[] = os_fd.pipe()
-            declare len: int = os_fd.writeBytes(pair[1], str)
-            os_fd.close(pair[1])
-            declare data: any = os_fd.readBytes(pair[0], len)
-            os_fd.close(pair[0])
-
-            declare res: byte[] = []
-
-            // 使用 std_array.Array 包装 data 进行读取
-            declare dataArr: std_array.Array = new std_array.Array(data)
-
-            loop:
-                init:
-                    // XXX: 此处利用 snow 内部机制，先对最后一个下标赋值，可直接扩容至 len 长度
-                    declare i: int = len - 1
-                cond:
-                    i >= 0
-                step:
-                    i = i - 1
-                body:
-                    declare v: any = dataArr.get(i)
-                    // 这里利用原生下标赋值扩容
-                    res[i] = v
-                end body
-            end loop
-
-            return res
+            return os_string.toUtf8(str)
         end body
     end function
 
@@ -801,23 +765,7 @@ module: std_string
             declare bytes: byte[]
         returns: string
         body:
-            declare arr: std_array.Array = new std_array.Array(bytes)
-            declare len: int = arr.length()
-            declare str: string = ""
-            loop:
-                init:
-                    declare i: int = 0
-                cond:
-                    i < len
-                step:
-                    i = i + 1
-                body:
-                    declare ch: int = arr.get(i)
-                    str = str + std_string._charToString(ch)
-                end body
-            end loop
-
-            return str
+            return os_string.fromUtf8(bytes)
         end body
     end function
 
@@ -833,10 +781,8 @@ module: std_string
             declare prefix: string
         returns: boolean
         body:
-            declare strArr: std_array.Array = new std_array.Array(str)
-            declare preArr: std_array.Array = new std_array.Array(prefix)
-            declare strLen: int = strArr.length()
-            declare prefixLen: int = preArr.length()
+            declare strLen: int = std_string.length(str)
+            declare prefixLen: int = std_string.length(prefix)
 
             if prefixLen > strLen then
                 return false
@@ -879,10 +825,8 @@ module: std_string
             declare suffix: string
         returns: boolean
         body:
-            declare strArr: std_array.Array = new std_array.Array(str)
-            declare sufArr: std_array.Array = new std_array.Array(suffix)
-            declare strLen: int = strArr.length()
-            declare suffixLen: int = sufArr.length()
+            declare strLen: int = std_string.length(str)
+            declare suffixLen: int = std_string.length(suffix)
 
             if suffixLen > strLen then
                 return false
@@ -966,12 +910,7 @@ module: std_string
             declare ch: int
         returns: string
         body:
-            // 将 int 转为单字节数组再解码为字符串，避免写入 int 时被 toString() 成数字字符
-            declare b: byte = std_parse.parseByte("" + ch)  // 显式收缩为 byte，避免以 Integer 形式写入
-            declare buf: any = os_sys.randomBytes(1)       // randomBytes(1) → byte[]
-            declare bufArr: std_array.Array = new std_array.Array(buf)
-            bufArr.set(0, b)
-            return "" + buf
+            return os_string.fromCodePoint(ch)
         end body
     end function
 

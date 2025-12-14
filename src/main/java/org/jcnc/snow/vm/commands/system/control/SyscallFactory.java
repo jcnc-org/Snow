@@ -16,6 +16,10 @@ import org.jcnc.snow.vm.commands.system.control.time.ClockGettimeHandler;
 import org.jcnc.snow.vm.commands.system.control.time.NanosleepHandler;
 import org.jcnc.snow.vm.commands.system.control.time.TickMsHandler;
 import org.jcnc.snow.vm.commands.system.control.time.TimeOfDayHandler;
+import org.jcnc.snow.vm.commands.system.control.text.StrFromCodePointHandler;
+import org.jcnc.snow.vm.commands.system.control.text.StrLenHandler;
+import org.jcnc.snow.vm.commands.system.control.text.StrToUtf8Handler;
+import org.jcnc.snow.vm.commands.system.control.text.Utf8ToStrHandler;
 import org.jcnc.snow.vm.engine.SyscallOpCode;
 
 /**
@@ -24,9 +28,9 @@ import org.jcnc.snow.vm.engine.SyscallOpCode;
 public final class SyscallFactory {
 
     /**
-     * 完整的 syscall 表。0x1000 – 0x19FF。
+     * 完整的 syscall 表。0x1000 – 0x1AFF。
      */
-    private static final SyscallHandler[] SYSCALLS = new SyscallHandler[0x1A00];
+    private static final SyscallHandler[] SYSCALLS = new SyscallHandler[0x1B00];
 
     static {
         // ================= 文件 & FD =================
@@ -141,6 +145,12 @@ public final class SyscallFactory {
         SYSCALLS[SyscallOpCode.ERRSTR] = new ErrStrHandler();
         SYSCALLS[SyscallOpCode.ERRNO] = new ErrnoHandler();
         SYSCALLS[SyscallOpCode.MEMINFO] = new MemInfoHandler();
+
+        // ================= 字符串 / 文本（运行时内建） =================
+        SYSCALLS[SyscallOpCode.STR_LEN] = new StrLenHandler();
+        SYSCALLS[SyscallOpCode.STR_TO_UTF8] = new StrToUtf8Handler();
+        SYSCALLS[SyscallOpCode.UTF8_TO_STR] = new Utf8ToStrHandler();
+        SYSCALLS[SyscallOpCode.STR_FROM_CODEPOINT] = new StrFromCodePointHandler();
     }
 
     private SyscallFactory() {

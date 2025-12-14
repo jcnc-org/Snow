@@ -1,0 +1,64 @@
+/**
+@module os_string
+@summary string 的过程式稳定层。
+@description
+    该层只做轻量封装，将底层 string syscall 以稳定 API 暴露给 std 层。
+*/
+module: os_string
+
+    import: string
+
+    /**
+    @function length
+    @summary 返回字符串 UTF-8 字节长度（null 返回 0）。
+    */
+    function: length
+        params:
+            declare str: string
+        returns: int
+        body:
+            return string.length(str)
+        end body
+    end function
+
+    /**
+    @function toUtf8
+    @summary 字符串 UTF-8 编码为 byte[]。
+    */
+    function: toUtf8
+        params:
+            declare str: string
+        returns: byte[]
+        body:
+            return string.toUtf8(str)
+        end body
+    end function
+
+    /**
+    @function fromUtf8
+    @summary UTF-8 byte[] 解码为字符串。
+    */
+    function: fromUtf8
+        params:
+            declare bytes: byte[]
+        returns: string
+        body:
+            return string.fromUtf8(bytes)
+        end body
+    end function
+
+    /**
+    @function fromCodePoint
+    @summary Unicode code point 转单字符字符串。
+    */
+    function: fromCodePoint
+        params:
+            declare codePoint: int
+        returns: string
+        body:
+            return string.fromCodePoint(codePoint)
+        end body
+    end function
+
+end module
+

@@ -1,0 +1,73 @@
+/**
+@module string
+@summary 字符串/文本运行时内建系统调用模块。
+@syscalls
+  0x1A00 STR_LEN              返回字符串 UTF-8 字节长度
+  0x1A01 STR_TO_UTF8          字符串 UTF-8 编码为 byte[]
+  0x1A02 UTF8_TO_STR          UTF-8 byte[] 解码为字符串
+  0x1A03 STR_FROM_CODEPOINT   Unicode code point 转单字符字符串
+*/
+module: string
+
+    /**
+    @function length
+    @summary 返回字符串 UTF-8 编码后的字节长度。
+    @param str 源字符串
+    @returns UTF-8 字节长度（int）；str 为 null 时返回 0
+    */
+    function: length
+        params:
+            declare str: string
+        returns: int
+        body:
+            return syscall("0x1A00", str)
+        end body
+    end function
+
+    /**
+    @function toUtf8
+    @summary 字符串编码为 UTF-8 byte[]。
+    @param str 源字符串
+    @returns UTF-8 字节数组（byte[]）；str 为 null 时返回空数组
+    */
+    function: toUtf8
+        params:
+            declare str: string
+        returns: byte[]
+        body:
+            return syscall("0x1A01", str)
+        end body
+    end function
+
+    /**
+    @function fromUtf8
+    @summary UTF-8 byte[] 解码为字符串。
+    @param bytes UTF-8 字节数组
+    @returns 解码后的字符串；bytes 为 null 时返回 ""
+    */
+    function: fromUtf8
+        params:
+            declare bytes: byte[]
+        returns: string
+        body:
+            return syscall("0x1A02", bytes)
+        end body
+    end function
+
+    /**
+    @function fromCodePoint
+    @summary 将 Unicode code point 转为单字符字符串。
+    @param codePoint Unicode code point（int）
+    @returns 单字符字符串
+    */
+    function: fromCodePoint
+        params:
+            declare codePoint: int
+        returns: string
+        body:
+            return syscall("0x1A03", codePoint)
+        end body
+    end function
+
+end module
+

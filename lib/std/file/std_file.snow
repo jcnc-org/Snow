@@ -81,7 +81,8 @@ module: std_file
                     body:
                         declare chunk: any = os_fd.readBytes(fd, 4096)
 
-                        // os_fd.readBytes 返回 -1 表示 EOF
+                        // os_fd.readBytes 正常返回 byte[]；长度为 0 表示 EOF；
+                        // 若发生系统调用错误，运行时可能返回 -1（int）。
                         declare chunkStr: string = "" + chunk
                         if chunkStr == "-1" then
                             break

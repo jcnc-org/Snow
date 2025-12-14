@@ -11,11 +11,11 @@ import java.time.Instant;
  * {@code TimeOfDayHandler} 实现 TIMEOFDAY (0x1702) 系统调用，
  * 用于兼容式获取当前时间（秒 + 微秒 部分）。
  *
- * <p><b>Stack</b>：入参 {@code ()} → 出参 {@code (sec:long, usec:int)}</p>
+ * <p><b>Stack</b>：入参 {@code ()} → 出参 {@code (pair:any)}</p>
  *
- * <p><b>语义</b>：返回自 Unix 纪元（1970-01-01T00:00:00Z）以来的秒数（{@code sec}）和当前秒内的微秒部分（{@code usec}, 0..999_999）。</p>
+ * <p><b>语义</b>：返回 {@code [sec:long, usec:int]}，其中 sec 为自 Unix 纪元以来的秒数，usec 为当前秒内微秒部分（0..999_999）。</p>
  *
- * <p><b>返回</b>：成功返回两个值：{@code sec:long} 和 {@code usec:int}（注意压栈顺序由实现约定）。</p>
+ * <p><b>返回</b>：成功返回一个二元数组（Object[]），元素为 {@code sec} 与 {@code usec}。</p>
  *
  * <p><b>异常</b>：通常不抛出异常，但实现可能在极特殊环境下抛出运行时异常。</p>
  */
@@ -33,9 +33,7 @@ public class TimeOfDayHandler implements SyscallHandler {
         // usec: int -> 当前秒内的微秒部分（0..999_999）
         int usec = now.getNano() / 1_000; // 将纳秒转换为微秒
 
-        // 按表格约定返回 sec:long, usec:int
-        // 这里我们先 push sec (Long)，再 push usec (Integer) —— 因此栈顶为 usec。
-        stack.push(sec);
-        stack.push(usec);
+        // Return a single composite value to keep syscall ABI single-return.
+        stack.push(new Object[]{sec, usec});
     }
 }

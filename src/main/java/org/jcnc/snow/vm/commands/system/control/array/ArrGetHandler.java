@@ -13,9 +13,9 @@ import org.jcnc.snow.vm.module.OperandStack;
  *
  * <p><b>语义</b>：获取数组/列表在指定索引位置的元素。</p>
  *
- * <p><b>支持</b>：{@link java.util.List}、原生 Java 数组、{@link CharSequence}。</p>
+ * <p><b>支持</b>：{@link java.util.List}、原生 Java 数组。</p>
  *
- * <p><b>返回</b>：对应索引位置的元素；若是 {@link CharSequence}，返回 {@code char} 或其包装形式。</p>
+ * <p><b>返回</b>：对应索引位置的元素。</p>
  *
  * <p><b>异常</b>：
  * <ul>

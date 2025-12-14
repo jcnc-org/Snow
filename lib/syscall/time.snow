@@ -49,7 +49,7 @@ module: time
     /**
     @function timeofday_raw
     @summary 兼容式获取 (sec, usec)。
-    @returns 成功返回两个值：sec:long 和 usec:int（注意压栈顺序由实现约定）
+    @returns 成功返回一个二元数组：[sec:long, usec:int]
     */
     function: timeofday_raw
         returns: any

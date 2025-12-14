@@ -10,6 +10,7 @@ import org.jcnc.snow.compiler.ir.instruction.CallInstruction;
 import org.jcnc.snow.compiler.ir.value.IRConstant;
 import org.jcnc.snow.compiler.ir.value.IRVirtualRegister;
 import org.jcnc.snow.vm.engine.VMOpCode;
+import org.jcnc.snow.vm.engine.SyscallTable;
 
 import java.util.List;
 import java.util.Locale;
@@ -233,52 +234,6 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
     }
 
     /**
-     * 判断 syscall 子命令返回值类型的前缀。
-     *
-     * @param subcmd syscall 子命令字符串
-     * @return 类型前缀，'R'（引用型）、'L'（长整型）或 'I'（整型）
-     */
-    private char syscallReturnPrefix(String subcmd) {
-        String s = subcmd.toUpperCase(Locale.ROOT);
-        return switch (s) {
-            // 返回引用（字符串/字节数组/Map/数组等）
-            case "0X1802", "ARR_GET",
-                 "0X1811", "ARR_POP",
-                 "0X1813", "ARR_REMOVE",
-                 "0X1001", "READ",
-                 "0X1005", "STAT",
-                 "0X1006", "FSTAT",
-                 "0X1904", "ERRSTR",
-                 "0X1200", "STDIN_READ",
-                 "0X100A", "PIPE",
-                 "0X1010", "READLINK",
-                 "0X1103", "GETCWD",
-                 "0X1104", "READDIR",
-                 "0X1300", "SELECT",
-                 "0X1303", "EPOLL_WAIT",
-                 "0X1304", "IO_WAIT",
-                 "0X1406", "RECV",
-                 "0X1408", "RECVFROM",
-                 "0X140C", "GETPEERNAME",
-                 "0X140D", "GETSOCKNAME",
-                 "0X140E", "GETADDRINFO",
-                 "0X140B", "GETSOCKOPT",
-                 "0X1507", "THREAD_JOIN",
-                 "0X1900", "STDERR_WRITE",
-                 "0X1906", "MEMINFO",
-                 "0X1903", "RANDOM_BYTES" -> 'R';
-
-            // 返回 long
-            case "0X1003", "SEEK",
-                 "0X1700", "CLOCK_GETTIME",
-                 "0X1703", "TICK_MS" -> 'L';
-
-            // 默认返回 int
-            default -> 'I';
-        };
-    }
-
-    /**
      * 生成 syscall 的 VM 指令。首参数为子命令字符串，剩余参数以引用形式压栈。
      * 若有返回值，根据子命令选择返回类型和 STORE 指令。
      *
@@ -292,6 +247,7 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
         if (args.isEmpty()) throw new IllegalStateException("[CallGenerator] syscall 至少需要一个子命令");
 
         String subcmd = resolveSyscallSubcmd(args.getFirst(), fn);
+        int opcode = SyscallTable.resolveOpcode(subcmd);
 
         // 压参数（全按引用）
         for (int i = 1; i < args.size(); i++) {
@@ -299,19 +255,15 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
         }
 
         // 发出 SYSCALL
-        out.emit(VMOpCode.SYSCALL + " " + subcmd);
+        out.emit(VMOpCode.SYSCALL + " " + String.format(Locale.ROOT, "0x%04X", opcode));
 
         // 处理返回值
         IRVirtualRegister dest = ins.getDest();
         if (dest != null) {
             Integer slot = slotMap.get(dest);
             if (slot == null) throw new IllegalStateException("[CallGenerator] syscall 未找到目标槽位");
-            char p = syscallReturnPrefix(subcmd);
-            switch (p) {
-                case 'R' -> out.emit(OpHelper.opcode("R_STORE") + " " + slot);
-                case 'L' -> out.emit(OpHelper.opcode("L_STORE") + " " + slot);
-                default -> out.emit(OpHelper.opcode("I_STORE") + " " + slot);
-            }
+            char p = SyscallTable.returnPrefix(opcode);
+            out.emit(OpHelper.opcode(p + "_STORE") + " " + slot);
             out.setSlotType(slot, p);
         }
     }
