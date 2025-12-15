@@ -4,9 +4,14 @@ import org.jcnc.snow.cli.api.CLICommand;
 import org.jcnc.snow.pkg.model.Project;
 import org.jcnc.snow.pkg.tasks.CompileTask;
 
+import java.io.ByteArrayOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -61,6 +66,71 @@ public final class TestAllCommand implements CLICommand {
     private static final String BRIGHT_CYAN = "\u001B[96m";
     private static final String BRIGHT_GRN = "\u001B[92m";
 
+    private enum OutputMode {
+        NONE,
+        FAIL,
+        ALWAYS
+    }
+
+    private record OutputSection(String title, List<String> cmd, String stdout, String stderr, boolean truncated) {
+    }
+
+    private record DemoRunResult(int exitCode, List<OutputSection> sections) {
+    }
+
+    private record CapturedResult<T>(T value, String stdout, String stderr, boolean truncated) {
+    }
+
+    private static final class BoundedOutputStream extends OutputStream {
+        private final long maxBytes;
+        private final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        private long written = 0;
+        private boolean truncated = false;
+
+        private BoundedOutputStream(long maxBytes) {
+            this.maxBytes = Math.max(0, maxBytes);
+        }
+
+        @Override
+        public void write(int b) {
+            if (maxBytes == 0) {
+                truncated = true;
+                return;
+            }
+            if (written < maxBytes) {
+                buffer.write(b);
+            } else {
+                truncated = true;
+            }
+            written++;
+        }
+
+        @Override
+        public void write(byte[] b, int off, int len) {
+            if (b == null || len <= 0) return;
+            if (maxBytes == 0) {
+                truncated = true;
+                written += len;
+                return;
+            }
+            long remaining = maxBytes - Math.min(written, maxBytes);
+            if (remaining > 0) {
+                int toWrite = (int) Math.min(remaining, len);
+                buffer.write(b, off, toWrite);
+            }
+            if (written + len > maxBytes) truncated = true;
+            written += len;
+        }
+
+        public boolean truncated() {
+            return truncated;
+        }
+
+        public String asString() {
+            return buffer.toString(StandardCharsets.UTF_8);
+        }
+    }
+
     /**
      * 跳过当前 demo 的全局标志，监听输入线程通过 [Enter] 设置
      */
@@ -84,6 +154,68 @@ public final class TestAllCommand implements CLICommand {
      */
     private static boolean isWindows() {
         return System.getProperty("os.name", "").toLowerCase().contains("win");
+    }
+
+    private static void printStreamBlock(PrintStream out, String name, String content, boolean truncated) {
+        out.println("  [" + name + "]");
+        if (content == null || content.isBlank()) {
+            out.println("    (no output)");
+            return;
+        }
+        String normalized = content.replace("\r\n", "\n").replace("\r", "\n");
+        String[] lines = normalized.split("\n", -1);
+        int last = lines.length;
+        while (last > 0 && lines[last - 1].isEmpty()) last--;
+        for (int i = 0; i < last; i++) {
+            out.println("    | " + lines[i]);
+        }
+        if (truncated) {
+            out.println("    | ...(truncated)...");
+        }
+    }
+
+    private static void printSection(PrintStream out, String demoName, OutputSection sec) {
+        out.println(BRIGHT_CYAN + "----- " + demoName + " :: " + sec.title() + " -----" + RESET);
+        if (sec.cmd() != null && !sec.cmd().isEmpty()) {
+            out.println("  $ " + String.join(" ", quoteArgs(sec.cmd())));
+        }
+        printStreamBlock(out, "stdout", sec.stdout(), sec.truncated());
+        printStreamBlock(out, "stderr", sec.stderr(), sec.truncated());
+        out.println(BRIGHT_CYAN + "----- end " + demoName + " :: " + sec.title() + " -----" + RESET);
+    }
+
+    private static CapturedResult<Integer> captureStdoutStderr(Callable<Integer> action, long maxBytes) throws Exception {
+        PrintStream prevOut = System.out;
+        PrintStream prevErr = System.err;
+
+        BoundedOutputStream outBuf = new BoundedOutputStream(maxBytes);
+        BoundedOutputStream errBuf = new BoundedOutputStream(maxBytes);
+
+        try (PrintStream psOut = new PrintStream(outBuf, true, StandardCharsets.UTF_8);
+             PrintStream psErr = new PrintStream(errBuf, true, StandardCharsets.UTF_8)) {
+            System.setOut(psOut);
+            System.setErr(psErr);
+            int rc = action.call();
+            return new CapturedResult<>(rc, outBuf.asString(), errBuf.asString(), outBuf.truncated() || errBuf.truncated());
+        } finally {
+            System.setOut(prevOut);
+            System.setErr(prevErr);
+        }
+    }
+
+    private static void pump(InputStream in, BoundedOutputStream sink, PrintStream streamOut) {
+        byte[] buf = new byte[4096];
+        try (in) {
+            int n;
+            while ((n = in.read(buf)) >= 0) {
+                sink.write(buf, 0, n);
+                if (streamOut != null) {
+                    streamOut.print(new String(buf, 0, n, StandardCharsets.UTF_8));
+                    streamOut.flush();
+                }
+            }
+        } catch (IOException ignore) {
+        }
     }
 
     /**
@@ -141,6 +273,9 @@ public final class TestAllCommand implements CLICommand {
         System.out.println("  --stop-on-failure        首次失败/异常时中止（超时不触发）");
         System.out.println("  --timeout=<ms>           设置单个 Demo 超时（毫秒，默认 2000）");
         System.out.println("  --snow-path=<path|auto>  指定 snow(.exe) 路径；auto 自动在 target/release/**/bin 下查找");
+        System.out.println("  --show-output=<mode>     输出分块：always | fail | none（默认：verbose=always，否则=fail）");
+        System.out.println("  --output-max-kb=<n>      每个 stdout/stderr 最大采集大小（KiB，默认 256；0=不采集）");
+        System.out.println("  --stream-output          保留旧行为：实时打印输出（不分块）");
         System.out.println("  测试时可随时按 [Enter] 跳过当前 demo，继续后续测试");
         System.out.println();
         System.out.println("Examples:");
@@ -151,12 +286,18 @@ public final class TestAllCommand implements CLICommand {
 
     @Override
     public int execute(String[] args) throws Exception {
+        final PrintStream controlOut = System.out;
+        final PrintStream controlErr = System.err;
+
         boolean runAfterCompile = true;
         boolean verbose = false;
         boolean stopOnFailure = false;
         String externalSnowPath = null;
         boolean requestedAuto = false; // 用户是否传了 auto
         long timeoutMs = DEFAULT_TIMEOUT_MS;
+        OutputMode outputMode = null;   // default depends on --verbose
+        boolean streamOutput = false;   // legacy live streaming (not block formatted)
+        long outputMaxBytes = 256 * 1024; // 256KiB per stream
 
         // 支持多个 --dir，按声明顺序去重保序
         Set<Path> demoRoots = new LinkedHashSet<>();
@@ -179,12 +320,38 @@ public final class TestAllCommand implements CLICommand {
                     System.err.println(RED + "Invalid timeout value: " + arg + RESET);
                     return 1;
                 }
+            } else if (arg.startsWith("--show-output=")) {
+                String v = arg.substring("--show-output=".length()).trim().toLowerCase(Locale.ROOT);
+                outputMode = switch (v) {
+                    case "always" -> OutputMode.ALWAYS;
+                    case "fail", "failure" -> OutputMode.FAIL;
+                    case "none", "never" -> OutputMode.NONE;
+                    default -> null;
+                };
+                if (outputMode == null) {
+                    System.err.println(RED + "Invalid --show-output value: " + arg + RESET);
+                    return 1;
+                }
+            } else if (arg.startsWith("--output-max-kb=")) {
+                try {
+                    long kb = Long.parseLong(arg.substring("--output-max-kb=".length()).trim());
+                    outputMaxBytes = Math.max(0, kb) * 1024L;
+                } catch (NumberFormatException e) {
+                    System.err.println(RED + "Invalid --output-max-kb value: " + arg + RESET);
+                    return 1;
+                }
+            } else if ("--stream-output".equals(arg)) {
+                streamOutput = true;
             } else if (arg.startsWith("--dir=")) {
                 String dir = arg.substring("--dir=".length()).trim();
                 if (!dir.isEmpty()) {
                     demoRoots.add(Paths.get(dir));
                 }
             }
+        }
+
+        if (outputMode == null) {
+            outputMode = verbose ? OutputMode.ALWAYS : OutputMode.FAIL;
         }
 
         // 2. 若未显式指定 --dir，则回退默认目录 playground/Demo/DemoA
@@ -286,7 +453,7 @@ public final class TestAllCommand implements CLICommand {
                     String line = reader.readLine();
                     if (line == null) break;
                     skipCurrent = true;
-                    System.err.println(BRIGHT_YEL + "[Enter] Skip current demo and continue..." + RESET);
+                    controlErr.println(BRIGHT_YEL + "[Enter] Skip current demo and continue..." + RESET);
                 }
             } catch (Exception ignore) {
             }
@@ -306,19 +473,22 @@ public final class TestAllCommand implements CLICommand {
             ExecutorService executor = Executors.newSingleThreadExecutor();
 
             try {
-                Callable<Integer> task;
+                Callable<DemoRunResult> task;
 
                 // 8.1 优先尝试外部 CLI 模式，否则回退内部 CompileTask
                 if (hasCloud && externalSnowPath != null) {
                     String finalSnow = externalSnowPath;
                     boolean finalRun = runAfterCompile;
                     boolean finalVerbose = verbose;
-                    task = () -> runExternalSnowBuildAndMaybeRun(finalSnow, demoDir, finalRun, finalVerbose);
+                    boolean finalStream = streamOutput;
+                    long finalOutputMaxBytes = outputMaxBytes;
+                    task = () -> runExternalSnowBuildAndMaybeRun(finalSnow, demoDir, finalRun, finalVerbose, finalStream, finalOutputMaxBytes);
                 } else {
                     if (!hasCloud && externalSnowPath != null && verbose) {
                         System.out.println(BRIGHT_CYAN + "No project.cloud found; fallback to internal CompileTask for "
                                 + demoName + RESET);
                     }
+                    boolean finalStreamOutput = streamOutput;
                     List<String> compileArgs = new ArrayList<>();
                     compileArgs.add("-d");
                     compileArgs.add(demoDir.toString());
@@ -326,14 +496,26 @@ public final class TestAllCommand implements CLICommand {
                     compileArgs.add("target/" + demoName);
                     if (runAfterCompile) compileArgs.add("run");
 
-                    task = () -> new CompileTask(
-                            Project.fromFlatMap(Collections.emptyMap()),
-                            compileArgs.toArray(new String[0])
-                    ).execute(compileArgs.toArray(new String[0]));
+                    long finalOutputMaxBytes = outputMaxBytes;
+                    task = () -> {
+                        if (finalStreamOutput) {
+                            int rc = new CompileTask(
+                                    Project.fromFlatMap(Collections.emptyMap()),
+                                    compileArgs.toArray(new String[0])
+                            ).execute(compileArgs.toArray(new String[0]));
+                            return new DemoRunResult(rc, List.of());
+                        }
+                        CapturedResult<Integer> cap = captureStdoutStderr(() -> new CompileTask(
+                                Project.fromFlatMap(Collections.emptyMap()),
+                                compileArgs.toArray(new String[0])
+                        ).execute(compileArgs.toArray(new String[0])), finalOutputMaxBytes);
+                        OutputSection sec = new OutputSection("internal CompileTask", List.copyOf(compileArgs), cap.stdout(), cap.stderr(), cap.truncated());
+                        return new DemoRunResult(cap.value(), List.of(sec));
+                    };
                 }
 
-                Future<Integer> future = executor.submit(task);
-                int result = 0;
+                Future<DemoRunResult> future = executor.submit(task);
+                DemoRunResult result = null;
 
                 // 8.2 支持超时与按 Enter 跳过逻辑
                 try {
@@ -346,9 +528,9 @@ public final class TestAllCommand implements CLICommand {
                             if (skipCurrent) {
                                 future.cancel(true);
                                 if (verbose) {
-                                    System.out.println(YELLOW + "! " + demoName + " SKIPPED by Enter" + RESET);
+                                    controlOut.println(YELLOW + "! " + demoName + " SKIPPED by Enter" + RESET);
                                 } else {
-                                    System.out.print(BRIGHT_YEL + "S" + RESET);
+                                    controlOut.print(BRIGHT_YEL + "S" + RESET);
                                 }
                                 break;
                             }
@@ -361,9 +543,9 @@ public final class TestAllCommand implements CLICommand {
                 } catch (TimeoutException te) {
                     future.cancel(true);
                     if (!verbose) {
-                        System.out.print(BRIGHT_YEL + "?" + RESET);
+                        controlOut.print(BRIGHT_YEL + "?" + RESET);
                     } else {
-                        System.out.println(BOLD + BRIGHT_YEL + "✗ " + demoName
+                        controlOut.println(BOLD + BRIGHT_YEL + "✗ " + demoName
                                 + " TIMEOUT > " + timeoutMs + "ms" + RESET);
                     }
                     failed.incrementAndGet();
@@ -373,17 +555,29 @@ public final class TestAllCommand implements CLICommand {
 
                 if (skipCurrent) continue; // 跳到下一个 demo
 
-                if (result == 0) {
-                    if (!verbose) System.out.print(BRIGHT_GRN + "." + RESET);
-                    else System.out.println(BOLD + BRIGHT_RED + "✓ " + demoName + " PASSED" + RESET);
+                int exitCode = (result == null) ? 1 : result.exitCode();
+                boolean showOutput = verbose && switch (outputMode) {
+                    case NONE -> false;
+                    case FAIL -> exitCode != 0;
+                    case ALWAYS -> true;
+                };
+                if (showOutput && result != null && !streamOutput) {
+                    for (OutputSection sec : result.sections()) {
+                        printSection(controlOut, demoName, sec);
+                    }
+                }
+
+                if (exitCode == 0) {
+                    if (!verbose) controlOut.print(BRIGHT_GRN + "." + RESET);
+                    else controlOut.println(BOLD + BRIGHT_GRN + "✓ " + demoName + " PASSED" + RESET);
                     passed.incrementAndGet();
                 } else {
-                    if (!verbose) System.out.print(RED + "F" + RESET);
-                    else System.out.println(BOLD + RED + "✗ " + demoName + " FAILED (exit=" + result + ")" + RESET);
+                    if (!verbose) controlOut.print(RED + "F" + RESET);
+                    else controlOut.println(BOLD + RED + "✗ " + demoName + " FAILED (exit=" + exitCode + ")" + RESET);
                     failed.incrementAndGet();
                     failedTests.add(demoName);
                     if (stopOnFailure) {
-                        System.out.println("\n\n" + BOLD + RED + "=== Test stopped due to failure ===" + RESET);
+                        controlOut.println("\n\n" + BOLD + RED + "=== Test stopped due to failure ===" + RESET);
                         break;
                     }
                 }
@@ -391,26 +585,26 @@ public final class TestAllCommand implements CLICommand {
             } catch (Exception e) {
                 if (skipCurrent) {
                     if (verbose) {
-                        System.out.println(YELLOW + "! " + demoName + " SKIPPED by Enter" + RESET);
+                        controlOut.println(YELLOW + "! " + demoName + " SKIPPED by Enter" + RESET);
                     } else {
-                        System.out.print(BRIGHT_YEL + "S" + RESET);
+                        controlOut.print(BRIGHT_YEL + "S" + RESET);
                     }
                     continue;
                 }
-                if (!verbose) System.out.print(RED + "E" + RESET);
+                if (!verbose) controlOut.print(RED + "E" + RESET);
                 else
-                    System.out.println(BOLD + RED + "✗ " + demoName + " FAILED with exception: " + e.getMessage() + RESET);
+                    controlOut.println(BOLD + RED + "✗ " + demoName + " FAILED with exception: " + e.getMessage() + RESET);
                 failed.incrementAndGet();
                 failedTests.add(demoName + " (Exception: " + e.getMessage() + ")");
                 if (stopOnFailure) {
-                    System.out.println("\n\n" + BOLD + RED + "=== Test stopped due to exception ===" + RESET);
+                    controlOut.println("\n\n" + BOLD + RED + "=== Test stopped due to exception ===" + RESET);
                     executor.shutdownNow();
                     break;
                 }
             } finally {
                 executor.shutdownNow();
             }
-            System.out.flush();
+            controlOut.flush();
         }
 
         // 9. 停止输入监听线程
@@ -440,22 +634,37 @@ public final class TestAllCommand implements CLICommand {
     /**
      * 在 demo 目录下运行外部 snow 命令：build（必要）+ run（可选）
      */
-    private int runExternalSnowBuildAndMaybeRun(String snowPath, Path demoDir,
-                                                boolean runAfterCompile, boolean verbose) throws Exception {
-        int build = execExternal(snowPath, demoDir, verbose, "build");
-        if (build != 0) return build;
-        if (!runAfterCompile) return 0;
-        return execExternal(snowPath, demoDir, verbose, "run");
+    private DemoRunResult runExternalSnowBuildAndMaybeRun(String snowPath,
+                                                          Path demoDir,
+                                                          boolean runAfterCompile,
+                                                          boolean verbose,
+                                                          boolean streamOutput,
+                                                          long outputMaxBytes) throws Exception {
+        List<OutputSection> sections = new ArrayList<>();
+        OutputSection build = execExternalCaptured(snowPath, demoDir, "build", verbose, streamOutput, outputMaxBytes);
+        sections.add(build);
+        if (build.cmd() == null) return new DemoRunResult(1, sections);
+        int buildExit = extractExit(build.title());
+        if (buildExit != 0) return new DemoRunResult(buildExit, sections);
+        if (!runAfterCompile) return new DemoRunResult(0, sections);
+
+        OutputSection run = execExternalCaptured(snowPath, demoDir, "run", verbose, streamOutput, outputMaxBytes);
+        sections.add(run);
+        return new DemoRunResult(extractExit(run.title()), sections);
     }
 
     /**
      * 执行一条外部 snow 命令（工作目录为 demoDir），支持 verbose 输出。
      */
-    private int execExternal(String snowPath, Path demoDir,
-                             boolean verbose, String... args) throws Exception {
+    private OutputSection execExternalCaptured(String snowPath,
+                                               Path demoDir,
+                                               String subcommand,
+                                               boolean verbose,
+                                               boolean streamOutput,
+                                               long outputMaxBytes) throws Exception {
         List<String> cmd = new ArrayList<>();
         cmd.add(snowPath);
-        Collections.addAll(cmd, args);
+        cmd.add(subcommand);
 
         if (verbose) {
             System.out.println(BRIGHT_CYAN + "CMD (" + demoDir.getFileName() + "): " + String.join(" ", quoteArgs(cmd)) + RESET);
@@ -463,21 +672,48 @@ public final class TestAllCommand implements CLICommand {
 
         ProcessBuilder pb = new ProcessBuilder(cmd);
         pb.directory(demoDir.toFile());
-        pb.redirectErrorStream(true);
+        pb.redirectErrorStream(false);
         Process process = pb.start();
 
-        Thread t = new Thread(() -> {
-            try (BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = r.readLine()) != null) {
-                    if (verbose) System.out.println("  | " + line);
-                }
-            } catch (IOException ignore) {
-            }
-        });
-        t.setDaemon(true);
-        t.start();
+        BoundedOutputStream stdout = new BoundedOutputStream(outputMaxBytes);
+        BoundedOutputStream stderr = new BoundedOutputStream(outputMaxBytes);
 
-        return process.waitFor();
+        PrintStream live = (verbose && streamOutput) ? System.out : null;
+        Thread tOut = new Thread(() -> pump(process.getInputStream(), stdout, live), "snow-stdout");
+        Thread tErr = new Thread(() -> pump(process.getErrorStream(), stderr, live), "snow-stderr");
+        tOut.setDaemon(true);
+        tErr.setDaemon(true);
+        tOut.start();
+        tErr.start();
+
+        int exit;
+        try {
+            exit = process.waitFor();
+        } catch (InterruptedException ie) {
+            process.destroyForcibly();
+            throw ie;
+        } finally {
+            try {
+                tOut.join(200);
+                tErr.join(200);
+            } catch (InterruptedException ignore) {
+            }
+        }
+
+        return new OutputSection(subcommand + " (exit=" + exit + ")", List.copyOf(cmd),
+                stdout.asString(), stderr.asString(), stdout.truncated() || stderr.truncated());
+    }
+
+    private static int extractExit(String title) {
+        // title: "<cmd> (exit=<n>)"
+        int idx = title.lastIndexOf("exit=");
+        if (idx < 0) return 1;
+        int end = title.indexOf(')', idx);
+        String num = (end < 0) ? title.substring(idx + 5) : title.substring(idx + 5, end);
+        try {
+            return Integer.parseInt(num.trim());
+        } catch (NumberFormatException e) {
+            return 1;
+        }
     }
 }
