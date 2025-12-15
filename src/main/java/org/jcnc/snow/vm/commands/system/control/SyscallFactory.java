@@ -12,6 +12,7 @@ import org.jcnc.snow.vm.commands.system.control.console.StdoutWriteHandler;
 import org.jcnc.snow.vm.commands.system.control.fd.*;
 import org.jcnc.snow.vm.commands.system.control.fs.*;
 import org.jcnc.snow.vm.commands.system.control.multiplex.*;
+import org.jcnc.snow.vm.commands.system.control.object.*;
 import org.jcnc.snow.vm.commands.system.control.process.*;
 import org.jcnc.snow.vm.commands.system.control.socket.*;
 import org.jcnc.snow.vm.commands.system.control.sync.*;
@@ -141,6 +142,11 @@ public final class SyscallFactory {
         SYSCALLS[SyscallOpCode.ARR_REMOVE] = new ArrRemoveHandler();
         SYSCALLS[SyscallOpCode.ARR_RESIZE] = new ArrResizeHandler();
         SYSCALLS[SyscallOpCode.ARR_CLEAR]  = new ArrClearHandler();
+
+        // ================= 对象 / 结构体（运行时内建） =================
+        SYSCALLS[SyscallOpCode.OBJ_NEW] = new ObjNewHandler();
+        SYSCALLS[SyscallOpCode.OBJ_GET] = new ObjGetHandler();
+        SYSCALLS[SyscallOpCode.OBJ_SET] = new ObjSetHandler();
 
         // ================= 系统信息 =================
         SYSCALLS[SyscallOpCode.GETENV] = new GetEnvHandler();

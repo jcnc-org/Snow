@@ -7,6 +7,7 @@ import org.jcnc.snow.vm.runtime.SnowBytesObject;
 import org.jcnc.snow.vm.runtime.SnowDictObject;
 import org.jcnc.snow.vm.runtime.SnowRuntime;
 import org.jcnc.snow.vm.runtime.SnowStringObject;
+import org.jcnc.snow.vm.runtime.SnowStructObject;
 import org.jcnc.snow.vm.value.RefValue;
 
 import java.nio.charset.StandardCharsets;
@@ -25,13 +26,16 @@ import java.util.Arrays;
 public class SyscallUtils {
 
     /**
-     * 全局 errno（进程/虚拟机级），-1 表示最近一次系统调用失败
+     * 最近一次系统调用的 errno（线程级），-1 表示失败。
+     *
+     * <p>注意：syscall 可能在并发线程中执行；errno/errstr 必须是线程局部的，
+     * 否则不同线程的错误状态会互相覆盖，导致 std 层不可组合。</p>
      */
-    private static volatile int LAST_ERRNO = 0;
+    private static final ThreadLocal<Integer> LAST_ERRNO = ThreadLocal.withInitial(() -> 0);
     /**
-     * 全局错误字符串（进程/虚拟机级）
+     * 最近一次系统调用的错误字符串（线程级）。
      */
-    private static volatile String LAST_ERRSTR = null;
+    private static final ThreadLocal<String> LAST_ERRSTR = new ThreadLocal<>();
     private SyscallUtils() {
     }
 
@@ -41,7 +45,7 @@ public class SyscallUtils {
      * @return 错误码，0 表示无错，-1 表示失败
      */
     public static int getErrno() {
-        return LAST_ERRNO;
+        return LAST_ERRNO.get();
     }
 
     /**
@@ -50,15 +54,25 @@ public class SyscallUtils {
      * @return 错误描述（如无错可能为 null）
      */
     public static String getErrStr() {
-        return LAST_ERRSTR;
+        return LAST_ERRSTR.get();
     }
 
     /**
      * 清空全局错误状态（errno=0，errstr=null）。
      */
     public static void clearErr() {
-        LAST_ERRNO = 0;
-        LAST_ERRSTR = null;
+        LAST_ERRNO.set(0);
+        LAST_ERRSTR.set(null);
+    }
+
+    /**
+     * 记录错误（errno=-1）与错误字符串，不修改操作数栈。
+     */
+    public static void recordErr(Exception e) {
+        LAST_ERRNO.set(-1);
+        LAST_ERRSTR.set((e == null)
+                ? "Unknown syscall error"
+                : (e.getClass().getSimpleName() + ": " + e.getMessage()));
     }
 
     /**
@@ -73,10 +87,7 @@ public class SyscallUtils {
      * @param e     异常对象（可为 null）
      */
     public static void pushErr(OperandStack stack, Exception e) {
-        LAST_ERRNO = -1;
-        LAST_ERRSTR = (e == null)
-                ? "Unknown syscall error"
-                : (e.getClass().getSimpleName() + ": " + e.getMessage());
+        recordErr(e);
         stack.push(-1);
     }
 
@@ -145,6 +156,7 @@ public class SyscallUtils {
                 yield sb.toString();
             }
             case SnowDictObject d -> d.snapshot().toString();
+            case SnowStructObject s -> s.typeName() + s.snapshot();
         };
     }
 }

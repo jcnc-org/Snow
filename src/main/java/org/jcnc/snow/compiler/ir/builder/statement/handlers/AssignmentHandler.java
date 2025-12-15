@@ -141,16 +141,15 @@ public class AssignmentHandler implements IStatementHandler {
      * 根据字段类型选择合适的 __setindex_* 通道。
      */
     private String selectSetIndexFunc(String fieldType) {
-        if (fieldType == null || fieldType.isBlank()) return "__setindex_r";
+        if (fieldType == null || fieldType.isBlank()) return "__obj_setindex_r";
         return switch (fieldType.toLowerCase(Locale.ROOT)) {
-            // Struct instance storage is an object (ArrayValue), not byte[]; byte fields must not route to BYTES_SET.
-            case "byte" -> "__struct_setindex_b";
-            case "short" -> "__setindex_s";
-            case "int", "integer", "bool", "boolean" -> "__setindex_i";
-            case "long" -> "__setindex_l";
-            case "float" -> "__setindex_f";
-            case "double" -> "__setindex_d";
-            default -> "__setindex_r";
+            case "byte" -> "__obj_setindex_b";
+            case "short" -> "__obj_setindex_s";
+            case "int", "integer", "bool", "boolean" -> "__obj_setindex_i";
+            case "long" -> "__obj_setindex_l";
+            case "float" -> "__obj_setindex_f";
+            case "double" -> "__obj_setindex_d";
+            default -> "__obj_setindex_r";
         };
     }
 }

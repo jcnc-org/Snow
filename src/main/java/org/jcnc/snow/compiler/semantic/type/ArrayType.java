@@ -26,8 +26,10 @@ public record ArrayType(
      */
     @Override
     public boolean isCompatible(Type other) {
-        if (!(other instanceof ArrayType(Type type))) return false;
-        return elementType.isCompatible(type);
+        if (!(other instanceof ArrayType(Type otherElem))) return false;
+        // Arrays are invariant. The only special case is any[], which acts as a dynamic array surface.
+        if (elementType == BuiltinType.ANY) return true;
+        return Objects.equals(elementType, otherElem);
     }
 
     /**

@@ -291,7 +291,7 @@ public class CallExpressionAnalyzer implements ExpressionAnalyzer {
             case STRING -> BuiltinType.STRING;
             case BYTES -> BytesType.INSTANCE;
             case ARRAY -> new ArrayType(BuiltinType.ANY);
-            case DICT, ANY -> BuiltinType.ANY;
+            case DICT, STRUCT, ANY -> BuiltinType.ANY;
         };
     }
 }

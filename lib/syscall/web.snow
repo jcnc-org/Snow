@@ -80,15 +80,18 @@ module: web
 
     /**
     @function accept
-    @summary 在监听套接字上接受一个新的连接，返回新套接字和对端地址。
+    @summary 在监听套接字上接受一个新的连接，返回新连接的文件描述符。
     @param fd 文件描述符
-    @returns 新连接的文件描述符，以及对端地址和端口
+    @returns 新连接的文件描述符（int）
     @throws Exception 无连接可接受、I/O 失败时抛出异常
+    @details
+        Snow 当前的 ACCEPT syscall 仅返回 cfd（新连接 fd）。
+        若需要对端地址/端口，请使用 getPeerName / getSockName。
     */
     function: accept
         params:
             declare fd: int
-        returns: any
+        returns: int
         body:
             return syscall("0x1403", fd)
         end body

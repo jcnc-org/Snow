@@ -148,7 +148,8 @@ public final class ValueInterop {
             // and to preserve reference identity across stores/loads.
             case SnowBytesObject _,
                  SnowArrayObject _,
-                 SnowDictObject _ -> new RefValue(objectId);
+                 SnowDictObject _,
+                 SnowStructObject _ -> new RefValue(objectId);
         };
     }
 }

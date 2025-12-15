@@ -49,7 +49,7 @@ public class IfAnalyzer implements StatementAnalyzer<IfNode> {
         // 对条件表达式执行类型分析
         Type condType = exprAnalyzer.analyze(ctx, mi, fn, locals, ifn.condition());
         // 判断条件类型是否为 boolean，否则报错
-        if (TypeUtils.isLogic(condType)) {
+        if (!TypeUtils.isLogic(condType)) {
             ctx.getErrors().add(new SemanticError(ifn, "if 条件必须为 boolean"));
         }
 

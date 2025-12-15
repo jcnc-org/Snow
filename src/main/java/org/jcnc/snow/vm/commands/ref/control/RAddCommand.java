@@ -71,13 +71,14 @@ public final class RAddCommand implements Command {
         }
         if (obj instanceof RefValue(int id)) {
             // Delegate to syscall utils (UTF-8 for bytes; readable for arrays/dicts)
-            return switch (SnowRuntime.get().heap().get(id)) {
-                case org.jcnc.snow.vm.runtime.SnowStringObject s -> s.value();
-                case org.jcnc.snow.vm.runtime.SnowBytesObject b -> new String(b.unsafeBytes(), java.nio.charset.StandardCharsets.UTF_8);
-                case org.jcnc.snow.vm.runtime.SnowArrayObject a -> a.snapshot().toString();
-                case org.jcnc.snow.vm.runtime.SnowDictObject d -> d.snapshot().toString();
-            };
-        }
+             return switch (SnowRuntime.get().heap().get(id)) {
+                 case org.jcnc.snow.vm.runtime.SnowStringObject s -> s.value();
+                 case org.jcnc.snow.vm.runtime.SnowBytesObject b -> new String(b.unsafeBytes(), java.nio.charset.StandardCharsets.UTF_8);
+                 case org.jcnc.snow.vm.runtime.SnowArrayObject a -> a.snapshot().toString();
+                 case org.jcnc.snow.vm.runtime.SnowDictObject d -> d.snapshot().toString();
+                 case org.jcnc.snow.vm.runtime.SnowStructObject s -> s.typeName() + s.snapshot();
+             };
+         }
         if (obj.getClass().isArray()) {
             // SyscallUtils handles byte[] specially as UTF-8 and others via Arrays.toString/deepToString
             return SyscallUtils.arrayToString(obj);

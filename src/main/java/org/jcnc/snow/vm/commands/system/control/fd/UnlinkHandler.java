@@ -18,7 +18,7 @@ import java.nio.file.Path;
  * <p>调用约定：</p>
  * <ul>
  *   <li>入参：{@code path:string}</li>
- *   <li>出参：int（0 表示成功）</li>
+ *   <li>出参：无</li>
  * </ul>
  *
  * <p>说明：</p>
@@ -50,8 +50,5 @@ public class UnlinkHandler implements SyscallHandler {
 
         // 删除文件（如果是目录会抛出 DirectoryNotEmptyException）
         Files.delete(path);
-
-        // push 返回值：0 表示成功
-        stack.push(0);
     }
 }

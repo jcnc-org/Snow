@@ -18,7 +18,7 @@ import java.nio.file.StandardOpenOption;
  * </p>
  *
  * <p><b>Stack</b>：
- * 入参 (path:String, length:long) ——> 出参 (rc:int，成功时为 0)
+ * 入参 (path:String, length:long) ——> 出参：无
  * </p>
  *
  * <p><b>语义</b>：
@@ -58,7 +58,5 @@ public class TruncateHandler implements SyscallHandler {
             ch.truncate(length);
         }
 
-        // 成功：压入返回码 0（保持栈平衡，匹配编译器对 syscall 语句的 I_STORE 弹栈行为）
-        stack.push(0);
     }
 }

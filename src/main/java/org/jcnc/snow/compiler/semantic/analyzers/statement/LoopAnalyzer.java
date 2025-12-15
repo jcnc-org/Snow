@@ -54,7 +54,7 @@ public class LoopAnalyzer implements StatementAnalyzer<LoopNode> {
         var condAnalyzer = ctx.getRegistry().getExpressionAnalyzer(ln.cond());
         Type condType = condAnalyzer.analyze(ctx, mi, fn, loopScope, ln.cond());
         // 条件类型必须为 boolean，否则记录错误
-        if (TypeUtils.isLogic(condType)) {
+        if (!TypeUtils.isLogic(condType)) {
             ctx.getErrors().add(new SemanticError(ln, "loop 条件必须为 boolean"));
         }
 

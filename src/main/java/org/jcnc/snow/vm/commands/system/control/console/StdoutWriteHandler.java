@@ -10,6 +10,7 @@ import org.jcnc.snow.vm.runtime.SnowBytesObject;
 import org.jcnc.snow.vm.runtime.SnowDictObject;
 import org.jcnc.snow.vm.runtime.SnowRuntime;
 import org.jcnc.snow.vm.runtime.SnowStringObject;
+import org.jcnc.snow.vm.runtime.SnowStructObject;
 import org.jcnc.snow.vm.value.BoolValue;
 import org.jcnc.snow.vm.value.ByteValue;
 import org.jcnc.snow.vm.value.DoubleValue;
@@ -87,6 +88,7 @@ public class StdoutWriteHandler implements SyscallHandler {
                     case SnowStringObject s -> s.value().getBytes(StandardCharsets.UTF_8);
                     case SnowArrayObject a -> a.snapshot().toString().getBytes(StandardCharsets.UTF_8);
                     case SnowDictObject d -> d.snapshot().toString().getBytes(StandardCharsets.UTF_8);
+                    case SnowStructObject s -> s.snapshot().toString().getBytes(StandardCharsets.UTF_8);
                 };
             }
         };

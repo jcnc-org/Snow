@@ -49,14 +49,21 @@ public class NewHandler implements ExpressionHandler<NewExpressionNode> {
     @Override
     public IRVirtualRegister handle(ExpressionBuilder b, NewExpressionNode node) {
 
-        // 1. 创建实例寄存器，默认初始化为空列表（结构体字段容器）
+        // 1. 创建实例寄存器，并分配 STRUCT 堆对象（固定槽位字段存储）
         IRVirtualRegister dest = b.ctx().newRegister();
         b.ctx().getScope().setRegisterType(dest, node.typeName());
-        InstructionFactory.loadConstInto(b.ctx(), dest, new IRConstant(java.util.List.of()));
+        Map<String, Integer> layout = IRBuilderScope.getStructLayout(node.typeName());
+        int fieldCount = (layout == null) ? node.arguments().size() : layout.size();
+        if (fieldCount < 0) fieldCount = 0;
+
+        IRVirtualRegister typeNameReg = b.ctx().newTempRegister();
+        InstructionFactory.loadConstInto(b.ctx(), typeNameReg, new IRConstant(node.typeName()));
+        IRVirtualRegister fieldCountReg = b.ctx().newTempRegister();
+        InstructionFactory.loadConstInto(b.ctx(), fieldCountReg, new IRConstant(fieldCount));
+        b.ctx().addInstruction(new CallInstruction(dest, "__obj_new", List.of(typeNameReg, fieldCountReg)));
 
         // 2. 遍历构造参数，依次求值并写入对应字段位置
         List<IRVirtualRegister> argRegs = new ArrayList<>();
-        Map<String, Integer> layout = IRBuilderScope.getStructLayout(node.typeName());
 
         for (int i = 0; i < node.arguments().size(); i++) {
 
@@ -116,17 +123,16 @@ public class NewHandler implements ExpressionHandler<NewExpressionNode> {
      */
     private String selectSetIndexFunc(String fieldType) {
         if (fieldType == null || fieldType.isBlank()) {
-            return "__setindex_r";
+            return "__obj_setindex_r";
         }
         return switch (fieldType.toLowerCase(Locale.ROOT)) {
-            // Struct instance storage is an object (ArrayValue), not byte[]; byte fields must not route to BYTES_SET.
-            case "byte" -> "__struct_setindex_b";
-            case "short" -> "__setindex_s";
-            case "int", "integer", "bool", "boolean" -> "__setindex_i";
-            case "long" -> "__setindex_l";
-            case "float" -> "__setindex_f";
-            case "double" -> "__setindex_d";
-            default -> "__setindex_r";
+            case "byte" -> "__obj_setindex_b";
+            case "short" -> "__obj_setindex_s";
+            case "int", "integer", "bool", "boolean" -> "__obj_setindex_i";
+            case "long" -> "__obj_setindex_l";
+            case "float" -> "__obj_setindex_f";
+            case "double" -> "__obj_setindex_d";
+            default -> "__obj_setindex_r";
         };
     }
 

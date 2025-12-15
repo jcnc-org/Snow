@@ -20,14 +20,13 @@ public final class TypeUtils {
     /**
      * 判断给定类型是否为“逻辑类型”。
      * <p>
-     * 当前的实现仅判断类型是否不是布尔类型（BOOLEAN）。
-     * 如果类型不是 BOOLEAN，则认为是“逻辑类型”。
+     * 当前语言中 if/loop 的条件表达式必须为布尔类型（BOOLEAN）。
      * </p>
      *
      * @param t 需要检查的类型对象
-     * @return 如果 t 不是 {@link BuiltinType#BOOLEAN}，则返回 {@code true}，否则返回 {@code false}
+     * @return 如果 t 是 {@link BuiltinType#BOOLEAN}，则返回 {@code true}，否则返回 {@code false}
      */
     public static boolean isLogic(Type t) {
-        return t != BuiltinType.BOOLEAN;
+        return t == BuiltinType.BOOLEAN;
     }
 }

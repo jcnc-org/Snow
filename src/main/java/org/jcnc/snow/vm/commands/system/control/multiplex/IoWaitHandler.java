@@ -6,6 +6,12 @@ import org.jcnc.snow.vm.io.FDTable;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.runtime.SnowArrayObject;
+import org.jcnc.snow.vm.runtime.SnowDictObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.Value;
 
 import java.io.IOException;
 import java.nio.channels.Channel;
@@ -66,34 +72,48 @@ public class IoWaitHandler implements SyscallHandler {
                        CallStack callStack) throws Exception {
 
         // 入参出栈：timeout_ms, fds
-        int timeoutMs = (int) stack.pop();
-        Object fdsObj = stack.pop();
+        int timeoutMs = switch (stack.popValue()) {
+            case IntValue(int i) -> i;
+            case org.jcnc.snow.vm.value.ShortValue(short s) -> s;
+            case org.jcnc.snow.vm.value.ByteValue(byte b) -> b;
+            case org.jcnc.snow.vm.value.LongValue(long l) -> (int) l;
+            default -> throw new IllegalArgumentException("IO_WAIT: timeout_ms must be int");
+        };
 
-        if (!(fdsObj instanceof List<?> fdsList)) {
-            throw new IllegalArgumentException("IO_WAIT: fds 必须是数组类型");
+        Value fdsV = stack.popValue();
+        if (!(fdsV instanceof RefValue(int fdsId))) {
+            throw new IllegalArgumentException("IO_WAIT: fds must be array");
+        }
+        var fdsObj = SnowRuntime.get().heap().get(fdsId);
+        if (!(fdsObj instanceof SnowArrayObject fdsArr)) {
+            throw new IllegalArgumentException("IO_WAIT: fds must be array");
         }
 
         // 1. 处理不可选择通道（fd 0/1/2），收集需要注册到 Selector 的条目
-        List<Map<String, Object>> result = new ArrayList<>();
+        SnowArrayObject out = new SnowArrayObject();
         List<Map.Entry<Integer, Integer>> toRegister = new ArrayList<>(); // (fd, interestOps)
 
-        for (Object obj : fdsList) {
+        for (Value obj : fdsArr.snapshot()) {
             int fd;
             int events;
 
-            if (obj instanceof Integer intFd) {
+            if (obj instanceof IntValue(int intFd)) {
                 fd = intFd;
                 events = 1; // 默认监听 READ
-            } else if (obj instanceof Map<?, ?> fdMap) {
-                Object fdVal = fdMap.get("fd");
-                Object evVal = fdMap.get("events");
-                if (!(fdVal instanceof Integer) || !(evVal instanceof Integer)) {
-                    throw new IllegalArgumentException("IO_WAIT: fd 和 events 必须是 int");
+            } else if (obj instanceof RefValue(int mapId)) {
+                var mapObj = SnowRuntime.get().heap().get(mapId);
+                if (!(mapObj instanceof SnowDictObject dict)) {
+                    throw new IllegalArgumentException("IO_WAIT: fds elements must be int or dict");
                 }
-                fd = (int) fdVal;
-                events = (int) evVal;
+                Value fdVal = dict.get("fd");
+                Value evVal = dict.get("events");
+                if (!(fdVal instanceof IntValue(int fdi)) || !(evVal instanceof IntValue(int evi))) {
+                    throw new IllegalArgumentException("IO_WAIT: fd/events must be int");
+                }
+                fd = fdi;
+                events = evi;
             } else {
-                throw new IllegalArgumentException("IO_WAIT: fds 元素必须是 int 或 {fd:int, events:int} map");
+                throw new IllegalArgumentException("IO_WAIT: fds elements must be int or dict");
             }
 
             Channel ch = FDTable.get(fd);
@@ -106,7 +126,11 @@ public class IoWaitHandler implements SyscallHandler {
                     readyEv |= 2;
                 }
                 if (readyEv != 0) {
-                    result.add(Map.of("fd", fd, "events", readyEv));
+                    SnowDictObject event = new SnowDictObject();
+                    event.put("fd", new IntValue(fd));
+                    event.put("events", new IntValue(readyEv));
+                    int eid = SnowRuntime.get().heap().alloc(event);
+                    out.push(new RefValue(eid));
                 }
                 continue;
             }
@@ -121,7 +145,8 @@ public class IoWaitHandler implements SyscallHandler {
 
         // 没有需要注册的通道，直接返回
         if (toRegister.isEmpty()) {
-            stack.push(result);
+            int aid = SnowRuntime.get().heap().alloc(out);
+            stack.pushValue(new RefValue(aid));
             return;
         }
 
@@ -153,13 +178,18 @@ public class IoWaitHandler implements SyscallHandler {
                     if (key.isConnectable()) ev |= 4;
 
                     if (ev != 0) {
-                        result.add(Map.of("fd", fd, "events", ev));
+                        SnowDictObject event = new SnowDictObject();
+                        event.put("fd", new IntValue(fd));
+                        event.put("events", new IntValue(ev));
+                        int eid = SnowRuntime.get().heap().alloc(event);
+                        out.push(new RefValue(eid));
                     }
                 }
                 selector.selectedKeys().clear();
             }
         }
 
-        stack.push(result);
+        int aid = SnowRuntime.get().heap().alloc(out);
+        stack.pushValue(new RefValue(aid));
     }
 }

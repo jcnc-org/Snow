@@ -5,6 +5,12 @@ import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 import org.jcnc.snow.vm.io.EnvRegistry;
+import org.jcnc.snow.vm.runtime.SnowArrayObject;
+import org.jcnc.snow.vm.runtime.SnowDictObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.runtime.SnowStringObject;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.Value;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,6 +18,7 @@ import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * {@code ExecHandler} 实现 EXEC (0x1502) 系统调用，
@@ -96,34 +103,81 @@ public class ExecHandler implements SyscallHandler {
         }
 
         // 2. 取参（注意顺序：Snow 调用顺序是 (env, argv, path)，压栈后 path 在栈顶）
-        Object pathObj = stack.pop(); // path
-        Object argvObj = stack.pop(); // argv
-        Object envObj  = stack.pop(); // env
+        Value pathV = stack.popValue(); // path
+        Value argvV = stack.popValue(); // argv
+        Value envV = stack.popValue();  // env
 
         // 3. 检查 path 类型
-        if (!(pathObj instanceof String path)) {
-            throw new IllegalArgumentException("EXEC: path 必须是 String");
+        if (!(pathV instanceof RefValue(int pathId))) {
+            throw new IllegalArgumentException("EXEC: path must be string");
+        }
+        var pathObj = SnowRuntime.get().heap().get(pathId);
+        if (!(pathObj instanceof SnowStringObject pathStr)) {
+            throw new IllegalArgumentException("EXEC: path must be string");
+        }
+        String path = pathStr.value();
+
+        // 4. argv: array<string> (missing/NULL => empty)
+        List<String> argv;
+        if (argvV == Value.NULL) {
+            argv = List.of();
+        } else if (argvV instanceof RefValue(int argvId)) {
+            var argvObj = SnowRuntime.get().heap().get(argvId);
+            if (!(argvObj instanceof SnowArrayObject arr)) {
+                throw new IllegalArgumentException("EXEC: argv must be array<string>");
+            }
+            var items = arr.snapshot();
+            ArrayList<String> tmp = new ArrayList<>(items.size());
+            for (Value v : items) {
+                if (!(v instanceof RefValue(int sid))) {
+                    throw new IllegalArgumentException("EXEC: argv elements must be string");
+                }
+                var sobj = SnowRuntime.get().heap().get(sid);
+                if (!(sobj instanceof SnowStringObject s)) {
+                    throw new IllegalArgumentException("EXEC: argv elements must be string");
+                }
+                tmp.add(s.value());
+            }
+            argv = List.copyOf(tmp);
+        } else {
+            throw new IllegalArgumentException("EXEC: argv must be array<string>");
         }
 
-        // 4. 参数类型处理
-        @SuppressWarnings("unchecked")
-        List<String> argv = (argvObj instanceof List)
-                ? (List<String>) argvObj
-                : List.of();
+        // 5. env: dict<string,string> (missing/NULL => empty)
+        Map<String, String> env;
+        if (envV == Value.NULL) {
+            env = Map.of();
+        } else if (envV instanceof RefValue(int envId)) {
+            var envObj = SnowRuntime.get().heap().get(envId);
+            if (!(envObj instanceof SnowDictObject dict)) {
+                throw new IllegalArgumentException("EXEC: env must be dict<string,string>");
+            }
+            Map<String, String> tmp = new HashMap<>();
+            for (Map.Entry<String, Value> e : dict.snapshot().entrySet()) {
+                Value v = e.getValue();
+                if (v == Value.NULL) continue;
+                if (!(v instanceof RefValue(int sid))) {
+                    throw new IllegalArgumentException("EXEC: env values must be string");
+                }
+                var sobj = SnowRuntime.get().heap().get(sid);
+                if (!(sobj instanceof SnowStringObject s)) {
+                    throw new IllegalArgumentException("EXEC: env values must be string");
+                }
+                tmp.put(e.getKey(), s.value());
+            }
+            env = Map.copyOf(tmp);
+        } else {
+            throw new IllegalArgumentException("EXEC: env must be dict<string,string>");
+        }
 
-        @SuppressWarnings("unchecked")
-        Map<String, String> env = (envObj instanceof Map)
-                ? (Map<String, String>) envObj
-                : Map.of();
-
-        // 5. 组装命令行: [path, ...argv]
+        // 6. 组装命令行: [path, ...argv]
         List<String> command = new ArrayList<>(argv.size() + 1);
         command.add(path);
         command.addAll(argv);
 
         ProcessBuilder pb = new ProcessBuilder(command);
 
-        // 6. 合并环境变量 (当前 VM 的 EnvRegistry.snapshot() 再叠加 env)
+        // 7. 合并环境变量 (当前 VM 的 EnvRegistry.snapshot() 再叠加 env)
         Map<String, String> pbEnv = pb.environment();
         pbEnv.putAll(EnvRegistry.snapshot());
         if (!env.isEmpty()) {
@@ -133,10 +187,10 @@ public class ExecHandler implements SyscallHandler {
         // 标准输入可以继承：允许交互型命令继续读键盘
         pb.redirectInput(ProcessBuilder.Redirect.INHERIT);
 
-        // 7. 启动子进程
+        // 8. 启动子进程
         Process child = pb.start();
 
-        // 8. 启动两个转发线程，把子进程输出实时打印到当前控制台
+        // 9. 启动两个转发线程，把子进程输出实时打印到当前控制台
         Thread outForwarder = new StreamForwarder(
                 child.getInputStream(),
                 System.out,
@@ -151,10 +205,10 @@ public class ExecHandler implements SyscallHandler {
         );
         errForwarder.start();
 
-        // 9. 等待子进程执行完毕
+        // 10. 等待子进程执行完毕
         child.waitFor();
 
-        // 10. 尽量等转发线程吃完最后一口输出（短 join，不处理 interrupt）
+        // 11. 尽量等转发线程吃完最后一口输出（短 join，不处理 interrupt）
         try {
             outForwarder.join(100);
         } catch (InterruptedException ignored) { }
@@ -162,7 +216,7 @@ public class ExecHandler implements SyscallHandler {
             errForwarder.join(100);
         } catch (InterruptedException ignored) { }
 
-        // 11. 终止当前 VM（不会返回到 Snow 代码）
+        // 12. 终止当前 VM（不会返回到 Snow 代码）
         Runtime.getRuntime().halt(0);
     }
 }

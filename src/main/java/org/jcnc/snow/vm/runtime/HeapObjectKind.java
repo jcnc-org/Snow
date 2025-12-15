@@ -4,5 +4,6 @@ public enum HeapObjectKind {
     STRING,
     BYTES,
     ARRAY,
-    DICT
+    DICT,
+    STRUCT
 }

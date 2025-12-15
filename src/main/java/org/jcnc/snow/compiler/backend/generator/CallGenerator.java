@@ -123,6 +123,66 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
 
         // 2. 处理内置数组读取和写入指令
         switch (fn) {
+            case "__obj_new" -> {
+                generateObjNewInstruction(ins, out, slotMap);
+                return;
+            }
+            case "__obj_index_b" -> {
+                generateObjGetInstruction(ins, out, slotMap, 'B');
+                return;
+            }
+            case "__obj_index_s" -> {
+                generateObjGetInstruction(ins, out, slotMap, 'S');
+                return;
+            }
+            case "__obj_index_i" -> {
+                generateObjGetInstruction(ins, out, slotMap, 'I');
+                return;
+            }
+            case "__obj_index_l" -> {
+                generateObjGetInstruction(ins, out, slotMap, 'L');
+                return;
+            }
+            case "__obj_index_f" -> {
+                generateObjGetInstruction(ins, out, slotMap, 'F');
+                return;
+            }
+            case "__obj_index_d" -> {
+                generateObjGetInstruction(ins, out, slotMap, 'D');
+                return;
+            }
+            case "__obj_index_r" -> {
+                generateObjGetInstruction(ins, out, slotMap, 'R');
+                return;
+            }
+            case "__obj_setindex_b" -> {
+                generateObjSetInstruction(ins, out, slotMap, 'B');
+                return;
+            }
+            case "__obj_setindex_s" -> {
+                generateObjSetInstruction(ins, out, slotMap, 'S');
+                return;
+            }
+            case "__obj_setindex_i" -> {
+                generateObjSetInstruction(ins, out, slotMap, 'I');
+                return;
+            }
+            case "__obj_setindex_l" -> {
+                generateObjSetInstruction(ins, out, slotMap, 'L');
+                return;
+            }
+            case "__obj_setindex_f" -> {
+                generateObjSetInstruction(ins, out, slotMap, 'F');
+                return;
+            }
+            case "__obj_setindex_d" -> {
+                generateObjSetInstruction(ins, out, slotMap, 'D');
+                return;
+            }
+            case "__obj_setindex_r" -> {
+                generateObjSetInstruction(ins, out, slotMap, 'R');
+                return;
+            }
             case "__index_b" -> {
                 generateIndexInstruction(ins, out, slotMap, 'B');
                 return;
@@ -149,10 +209,6 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
             }
             case "__index_r" -> {
                 generateIndexInstruction(ins, out, slotMap, 'R');
-                return;
-            }
-            case "__struct_index_b" -> {
-                generateStructByteIndexInstruction(ins, out, slotMap);
                 return;
             }
             case "__setindex_b" -> {
@@ -183,10 +239,6 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
                 generateSetIndexInstruction(ins, out, slotMap, 'R');
                 return;
             }
-            case "__struct_setindex_b" -> {
-                generateStructByteSetIndexInstruction(ins, out, slotMap);
-                return;
-            }
         }
 
         // 3. 其余为普通函数调用
@@ -211,43 +263,64 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
         // byte[] uses dedicated bytes syscalls; arrays use ARR_SET.
         if (valType == 'B') out.emit(VMOpCode.SYSCALL + " 0x1A12");
         else out.emit(VMOpCode.SYSCALL + " 0x1803");
+        // __setindex_* is used for assignment statements; discard syscall return value (rc).
+        out.emit(VMOpCode.POP + "");
     }
 
     /**
-     * 生成结构体字段读取（byte）的 VM 指令：底层容器为 ArrayValue，因此必须使用 ARR_GET 而不是 BYTES_GET。
-     * 参数个数应为 2（对象、索引）。结果写回到目标寄存器，并使用 B_STORE。
+     * 生成 STRUCT 分配的 VM 指令：底层为 OBJ_NEW。
      */
-    private void generateStructByteIndexInstruction(CallInstruction ins, VMProgramBuilder out, Map<IRVirtualRegister, Integer> slotMap) {
+    private void generateObjNewInstruction(CallInstruction ins, VMProgramBuilder out, Map<IRVirtualRegister, Integer> slotMap) {
         String fn = ins.getFunctionName();
         List<IRValue> args = ins.getArguments();
         if (args.size() != 2) throw new IllegalStateException("[CallGenerator] " + fn + " 需要两个参数");
 
         loadArgument(out, slotMap, args.get(0), 'R', fn);
         loadArgument(out, slotMap, args.get(1), 'I', fn);
-        out.emit(VMOpCode.SYSCALL + " 0x1802"); // ARR_GET
+        out.emit(VMOpCode.SYSCALL + " 0x18E0"); // OBJ_NEW
 
         IRVirtualRegister dest = ins.getDest();
         if (dest == null) throw new IllegalStateException("[CallGenerator] " + fn + " 必须有返回值寄存器");
         Integer slot = slotMap.get(dest);
         if (slot == null) throw new IllegalStateException("[CallGenerator] " + fn + " 未找到目标槽位");
 
-        out.emit(OpHelper.opcode("B_STORE") + " " + slot);
-        out.setSlotType(slot, 'B');
+        out.emit(OpHelper.opcode("R_STORE") + " " + slot);
+        out.setSlotType(slot, 'R');
     }
 
     /**
-     * 生成结构体字段写入（byte）的 VM 指令：底层容器为 ArrayValue，因此必须使用 ARR_SET 而不是 BYTES_SET。
-     * 参数个数应为 3（对象、索引、值）。
+     * 生成 STRUCT 字段读取的 VM 指令：底层为 OBJ_GET。
      */
-    private void generateStructByteSetIndexInstruction(CallInstruction ins, VMProgramBuilder out, Map<IRVirtualRegister, Integer> slotMap) {
+    private void generateObjGetInstruction(CallInstruction ins, VMProgramBuilder out, Map<IRVirtualRegister, Integer> slotMap, char retType) {
+        String fn = ins.getFunctionName();
+        List<IRValue> args = ins.getArguments();
+        if (args.size() != 2) throw new IllegalStateException("[CallGenerator] " + fn + " 需要两个参数");
+
+        loadArgument(out, slotMap, args.get(0), 'R', fn);
+        loadArgument(out, slotMap, args.get(1), 'I', fn);
+        out.emit(VMOpCode.SYSCALL + " 0x18E1"); // OBJ_GET
+
+        IRVirtualRegister dest = ins.getDest();
+        if (dest == null) throw new IllegalStateException("[CallGenerator] " + fn + " 必须有返回值寄存器");
+        Integer slot = slotMap.get(dest);
+        if (slot == null) throw new IllegalStateException("[CallGenerator] " + fn + " 未找到目标槽位");
+
+        out.emit(OpHelper.opcode(retType + "_STORE") + " " + slot);
+        out.setSlotType(slot, retType);
+    }
+
+    /**
+     * 生成 STRUCT 字段写入的 VM 指令：底层为 OBJ_SET（VOID）。
+     */
+    private void generateObjSetInstruction(CallInstruction ins, VMProgramBuilder out, Map<IRVirtualRegister, Integer> slotMap, char valType) {
         String fn = ins.getFunctionName();
         List<IRValue> args = ins.getArguments();
         if (args.size() != 3) throw new IllegalStateException("[CallGenerator] " + fn + " 需要三个参数");
 
         loadArgument(out, slotMap, args.get(0), 'R', fn);
         loadArgument(out, slotMap, args.get(1), 'I', fn);
-        loadArgument(out, slotMap, args.get(2), 'B', fn);
-        out.emit(VMOpCode.SYSCALL + " 0x1803"); // ARR_SET
+        loadArgument(out, slotMap, args.get(2), valType, fn);
+        out.emit(VMOpCode.SYSCALL + " 0x18E2"); // OBJ_SET
     }
 
     /**
@@ -296,6 +369,7 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
 
         String subcmd = resolveSyscallSubcmd(args.getFirst(), fn);
         int opcode = SyscallTable.resolveOpcode(subcmd);
+        char retPrefix = SyscallTable.returnStorePrefix(opcode);
 
         // 压参数（全按引用）
         for (int i = 1; i < args.size(); i++) {
@@ -307,14 +381,16 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
 
         // 处理返回值
         IRVirtualRegister dest = ins.getDest();
-        if (dest != null) {
-            Integer slot = slotMap.get(dest);
-            if (slot == null) throw new IllegalStateException("[CallGenerator] syscall 未找到目标槽位");
-            char p = SyscallTable.returnStorePrefix(opcode);
-            if (p == 'V') return;
-            out.emit(OpHelper.opcode(p + "_STORE") + " " + slot);
-            out.setSlotType(slot, p == 'V' ? 'I' : p);
+        if (retPrefix == 'V') return;
+        if (dest == null) {
+            // Expression result unused; discard it to keep the operand stack balanced.
+            out.emit(VMOpCode.POP + "");
+            return;
         }
+        Integer slot = slotMap.get(dest);
+        if (slot == null) throw new IllegalStateException("[CallGenerator] syscall 未找到目标槽位");
+        out.emit(OpHelper.opcode(retPrefix + "_STORE") + " " + slot);
+        out.setSlotType(slot, retPrefix);
     }
 
     /**
@@ -363,7 +439,11 @@ public class CallGenerator implements InstructionGenerator<CallInstruction> {
         if ("void".equals(retTypeName)) return;
 
         IRVirtualRegister dest = ins.getDest();
-        if (dest == null) throw new IllegalStateException("[CallGenerator] 普通调用缺少返回寄存器");
+        if (dest == null) {
+            // Allow discarding return values in statement position.
+            out.emit(VMOpCode.POP + "");
+            return;
+        }
         Integer slot = slotMap.get(dest);
         if (slot == null) throw new IllegalStateException("[CallGenerator] 未找到返回槽位");
 

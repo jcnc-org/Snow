@@ -6,6 +6,7 @@
 module: syscall_array_example
 
     import: array
+    import: sys_string
     import: std_io
 
     function: main
@@ -27,9 +28,9 @@ module: syscall_array_example
             std_io.println("")
 
             // 演示 2
-            std_io.println("[2] length() - 获取字符串长度")
+            std_io.println("[2] sys_string.length() - 获取字符串长度")
             declare str: string = "Hello Snow Language"
-            declare str_len: int = array.length(str)
+            declare str_len: int = sys_string.length(str)
             std_io.print("长度 = ")
             std_io.println(str_len)
             std_io.println("")

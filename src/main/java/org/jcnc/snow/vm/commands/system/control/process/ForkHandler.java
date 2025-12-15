@@ -6,6 +6,11 @@ import org.jcnc.snow.vm.io.ProcessRegistry;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.runtime.SnowArrayObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.runtime.SnowStringObject;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.Value;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,20 +67,26 @@ public class ForkHandler implements SyscallHandler {
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
 
-        // 1. 取参数（必须为字符串 List）
-        Object cmdObj = stack.pop();
-        if (!(cmdObj instanceof List<?> list)) {
-            throw new IllegalArgumentException("FORK: 参数必须是字符串数组");
+        // 1. 取参数：cmd 必须是 Snow array<string>
+        Value cmdV = stack.popValue();
+        if (!(cmdV instanceof RefValue(int cmdId))) {
+            throw new IllegalArgumentException("FORK: cmd must be array<string>");
         }
-
-        List<String> cmd = new ArrayList<>(list.size());
-        for (Object o : list) {
-            if (!(o instanceof String)) {
-                throw new IllegalArgumentException(
-                        "FORK: 命令数组必须全部是 string，得到: " + o
-                );
+        var cmdObj = SnowRuntime.get().heap().get(cmdId);
+        if (!(cmdObj instanceof SnowArrayObject cmdArr)) {
+            throw new IllegalArgumentException("FORK: cmd must be array<string>");
+        }
+        var items = cmdArr.snapshot();
+        List<String> cmd = new ArrayList<>(items.size());
+        for (Value v : items) {
+            if (!(v instanceof RefValue(int sid))) {
+                throw new IllegalArgumentException("FORK: cmd elements must be string");
             }
-            cmd.add((String) o);
+            var sobj = SnowRuntime.get().heap().get(sid);
+            if (!(sobj instanceof SnowStringObject s)) {
+                throw new IllegalArgumentException("FORK: cmd elements must be string");
+            }
+            cmd.add(s.value());
         }
 
         try {
@@ -139,7 +150,6 @@ public class ForkHandler implements SyscallHandler {
 
         } catch (IOException e) {
             // 11. 启动失败
-            stack.push(-1);
             throw e;
         }
     }

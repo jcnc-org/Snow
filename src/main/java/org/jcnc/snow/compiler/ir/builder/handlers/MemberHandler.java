@@ -16,7 +16,7 @@ import java.util.*;
 
 /**
  * {@code MemberHandler} 是成员访问表达式的处理器，
- * 负责将 obj.field 类型的成员访问降级为底层的 __index_r(obj, fieldIndex) 调用。
+ * 负责将 obj.field 类型的成员访问降级为底层的 __obj_index_r(obj, fieldIndex) 调用。
  * 主要解决结构体继承层级下 fieldIndex 的正确计算，避免父类字段下标重复累计的问题。
  * <p>
  * 功能概述：
@@ -76,7 +76,7 @@ public class MemberHandler implements ExpressionHandler<MemberExpressionNode> {
                     + " (object=" + mem.object() + ")" + loc);
         }
 
-        // 4. 生成类型匹配的 __index_* 调用
+        // 4. 生成类型匹配的 __obj_index_* 调用
         IRVirtualRegister idxReg = b.ctx().newRegister();
         b.ctx().addInstruction(new LoadConstInstruction(
                 idxReg, IRConstant.fromNumber(Integer.toString(fieldIndex))));
@@ -95,17 +95,16 @@ public class MemberHandler implements ExpressionHandler<MemberExpressionNode> {
      * 根据字段类型选择对应的 __index_* 通道。
      */
     private String selectIndexFunc(String fieldType) {
-        if (fieldType == null || fieldType.isBlank()) return "__index_r";
+        if (fieldType == null || fieldType.isBlank()) return "__obj_index_r";
         return switch (fieldType.toLowerCase(Locale.ROOT)) {
-            // Struct instance storage is an object (ArrayValue), not byte[]; byte fields must not route to BYTES_GET.
-            case "byte" -> "__struct_index_b";
-            case "short" -> "__index_s";
-            case "int", "integer", "bool", "boolean" -> "__index_i";
-            case "long" -> "__index_l";
-            case "float" -> "__index_f";
-            case "double" -> "__index_d";
-            case "string" -> "__index_r";
-            default -> "__index_r";
+            case "byte" -> "__obj_index_b";
+            case "short" -> "__obj_index_s";
+            case "int", "integer", "bool", "boolean" -> "__obj_index_i";
+            case "long" -> "__obj_index_l";
+            case "float" -> "__obj_index_f";
+            case "double" -> "__obj_index_d";
+            case "string" -> "__obj_index_r";
+            default -> "__obj_index_r";
         };
     }
 

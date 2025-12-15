@@ -13,17 +13,17 @@ import java.nio.channels.SocketChannel;
  * {@code AcceptHandler} 实现 ACCEPT (0x1403) 系统调用，
  * 用于接受一个传入的 socket 连接。
  *
- * <p><b>Stack</b>：入参 {@code (fd:int)} → 出参 {@code (cfd:int, addr:String, port:int)}</p>
+ * <p><b>Stack</b>：入参 {@code (fd:int)} → 出参 {@code (cfd:int)}</p>
  *
- * <p><b>语义</b>：阻塞等待并接受传入连接，返回新连接 fd、对端地址和端口。</p>
+ * <p><b>语义</b>：阻塞等待并接受传入连接，返回新连接 fd。</p>
  *
  * <p><b>返回</b>：
  * <ul>
  *   <li>cfd：新连接的 socket fd</li>
- *   <li>addr：对端 IP 地址（String）</li>
- *   <li>port：对端端口号（int）</li>
  * </ul>
  * </p>
+ *
+ * <p>对端地址与端口可通过 {@code GETPEERNAME}/{@code GETSOCKNAME} 等 syscalls 获取。</p>
  *
  * <p><b>异常</b>：
  * <ul>

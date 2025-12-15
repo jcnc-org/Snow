@@ -8,7 +8,8 @@ public sealed interface HeapObject permits
         SnowStringObject,
         SnowBytesObject,
         SnowArrayObject,
-        SnowDictObject {
+        SnowDictObject,
+        SnowStructObject {
 
     HeapObjectKind kind();
 }

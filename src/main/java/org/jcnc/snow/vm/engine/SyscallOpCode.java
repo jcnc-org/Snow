@@ -1169,6 +1169,35 @@ public final class SyscallOpCode {
      * </p>
      */
     public static final int ARR_CLEAR = 0x1815;
+
+    // region Object / struct runtime builtins (0x18E0 – 0x18EF)
+    /**
+     * OBJ_NEW (0x18E0)
+     *
+     * <p><b>Stack</b>：入参 {@code (typeName:String, fieldCount:int)} → 出参 {@code (obj:STRUCT)}</p>
+     *
+     * <p><b>语义</b>：分配一个固定槽位数量的结构体实例对象（STRUCT）。字段初值均为 null。</p>
+     */
+    public static final int OBJ_NEW = 0x18E0;
+
+    /**
+     * OBJ_GET (0x18E1)
+     *
+     * <p><b>Stack</b>：入参 {@code (obj:STRUCT, index:int)} → 出参 {@code (value:any)}</p>
+     *
+     * <p><b>语义</b>：读取结构体实例的字段槽位。</p>
+     */
+    public static final int OBJ_GET = 0x18E1;
+
+    /**
+     * OBJ_SET (0x18E2)
+     *
+     * <p><b>Stack</b>：入参 {@code (obj:STRUCT, index:int, value:any)} → 出参 {@code ()}</p>
+     *
+     * <p><b>语义</b>：写入结构体实例的字段槽位。</p>
+     */
+    public static final int OBJ_SET = 0x18E2;
+    // endregion
     // endregion
 
 

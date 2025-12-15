@@ -10,7 +10,13 @@ import org.jcnc.snow.vm.runtime.HeapObject;
 import org.jcnc.snow.vm.runtime.HeapObjectKind;
 import org.jcnc.snow.vm.runtime.SnowPanicException;
 import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.value.ByteValue;
+import org.jcnc.snow.vm.value.DoubleValue;
+import org.jcnc.snow.vm.value.FloatValue;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.LongValue;
 import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.ShortValue;
 import org.jcnc.snow.vm.value.Value;
 
 /**
@@ -62,9 +68,9 @@ public class SyscallCommand implements Command {
         int opcode = SyscallTable.resolveOpcode(parts[1]);
 
         SyscallHandler handler = SyscallFactory.getHandler(opcode);
+        int before = stack.size();
 
         try {
-            int before = stack.size();
             SyscallTable.SyscallSpec spec = SyscallTable.spec(opcode);
             String name = spec == null ? String.format("0x%04X", opcode) : spec.name();
             try (AutoCloseable ignored = SnowRuntime.get().enterSyscall(opcode, name, handler.getClass().getName())) {
@@ -81,11 +87,52 @@ public class SyscallCommand implements Command {
                 String name = spec == null ? String.format("0x%04X", opcode) : spec.name();
                 throw new SnowPanicException("Runtime builtin syscall failed: " + name, e);
             }
-            // 失败时压入 -1（int）并记录错误串
-            SyscallUtils.pushErr(stack, e);
+            // 失败：记录 errno/errstr，并根据 ABI 返回类型压入“同类别”的失败哨兵值（或不返回值）。
+            SyscallTable.SyscallSpec spec = SyscallTable.spec(opcode);
+            if (spec == null) {
+                // Legacy / unknown ABI: keep the historical behavior (push -1 int).
+                SyscallUtils.pushErr(stack, e);
+                return pc + 1;
+            }
+            SyscallUtils.recordErr(e);
+            normalizeArgsAfterFailure(spec, before, stack);
+            switch (spec.ret()) {
+                case VOID -> {
+                    // no return value
+                }
+                case I8 -> stack.pushValue(new ByteValue((byte) -1));
+                case I16 -> stack.pushValue(new ShortValue((short) -1));
+                case I32 -> stack.pushValue(new IntValue(-1));
+                case I64 -> stack.pushValue(new LongValue(-1));
+                case F32 -> stack.pushValue(new FloatValue(-1.0f));
+                case F64 -> stack.pushValue(new DoubleValue(-1.0d));
+                case STRING, BYTES, ARRAY, DICT, STRUCT, ANY -> stack.pushValue(Value.NULL);
+            }
         }
 
         return pc + 1;
+    }
+
+    /**
+     * Best-effort stack repair for failed syscalls.
+     *
+     * <p>{@code beforeSize} is the operand stack size right before dispatching into the handler,
+     * i.e. after the compiler has pushed all syscall arguments.</p>
+     *
+     * <p>On failure, a handler may throw before consuming all arguments. If those arguments remain
+     * on the stack, the VM will be corrupted and subsequent code will observe a shifted stack.
+     * We repair this by trimming/padding the stack back to {@code beforeSize - argCount} before
+     * pushing the failure sentinel return value.</p>
+     */
+    private static void normalizeArgsAfterFailure(SyscallTable.SyscallSpec spec, int beforeSize, OperandStack stack) {
+        int argCount = (spec.args() == null) ? 0 : spec.args().length;
+        int desired = beforeSize - argCount;
+        while (stack.size() > desired) {
+            stack.popValue();
+        }
+        while (stack.size() < desired) {
+            stack.pushValue(Value.NULL);
+        }
     }
 
     private static boolean isRuntimeBuiltin(int opcode) {
@@ -138,7 +185,7 @@ public class SyscallCommand implements Command {
                     throw new org.jcnc.snow.vm.runtime.SnowPanicException("Syscall ABI violation: " + spec.name() + " expected double");
                 }
             }
-            case STRING, BYTES, ARRAY, DICT -> {
+            case STRING, BYTES, ARRAY, DICT, STRUCT -> {
                 if (!(top instanceof RefValue(int id))) {
                     throw new org.jcnc.snow.vm.runtime.SnowPanicException("Syscall ABI violation: " + spec.name() + " expected ref");
                 }
@@ -149,6 +196,7 @@ public class SyscallCommand implements Command {
                     case BYTES -> HeapObjectKind.BYTES;
                     case ARRAY -> HeapObjectKind.ARRAY;
                     case DICT -> HeapObjectKind.DICT;
+                    case STRUCT -> HeapObjectKind.STRUCT;
                     default -> throw new org.jcnc.snow.vm.runtime.SnowPanicException("unreachable");
                 };
                 if (kind != expected) {
