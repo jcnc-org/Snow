@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * The {@code BOrCommand} class implements the {@link Command} interface and represents the byte8 bitwise OR (`|`) operation command.
@@ -45,8 +46,8 @@ public class BOrCommand implements Command {
         }
 
         // Pop the top two operands from the stack
-        final byte b = (byte) operandStack.pop();
-        final byte a = (byte) operandStack.pop();
+        final byte b = NumberUtils.popByte(operandStack, "B_OR");
+        final byte a = NumberUtils.popByte(operandStack, "B_OR");
 
         // Perform the byte8 bitwise OR operation and push the result back onto the stack
         operandStack.push((byte) (a | b));

@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * B2SCommand Opcode: Represents the type conversion operation from byte8 to short16 in the virtual machine.
@@ -40,7 +41,7 @@ public class B2SCommand implements Command {
     @Override
     public int execute(String[] parts, int currentPC, OperandStack operandStack,
                        LocalVariableStore localVariableStore, CallStack callStack) {
-        short convertedValue = (byte) operandStack.pop();
+        short convertedValue = NumberUtils.popByte(operandStack, "B2S");
         operandStack.push(convertedValue);
         return currentPC + 1;
     }

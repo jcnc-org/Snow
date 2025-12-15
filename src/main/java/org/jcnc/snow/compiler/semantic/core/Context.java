@@ -3,6 +3,7 @@ package org.jcnc.snow.compiler.semantic.core;
 import org.jcnc.snow.compiler.semantic.analyzers.AnalyzerRegistry;
 import org.jcnc.snow.compiler.semantic.error.SemanticError;
 import org.jcnc.snow.compiler.semantic.type.ArrayType;
+import org.jcnc.snow.compiler.semantic.type.BuiltinType;
 import org.jcnc.snow.compiler.semantic.type.Type;
 
 import java.util.List;
@@ -172,6 +173,11 @@ public class Context {
 
         // 1) 优先查找内建类型
         Type base = BuiltinTypeRegistry.BUILTIN_TYPES.get(name);
+        // byte[] is a first-class Bytes type in the runtime value model
+        if (base == BuiltinType.BYTE && dims > 0) {
+            base = org.jcnc.snow.compiler.semantic.type.BytesType.INSTANCE;
+            dims -= 1;
+        }
 
         // 2) 如果不是内建类型，则尝试查找结构体类型
         if (base == null) {

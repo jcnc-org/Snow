@@ -5,7 +5,11 @@ import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
-import java.util.List;
+import org.jcnc.snow.vm.runtime.SnowArrayObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.Value;
 
 /**
  * {@code ArrClearHandler} 实现 ARR_CLEAR (0x1815) 系统调用，
@@ -30,15 +34,15 @@ public class ArrClearHandler implements SyscallHandler {
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
 
-        Object arrObj = stack.pop();
-
-        if (!(arrObj instanceof List<?> list)) {
-            throw new IllegalArgumentException("ARR_CLEAR: not a List: " + arrObj);
+        Value arrV = stack.popValue();
+        if (!(arrV instanceof RefValue(int id))) {
+            throw new IllegalArgumentException("ARR_CLEAR: not an array");
         }
-
-        list.clear();
-
-        // 返回长度 0
-        stack.push(0);
+        var obj = SnowRuntime.get().heap().get(id);
+        if (!(obj instanceof SnowArrayObject arr)) {
+            throw new IllegalArgumentException("ARR_CLEAR: not an array");
+        }
+        arr.clear();
+        stack.pushValue(new IntValue(0));
     }
 }

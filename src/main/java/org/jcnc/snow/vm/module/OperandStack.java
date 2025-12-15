@@ -1,6 +1,8 @@
 package org.jcnc.snow.vm.module;
 
 import org.jcnc.snow.vm.utils.LoggingUtils;
+import org.jcnc.snow.vm.runtime.ValueInterop;
+import org.jcnc.snow.vm.value.Value;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -14,7 +16,7 @@ import java.util.EmptyStackException;
  * </p>
  */
 public class OperandStack {
-    private final Deque<Object> stack = new ArrayDeque<>();
+    private final Deque<Value> stack = new ArrayDeque<>();
 
     /**
      * Default constructor for creating an instance of OperandStack.
@@ -33,6 +35,11 @@ public class OperandStack {
      * @param value The value to be pushed onto the stack.
      */
     public void push(Object value) {
+        pushValue(ValueInterop.toValue(value, "OperandStack.push"));
+    }
+
+    public void pushValue(Value value) {
+        if (value == null) value = Value.NULL;
         stack.push(value);
     }
 
@@ -46,6 +53,10 @@ public class OperandStack {
      * @throws IllegalStateException If the stack is empty, an exception is thrown indicating that the pop operation cannot be performed.
      */
     public Object pop() {
+        return ValueInterop.toJava(popValue());
+    }
+
+    public Value popValue() {
         if (stack.isEmpty()) {
             throw new IllegalStateException("Stack is empty, cannot pop");
         }
@@ -95,6 +106,10 @@ public class OperandStack {
      * @throws EmptyStackException if the stack is empty.
      */
     public Object peek() {
+        return ValueInterop.toJava(peekValue());
+    }
+
+    public Value peekValue() {
         if (stack.isEmpty()) {
             throw new EmptyStackException();
         }

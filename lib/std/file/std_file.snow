@@ -6,6 +6,7 @@ module: std_file
     import: os_fs
     import: os_fd
     import: std_array
+    import: std_bytes
 
     /**
      * @struct File
@@ -65,11 +66,10 @@ module: std_file
             returns: byte[]
             body:
                 if fd == -1 then
-                    declare emptyArr: Array = new Array()
-                    return emptyArr.toRawArray()
+                    return std_bytes.alloc(0)
                 end if
 
-                declare buffer: Array = new Array()
+                declare buffer: byte[] = std_bytes.alloc(0)
 
                 loop:
                     init:
@@ -79,40 +79,23 @@ module: std_file
                     step:
                         keep = keep
                     body:
-                        declare chunk: any = os_fd.readBytes(fd, 4096)
+                        declare chunk: byte[] = os_fd.readBytes(fd, 4096)
 
-                        // os_fd.readBytes 正常返回 byte[]；长度为 0 表示 EOF；
-                        // 若发生系统调用错误，运行时可能返回 -1（int）。
                         declare chunkStr: string = "" + chunk
                         if chunkStr == "-1" then
                             break
                         end if
 
-                        // 将 chunk 数组用 Array 包装
-                        declare chunkArr: Array = new Array(chunk)
-                        declare chunkLen: int = chunkArr.length()
-
+                        declare chunkLen: int = std_bytes.length(chunk)
                         if chunkLen == 0 then
                             break
                         end if
 
-                        // 按字节复制到 buffer
-                        declare i: int = 0
-                        loop:
-                            init:
-                                i = i
-                            cond:
-                                i < chunkLen
-                            step:
-                                i = i + 1
-                            body:
-                                buffer.append(chunkArr.get(i))
-                            end body
-                        end loop
+                        buffer = std_bytes.concat(buffer, chunk)
                     end body
                 end loop
 
-                return buffer.toRawArray()
+                return buffer
             end body
         end function
 

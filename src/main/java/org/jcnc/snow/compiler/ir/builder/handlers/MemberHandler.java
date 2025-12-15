@@ -97,7 +97,8 @@ public class MemberHandler implements ExpressionHandler<MemberExpressionNode> {
     private String selectIndexFunc(String fieldType) {
         if (fieldType == null || fieldType.isBlank()) return "__index_r";
         return switch (fieldType.toLowerCase(Locale.ROOT)) {
-            case "byte" -> "__index_b";
+            // Struct instance storage is an object (ArrayValue), not byte[]; byte fields must not route to BYTES_GET.
+            case "byte" -> "__struct_index_b";
             case "short" -> "__index_s";
             case "int", "integer", "bool", "boolean" -> "__index_i";
             case "long" -> "__index_l";

@@ -85,7 +85,7 @@ public class TokenStream {
      * @return 匹配成功返回 true，否则返回 false
      */
     public boolean match(String lexeme) {
-        if (peek().getLexeme().equals(lexeme)) {
+        if (peek().lexeme().equals(lexeme)) {
             next();
             return true;
         }
@@ -102,10 +102,10 @@ public class TokenStream {
      */
     public Token expect(String lexeme) {
         Token t = peek();
-        if (!t.getLexeme().equals(lexeme)) {
+        if (!t.lexeme().equals(lexeme)) {
             throw new ParseException(
-                    "期望的词素是 '" + lexeme + "'，但得到的是 '" + t.getLexeme() + "'",
-                    t.getLine(), t.getCol()
+                    "期望的词素是 '" + lexeme + "'，但得到的是 '" + t.lexeme() + "'",
+                    t.line(), t.col()
             );
         }
         return next();
@@ -121,11 +121,11 @@ public class TokenStream {
      */
     public Token expectType(TokenType type) {
         Token t = peek();
-        if (t.getType() != type) {
+        if (t.type() != type) {
             throw new ParseException(
-                    "期望的标记类型为 " + type + "，但实际得到的是 " + t.getType() +
-                            " ('" + t.getLexeme() + "')",
-                    t.getLine(), t.getCol()
+                    "期望的标记类型为 " + type + "，但实际得到的是 " + t.type() +
+                            " ('" + t.lexeme() + "')",
+                    t.line(), t.col()
             );
         }
         return next();
@@ -137,7 +137,7 @@ public class TokenStream {
      * @return 若当前位置 Token 为 EOF，则返回 true；否则返回 false
      */
     public boolean isAtEnd() {
-        return peek().getType() == TokenType.EOF;
+        return peek().type() == TokenType.EOF;
     }
 
     /**
@@ -145,7 +145,7 @@ public class TokenStream {
      */
     private void skipTrivia() {
         while (pos < tokens.size()
-                && tokens.get(pos).getType() == TokenType.COMMENT) {
+                && tokens.get(pos).type() == TokenType.COMMENT) {
             pos++;
         }
     }

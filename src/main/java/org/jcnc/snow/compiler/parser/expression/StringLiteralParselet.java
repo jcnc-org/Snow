@@ -28,13 +28,13 @@ public class StringLiteralParselet implements PrefixParselet {
     @Override
     public ExpressionNode parse(ParserContext ctx, Token token) {
         // 去除首尾引号
-        String raw = token.getRaw();
+        String raw = token.raw();
         String inner = raw.substring(1, raw.length() - 1);
         // 解析转义符与 Unicode 转义
         String value = StringEscape.unescape(inner);
         return new StringLiteralNode(
                 value,
-                new NodeContext(token.getLine(), token.getCol(), ctx.getSourceName())
+                new NodeContext(token.line(), token.col(), ctx.getSourceName())
         );
     }
 }

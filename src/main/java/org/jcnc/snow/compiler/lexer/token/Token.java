@@ -7,33 +7,14 @@ package org.jcnc.snow.compiler.lexer.token;
  * 一个 Token 通常对应源代码中一个具有语义意义的片段，如关键字、标识符、常量、运算符等。
  * 区分 lexeme（清洗后的词素）与 raw（原始片段）是为了支持如带引号的字符串、注释等需要保留原始形式的元素。
  * </p>
+ *
+ * @param type   Token 的类型，如 KEYWORD、IDENTIFIER、TYPE 等。
+ * @param lexeme 清洗后的词素内容，例如去掉引号的字符串正文或注释正文。
+ * @param raw    源代码中对应的原始片段，可能包含引号、注释符号等。
+ * @param line   Token 在源文件中的行号，从 1 开始计数。
+ * @param col    Token 在源文件行中的列号，从 1 开始计数。
  */
-public class Token {
-
-    /**
-     * Token 的类型，如 KEYWORD、IDENTIFIER、TYPE 等。
-     */
-    private final TokenType type;
-
-    /**
-     * 清洗后的词素内容，例如去掉引号的字符串正文或注释正文。
-     */
-    private final String lexeme;
-
-    /**
-     * 源代码中对应的原始片段，可能包含引号、注释符号等。
-     */
-    private final String raw;
-
-    /**
-     * Token 在源文件中的行号，从 1 开始计数。
-     */
-    private final int line;
-
-    /**
-     * Token 在源文件行中的列号，从 1 开始计数。
-     */
-    private final int col;
+public record Token(TokenType type, String lexeme, String raw, int line, int col) {
 
     /**
      * 构造一个完整信息的 Token 实例。
@@ -44,12 +25,7 @@ public class Token {
      * @param line   所在源文件的行号（从 1 开始）
      * @param col    所在源文件行的列号（从 1 开始）
      */
-    public Token(TokenType type, String lexeme, String raw, int line, int col) {
-        this.type = type;
-        this.lexeme = lexeme;
-        this.raw = raw;
-        this.line = line;
-        this.col = col;
+    public Token {
     }
 
     /**
@@ -83,35 +59,40 @@ public class Token {
     /**
      * @return 此 Token 的类型
      */
-    public TokenType getType() {
+    @Override
+    public TokenType type() {
         return type;
     }
 
     /**
      * @return 清洗后的词素内容（lexeme）
      */
-    public String getLexeme() {
+    @Override
+    public String lexeme() {
         return lexeme;
     }
 
     /**
      * @return 源代码中的原始片段
      */
-    public String getRaw() {
+    @Override
+    public String raw() {
         return raw;
     }
 
     /**
      * @return Token 所在的源文件行号（从 1 开始）
      */
-    public int getLine() {
+    @Override
+    public int line() {
         return line;
     }
 
     /**
      * @return Token 所在行的列号（从 1 开始）
      */
-    public int getCol() {
+    @Override
+    public int col() {
         return col;
     }
 

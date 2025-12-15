@@ -5,6 +5,11 @@ import org.jcnc.snow.vm.io.FDTable;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.runtime.SnowBytesObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.Value;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
@@ -47,11 +52,27 @@ public class ReadHandler implements SyscallHandler {
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
         // 栈顶依次为：size、fd（与源码参数顺序相反）
-        int size = (Integer) stack.pop();
-        int fd = (Integer) stack.pop();
+        Value sizeV = stack.popValue();
+        Value fdV = stack.popValue();
+
+        int size = switch (sizeV) {
+            case org.jcnc.snow.vm.value.IntValue(int i) -> i;
+            case org.jcnc.snow.vm.value.ShortValue(short s) -> s;
+            case org.jcnc.snow.vm.value.ByteValue(byte b) -> b;
+            case org.jcnc.snow.vm.value.LongValue(long l) -> (int) l;
+            default -> throw new IllegalArgumentException("READ: length must be int");
+        };
+        int fd = switch (fdV) {
+            case org.jcnc.snow.vm.value.IntValue(int i) -> i;
+            case org.jcnc.snow.vm.value.ShortValue(short s) -> s;
+            case org.jcnc.snow.vm.value.ByteValue(byte b) -> b;
+            case org.jcnc.snow.vm.value.LongValue(long l) -> (int) l;
+            default -> throw new IllegalArgumentException("READ: fd must be int");
+        };
 
         if (size <= 0) {
-            stack.push(new byte[0]);
+            int bid = SnowRuntime.get().heap().alloc(new SnowBytesObject(new byte[0]));
+            stack.pushValue(new RefValue(bid));
             return;
         }
 
@@ -63,14 +84,15 @@ public class ReadHandler implements SyscallHandler {
         ByteBuffer buffer = ByteBuffer.allocate(size);
         int bytesRead = rch.read(buffer);
         if (bytesRead <= 0) {
-            stack.push(new byte[0]);
+            int bid = SnowRuntime.get().heap().alloc(new SnowBytesObject(new byte[0]));
+            stack.pushValue(new RefValue(bid));
             return;
         }
 
         byte[] data = new byte[bytesRead];
         buffer.flip();
         buffer.get(data);
-
-        stack.push(data);
+        int bid = SnowRuntime.get().heap().alloc(new SnowBytesObject(data));
+        stack.pushValue(new RefValue(bid));
     }
 }

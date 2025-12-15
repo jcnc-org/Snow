@@ -49,28 +49,28 @@ public class NewObjectParselet implements PrefixParselet {
 
         // 1. 解析类型名（支持限定名如 module.Type）
         // 类型名只能为内建类型（TYPE）或用户结构体名（IDENTIFIER）
-        if (ts.peek().getType() != TokenType.TYPE && ts.peek().getType() != TokenType.IDENTIFIER) {
+        if (ts.peek().type() != TokenType.TYPE && ts.peek().type() != TokenType.IDENTIFIER) {
             var t = ts.peek();
             throw new UnexpectedToken(
                     "期望的标记类型为 TYPE 或 IDENTIFIER，但实际得到的是 " +
-                            t.getType() + " ('" + t.getLexeme() + "')",
-                    t.getLine(), t.getCol()
+                            t.type() + " ('" + t.lexeme() + "')",
+                    t.line(), t.col()
             );
         }
         StringBuilder typeName = new StringBuilder();
-        typeName.append(ts.next().getLexeme());
+        typeName.append(ts.next().lexeme());
         
         // 支持限定名：module.Type 或 module.submodule.Type
         while (ts.match(".")) {
             typeName.append('.');
-            if (ts.peek().getType() == TokenType.IDENTIFIER) {
-                typeName.append(ts.next().getLexeme());
+            if (ts.peek().type() == TokenType.IDENTIFIER) {
+                typeName.append(ts.next().lexeme());
             } else {
                 var t = ts.peek();
                 throw new UnexpectedToken(
                         "限定类型名中点号后必须跟标识符，但实际得到的是 " +
-                                t.getType() + " ('" + t.getLexeme() + "')",
-                        t.getLine(), t.getCol()
+                                t.type() + " ('" + t.lexeme() + "')",
+                        t.line(), t.col()
                 );
             }
         }
@@ -88,7 +88,7 @@ public class NewObjectParselet implements PrefixParselet {
         }
 
         // 3. 封装为 AST 节点并返回
-        NodeContext nc = new NodeContext(token.getLine(), token.getCol(), ctx.getSourceName());
+        NodeContext nc = new NodeContext(token.line(), token.col(), ctx.getSourceName());
         return new NewExpressionNode(typeName.toString(), args, nc);
     }
 }

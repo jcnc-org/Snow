@@ -5,7 +5,11 @@ import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
-import java.util.List;
+import org.jcnc.snow.vm.runtime.SnowArrayObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.Value;
 
 /**
  * {@code ArrRemoveHandler} 实现 ARR_REMOVE (0x1813) 系统调用，
@@ -35,29 +39,25 @@ public class ArrRemoveHandler implements SyscallHandler {
                        CallStack callStack) throws Exception {
 
         // 入栈顺序：(arr, index) → 栈顶是 index
-        Object idxObj = stack.pop();
-        Object arrObj = stack.pop();
+        Value idxV = stack.popValue();
+        Value arrV = stack.popValue();
 
-        int idx = (idxObj instanceof Number n)
-                ? n.intValue()
-                : Integer.parseInt(idxObj.toString().trim());
+        int idx = switch (idxV) {
+            case IntValue(int i) -> i;
+            case org.jcnc.snow.vm.value.ShortValue(short s) -> s;
+            case org.jcnc.snow.vm.value.ByteValue(byte b) -> b;
+            case org.jcnc.snow.vm.value.LongValue(long l) -> (int) l;
+            default -> throw new IllegalArgumentException("ARR_REMOVE: index must be int");
+        };
 
-        if (!(arrObj instanceof List<?> list)) {
-            throw new IllegalArgumentException("ARR_REMOVE: not a List: " + arrObj);
+        if (!(arrV instanceof RefValue(int id))) {
+            throw new IllegalArgumentException("ARR_REMOVE: not an array");
+        }
+        var obj = SnowRuntime.get().heap().get(id);
+        if (!(obj instanceof SnowArrayObject arr)) {
+            throw new IllegalArgumentException("ARR_REMOVE: not an array");
         }
 
-        @SuppressWarnings("unchecked")
-        List<Object> mlist = (List<Object>) list;
-
-        Object elem = mlist.remove(idx);
-
-        // 和 ArrGetHandler 保持一致的推栈规则
-        if (elem instanceof Number n) {
-            stack.push(n);
-        } else if (elem instanceof Boolean b) {
-            stack.push(b ? 1 : 0);
-        } else {
-            stack.push(elem);
-        }
+        stack.pushValue(arr.remove(idx));
     }
 }

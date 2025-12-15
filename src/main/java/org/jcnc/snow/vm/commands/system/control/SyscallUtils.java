@@ -1,6 +1,13 @@
 package org.jcnc.snow.vm.commands.system.control;
 
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.runtime.HeapObject;
+import org.jcnc.snow.vm.runtime.SnowArrayObject;
+import org.jcnc.snow.vm.runtime.SnowBytesObject;
+import org.jcnc.snow.vm.runtime.SnowDictObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.runtime.SnowStringObject;
+import org.jcnc.snow.vm.value.RefValue;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -90,6 +97,8 @@ public class SyscallUtils {
         String str;
         if (obj == null) {
             str = "null";
+        } else if (obj instanceof RefValue(int id)) {
+            str = heapObjectToString(SnowRuntime.get().heap().get(id));
         } else if (obj instanceof byte[] bytes) {
             str = new String(bytes, StandardCharsets.UTF_8);
         } else if (obj.getClass().isArray()) {
@@ -118,5 +127,24 @@ public class SyscallUtils {
         if (array instanceof boolean[] a) return Arrays.toString(a);
         if (array instanceof Object[] a) return Arrays.deepToString(a);
         return "Unsupported array";
+    }
+
+    private static String heapObjectToString(HeapObject obj) {
+        return switch (obj) {
+            case SnowStringObject s -> s.value();
+            case SnowBytesObject b -> new String(b.unsafeBytes(), StandardCharsets.UTF_8);
+            case SnowArrayObject a -> {
+                StringBuilder sb = new StringBuilder();
+                sb.append('[');
+                var items = a.snapshot();
+                for (int i = 0; i < items.size(); i++) {
+                    if (i > 0) sb.append(", ");
+                    sb.append(items.get(i));
+                }
+                sb.append(']');
+                yield sb.toString();
+            }
+            case SnowDictObject d -> d.snapshot().toString();
+        };
     }
 }

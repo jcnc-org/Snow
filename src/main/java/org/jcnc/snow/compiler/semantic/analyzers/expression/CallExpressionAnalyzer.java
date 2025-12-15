@@ -4,6 +4,7 @@ import org.jcnc.snow.compiler.parser.ast.CallExpressionNode;
 import org.jcnc.snow.compiler.parser.ast.FunctionNode;
 import org.jcnc.snow.compiler.parser.ast.IdentifierNode;
 import org.jcnc.snow.compiler.parser.ast.MemberExpressionNode;
+import org.jcnc.snow.compiler.parser.ast.StringLiteralNode;
 import org.jcnc.snow.compiler.parser.ast.base.ExpressionNode;
 import org.jcnc.snow.compiler.semantic.analyzers.base.ExpressionAnalyzer;
 import org.jcnc.snow.compiler.semantic.core.Context;
@@ -13,6 +14,7 @@ import org.jcnc.snow.compiler.semantic.symbol.Symbol;
 import org.jcnc.snow.compiler.semantic.symbol.SymbolTable;
 import org.jcnc.snow.compiler.semantic.type.*;
 import org.jcnc.snow.compiler.semantic.utils.NumericConstantUtils;
+import org.jcnc.snow.vm.engine.SyscallTable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -251,7 +253,45 @@ public class CallExpressionAnalyzer implements ExpressionAnalyzer {
         }
 
         // 6. 返回函数的返回类型
+        Type inferredSyscallRet = inferSyscallReturnType(call, functionName);
+        if (inferredSyscallRet != null) {
+            ctx.log("syscall 返回类型: " + inferredSyscallRet);
+            return inferredSyscallRet;
+        }
         ctx.log("函数调用类型: 返回 " + funcType.returnType());
         return funcType.returnType();
+    }
+
+    /**
+     * If this is a builtin syscall call and the first argument is a string literal,
+     * infer the return type from {@link SyscallTable}.
+     */
+    private static Type inferSyscallReturnType(CallExpressionNode call, String functionName) {
+        if (!"syscall".equals(functionName)) return null;
+        if (call.arguments() == null || call.arguments().isEmpty()) return null;
+        ExpressionNode subcmd = call.arguments().getFirst();
+        if (!(subcmd instanceof StringLiteralNode lit)) return null;
+
+        SyscallTable.SyscallSpec spec;
+        try {
+            int opcode = SyscallTable.resolveOpcode(lit.value());
+            spec = SyscallTable.spec(opcode);
+        } catch (RuntimeException ignored) {
+            return null;
+        }
+        if (spec == null) return null;
+        return switch (spec.ret()) {
+            case VOID -> BuiltinType.VOID;
+            case I8 -> BuiltinType.BYTE;
+            case I16 -> BuiltinType.SHORT;
+            case I32 -> BuiltinType.INT;
+            case I64 -> BuiltinType.LONG;
+            case F32 -> BuiltinType.FLOAT;
+            case F64 -> BuiltinType.DOUBLE;
+            case STRING -> BuiltinType.STRING;
+            case BYTES -> BytesType.INSTANCE;
+            case ARRAY -> new ArrayType(BuiltinType.ANY);
+            case DICT, ANY -> BuiltinType.ANY;
+        };
     }
 }

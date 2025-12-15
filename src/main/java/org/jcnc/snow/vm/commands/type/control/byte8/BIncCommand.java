@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * BIncCommand Opcode: Represents the byte8 increment operation for a local variable in the virtual machine.
@@ -56,7 +57,8 @@ public class BIncCommand implements Command {
         byte incrementValue = Byte.parseByte(parts[2]); // The value by which to increment the local variable
 
         // Get the current value of the local variable at the specified index
-        byte currentValue = (byte) callStack.peekFrame().getLocalVariableStore().getVariable(localVariableIndex);
+        Object raw = callStack.peekFrame().getLocalVariableStore().getVariable(localVariableIndex);
+        byte currentValue = NumberUtils.toByte(raw, "B_INC");
 
         // Increment the local variable value by the specified increment
         byte newValue = (byte) (currentValue + incrementValue);

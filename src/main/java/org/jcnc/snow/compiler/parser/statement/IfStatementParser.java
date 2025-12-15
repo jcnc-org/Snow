@@ -49,8 +49,8 @@ public class IfStatementParser implements StatementParser {
         var ts = ctx.getTokens(); // 获取 token 流引用
 
         // 获取当前 token 的行号、列号和文件名
-        int line = ctx.getTokens().peek().getLine();
-        int column = ctx.getTokens().peek().getCol();
+        int line = ctx.getTokens().peek().line();
+        int column = ctx.getTokens().peek().col();
         String file = ctx.getSourceName();
 
         // 消耗起始关键字 "if"
@@ -74,19 +74,19 @@ public class IfStatementParser implements StatementParser {
             Token peek = ts.peek();
 
             // 跳过空行
-            if (peek.getType() == TokenType.NEWLINE) {
+            if (peek.type() == TokenType.NEWLINE) {
                 ts.next();
                 continue;
             }
 
             // 遇到 else 或 end 表示 then 分支结束
-            if (peek.getType() == TokenType.KEYWORD &&
-                    (peek.getLexeme().equals("else") || peek.getLexeme().equals("end"))) {
+            if (peek.type() == TokenType.KEYWORD &&
+                    (peek.lexeme().equals("else") || peek.lexeme().equals("end"))) {
                 break;
             }
 
             // 获取当前语句的关键字，调用工厂获取对应解析器
-            String keyword = peek.getType() == TokenType.KEYWORD ? peek.getLexeme() : "";
+            String keyword = peek.type() == TokenType.KEYWORD ? peek.lexeme() : "";
             StatementNode stmt = StatementParserFactory.get(keyword).parse(ctx);
             thenBranch.add(stmt);
         }
@@ -94,7 +94,7 @@ public class IfStatementParser implements StatementParser {
         // -------------------------
         // 解析 ELSE 分支语句块（可选）
         // -------------------------
-        if (ts.peek().getLexeme().equals("else")) {
+        if (ts.peek().lexeme().equals("else")) {
             ts.next(); // 消耗 "else"
             ts.expectType(TokenType.NEWLINE); // 消耗换行符
 
@@ -102,17 +102,17 @@ public class IfStatementParser implements StatementParser {
                 Token peek = ts.peek();
 
                 // 跳过空行
-                if (peek.getType() == TokenType.NEWLINE) {
+                if (peek.type() == TokenType.NEWLINE) {
                     ts.next();
                     continue;
                 }
 
                 // "end" 表示 else 分支结束
-                if (peek.getType() == TokenType.KEYWORD && peek.getLexeme().equals("end")) {
+                if (peek.type() == TokenType.KEYWORD && peek.lexeme().equals("end")) {
                     break;
                 }
 
-                String keyword = peek.getType() == TokenType.KEYWORD ? peek.getLexeme() : "";
+                String keyword = peek.type() == TokenType.KEYWORD ? peek.lexeme() : "";
                 StatementNode stmt = StatementParserFactory.get(keyword).parse(ctx);
                 elseBranch.add(stmt);
             }

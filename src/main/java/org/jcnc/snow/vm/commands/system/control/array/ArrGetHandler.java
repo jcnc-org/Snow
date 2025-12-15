@@ -4,6 +4,11 @@ import org.jcnc.snow.vm.commands.system.control.syscalls.SyscallHandler;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.runtime.SnowArrayObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.Value;
 
 /**
  * {@code ArrGetHandler} 实现 ARR_GET (0x1802) 系统调用，
@@ -44,38 +49,25 @@ public class ArrGetHandler implements SyscallHandler {
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
 
-        // 从栈顶弹出索引对象
-        Object idxObj = stack.pop();
-        // 从栈顶弹出数组或列表对象
-        Object arrObj = stack.pop();
+        Value idxV = stack.popValue();
+        Value arrV = stack.popValue();
 
-        // 索引转为 int 类型
-        int idx = (idxObj instanceof Number n)
-                ? n.intValue()
-                : Integer.parseInt(idxObj.toString().trim());
+        int idx = switch (idxV) {
+            case IntValue(int i) -> i;
+            case org.jcnc.snow.vm.value.ShortValue(short s) -> s;
+            case org.jcnc.snow.vm.value.ByteValue(byte b) -> b;
+            case org.jcnc.snow.vm.value.LongValue(long l) -> (int) l;
+            default -> throw new IllegalArgumentException("ARR_GET: index must be int");
+        };
 
-        Object elem;
-
-        // 若为 List，直接获取
-        if (arrObj instanceof java.util.List<?> list) {
-            elem = list.get(idx);
+        if (!(arrV instanceof RefValue(int id))) {
+            throw new IllegalArgumentException("ARR_GET: not an array");
         }
-        // 若为原生数组，反射获取
-        else if (arrObj != null && arrObj.getClass().isArray()) {
-            elem = java.lang.reflect.Array.get(arrObj, idx);
-        }
-        // 类型不符，抛出异常
-        else {
-            throw new IllegalArgumentException("ARR_GET: not an array/list: " + arrObj);
+        var obj = SnowRuntime.get().heap().get(id);
+        if (!(obj instanceof SnowArrayObject arr)) {
+            throw new IllegalArgumentException("ARR_GET: not an array");
         }
 
-        // 按类型将元素压回栈
-        if (elem instanceof Number n) {
-            stack.push(n);
-        } else if (elem instanceof Boolean b) {
-            stack.push(b ? 1 : 0);
-        } else {
-            stack.push(elem);
-        }
+        stack.pushValue(arr.get(idx));
     }
 }

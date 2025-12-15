@@ -134,14 +134,12 @@ public record SignatureRegistrar(Context ctx) {
                 // 字段继承
                 parent.getFields().forEach((k, v) -> child.getFields().putIfAbsent(k, v));
                 // 方法继承
-                parent.getMethodOverloads().forEach((name, byArity) -> {
-                    byArity.forEach((argc, ft) -> {
-                        child.getMethodOverloads()
-                                .computeIfAbsent(name, _k -> new java.util.HashMap<>())
-                                .putIfAbsent(argc, ft);
-                        child.getMethods().putIfAbsent(name, ft);
-                    });
-                });
+                parent.getMethodOverloads().forEach((name, byArity) -> byArity.forEach((argc, ft) -> {
+                    child.getMethodOverloads()
+                            .computeIfAbsent(name, _k -> new java.util.HashMap<>())
+                            .putIfAbsent(argc, ft);
+                    child.getMethods().putIfAbsent(name, ft);
+                }));
             }
         }
 

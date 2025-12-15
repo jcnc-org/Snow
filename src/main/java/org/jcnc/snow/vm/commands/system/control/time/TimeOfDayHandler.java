@@ -4,8 +4,14 @@ import org.jcnc.snow.vm.commands.system.control.syscalls.SyscallHandler;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.runtime.SnowArrayObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.LongValue;
+import org.jcnc.snow.vm.value.RefValue;
 
 import java.time.Instant;
+import java.util.List;
 
 /**
  * {@code TimeOfDayHandler} 实现 TIMEOFDAY (0x1702) 系统调用，
@@ -33,7 +39,7 @@ public class TimeOfDayHandler implements SyscallHandler {
         // usec: int -> 当前秒内的微秒部分（0..999_999）
         int usec = now.getNano() / 1_000; // 将纳秒转换为微秒
 
-        // Return a single composite value to keep syscall ABI single-return.
-        stack.push(new Object[]{sec, usec});
+        int id = SnowRuntime.get().heap().alloc(new SnowArrayObject(List.of(new LongValue(sec), new IntValue(usec))));
+        stack.pushValue(new RefValue(id));
     }
 }

@@ -135,20 +135,14 @@ public record FunctionChecker(Context ctx) {
      * 递归检查单个语句（以及其嵌套语句）是否存在 return。
      */
     private boolean containsReturn(StatementNode statement) {
-        if (statement == null) {
-            return false;
-        }
-        if (statement instanceof ReturnNode) {
-            return true;
-        }
-        if (statement instanceof IfNode ifNode) {
-            return containsReturn(ifNode.thenBranch()) || containsReturn(ifNode.elseBranch());
-        }
-        if (statement instanceof LoopNode loopNode) {
-            return containsReturn(loopNode.init())
+        return switch (statement) {
+            case null -> false;
+            case ReturnNode returnNode -> true;
+            case IfNode ifNode -> containsReturn(ifNode.thenBranch()) || containsReturn(ifNode.elseBranch());
+            case LoopNode loopNode -> containsReturn(loopNode.init())
                     || containsReturn(loopNode.step())
                     || containsReturn(loopNode.body());
-        }
-        return false;
+            default -> false;
+        };
     }
 }

@@ -1,5 +1,5 @@
 /**
-@module string
+@module sys_string
 @summary 字符串/文本运行时内建系统调用模块。
 @syscalls
   0x1A00 STR_LEN              返回字符串 UTF-8 字节长度
@@ -7,7 +7,7 @@
   0x1A02 UTF8_TO_STR          UTF-8 byte[] 解码为字符串
   0x1A03 STR_FROM_CODEPOINT   Unicode code point 转单字符字符串
 */
-module: string
+module: sys_string
 
     /**
     @function length
@@ -70,4 +70,3 @@ module: string
     end function
 
 end module
-

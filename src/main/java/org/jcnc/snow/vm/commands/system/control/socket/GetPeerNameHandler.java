@@ -5,10 +5,20 @@ import org.jcnc.snow.vm.io.SocketRegistry;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.runtime.SnowArrayObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.runtime.SnowStringObject;
+import org.jcnc.snow.vm.value.ByteValue;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.LongValue;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.ShortValue;
+import org.jcnc.snow.vm.value.Value;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.channels.SocketChannel;
+import java.util.List;
 
 /**
  * {@code GetPeerNameHandler} 实现 GETPEERNAME (0x140C) 系统调用，
@@ -53,8 +63,7 @@ public class GetPeerNameHandler implements SyscallHandler {
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
 
-        // 1. 取出 fd
-        int fd = (int) stack.pop();
+        int fd = asInt(stack.popValue(), "GETPEERNAME: fd");
 
         // 2. 获取 SocketChannel
         SocketChannel channel = (SocketChannel) SocketRegistry.get(fd);
@@ -71,8 +80,18 @@ public class GetPeerNameHandler implements SyscallHandler {
         String addr = inet.getAddress().getHostAddress();
         int port = inet.getPort();
 
-        // 4. 返回数组 {addr, port}
-        Object[] result = new Object[]{addr, port};
-        stack.push(result);
+        int addrId = SnowRuntime.get().heap().alloc(new SnowStringObject(addr));
+        int tupId = SnowRuntime.get().heap().alloc(new SnowArrayObject(List.of(new RefValue(addrId), new IntValue(port))));
+        stack.pushValue(new RefValue(tupId));
+    }
+
+    private static int asInt(Value v, String what) {
+        return switch (v) {
+            case IntValue(int i) -> i;
+            case ShortValue(short s) -> s;
+            case ByteValue(byte b) -> b;
+            case LongValue(long l) -> (int) l;
+            default -> throw new IllegalArgumentException(what + " must be int");
+        };
     }
 }

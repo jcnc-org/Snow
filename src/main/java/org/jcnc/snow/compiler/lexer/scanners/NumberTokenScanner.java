@@ -243,7 +243,7 @@ public class NumberTokenScanner extends AbstractTokenScanner {
                 var its = new IdentifierTokenScanner();
                 var token = its.scanToken(ctx, line, col);
                 throw new LexicalException(
-                        "数字后不能紧跟未知标识符 '" + token.getLexeme() + "'", line, col);
+                        "数字后不能紧跟未知标识符 '" + token.lexeme() + "'", line, col);
                 /* 2-C. **非法下划线** */
             } else if (next == '_') {
                 throw new LexicalException(
@@ -312,7 +312,7 @@ public class NumberTokenScanner extends AbstractTokenScanner {
                 var its = new IdentifierTokenScanner();
                 var token = its.scanToken(ctx, line, col);
                 throw new LexicalException(
-                        "数字后不能紧跟未知标识符 '" + token.getLexeme() + "'", line, col);
+                        "数字后不能紧跟未知标识符 '" + token.lexeme() + "'", line, col);
             } else if (next == '_') {
                 throw new LexicalException("数字后不能紧跟下划线 '_'", line, col);
             }

@@ -43,8 +43,8 @@ public class UnaryOperatorParselet implements PrefixParselet {
     @Override
     public ExpressionNode parse(ParserContext ctx, Token token) {
         // 获取当前 token 的行号、列号和文件名
-        int line = ctx.getTokens().peek().getLine();
-        int column = ctx.getTokens().peek().getCol();
+        int line = ctx.getTokens().peek().line();
+        int column = ctx.getTokens().peek().col();
         String file = ctx.getSourceName();
 
         /* ------------------------------------------------------------
@@ -56,6 +56,6 @@ public class UnaryOperatorParselet implements PrefixParselet {
         /* ------------------------------------------------------------
          * 2. 封装成 AST 节点并返回。
          * ------------------------------------------------------------ */
-        return new UnaryExpressionNode(token.getLexeme(), operand, new NodeContext(line, column, file));
+        return new UnaryExpressionNode(token.lexeme(), operand, new NodeContext(line, column, file));
     }
 }

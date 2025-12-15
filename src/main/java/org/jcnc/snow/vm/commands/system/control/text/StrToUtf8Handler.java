@@ -4,6 +4,11 @@ import org.jcnc.snow.vm.commands.system.control.syscalls.SyscallHandler;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.runtime.SnowBytesObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.runtime.SnowStringObject;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.Value;
 
 import java.nio.charset.StandardCharsets;
 
@@ -17,15 +22,21 @@ public final class StrToUtf8Handler implements SyscallHandler {
     public void handle(OperandStack stack,
                        LocalVariableStore locals,
                        CallStack callStack) {
-        Object obj = stack.pop();
-        if (obj == null) {
-            stack.push(new byte[0]);
+        Value v = stack.popValue();
+        if (v == Value.NULL) {
+            int bid = SnowRuntime.get().heap().alloc(new SnowBytesObject(new byte[0]));
+            stack.pushValue(new RefValue(bid));
             return;
         }
-        if (!(obj instanceof String s)) {
-            throw new IllegalArgumentException("STR_TO_UTF8: str must be a string");
+        if (!(v instanceof RefValue(int id))) {
+            throw new IllegalArgumentException("STR_TO_UTF8: expected string");
         }
-        stack.push(s.getBytes(StandardCharsets.UTF_8));
+        var obj = SnowRuntime.get().heap().get(id);
+        if (!(obj instanceof SnowStringObject s)) {
+            throw new IllegalArgumentException("STR_TO_UTF8: expected string");
+        }
+        byte[] bytes = s.value().getBytes(StandardCharsets.UTF_8);
+        int bid = SnowRuntime.get().heap().alloc(new SnowBytesObject(bytes));
+        stack.pushValue(new RefValue(bid));
     }
 }
-

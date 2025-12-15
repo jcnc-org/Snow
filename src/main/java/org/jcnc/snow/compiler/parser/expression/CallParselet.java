@@ -28,8 +28,8 @@ public class CallParselet implements InfixParselet {
     @Override
     public ExpressionNode parse(ParserContext ctx, ExpressionNode left) {
         // 获取函数名 token 的行号、列号和文件名
-        int line = ctx.getTokens().peek(-1).getLine();
-        int column = ctx.getTokens().peek(-1).getCol();
+        int line = ctx.getTokens().peek(-1).line();
+        int column = ctx.getTokens().peek(-1).col();
         String file = ctx.getSourceName();
 
         ctx.getTokens().next(); // 消费 "("
@@ -37,7 +37,7 @@ public class CallParselet implements InfixParselet {
         List<ExpressionNode> args = new ArrayList<>();
 
         // 解析函数调用参数
-        if (!ctx.getTokens().peek().getLexeme().equals(")")) {
+        if (!ctx.getTokens().peek().lexeme().equals(")")) {
             do {
                 args.add(new PrattExpressionParser().parse(ctx));
             } while (ctx.getTokens().match(","));

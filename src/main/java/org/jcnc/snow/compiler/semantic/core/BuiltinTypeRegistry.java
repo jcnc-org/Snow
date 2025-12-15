@@ -3,8 +3,6 @@ package org.jcnc.snow.compiler.semantic.core;
 import org.jcnc.snow.compiler.semantic.type.BuiltinType;
 import org.jcnc.snow.compiler.semantic.type.Type;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -37,28 +35,26 @@ public final class BuiltinTypeRegistry {
 
     // === 静态初始化内置类型表 ===
     static {
-        Map<String, Type> t = new HashMap<>();
         // 整数类型
-        t.put("byte", BuiltinType.BYTE);      // 单字节无符号整数
-        t.put("short", BuiltinType.SHORT);    // 短整型
-        t.put("int", BuiltinType.INT);        // 标准整型
-        t.put("long", BuiltinType.LONG);      // 长整型
-        // 浮点类型
-        t.put("float", BuiltinType.FLOAT);    // 单精度浮点数
-        t.put("double", BuiltinType.DOUBLE);  // 双精度浮点数
-        // 字符串类型
-        t.put("string", BuiltinType.STRING);  // 字符串类型
-        // 布尔类型
-        t.put("boolean", BuiltinType.BOOLEAN);// 布尔类型
-        // 空类型
-        t.put("void", BuiltinType.VOID);      // 无返回值类型
-        // 任意类型（万能类型，类似 dynamic 或 any）
-        t.put("any", BuiltinType.ANY);        // 任意类型
-        // 临时兼容：标准库中大量使用 map 作为返回类型注解，但目前编译器未实现一等 Map 类型。
-        // 先将 map 视为 any，避免签名登记阶段系统性降级与误报。
-        t.put("map", BuiltinType.ANY);
         // 构建只读映射，防止外部修改
-        BUILTIN_TYPES = Collections.unmodifiableMap(t);
+        BUILTIN_TYPES = Map.ofEntries(Map.entry("byte", BuiltinType.BYTE),      // 8 位有符号整数（与 VM byte8 指令一致）
+                Map.entry("short", BuiltinType.SHORT),    // 短整型
+                Map.entry("int", BuiltinType.INT),        // 标准整型
+                Map.entry("long", BuiltinType.LONG),      // 长整型
+                // 浮点类型
+                Map.entry("float", BuiltinType.FLOAT),    // 单精度浮点数
+                Map.entry("double", BuiltinType.DOUBLE),  // 双精度浮点数
+                // 字符串类型
+                Map.entry("string", BuiltinType.STRING),  // 字符串类型
+                // 布尔类型
+                Map.entry("boolean", BuiltinType.BOOLEAN),// 布尔类型
+                // 空类型
+                Map.entry("void", BuiltinType.VOID),      // 无返回值类型
+                // 任意类型（万能类型，类似 dynamic 或 any）
+                Map.entry("any", BuiltinType.ANY),        // 任意类型
+                // 临时兼容：标准库中大量使用 map 作为返回类型注解，但目前编译器未实现一等 Map 类型。
+                // 先将 map 视为 any，避免签名登记阶段系统性降级与误报。
+                Map.entry("map", BuiltinType.ANY));
     }
 
     /**

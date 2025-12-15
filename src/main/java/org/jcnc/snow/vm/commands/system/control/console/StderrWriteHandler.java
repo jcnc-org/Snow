@@ -4,6 +4,24 @@ import org.jcnc.snow.vm.commands.system.control.syscalls.SyscallHandler;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.runtime.HeapObject;
+import org.jcnc.snow.vm.runtime.SnowArrayObject;
+import org.jcnc.snow.vm.runtime.SnowBytesObject;
+import org.jcnc.snow.vm.runtime.SnowDictObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.runtime.SnowStringObject;
+import org.jcnc.snow.vm.value.BoolValue;
+import org.jcnc.snow.vm.value.ByteValue;
+import org.jcnc.snow.vm.value.DoubleValue;
+import org.jcnc.snow.vm.value.FloatValue;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.LongValue;
+import org.jcnc.snow.vm.value.NullValue;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.ShortValue;
+import org.jcnc.snow.vm.value.Value;
+
+import java.nio.charset.StandardCharsets;
 
 /**
  * {@code StderrWriteHandler} 实现 STDERR_WRITE (0x1202) 系统调用，
@@ -37,19 +55,36 @@ public class StderrWriteHandler implements SyscallHandler {
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
 
-        // 从操作数栈弹出待输出的数据对象
-        Object dataObj = stack.pop();
-
-        // 写入标准错误流（System.err），null 则输出 "null"
-        if (dataObj != null) {
-            System.err.print(dataObj.toString());
-        } else {
-            System.err.print("null");
-        }
+        Value data = stack.popValue();
+        byte[] bytes = toBytes(data);
+        System.err.write(bytes);
         // 确保立即刷新
         System.err.flush();
 
         // 向栈压入 0，保持栈平衡
-        stack.push(0);
+        stack.pushValue(new IntValue(0));
+    }
+
+    private static byte[] toBytes(Value v) {
+        if (v == null) v = Value.NULL;
+        return switch (v) {
+            case NullValue _ -> "null".getBytes(StandardCharsets.UTF_8);
+            case BoolValue(boolean b) -> (b ? "true" : "false").getBytes(StandardCharsets.UTF_8);
+            case ByteValue(byte b) -> Byte.toString(b).getBytes(StandardCharsets.UTF_8);
+            case ShortValue(short s) -> Short.toString(s).getBytes(StandardCharsets.UTF_8);
+            case IntValue(int i) -> Integer.toString(i).getBytes(StandardCharsets.UTF_8);
+            case LongValue(long l) -> Long.toString(l).getBytes(StandardCharsets.UTF_8);
+            case FloatValue(float f) -> Float.toString(f).getBytes(StandardCharsets.UTF_8);
+            case DoubleValue(double d) -> Double.toString(d).getBytes(StandardCharsets.UTF_8);
+            case RefValue(int objectId) -> {
+                HeapObject obj = SnowRuntime.get().heap().get(objectId);
+                yield switch (obj) {
+                    case SnowBytesObject b -> b.unsafeBytes();
+                    case SnowStringObject s -> s.value().getBytes(StandardCharsets.UTF_8);
+                    case SnowArrayObject a -> a.snapshot().toString().getBytes(StandardCharsets.UTF_8);
+                    case SnowDictObject d -> d.snapshot().toString().getBytes(StandardCharsets.UTF_8);
+                };
+            }
+        };
     }
 }

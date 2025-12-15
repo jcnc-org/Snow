@@ -10,6 +10,7 @@ module: os_fs
     import: os_fd
     import: std_string
     import: std_array
+    import: std_bytes
 
     /**
     @function currentDir
@@ -327,50 +328,15 @@ module: os_fs
                 step:
                     keep = keep
                 body:
-                    declare chunk: any = os_fd.readBytes(handle, 4096)
+                    declare chunk: byte[] = os_fd.readBytes(handle, 4096)
                     declare chunkStr: string = "" + chunk
                     if chunkStr == "-1" then
                         break
                     end if
-
-                    declare chunkArr: std_array.Array = new std_array.Array(chunk)
-                    declare chunkLen: int = chunkArr.length()
-                    if chunkLen == 0 then
+                    if std_bytes.length(chunk) == 0 then
                         break
                     end if
-
-                    declare buf: std_array.Array = new std_array.Array()
-                    declare ci: int = 0
-                    loop:
-                        init:
-                            ci = ci
-                        cond:
-                            ci < chunkLen
-                        step:
-                            ci = ci + 1
-                        body:
-                            declare b: int = chunkArr.get(ci)
-                            buf.append(b)
-                        end body
-                    end loop
-
-                    declare bufData: byte[] = []
-                    declare bi: int = 0
-                    declare bufLen: int = buf.length()
-                    loop:
-                        init:
-                            bi = bi
-                        cond:
-                            bi < bufLen
-                        step:
-                            bi = bi + 1
-                        body:
-                            declare byteVal: int = buf.get(bi)
-                            bufData[bi] = byteVal
-                        end body
-                    end loop
-
-                    content = content + std_string.fromBytes(bufData)
+                    content = content + std_string.fromBytes(chunk)
                 end body
             end loop
 

@@ -46,8 +46,8 @@ public class ImportParser {
 
         do {
             // 每个模块名的起始位置信息
-            int line = ts.peek().getLine();
-            int column = ts.peek().getCol();
+            int line = ts.peek().line();
+            int column = ts.peek().col();
             String file = ctx.getSourceName();
 
             // 解析形如 IDENT ('.' IDENT)*
@@ -71,10 +71,10 @@ public class ImportParser {
     private String parseQualifiedName(TokenStream ts) {
         StringBuilder sb = new StringBuilder();
         // 第一个标识符
-        sb.append(ts.expectType(TokenType.IDENTIFIER).getLexeme());
+        sb.append(ts.expectType(TokenType.IDENTIFIER).lexeme());
         // 后续 .IDENTIFIER
         while (ts.match(".")) {
-            sb.append('.').append(ts.expectType(TokenType.IDENTIFIER).getLexeme());
+            sb.append('.').append(ts.expectType(TokenType.IDENTIFIER).lexeme());
         }
         return sb.toString();
     }

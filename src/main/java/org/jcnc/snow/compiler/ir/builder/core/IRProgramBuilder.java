@@ -311,6 +311,7 @@ public final class IRProgramBuilder {
                         if (decl.getInitializer().isEmpty()) continue;
                         ExpressionNode init = decl.getInitializer().get();
                         Object value = evalLiteral(init);
+                        value = coerceConstToDeclaredType(value, decl.getType());
                         if (value != null) {
                             GlobalConstTable.register(moduleName + "." + decl.getName(), value);
                         }
@@ -368,6 +369,23 @@ public final class IRProgramBuilder {
             }
             default -> null;
         };
+    }
+
+    private static Object coerceConstToDeclaredType(Object value, String declaredType) {
+        if (value == null || declaredType == null || declaredType.isBlank()) return value;
+        String t = declaredType.toLowerCase(Locale.ROOT).trim();
+        if (value instanceof Number n) {
+            return switch (t) {
+                case "byte" -> (byte) n.longValue();
+                case "short" -> (short) n.longValue();
+                case "int", "integer", "bool", "boolean" -> (int) n.longValue();
+                case "long" -> n.longValue();
+                case "float" -> (float) n.doubleValue();
+                case "double" -> n.doubleValue();
+                default -> value;
+            };
+        }
+        return value;
     }
 
     /**

@@ -66,8 +66,8 @@ public class LoopStatementParser implements StatementParser {
         TokenStream ts = ctx.getTokens();
 
         // 获取当前 token 的行号、列号
-        int loop_line = ctx.getTokens().peek().getLine();
-        int loop_column = ctx.getTokens().peek().getCol();
+        int loop_line = ctx.getTokens().peek().line();
+        int loop_column = ctx.getTokens().peek().col();
 
         String file = ctx.getSourceName();
 
@@ -85,17 +85,17 @@ public class LoopStatementParser implements StatementParser {
 
         // init 区块: 仅支持一条语句，通常为 declare
         sections.put("init", new FlexibleSectionParser.SectionDefinition(
-                ts1 -> ts1.peek().getLexeme().equals("init"),
+                ts1 -> ts1.peek().lexeme().equals("init"),
                 (ctx1, ts1) -> {
                     ParserUtils.matchHeader(ts1, "init");
-                    init[0] = StatementParserFactory.get(ts1.peek().getLexeme()).parse(ctx1);
+                    init[0] = StatementParserFactory.get(ts1.peek().lexeme()).parse(ctx1);
                     ParserUtils.skipNewlines(ts1);
                 }
         ));
 
         // cond 区块: 支持任意可解析为布尔的表达式
         sections.put("cond", new FlexibleSectionParser.SectionDefinition(
-                ts1 -> ts1.peek().getLexeme().equals("cond"),
+                ts1 -> ts1.peek().lexeme().equals("cond"),
                 (ctx1, ts1) -> {
                     ParserUtils.matchHeader(ts1, "cond");
                     cond[0] = new PrattExpressionParser().parse(ctx1);
@@ -106,14 +106,14 @@ public class LoopStatementParser implements StatementParser {
 
         // step 区块: 目前仅支持单一变量赋值语句
         sections.put("step", new FlexibleSectionParser.SectionDefinition(
-                ts1 -> ts1.peek().getLexeme().equals("step"),
+                ts1 -> ts1.peek().lexeme().equals("step"),
                 (ctx1, ts1) -> {
                     // 获取当前 token 的行号、列号
-                    int line = ctx.getTokens().peek().getLine();
-                    int column = ctx.getTokens().peek().getCol();
+                    int line = ctx.getTokens().peek().line();
+                    int column = ctx.getTokens().peek().col();
 
                     ParserUtils.matchHeader(ts1, "step");
-                    String varName = ts1.expectType(TokenType.IDENTIFIER).getLexeme();
+                    String varName = ts1.expectType(TokenType.IDENTIFIER).lexeme();
                     ts1.expect("=");
                     ExpressionNode expr = new PrattExpressionParser().parse(ctx1);
                     ts1.expectType(TokenType.NEWLINE);
@@ -124,14 +124,14 @@ public class LoopStatementParser implements StatementParser {
 
         // body 区块: 支持多条语句，直到遇到 end body
         sections.put("body", new FlexibleSectionParser.SectionDefinition(
-                ts1 -> ts1.peek().getLexeme().equals("body"),
+                ts1 -> ts1.peek().lexeme().equals("body"),
                 (ctx1, ts1) -> {
                     ParserUtils.matchHeader(ts1, "body");
 
-                    while (!(ts1.peek().getLexeme().equals("end") &&
-                            ts1.peek(1).getLexeme().equals("body"))) {
-                        String keyword = ts1.peek().getType() == TokenType.KEYWORD
-                                ? ts1.peek().getLexeme()
+                    while (!(ts1.peek().lexeme().equals("end") &&
+                            ts1.peek(1).lexeme().equals("body"))) {
+                        String keyword = ts1.peek().type() == TokenType.KEYWORD
+                                ? ts1.peek().lexeme()
                                 : "";
                         body.add(StatementParserFactory.get(keyword).parse(ctx1));
                         ParserUtils.skipNewlines(ts1);

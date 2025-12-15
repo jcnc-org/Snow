@@ -30,17 +30,17 @@ public class DeclarationStatementParser implements StatementParser {
         var tokens = ctx.getTokens(); // 获取词法单元流
 
         // 记录声明语句在源码中的位置信息（行、列、文件名）
-        int line = tokens.peek().getLine();
-        int column = tokens.peek().getCol();
+        int line = tokens.peek().line();
+        int column = tokens.peek().col();
         String file = ctx.getSourceName();
 
         // 判断并消费声明关键字 declare 或 const
         boolean isConst = false;
-        String first = tokens.peek().getLexeme();
+        String first = tokens.peek().lexeme();
         if ("declare".equals(first)) {
             tokens.next(); // 消费 declare
             // declare 后可选 const，用于声明常量
-            if ("const".equals(tokens.peek().getLexeme())) {
+            if ("const".equals(tokens.peek().lexeme())) {
                 isConst = true;
                 tokens.next(); // 消费 const
             }
@@ -52,32 +52,32 @@ public class DeclarationStatementParser implements StatementParser {
             // 不符合语法规则，抛出异常
             throw new org.jcnc.snow.compiler.parser.context.UnexpectedToken(
                     "声明应以 'declare' 或 'declare const' 开始，而不是 '" + first + "'",
-                    tokens.peek().getLine(), tokens.peek().getCol());
+                    tokens.peek().line(), tokens.peek().col());
         }
 
         // 获取变量名（标识符）
-        String name = tokens.expectType(TokenType.IDENTIFIER).getLexeme();
+        String name = tokens.expectType(TokenType.IDENTIFIER).lexeme();
 
         // 检查并消费冒号 “:”
         tokens.expect(":");
 
         // 解析变量类型（类型标识符或自定义结构体名，支持限定名如 module.Type）
         StringBuilder type = new StringBuilder();
-        if (tokens.peek().getType() == TokenType.TYPE || tokens.peek().getType() == TokenType.IDENTIFIER) {
+        if (tokens.peek().type() == TokenType.TYPE || tokens.peek().type() == TokenType.IDENTIFIER) {
             // 类型可以是基础类型或结构体名
-            type.append(tokens.next().getLexeme());
+            type.append(tokens.next().lexeme());
             
             // 支持限定名：module.Type 或 module.submodule.Type
             while (tokens.match(".")) {
                 type.append('.');
-                if (tokens.peek().getType() == TokenType.IDENTIFIER) {
-                    type.append(tokens.next().getLexeme());
+                if (tokens.peek().type() == TokenType.IDENTIFIER) {
+                    type.append(tokens.next().lexeme());
                 } else {
                     var t = tokens.peek();
                     throw new org.jcnc.snow.compiler.parser.context.UnexpectedToken(
                             "限定类型名中点号后必须跟标识符，但实际得到的是 "
-                                    + t.getType() + " ('" + t.getLexeme() + "')",
-                            t.getLine(), t.getCol()
+                                    + t.type() + " ('" + t.lexeme() + "')",
+                            t.line(), t.col()
                     );
                 }
             }
@@ -86,8 +86,8 @@ public class DeclarationStatementParser implements StatementParser {
             var t = tokens.peek();
             throw new org.jcnc.snow.compiler.parser.context.UnexpectedToken(
                     "期望的标记类型为 TYPE 或 IDENTIFIER，但实际得到的是 "
-                            + t.getType() + " ('" + t.getLexeme() + "')",
-                    t.getLine(), t.getCol()
+                            + t.type() + " ('" + t.lexeme() + "')",
+                    t.line(), t.col()
             );
         }
 

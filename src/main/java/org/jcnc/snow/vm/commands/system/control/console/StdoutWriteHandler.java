@@ -4,6 +4,22 @@ import org.jcnc.snow.vm.commands.system.control.syscalls.SyscallHandler;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.runtime.HeapObject;
+import org.jcnc.snow.vm.runtime.SnowArrayObject;
+import org.jcnc.snow.vm.runtime.SnowBytesObject;
+import org.jcnc.snow.vm.runtime.SnowDictObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.runtime.SnowStringObject;
+import org.jcnc.snow.vm.value.BoolValue;
+import org.jcnc.snow.vm.value.ByteValue;
+import org.jcnc.snow.vm.value.DoubleValue;
+import org.jcnc.snow.vm.value.FloatValue;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.LongValue;
+import org.jcnc.snow.vm.value.NullValue;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.ShortValue;
+import org.jcnc.snow.vm.value.Value;
 
 import java.nio.charset.StandardCharsets;
 
@@ -42,26 +58,37 @@ public class StdoutWriteHandler implements SyscallHandler {
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
 
-        // 1. 取参数，操作数栈不能为空
-        if (stack.isEmpty()) {
-            throw new IllegalStateException("STDOUT_WRITE: 缺少参数 data");
-        }
-        Object dataObj = stack.pop();
-
-        // 2. 类型处理
-        final byte[] data;
-        if (dataObj instanceof byte[] bytes) {
-            data = bytes;
-        } else {
-            // null → "null"；其它 → .toString()
-            data = String.valueOf(dataObj).getBytes(StandardCharsets.UTF_8);
-        }
+        if (stack.isEmpty()) throw new IllegalStateException("STDOUT_WRITE: 缺少参数 data");
+        byte[] data = toBytes(stack.popValue());
 
         // 3. 写入 System.out
         System.out.write(data);
         System.out.flush();
 
         // 4. 返回实际写入字节数
-        stack.push(data.length);
+        stack.pushValue(new IntValue(data.length));
+    }
+
+    private static byte[] toBytes(Value v) {
+        if (v == null) v = Value.NULL;
+        return switch (v) {
+            case NullValue _ -> "null".getBytes(StandardCharsets.UTF_8);
+            case BoolValue(boolean b) -> (b ? "true" : "false").getBytes(StandardCharsets.UTF_8);
+            case ByteValue(byte b) -> Byte.toString(b).getBytes(StandardCharsets.UTF_8);
+            case ShortValue(short s) -> Short.toString(s).getBytes(StandardCharsets.UTF_8);
+            case IntValue(int i) -> Integer.toString(i).getBytes(StandardCharsets.UTF_8);
+            case LongValue(long l) -> Long.toString(l).getBytes(StandardCharsets.UTF_8);
+            case FloatValue(float f) -> Float.toString(f).getBytes(StandardCharsets.UTF_8);
+            case DoubleValue(double d) -> Double.toString(d).getBytes(StandardCharsets.UTF_8);
+            case RefValue(int objectId) -> {
+                HeapObject obj = SnowRuntime.get().heap().get(objectId);
+                yield switch (obj) {
+                    case SnowBytesObject b -> b.unsafeBytes();
+                    case SnowStringObject s -> s.value().getBytes(StandardCharsets.UTF_8);
+                    case SnowArrayObject a -> a.snapshot().toString().getBytes(StandardCharsets.UTF_8);
+                    case SnowDictObject d -> d.snapshot().toString().getBytes(StandardCharsets.UTF_8);
+                };
+            }
+        };
     }
 }

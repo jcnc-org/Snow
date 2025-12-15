@@ -1301,5 +1301,40 @@ public final class SyscallOpCode {
      * <p><b>Stack</b>：入参 {@code (codePoint:int)} → 出参 {@code (str:string)}</p>
      */
     public static final int STR_FROM_CODEPOINT = 0x1A03;
+
+    /**
+     * Returns the length of a bytes object.
+     *
+     * <p><b>Stack</b>：入参 {@code (bytes:byte[])} → 出参 {@code (len:int)}</p>
+     */
+    public static final int BYTES_LEN = 0x1A10;
+
+    /**
+     * Gets the byte at index.
+     *
+     * <p><b>Stack</b>：入参 {@code (bytes:byte[], index:int)} → 出参 {@code (b:byte)}</p>
+     */
+    public static final int BYTES_GET = 0x1A11;
+
+    /**
+     * Sets the byte at index.
+     *
+     * <p><b>Stack</b>：入参 {@code (bytes:byte[], index:int, b:byte)} → 出参 {@code (rc:int)}</p>
+     */
+    public static final int BYTES_SET = 0x1A12;
+
+    /**
+     * Allocates a new bytes object of length n, initialized to 0.
+     *
+     * <p><b>Stack</b>：入参 {@code (n:int)} → 出参 {@code (bytes:byte[])}</p>
+     */
+    public static final int BYTES_NEW = 0x1A13;
+
+    /**
+     * Concatenates two bytes objects.
+     *
+     * <p><b>Stack</b>：入参 {@code (a:byte[], b:byte[])} → 出参 {@code (bytes:byte[])}</p>
+     */
+    public static final int BYTES_CONCAT = 0x1A14;
     // endregion
 }

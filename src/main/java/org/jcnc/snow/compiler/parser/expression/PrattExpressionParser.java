@@ -123,16 +123,16 @@ public class PrattExpressionParser implements ExpressionParser {
         Token token = ctx.getTokens().next();
 
         // 2) 查找前缀解析器（优先按词素，再按 TokenType）
-        PrefixParselet prefix = prefixes.get(token.getLexeme());
+        PrefixParselet prefix = prefixes.get(token.lexeme());
         if (prefix == null) {
-            prefix = prefixes.get(token.getType().name());
+            prefix = prefixes.get(token.type().name());
         }
         if (prefix == null) {
             // 未注册前缀解析器，直接报错
             throw new UnsupportedFeature(
-                    "没有为该 Token 注册前缀解析器: " + token.getLexeme() + " / " + token.getType(),
-                    token.getLine(),
-                    token.getCol()
+                    "没有为该 Token 注册前缀解析器: " + token.lexeme() + " / " + token.type(),
+                    token.line(),
+                    token.col()
             );
         }
 
@@ -141,15 +141,15 @@ public class PrattExpressionParser implements ExpressionParser {
 
         // 4) 主循环：不断吸收更高优先级的中缀操作，直到优先级不再提升
         while (!ctx.getTokens().isAtEnd() && prec.ordinal() < nextPrecedence(ctx)) {
-            String lex = ctx.getTokens().peek().getLexeme();
+            String lex = ctx.getTokens().peek().lexeme();
             InfixParselet infix = infixes.get(lex);
             if (infix == null) {
                 // nextPrecedence > prec 时一般已注册中缀解析器
                 Token t = ctx.getTokens().peek();
                 throw new UnsupportedFeature(
                         "没有为该运算符注册中缀解析器: '" + lex + "'",
-                        t.getLine(),
-                        t.getCol()
+                        t.line(),
+                        t.col()
                 );
             }
             // 递归组合更高优先级的中缀表达式
@@ -169,7 +169,7 @@ public class PrattExpressionParser implements ExpressionParser {
      * @return 下一个运算符优先级序号（无则-1）
      */
     private int nextPrecedence(ParserContext ctx) {
-        InfixParselet infix = infixes.get(ctx.getTokens().peek().getLexeme());
+        InfixParselet infix = infixes.get(ctx.getTokens().peek().lexeme());
         return infix != null ? infix.precedence().ordinal() : -1;
     }
 }

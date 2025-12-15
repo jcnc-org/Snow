@@ -5,6 +5,12 @@ import org.jcnc.snow.vm.io.FDTable;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.runtime.SnowArrayObject;
+import org.jcnc.snow.vm.runtime.SnowDictObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.Value;
 
 import java.io.IOException;
 import java.nio.channels.*;
@@ -62,34 +68,37 @@ public class SelectHandler implements SyscallHandler {
         return false;
     }
 
-    private static void pushResult(OperandStack stack,
-                                   List<Integer> r, List<Integer> w, List<Integer> e) {
-        Map<String, Object> ready = new HashMap<>();
-        ready.put("read", r);
-        ready.put("write", w);
-        ready.put("except", e);
-        stack.push(ready);
+    private static RefValue newIntArray(List<Integer> ints) {
+        SnowArrayObject arr = new SnowArrayObject();
+        for (Integer i : ints) {
+            if (i == null) continue;
+            arr.push(new IntValue(i));
+        }
+        int id = SnowRuntime.get().heap().alloc(arr);
+        return new RefValue(id);
     }
 
-    /**
-     * 将任意 List<?> 转换为 List<Integer>
-     */
-    private static List<Integer> toIntList(Object obj) {
-        if (obj == null) return Collections.emptyList();
-        if (obj instanceof List<?> list) {
-            List<Integer> out = new ArrayList<>(list.size());
-            for (Object o : list)
-                switch (o) {
-                    case null -> {
-                    }
-                    case Number n -> out.add(n.intValue());
-                    case Boolean b -> out.add(b ? 1 : 0);
-                    default -> throw new IllegalArgumentException(
-                            "SELECT: fd list must contain integers, got " + o.getClass());
-                }
-            return out;
+    private static List<Integer> toIntList(Value v) {
+        if (v == Value.NULL) return Collections.emptyList();
+        if (!(v instanceof RefValue(int id))) {
+            throw new IllegalArgumentException("SELECT: fd list must be an array");
         }
-        throw new IllegalArgumentException("SELECT: fd list must be a List, got " + obj.getClass());
+        var obj = SnowRuntime.get().heap().get(id);
+        if (!(obj instanceof SnowArrayObject arr)) {
+            throw new IllegalArgumentException("SELECT: fd list must be an array");
+        }
+        List<Integer> out = new ArrayList<>(arr.length());
+        for (var item : arr.snapshot()) {
+            int fd = switch (item) {
+                case IntValue(int i) -> i;
+                case org.jcnc.snow.vm.value.ShortValue(short s) -> s;
+                case org.jcnc.snow.vm.value.ByteValue(byte b) -> b;
+                case org.jcnc.snow.vm.value.LongValue(long l) -> (int) l;
+                default -> throw new IllegalArgumentException("SELECT: fd list must contain integers");
+            };
+            out.add(fd);
+        }
+        return out;
     }
 
     @Override
@@ -98,15 +107,19 @@ public class SelectHandler implements SyscallHandler {
                        CallStack callStack) throws Exception {
 
         // 参数解析
-        Object timeoutObj = stack.pop();
-        Object exceptObj = stack.pop();
-        Object writeObj = stack.pop();
-        Object readObj = stack.pop();
+        Value timeoutV = stack.popValue();
+        Value exceptV = stack.popValue();
+        Value writeV = stack.popValue();
+        Value readV = stack.popValue();
 
-        final int timeoutMs = (timeoutObj == null) ? -1 : ((Number) timeoutObj).intValue();
-        final List<Integer> readSet = toIntList(readObj);
-        final List<Integer> writeSet = toIntList(writeObj);
-        final List<Integer> exceptSet = toIntList(exceptObj);
+        final int timeoutMs = (timeoutV == Value.NULL) ? -1 : switch (timeoutV) {
+            case IntValue(int i) -> i;
+            case org.jcnc.snow.vm.value.LongValue(long l) -> (int) l;
+            default -> throw new IllegalArgumentException("SELECT: timeout must be int");
+        };
+        final List<Integer> readSet = toIntList(readV);
+        final List<Integer> writeSet = toIntList(writeV);
+        final List<Integer> exceptSet = toIntList(exceptV);
 
         // interestOps 聚合
         final Map<Integer, Integer> fdOps = new HashMap<>();
@@ -137,7 +150,12 @@ public class SelectHandler implements SyscallHandler {
         }
 
         if (fdOps.isEmpty()) {
-            pushResult(stack, readyRead, readyWrite, readyExcept);
+            var out = new SnowDictObject();
+            out.put("read", newIntArray(readyRead));
+            out.put("write", newIntArray(readyWrite));
+            out.put("except", newIntArray(readyExcept));
+            int outId = SnowRuntime.get().heap().alloc(out);
+            stack.pushValue(new RefValue(outId));
             return;
         }
 
@@ -185,6 +203,11 @@ public class SelectHandler implements SyscallHandler {
         }
 
         // 返回结果
-        pushResult(stack, readyRead, readyWrite, readyExcept);
+        var out = new SnowDictObject();
+        out.put("read", newIntArray(readyRead));
+        out.put("write", newIntArray(readyWrite));
+        out.put("except", newIntArray(readyExcept));
+        int outId = SnowRuntime.get().heap().alloc(out);
+        stack.pushValue(new RefValue(outId));
     }
 }

@@ -6,7 +6,7 @@
 */
 module: os_string
 
-    import: string
+    import: sys_string
 
     /**
     @function length
@@ -17,7 +17,7 @@ module: os_string
             declare str: string
         returns: int
         body:
-            return string.length(str)
+            return sys_string.length(str)
         end body
     end function
 
@@ -30,7 +30,7 @@ module: os_string
             declare str: string
         returns: byte[]
         body:
-            return string.toUtf8(str)
+            return sys_string.toUtf8(str)
         end body
     end function
 
@@ -43,7 +43,7 @@ module: os_string
             declare bytes: byte[]
         returns: string
         body:
-            return string.fromUtf8(bytes)
+            return sys_string.fromUtf8(bytes)
         end body
     end function
 
@@ -56,9 +56,8 @@ module: os_string
             declare codePoint: int
         returns: string
         body:
-            return string.fromCodePoint(codePoint)
+            return sys_string.fromCodePoint(codePoint)
         end body
     end function
 
 end module
-

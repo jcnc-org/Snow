@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 import org.jcnc.snow.vm.utils.LoggingUtils;
 
 /**
@@ -62,8 +63,8 @@ public class BCGECommand implements Command {
         int target = Integer.parseInt(parts[1]);
 
         // Pop the two operands from the stack
-        byte b = (byte) operandStack.pop();
-        byte a = (byte) operandStack.pop();
+        byte b = NumberUtils.popByte(operandStack, "B_CGE");
+        byte a = NumberUtils.popByte(operandStack, "B_CGE");
 
         // If the first operand is greater than or equal to the second, jump to the target command
         if (a >= b) {

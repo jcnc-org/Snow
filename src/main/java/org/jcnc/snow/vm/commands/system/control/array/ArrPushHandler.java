@@ -5,7 +5,11 @@ import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
-import java.util.List;
+import org.jcnc.snow.vm.runtime.SnowArrayObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.Value;
 
 /**
  * {@code ArrPushHandler} 实现 ARR_PUSH (0x1810) 系统调用，
@@ -32,19 +36,18 @@ public class ArrPushHandler implements SyscallHandler {
                        CallStack callStack) throws Exception {
 
         // 入栈顺序：(arr, value) → 栈顶是 value
-        Object value = stack.pop();
-        Object arrObj = stack.pop();
+        Value valueV = stack.popValue();
+        Value arrV = stack.popValue();
 
-        if (!(arrObj instanceof List<?> list)) {
-            throw new IllegalArgumentException("ARR_PUSH: not a List: " + arrObj);
+        if (!(arrV instanceof RefValue(int id))) {
+            throw new IllegalArgumentException("ARR_PUSH: not an array");
+        }
+        var obj = SnowRuntime.get().heap().get(id);
+        if (!(obj instanceof SnowArrayObject arr)) {
+            throw new IllegalArgumentException("ARR_PUSH: not an array");
         }
 
-        @SuppressWarnings("unchecked")
-        List<Object> mlist = (List<Object>) list;
-
-        mlist.add(value);
-
-        // 返回追加后的长度
-        stack.push(mlist.size());
+        arr.push(valueV);
+        stack.pushValue(new IntValue(arr.length()));
     }
 }

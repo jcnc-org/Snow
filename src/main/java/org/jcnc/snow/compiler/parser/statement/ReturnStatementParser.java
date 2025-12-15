@@ -37,8 +37,8 @@ public class ReturnStatementParser implements StatementParser {
     @Override
     public ReturnNode parse(ParserContext ctx) {
         // 获取当前 token 的行号、列号和文件名
-        int line = ctx.getTokens().peek().getLine();
-        int column = ctx.getTokens().peek().getCol();
+        int line = ctx.getTokens().peek().line();
+        int column = ctx.getTokens().peek().col();
         String file = ctx.getSourceName();
 
         // 消耗 "return" 关键字
@@ -47,7 +47,7 @@ public class ReturnStatementParser implements StatementParser {
         ExpressionNode expr = null;
 
         // 如果下一 token 不是换行符，说明存在返回值表达式
-        if (ctx.getTokens().peek().getType() != TokenType.NEWLINE) {
+        if (ctx.getTokens().peek().type() != TokenType.NEWLINE) {
             expr = new PrattExpressionParser().parse(ctx);
         }
 

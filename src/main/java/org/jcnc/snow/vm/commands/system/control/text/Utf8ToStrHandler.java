@@ -4,9 +4,13 @@ import org.jcnc.snow.vm.commands.system.control.syscalls.SyscallHandler;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.runtime.SnowBytesObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.runtime.SnowStringObject;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.Value;
 
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 /**
  * {@code Utf8ToStrHandler} implements UTF8_TO_STR (0x1A02).
@@ -18,27 +22,21 @@ public final class Utf8ToStrHandler implements SyscallHandler {
     public void handle(OperandStack stack,
                        LocalVariableStore locals,
                        CallStack callStack) {
-        Object obj = stack.pop();
-        if (obj == null) {
-            stack.push("");
+        Value v = stack.popValue();
+        if (v == Value.NULL) {
+            int id = SnowRuntime.get().heap().alloc(new SnowStringObject(""));
+            stack.pushValue(new RefValue(id));
             return;
         }
-        byte[] bytes = switch (obj) {
-            case byte[] b -> b;
-            case List<?> list -> {
-                byte[] out = new byte[list.size()];
-                for (int i = 0; i < list.size(); i++) {
-                    Object v = list.get(i);
-                    if (v == null) out[i] = 0;
-                    else if (v instanceof Number n) out[i] = (byte) n.intValue();
-                    else if (v instanceof Boolean b) out[i] = (byte) (b ? 1 : 0);
-                    else throw new IllegalArgumentException("UTF8_TO_STR: list element must be number/bool/null");
-                }
-                yield out;
-            }
-            default -> throw new IllegalArgumentException("UTF8_TO_STR: bytes must be byte[] or List");
-        };
-        stack.push(new String(bytes, StandardCharsets.UTF_8));
+        if (!(v instanceof RefValue(int id))) {
+            throw new IllegalArgumentException("UTF8_TO_STR: expected bytes");
+        }
+        var obj = SnowRuntime.get().heap().get(id);
+        if (!(obj instanceof SnowBytesObject bytes)) {
+            throw new IllegalArgumentException("UTF8_TO_STR: expected bytes");
+        }
+        String s = new String(bytes.unsafeBytes(), StandardCharsets.UTF_8);
+        int sid = SnowRuntime.get().heap().alloc(new SnowStringObject(s));
+        stack.pushValue(new RefValue(sid));
     }
 }
-

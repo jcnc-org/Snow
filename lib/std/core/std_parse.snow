@@ -7,6 +7,7 @@ module: std_parse
     import: std_string
     import: std_array
     import: std_option
+    import: std_bytes
 
     /**
     @function _digitValue
@@ -486,21 +487,20 @@ module: std_parse
 
     /**
     @function _arrLen
-    @summary 内部工具：获取字节数组长度（基于 std_array.Array）
+    @summary 内部工具：获取字节数组长度（基于 std_bytes）
     */
     function: _arrLen
         params:
             declare data: byte[]
         returns: int
         body:
-            declare arr: std_array.Array = new std_array.Array(data)
-            return arr.length()
+            return std_bytes.length(data)
         end body
     end function
 
     /**
     @function _arrGet
-    @summary 内部工具：获取字节数组元素（基于 std_array.Array）
+    @summary 内部工具：获取字节数组元素（基于 std_bytes）
     */
     function: _arrGet
         params:
@@ -508,8 +508,7 @@ module: std_parse
             declare idx: int
         returns: int
         body:
-            declare arr: std_array.Array = new std_array.Array(data)
-            return arr.get(idx)
+            return std_bytes.get(data, idx)
         end body
     end function
 

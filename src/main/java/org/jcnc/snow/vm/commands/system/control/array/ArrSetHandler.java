@@ -4,8 +4,11 @@ import org.jcnc.snow.vm.commands.system.control.syscalls.SyscallHandler;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
-
-import java.util.List;
+import org.jcnc.snow.vm.runtime.SnowArrayObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.Value;
 
 /**
  * {@code ArrSetHandler} 实现 ARR_SET (0x1803) 系统调用，
@@ -48,35 +51,37 @@ public class ArrSetHandler implements SyscallHandler {
                        CallStack callStack) throws Exception {
 
         // 从栈顶弹出赋值内容、索引、目标数组/列表对象
-        Object value = stack.pop();
-        Object idxObj = stack.pop();
-        Object arrObj = stack.pop();
+        Value valueV = stack.popValue();
+        Value idxV = stack.popValue();
+        Value arrV = stack.popValue();
 
-        // 将索引对象转换为 int 类型
-        int idx = (idxObj instanceof Number n)
-                ? n.intValue()
-                : Integer.parseInt(idxObj.toString().trim());
+        int idx = switch (idxV) {
+            case IntValue(int i) -> i;
+            case org.jcnc.snow.vm.value.ShortValue(short s) -> s;
+            case org.jcnc.snow.vm.value.ByteValue(byte b) -> b;
+            case org.jcnc.snow.vm.value.LongValue(long l) -> (int) l;
+            default -> throw new IllegalArgumentException("ARR_SET: index must be int");
+        };
 
-        // 支持 List 类型容器
-        if (arrObj instanceof List<?> list) {
-            @SuppressWarnings("unchecked")
-            List<Object> mlist = (List<Object>) list;
-            // 若目标索引超出当前长度，则补齐 null
-            while (mlist.size() < idx) mlist.add(null);
-            // 如果等于长度则 append，否则 set 覆盖
-            if (idx == mlist.size()) mlist.add(value);
-            else mlist.set(idx, value);
+        if (!(arrV instanceof RefValue(int id))) {
+            throw new IllegalArgumentException("ARR_SET: not an array");
         }
-        // 支持原生 Java 数组
-        else if (arrObj != null && arrObj.getClass().isArray()) {
-            java.lang.reflect.Array.set(arrObj, idx, value);
+        var obj = SnowRuntime.get().heap().get(id);
+        if (!(obj instanceof SnowArrayObject arr)) {
+            throw new IllegalArgumentException("ARR_SET: not an array");
         }
-        // 类型不符，抛出异常
-        else {
-            throw new IllegalArgumentException("ARR_SET: not an array/list: " + arrObj);
+
+        if (idx < 0) throw new IndexOutOfBoundsException("ARR_SET: negative index");
+        if (idx > arr.length()) {
+            arr.resize(idx);
+        }
+        if (idx == arr.length()) {
+            arr.push(valueV);
+        } else {
+            arr.set(idx, valueV);
         }
 
         // 操作完成后压入返回值 0
-        stack.push(0);
+        stack.pushValue(new IntValue(0));
     }
 }

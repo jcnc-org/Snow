@@ -5,6 +5,10 @@ import org.jcnc.snow.vm.io.FDTable;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.runtime.SnowArrayObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.RefValue;
 
 import java.nio.channels.Pipe;
 
@@ -51,7 +55,10 @@ public class PipeHandler implements SyscallHandler {
         int readfd = FDTable.register(pipe.source()); // 读端
         int writefd = FDTable.register(pipe.sink());   // 写端
 
-        // 封装为 int[]，顺序：[readfd, writefd]
-        stack.push(new int[]{readfd, writefd});
+        SnowArrayObject arr = new SnowArrayObject();
+        arr.push(new IntValue(readfd));
+        arr.push(new IntValue(writefd));
+        int aid = SnowRuntime.get().heap().alloc(arr);
+        stack.pushValue(new RefValue(aid));
     }
 }

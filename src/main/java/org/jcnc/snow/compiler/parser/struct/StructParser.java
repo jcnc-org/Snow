@@ -45,24 +45,24 @@ public class StructParser implements TopLevelParser {
     public StructNode parse(ParserContext ctx) {
         TokenStream ts = ctx.getTokens();
 
-        int line = ts.peek().getLine();
-        int col = ts.peek().getCol();
+        int line = ts.peek().line();
+        int col = ts.peek().col();
         String file = ctx.getSourceName();
 
         /* -------- 解析头部 -------- */
         ts.expect("struct");
         ts.expect(":");
-        String structName = ts.expectType(TokenType.IDENTIFIER).getLexeme();
+        String structName = ts.expectType(TokenType.IDENTIFIER).lexeme();
 
         // 解析可选 extends（支持限定名 module.Struct）
         String parentName = null;
-        if ("extends".equals(ts.peek().getLexeme())) {
+        if ("extends".equals(ts.peek().lexeme())) {
             ts.expect("extends");
-            parentName = ts.expectType(TokenType.IDENTIFIER).getLexeme();
+            parentName = ts.expectType(TokenType.IDENTIFIER).lexeme();
             // 支持限定名：module.Struct
-            if (".".equals(ts.peek().getLexeme())) {
+            if (".".equals(ts.peek().lexeme())) {
                 ts.expect(".");
-                parentName += "." + ts.expectType(TokenType.IDENTIFIER).getLexeme();
+                parentName += "." + ts.expectType(TokenType.IDENTIFIER).lexeme();
             }
         }
 
@@ -79,12 +79,12 @@ public class StructParser implements TopLevelParser {
         /* -------- 主循环：依次解析 struct 块内部字段、构造、方法 -------- */
         while (true) {
             /* 跳过空行 */
-            if (ts.peek().getType() == TokenType.NEWLINE) {
+            if (ts.peek().type() == TokenType.NEWLINE) {
                 ts.next();
                 continue;
             }
 
-            String lex = ts.peek().getLexeme();
+            String lex = ts.peek().lexeme();
             switch (lex) {
                 /* ---------- fields 块 ---------- */
                 case "fields" -> {
@@ -93,11 +93,11 @@ public class StructParser implements TopLevelParser {
                     ts.expectType(TokenType.NEWLINE);
                     // 字段块不强制 'end fields'，遇到非 declare 则退出
                     while (true) {
-                        if (ts.peek().getType() == TokenType.NEWLINE) {
+                        if (ts.peek().type() == TokenType.NEWLINE) {
                             ts.next();
                             continue;
                         }
-                        if ("declare".equals(ts.peek().getLexeme())) {
+                        if ("declare".equals(ts.peek().lexeme())) {
                             // 字段声明使用通用 DeclarationStatementParser（其已支持 TYPE/IDENTIFIER 作为类型）
                             fields.add(declParser.parse(ctx));
                         } else {
@@ -116,7 +116,7 @@ public class StructParser implements TopLevelParser {
                         if (ex.parameters().size() == ctor.parameters().size()) {
                             throw new UnexpectedToken(
                                     "重复定义 init 构造函数 (参数数量冲突)",
-                                    ts.peek().getLine(), ts.peek().getCol());
+                                    ts.peek().line(), ts.peek().col());
                         }
                     }
                     inits.add(ctor);
@@ -137,7 +137,7 @@ public class StructParser implements TopLevelParser {
                 /* ---------- 非法内容 ---------- */
                 default -> throw new UnexpectedToken(
                         "struct 块内不支持的标记: " + lex,
-                        ts.peek().getLine(), ts.peek().getCol());
+                        ts.peek().line(), ts.peek().col());
             }
         }
     }
@@ -159,8 +159,8 @@ public class StructParser implements TopLevelParser {
     private FunctionNode parseInit(ParserContext ctx, String structName) {
         TokenStream ts = ctx.getTokens();
 
-        int line = ts.peek().getLine();
-        int col = ts.peek().getCol();
+        int line = ts.peek().line();
+        int col = ts.peek().col();
         String file = ctx.getSourceName();
 
         ts.expect("init");
@@ -173,12 +173,12 @@ public class StructParser implements TopLevelParser {
 
         // 主循环：支持 params/body 两块，顺序不限
         while (true) {
-            if (ts.peek().getType() == TokenType.NEWLINE) {
+            if (ts.peek().type() == TokenType.NEWLINE) {
                 ts.next();
                 continue;
             }
 
-            String lex = ts.peek().getLexeme();
+            String lex = ts.peek().lexeme();
             switch (lex) {
                 case "params" -> params.addAll(parseParams(ctx));
                 case "body" -> body.addAll(parseBody(ctx));
@@ -195,7 +195,7 @@ public class StructParser implements TopLevelParser {
                 }
                 default -> throw new UnexpectedToken(
                         "init 块内不支持的标记: " + lex,
-                        ts.peek().getLine(), ts.peek().getCol());
+                        ts.peek().line(), ts.peek().col());
             }
         }
     }
@@ -220,40 +220,40 @@ public class StructParser implements TopLevelParser {
         List<ParameterNode> list = new ArrayList<>();
         while (true) {
             // 跳过空行
-            if (ts.peek().getType() == TokenType.NEWLINE) {
+            if (ts.peek().type() == TokenType.NEWLINE) {
                 ts.next();
                 continue;
             }
 
             // 碰到 body / end / returns 等其他小节，说明 params 结束
-            String lookaheadLex = ts.peek().getLexeme();
+            String lookaheadLex = ts.peek().lexeme();
             if ("body".equals(lookaheadLex) || "end".equals(lookaheadLex) || "returns".equals(lookaheadLex)) {
                 break;
             }
 
-            int line = ts.peek().getLine();
-            int col = ts.peek().getCol();
+            int line = ts.peek().line();
+            int col = ts.peek().col();
 
             // 支持两种前缀：有 declare / 无 declare
-            boolean hasDeclare = "declare".equals(ts.peek().getLexeme());
+            boolean hasDeclare = "declare".equals(ts.peek().lexeme());
             if (hasDeclare) {
                 ts.expect("declare");
             }
 
             // 参数名
-            String pName = ts.expectType(TokenType.IDENTIFIER).getLexeme();
+            String pName = ts.expectType(TokenType.IDENTIFIER).lexeme();
             ts.expect(":");
 
             // 参数类型：既可为 TYPE（内置），也可为 IDENTIFIER（自定义）
             String pType;
-            if (ts.peek().getType() == TokenType.TYPE || ts.peek().getType() == TokenType.IDENTIFIER) {
-                pType = ts.next().getLexeme();
+            if (ts.peek().type() == TokenType.TYPE || ts.peek().type() == TokenType.IDENTIFIER) {
+                pType = ts.next().lexeme();
             } else {
                 var t = ts.peek();
                 throw new UnexpectedToken(
                         "期望的标记类型为 TYPE 或 IDENTIFIER，但实际得到的是 " +
-                                t.getType() + " ('" + t.getLexeme() + "')",
-                        t.getLine(), t.getCol());
+                                t.type() + " ('" + t.lexeme() + "')",
+                        t.line(), t.col());
             }
 
             ts.expectType(TokenType.NEWLINE);
@@ -281,13 +281,13 @@ public class StructParser implements TopLevelParser {
 
         // 循环读取每一条语句，直到 end body
         while (true) {
-            if (ts.peek().getType() == TokenType.NEWLINE) {
+            if (ts.peek().type() == TokenType.NEWLINE) {
                 ts.next();
                 continue;
             }
-            if ("end".equals(ts.peek().getLexeme())) break;   // body 块结束
+            if ("end".equals(ts.peek().lexeme())) break;   // body 块结束
 
-            var parser = StatementParserFactory.get(ts.peek().getLexeme());
+            var parser = StatementParserFactory.get(ts.peek().lexeme());
             body.add(parser.parse(ctx));
         }
 

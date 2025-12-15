@@ -30,11 +30,11 @@ public class MemberParselet implements InfixParselet {
         ts.expect("."); // 消费点号
 
         // 获取当前 token 的行号、列号和文件名
-        int line = ctx.getTokens().peek().getLine();
-        int column = ctx.getTokens().peek().getCol();
+        int line = ctx.getTokens().peek().line();
+        int column = ctx.getTokens().peek().col();
         String file = ctx.getSourceName();
 
-        String member = ts.expectType(TokenType.IDENTIFIER).getLexeme();
+        String member = ts.expectType(TokenType.IDENTIFIER).lexeme();
         return new MemberExpressionNode(left, member, new NodeContext(line, column, file));
     }
 

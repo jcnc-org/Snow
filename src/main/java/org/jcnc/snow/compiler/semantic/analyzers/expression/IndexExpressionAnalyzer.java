@@ -8,6 +8,7 @@ import org.jcnc.snow.compiler.semantic.core.ModuleInfo;
 import org.jcnc.snow.compiler.semantic.error.SemanticError;
 import org.jcnc.snow.compiler.semantic.symbol.SymbolTable;
 import org.jcnc.snow.compiler.semantic.type.ArrayType;
+import org.jcnc.snow.compiler.semantic.type.BytesType;
 import org.jcnc.snow.compiler.semantic.type.BuiltinType;
 import org.jcnc.snow.compiler.semantic.type.Type;
 
@@ -51,6 +52,15 @@ public class IndexExpressionAnalyzer implements ExpressionAnalyzer<IndexExpressi
             }
             // array[index] 的类型是数组元素类型
             return elementType;
+        }
+        if (arrType == BytesType.INSTANCE) {
+            Type idxType = ctx.getRegistry()
+                    .getExpressionAnalyzer(node.index())
+                    .analyze(ctx, mi, fn, locals, node.index());
+            if (!idxType.isNumeric()) {
+                ctx.getErrors().add(new SemanticError(node, "数组下标必须是数值类型"));
+            }
+            return BuiltinType.BYTE;
         }
 
         ctx.getErrors().add(new SemanticError(node, "仅数组类型支持下标访问"));

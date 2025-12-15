@@ -5,6 +5,14 @@ import org.jcnc.snow.vm.io.SocketRegistry;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.runtime.SnowBytesObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.value.ByteValue;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.LongValue;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.ShortValue;
+import org.jcnc.snow.vm.value.Value;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
@@ -41,9 +49,10 @@ public class RecvHandler implements SyscallHandler {
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
 
-        // 1. 参数顺序: n → fd
-        int n = (int) stack.pop();
-        int fd = (int) stack.pop();
+        Value nV = stack.popValue();
+        Value fdV = stack.popValue();
+        int n = asInt(nV, "RECV: n");
+        int fd = asInt(fdV, "RECV: fd");
 
         // 2. 获取 SocketChannel
         SocketChannel channel = (SocketChannel) SocketRegistry.get(fd);
@@ -65,7 +74,17 @@ public class RecvHandler implements SyscallHandler {
             buffer.get(data);
         }
 
-        // 4. 压回结果
-        stack.push(data);
+        int id = SnowRuntime.get().heap().alloc(new SnowBytesObject(data));
+        stack.pushValue(new RefValue(id));
+    }
+
+    private static int asInt(Value v, String what) {
+        return switch (v) {
+            case IntValue(int i) -> i;
+            case ShortValue(short s) -> s;
+            case ByteValue(byte b) -> b;
+            case LongValue(long l) -> (int) l;
+            default -> throw new IllegalArgumentException(what + " must be int");
+        };
     }
 }

@@ -132,23 +132,23 @@ public class LexerEngine {
             Token tok = tokens.get(i);
 
             /* ---------- declare 规则 ---------- */
-            if (tok.getType() == TokenType.KEYWORD
-                    && "declare".equalsIgnoreCase(tok.getLexeme())) {
+            if (tok.type() == TokenType.KEYWORD
+                    && "declare".equalsIgnoreCase(tok.lexeme())) {
 
                 // 找 declare 后第一个非 NEWLINE token
                 Token t1 = findNextNonNewline(i);
 
                 // 如果有 const，允许
                 boolean hasConst = t1 != null
-                        && t1.getType() == TokenType.KEYWORD
-                        && "const".equalsIgnoreCase(t1.getLexeme());
+                        && t1.type() == TokenType.KEYWORD
+                        && "const".equalsIgnoreCase(t1.lexeme());
                 int identStartIdx = hasConst ? tokens.indexOf(t1) : i;
 
                 // 找下一个非 NEWLINE token，如果有 const，就找下一个
                 Token id1 = findNextNonNewline(identStartIdx);
 
                 // id1 必须是 IDENTIFIER
-                if (id1 == null || id1.getType() != TokenType.IDENTIFIER) {
+                if (id1 == null || id1.type() != TokenType.IDENTIFIER) {
                     errors.add(err(
                             (id1 == null ? (hasConst ? t1 : tok) : id1),
                             "declare 后必须跟合法标识符 (可选 const 关键字)"
@@ -158,7 +158,7 @@ public class LexerEngine {
 
                 // 检查是否有第二个多余的 IDENTIFIER
                 Token id2 = findNextNonNewline(tokens.indexOf(id1));
-                if (id2 != null && id2.getType() == TokenType.IDENTIFIER) {
+                if (id2 != null && id2.type() == TokenType.IDENTIFIER) {
                     errors.add(err(id2, "declare 声明中出现多余的标识符"));
                 }
             }
@@ -171,7 +171,7 @@ public class LexerEngine {
     private Token findNextNonNewline(int index) {
         for (int j = index + 1; j < tokens.size(); j++) {
             Token t = tokens.get(j);
-            if (t.getType() != TokenType.NEWLINE) return t;
+            if (t.type() != TokenType.NEWLINE) return t;
         }
         return null;
     }
@@ -180,6 +180,6 @@ public class LexerEngine {
      * 构造统一的 LexicalError
      */
     private LexicalError err(Token t, String msg) {
-        return new LexicalError(absPath, t.getLine(), t.getCol(), msg);
+        return new LexicalError(absPath, t.line(), t.col(), msg);
     }
 }

@@ -5,6 +5,7 @@
 module: std_string
     import: std_array
     import: os_string
+    import: std_bytes
 
     /**
     @struct String
@@ -434,8 +435,7 @@ module: std_string
             // 分隔符为空时，逐字符拆分
             if delimLen == 0 then
                 declare data: byte[] = std_string.toBytes(str)
-                declare dataArr: std_array.Array = new std_array.Array(data)
-                declare len: int = dataArr.length()
+                declare len: int = std_bytes.length(data)
                 loop:
                     init:
                         declare i: int = 0
@@ -444,7 +444,7 @@ module: std_string
                     step:
                         i = i + 1
                     body:
-                        result.append(std_string._charToString(dataArr.get(i)))
+                        result.append(std_string._charToString(std_bytes.get(data, i)))
                     end body
                 end loop
                 return result

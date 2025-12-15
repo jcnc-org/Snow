@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * The BLoadCommand class implements the {@link Command} interface and represents a load instruction in the virtual machine.
@@ -55,7 +56,8 @@ public class BLoadCommand implements Command {
         int index = Integer.parseInt(parts[1]);
 
         // Retrieve the value from the local variable store of the current method frame
-        byte value = (byte) callStack.peekFrame().getLocalVariableStore().getVariable(index);
+        Object raw = callStack.peekFrame().getLocalVariableStore().getVariable(index);
+        byte value = NumberUtils.toByte(raw, "B_LOAD");
 
         // Push the loaded value onto the operand stack for subsequent operations
         operandStack.push(value);

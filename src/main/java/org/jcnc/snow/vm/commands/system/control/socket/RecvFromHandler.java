@@ -5,11 +5,22 @@ import org.jcnc.snow.vm.io.SocketRegistry;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.runtime.SnowArrayObject;
+import org.jcnc.snow.vm.runtime.SnowBytesObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.runtime.SnowStringObject;
+import org.jcnc.snow.vm.value.ByteValue;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.LongValue;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.ShortValue;
+import org.jcnc.snow.vm.value.Value;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
+import java.util.List;
 
 /**
  * {@code RecvFromHandler} 实现 RECVFROM (0x1408) 系统调用，
@@ -46,9 +57,10 @@ public class RecvFromHandler implements SyscallHandler {
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
 
-        // 1. 参数顺序: n → fd
-        int n = (int) stack.pop();
-        int fd = (int) stack.pop();
+        Value nV = stack.popValue();
+        Value fdV = stack.popValue();
+        int n = asInt(nV, "RECVFROM: n");
+        int fd = asInt(fdV, "RECVFROM: fd");
 
         // 2. 获取 DatagramChannel
         DatagramChannel channel = (DatagramChannel) SocketRegistry.get(fd);
@@ -72,8 +84,23 @@ public class RecvFromHandler implements SyscallHandler {
             port = inet.getPort();
         }
 
-        // 5. 返回一个数组: {data, addr, port}
-        Object[] result = new Object[]{data, addr, port};
-        stack.push(result);
+        int dataId = SnowRuntime.get().heap().alloc(new SnowBytesObject(data));
+        int addrId = SnowRuntime.get().heap().alloc(new SnowStringObject(addr));
+        int tupId = SnowRuntime.get().heap().alloc(new SnowArrayObject(List.of(
+                new RefValue(dataId),
+                new RefValue(addrId),
+                new IntValue(port)
+        )));
+        stack.pushValue(new RefValue(tupId));
+    }
+
+    private static int asInt(Value v, String what) {
+        return switch (v) {
+            case IntValue(int i) -> i;
+            case ShortValue(short s) -> s;
+            case ByteValue(byte b) -> b;
+            case LongValue(long l) -> (int) l;
+            default -> throw new IllegalArgumentException(what + " must be int");
+        };
     }
 }

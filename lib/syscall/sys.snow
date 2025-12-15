@@ -70,7 +70,7 @@ module: sys
     function: randomBytes
         params:
             declare n: int
-        returns: any   // 运行时为 byte[]
+        returns: byte[]
         body:
             return syscall("0x1903", n)
         end body
@@ -106,7 +106,7 @@ module: sys
     @returns 包含系统资源信息的 Map<String,Object>，典型键包括 heapTotal、heapFree、heapUsed、heapMax 等
     */
     function: memoryInfo
-        returns: any   // 运行时为 Map<String,Object>
+        returns: any   // 运行时为 dict (opaque)
         body:
             return syscall("0x1906")
         end body

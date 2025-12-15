@@ -43,12 +43,12 @@ public record ParserEngine(ParserContext ctx) {
         // 主循环至 EOF
         while (!ts.isAtEnd()) {
             // 跳过空行
-            if (ts.peek().getType() == TokenType.NEWLINE) {
+            if (ts.peek().type() == TokenType.NEWLINE) {
                 ts.next();
                 continue;
             }
 
-            TopLevelParser parser = TopLevelParserFactory.get(ts.peek().getLexeme());
+            TopLevelParser parser = TopLevelParserFactory.get(ts.peek().lexeme());
             try {
                 nodes.add(parser.parse(ctx));
             } catch (ParseException ex) {
@@ -80,17 +80,17 @@ public record ParserEngine(ParserContext ctx) {
      */
     private void synchronize(TokenStream ts) {
         while (!ts.isAtEnd()) {
-            if (ts.peek().getType() == TokenType.NEWLINE) {
+            if (ts.peek().type() == TokenType.NEWLINE) {
                 ts.next();
                 break;
             }
-            if (TopLevelParserFactory.isRegistered(ts.peek().getLexeme())) {
+            if (TopLevelParserFactory.isRegistered(ts.peek().lexeme())) {
                 break; // 仅在已注册关键字处停下
             }
             ts.next(); // 继续丢弃 token
         }
         // 清理后续连续空行
-        while (!ts.isAtEnd() && ts.peek().getType() == TokenType.NEWLINE) {
+        while (!ts.isAtEnd() && ts.peek().type() == TokenType.NEWLINE) {
             ts.next();
         }
     }

@@ -1,10 +1,17 @@
 package org.jcnc.snow.vm.commands.system.control;
 
 import org.jcnc.snow.vm.commands.system.control.syscalls.SyscallHandler;
+import org.jcnc.snow.vm.engine.SyscallTable;
 import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.runtime.HeapObject;
+import org.jcnc.snow.vm.runtime.HeapObjectKind;
+import org.jcnc.snow.vm.runtime.SnowPanicException;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.Value;
 
 /**
  * {@code SyscallCommand} 实现虚拟机系统调用分发器，负责根据系统调用 opcode 路由到对应的 {@link SyscallHandler} 实现。
@@ -52,29 +59,107 @@ public class SyscallCommand implements Command {
             return pc + 1;
         }
 
-        int opcode;
-        try {
-            String token = parts[1].trim();
-            if (token.startsWith("0x") || token.startsWith("0X")) {
-                opcode = Integer.parseInt(token.substring(2), 16);
-            } else {
-                opcode = Integer.parseInt(token);
-            }
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid syscall opcode format: " + parts[1], e);
-        }
+        int opcode = SyscallTable.resolveOpcode(parts[1]);
 
         SyscallHandler handler = SyscallFactory.getHandler(opcode);
 
         try {
-            handler.handle(stack, locals, callStack);
-            // 成功时重置 errno/errstr
-            SyscallUtils.clearErr();
+            int before = stack.size();
+            SyscallTable.SyscallSpec spec = SyscallTable.spec(opcode);
+            String name = spec == null ? String.format("0x%04X", opcode) : spec.name();
+            try (AutoCloseable ignored = SnowRuntime.get().enterSyscall(opcode, name, handler.getClass().getName())) {
+                handler.handle(stack, locals, callStack);
+                // 成功时重置 errno/errstr
+                SyscallUtils.clearErr();
+                validateReturn(opcode, before, stack);
+            }
+        } catch (SnowPanicException e) {
+            throw e;
         } catch (Exception e) {
+            if (isRuntimeBuiltin(opcode)) {
+                SyscallTable.SyscallSpec spec = SyscallTable.spec(opcode);
+                String name = spec == null ? String.format("0x%04X", opcode) : spec.name();
+                throw new SnowPanicException("Runtime builtin syscall failed: " + name, e);
+            }
             // 失败时压入 -1（int）并记录错误串
             SyscallUtils.pushErr(stack, e);
         }
 
         return pc + 1;
+    }
+
+    private static boolean isRuntimeBuiltin(int opcode) {
+        // Array builtins live under 0x18xx; string/bytes builtins under 0x1Axx.
+        return (opcode >= 0x1800 && opcode <= 0x18FF) || (opcode >= 0x1A00 && opcode <= 0x1A1F);
+    }
+
+    private static void validateReturn(int opcode, int beforeSize, OperandStack stack) {
+        if (SyscallUtils.getErrno() != 0) return;
+        SyscallTable.SyscallSpec spec = SyscallTable.spec(opcode);
+        if (spec == null) return;
+        int argCount = (spec.args() == null) ? 0 : spec.args().length;
+        int expectedDelta = (spec.ret() == SyscallTable.AbiType.VOID ? 0 : 1) - argCount;
+        int actualDelta = stack.size() - beforeSize;
+        if (actualDelta != expectedDelta) {
+            throw new org.jcnc.snow.vm.runtime.SnowPanicException("Syscall ABI violation: " + spec.name()
+                    + " expected stack delta=" + expectedDelta + " (args=" + argCount + ", ret=" + spec.ret()
+                    + ") but got " + actualDelta);
+        }
+        if (spec.ret() == SyscallTable.AbiType.VOID) return;
+        Value top = stack.peekValue();
+        switch (spec.ret()) {
+            case I8 -> {
+                if (!(top instanceof org.jcnc.snow.vm.value.ByteValue)) {
+                    throw new org.jcnc.snow.vm.runtime.SnowPanicException("Syscall ABI violation: " + spec.name() + " expected byte");
+                }
+            }
+            case I16 -> {
+                if (!(top instanceof org.jcnc.snow.vm.value.ShortValue)) {
+                    throw new org.jcnc.snow.vm.runtime.SnowPanicException("Syscall ABI violation: " + spec.name() + " expected short");
+                }
+            }
+            case I32 -> {
+                if (!(top instanceof org.jcnc.snow.vm.value.IntValue)) {
+                    throw new org.jcnc.snow.vm.runtime.SnowPanicException("Syscall ABI violation: " + spec.name() + " expected int");
+                }
+            }
+            case I64 -> {
+                if (!(top instanceof org.jcnc.snow.vm.value.LongValue)) {
+                    throw new org.jcnc.snow.vm.runtime.SnowPanicException("Syscall ABI violation: " + spec.name() + " expected long");
+                }
+            }
+            case F32 -> {
+                if (!(top instanceof org.jcnc.snow.vm.value.FloatValue)) {
+                    throw new org.jcnc.snow.vm.runtime.SnowPanicException("Syscall ABI violation: " + spec.name() + " expected float");
+                }
+            }
+            case F64 -> {
+                if (!(top instanceof org.jcnc.snow.vm.value.DoubleValue)) {
+                    throw new org.jcnc.snow.vm.runtime.SnowPanicException("Syscall ABI violation: " + spec.name() + " expected double");
+                }
+            }
+            case STRING, BYTES, ARRAY, DICT -> {
+                if (!(top instanceof RefValue(int id))) {
+                    throw new org.jcnc.snow.vm.runtime.SnowPanicException("Syscall ABI violation: " + spec.name() + " expected ref");
+                }
+                HeapObject obj = SnowRuntime.get().heap().get(id);
+                HeapObjectKind kind = obj.kind();
+                HeapObjectKind expected = switch (spec.ret()) {
+                    case STRING -> HeapObjectKind.STRING;
+                    case BYTES -> HeapObjectKind.BYTES;
+                    case ARRAY -> HeapObjectKind.ARRAY;
+                    case DICT -> HeapObjectKind.DICT;
+                    default -> throw new org.jcnc.snow.vm.runtime.SnowPanicException("unreachable");
+                };
+                if (kind != expected) {
+                    throw new org.jcnc.snow.vm.runtime.SnowPanicException("Syscall ABI violation: " + spec.name()
+                            + " expected " + expected + " but got " + kind);
+                }
+            }
+            case ANY -> {
+            }
+            case VOID -> {
+            }
+        }
     }
 }

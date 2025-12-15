@@ -1,0 +1,59 @@
+/**
+@module std_bytes
+@summary byte[] 的标准库封装（基于 os_bytes 稳定层）。
+*/
+module: std_bytes
+
+    import: os_bytes
+
+    function: length
+        params:
+            declare data: byte[]
+        returns: int
+        body:
+            return os_bytes.length(data)
+        end body
+    end function
+
+    function: get
+        params:
+            declare data: byte[]
+            declare idx: int
+        returns: int
+        body:
+            // 统一返回 int 便于上层处理
+            return os_bytes.get(data, idx)
+        end body
+    end function
+
+    function: set
+        params:
+            declare data: byte[]
+            declare idx: int
+            declare b: byte
+        returns: int
+        body:
+            return os_bytes.set(data, idx, b)
+        end body
+    end function
+
+    function: alloc
+        params:
+            declare n: int
+        returns: byte[]
+        body:
+            return os_bytes.alloc(n)
+        end body
+    end function
+
+    function: concat
+        params:
+            declare a: byte[]
+            declare b: byte[]
+        returns: byte[]
+        body:
+            return os_bytes.concat(a, b)
+        end body
+    end function
+
+end module

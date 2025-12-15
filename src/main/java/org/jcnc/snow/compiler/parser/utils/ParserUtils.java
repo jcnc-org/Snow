@@ -57,7 +57,7 @@ public class ParserUtils {
      * @param ts 当前的 token 流
      */
     public static void skipNewlines(TokenStream ts) {
-        while (ts.peek().getType() == TokenType.NEWLINE) {
+        while (ts.peek().type() == TokenType.NEWLINE) {
             ts.next(); // 连续消费换行符
         }
     }

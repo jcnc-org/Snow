@@ -4,6 +4,11 @@ import org.jcnc.snow.vm.commands.system.control.syscalls.SyscallHandler;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.runtime.SnowArrayObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.runtime.SnowStringObject;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.Value;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -34,10 +39,15 @@ public class ReaddirHandler implements SyscallHandler {
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
         // 1. 获取参数
-        Object pathObj = stack.pop();
-        if (!(pathObj instanceof String pathStr)) {
+        Value pathV = stack.popValue();
+        if (!(pathV instanceof RefValue(int pid))) {
             throw new IllegalArgumentException("readdir: path 必须是 String");
         }
+        var pobj = SnowRuntime.get().heap().get(pid);
+        if (!(pobj instanceof SnowStringObject pstr)) {
+            throw new IllegalArgumentException("readdir: path 必须是 String");
+        }
+        String pathStr = pstr.value();
 
         Path dir = Paths.get(pathStr);
 
@@ -57,8 +67,14 @@ public class ReaddirHandler implements SyscallHandler {
                 }
             }
 
-            // 3. 转换为数组并推入栈
-            stack.push(entries.toArray(new String[0]));
+            // 3. 转换为 Snow array<string> 并推入栈
+            SnowArrayObject arr = new SnowArrayObject();
+            for (String e : entries) {
+                int sid = SnowRuntime.get().heap().alloc(new SnowStringObject(e));
+                arr.push(new RefValue(sid));
+            }
+            int aid = SnowRuntime.get().heap().alloc(arr);
+            stack.pushValue(new RefValue(aid));
         } catch (IOException e) {
             throw new IOException("readdir: I/O 错误 -> " + pathStr, e);
         }

@@ -95,6 +95,28 @@ public final class NumberUtils {
         return toShort(raw, opcode);
     }
 
+    public static byte popByte(OperandStack stack, String opcode) {
+        Object raw = stack.pop();
+        return toByte(raw, opcode);
+    }
+
+    public static byte toByte(Object raw, String opcode) {
+        if (raw instanceof Byte b) {
+            return b;
+        }
+        if (raw instanceof Number n) {
+            return (byte) n.intValue();
+        }
+        if (raw instanceof Boolean b) {
+            return (byte) (b ? 1 : 0);
+        }
+        if (raw == null) {
+            throw new IllegalStateException(opcode + " encountered null operand");
+        }
+        throw new IllegalStateException(opcode + " expects numeric operand but got "
+                + raw.getClass().getSimpleName());
+    }
+
     public static short toShort(Object raw, String opcode) {
         if (raw instanceof Short s) {
             return s;

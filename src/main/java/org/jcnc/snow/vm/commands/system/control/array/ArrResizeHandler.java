@@ -5,7 +5,11 @@ import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
-import java.util.List;
+import org.jcnc.snow.vm.runtime.SnowArrayObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.Value;
 
 /**
  * {@code ArrResizeHandler} 实现 ARR_RESIZE (0x1814) 系统调用，
@@ -39,34 +43,30 @@ public class ArrResizeHandler implements SyscallHandler {
                        CallStack callStack) throws Exception {
 
         // 入栈顺序：(arr, newLen) → 栈顶是 newLen
-        Object lenObj = stack.pop();
-        Object arrObj = stack.pop();
+        Value lenV = stack.popValue();
+        Value arrV = stack.popValue();
 
-        int newLen = (lenObj instanceof Number n)
-                ? n.intValue()
-                : Integer.parseInt(lenObj.toString().trim());
+        int newLen = switch (lenV) {
+            case IntValue(int i) -> i;
+            case org.jcnc.snow.vm.value.ShortValue(short s) -> s;
+            case org.jcnc.snow.vm.value.ByteValue(byte b) -> b;
+            case org.jcnc.snow.vm.value.LongValue(long l) -> (int) l;
+            default -> throw new IllegalArgumentException("ARR_RESIZE: newLen must be int");
+        };
 
         if (newLen < 0) {
             throw new IllegalArgumentException("ARR_RESIZE: negative length: " + newLen);
         }
 
-        if (!(arrObj instanceof List<?> list)) {
-            throw new IllegalArgumentException("ARR_RESIZE: not a List: " + arrObj);
+        if (!(arrV instanceof RefValue(int id))) {
+            throw new IllegalArgumentException("ARR_RESIZE: not an array");
+        }
+        var obj = SnowRuntime.get().heap().get(id);
+        if (!(obj instanceof SnowArrayObject arr)) {
+            throw new IllegalArgumentException("ARR_RESIZE: not an array");
         }
 
-        @SuppressWarnings("unchecked")
-        List<Object> mlist = (List<Object>) list;
-
-        // 缩短
-        while (mlist.size() > newLen) {
-            mlist.remove(mlist.size() - 1);
-        }
-
-        // 变长：补 null
-        while (mlist.size() < newLen) {
-            mlist.add(null);
-        }
-
-        stack.push(newLen);
+        arr.resize(newLen);
+        stack.pushValue(new IntValue(newLen));
     }
 }

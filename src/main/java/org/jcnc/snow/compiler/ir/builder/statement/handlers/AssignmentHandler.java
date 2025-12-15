@@ -143,7 +143,8 @@ public class AssignmentHandler implements IStatementHandler {
     private String selectSetIndexFunc(String fieldType) {
         if (fieldType == null || fieldType.isBlank()) return "__setindex_r";
         return switch (fieldType.toLowerCase(Locale.ROOT)) {
-            case "byte" -> "__setindex_b";
+            // Struct instance storage is an object (ArrayValue), not byte[]; byte fields must not route to BYTES_SET.
+            case "byte" -> "__struct_setindex_b";
             case "short" -> "__setindex_s";
             case "int", "integer", "bool", "boolean" -> "__setindex_i";
             case "long" -> "__setindex_l";

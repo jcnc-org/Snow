@@ -4,8 +4,11 @@ import org.jcnc.snow.vm.commands.system.control.syscalls.SyscallHandler;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
-
-import java.util.List;
+import org.jcnc.snow.vm.runtime.SnowArrayObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.Value;
 
 /**
  * {@code ArrInsertHandler} 实现 ARR_INSERT (0x1812) 系统调用，
@@ -35,29 +38,32 @@ public class ArrInsertHandler implements SyscallHandler {
                        CallStack callStack) throws Exception {
 
         // 入栈顺序：(arr, index, value) → 栈顶依次是 value, index, arr
-        Object value = stack.pop();
-        Object idxObj = stack.pop();
-        Object arrObj = stack.pop();
+        Value valueV = stack.popValue();
+        Value idxV = stack.popValue();
+        Value arrV = stack.popValue();
 
-        int idx = (idxObj instanceof Number n)
-                ? n.intValue()
-                : Integer.parseInt(idxObj.toString().trim());
+        int idx = switch (idxV) {
+            case IntValue(int i) -> i;
+            case org.jcnc.snow.vm.value.ShortValue(short s) -> s;
+            case org.jcnc.snow.vm.value.ByteValue(byte b) -> b;
+            case org.jcnc.snow.vm.value.LongValue(long l) -> (int) l;
+            default -> throw new IllegalArgumentException("ARR_INSERT: index must be int");
+        };
 
-        if (!(arrObj instanceof List<?> list)) {
-            throw new IllegalArgumentException("ARR_INSERT: not a List: " + arrObj);
+        if (!(arrV instanceof RefValue(int id))) {
+            throw new IllegalArgumentException("ARR_INSERT: not an array");
+        }
+        var obj = SnowRuntime.get().heap().get(id);
+        if (!(obj instanceof SnowArrayObject arr)) {
+            throw new IllegalArgumentException("ARR_INSERT: not an array");
         }
 
-        @SuppressWarnings("unchecked")
-        List<Object> mlist = (List<Object>) list;
-
-        if (idx < 0 || idx > mlist.size()) {
+        if (idx < 0 || idx > arr.length()) {
             throw new IndexOutOfBoundsException(
-                    "ARR_INSERT: index " + idx + " out of bounds for length " + mlist.size());
+                    "ARR_INSERT: index " + idx + " out of bounds for length " + arr.length());
         }
 
-        mlist.add(idx, value);
-
-        // 返回插入后的长度
-        stack.push(mlist.size());
+        arr.insert(idx, valueV);
+        stack.pushValue(new IntValue(arr.length()));
     }
 }

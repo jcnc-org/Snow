@@ -9,6 +9,7 @@ import org.jcnc.snow.compiler.semantic.core.ModuleInfo;
 import org.jcnc.snow.compiler.semantic.error.SemanticError;
 import org.jcnc.snow.compiler.semantic.symbol.SymbolTable;
 import org.jcnc.snow.compiler.semantic.type.ArrayType;
+import org.jcnc.snow.compiler.semantic.type.BytesType;
 import org.jcnc.snow.compiler.semantic.type.Type;
 import org.jcnc.snow.compiler.semantic.utils.NumericConstantUtils;
 
@@ -48,7 +49,12 @@ public class IndexAssignmentAnalyzer implements StatementAnalyzer<IndexAssignmen
         Type arrT = ctx.getRegistry()
                 .getExpressionAnalyzer(target.array())
                 .analyze(ctx, mi, fn, locals, target.array());
-        if (!(arrT instanceof ArrayType(Type elementType))) {
+        Type elementType;
+        if (arrT instanceof ArrayType(Type et)) {
+            elementType = et;
+        } else if (arrT == BytesType.INSTANCE) {
+            elementType = org.jcnc.snow.compiler.semantic.type.BuiltinType.BYTE;
+        } else {
             ctx.getErrors().add(new SemanticError(node, "左侧不是数组，无法进行下标赋值"));
             return;
         }

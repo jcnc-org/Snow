@@ -31,14 +31,14 @@ public class ModuleParser implements TopLevelParser {
     public ModuleNode parse(ParserContext ctx) {
         TokenStream ts = ctx.getTokens();
 
-        int line = ts.peek().getLine();
-        int column = ts.peek().getCol();
+        int line = ts.peek().line();
+        int column = ts.peek().col();
         String file = ctx.getSourceName();
 
         // 1) 解析模块声明头部
         ts.expect("module");
         ts.expect(":");
-        String name = ts.expectType(TokenType.IDENTIFIER).getLexeme();
+        String name = ts.expectType(TokenType.IDENTIFIER).lexeme();
         ts.expectType(TokenType.NEWLINE);
 
         // 2) 初始化各类节点容器
@@ -55,14 +55,14 @@ public class ModuleParser implements TopLevelParser {
 
         // 4) 进入主循环，直到 end module
         while (true) {
-            if (ts.peek().getType() == TokenType.NEWLINE) {
+            if (ts.peek().type() == TokenType.NEWLINE) {
                 ts.next();
                 continue;
             }
-            if ("end".equals(ts.peek().getLexeme())) {
+            if ("end".equals(ts.peek().lexeme())) {
                 break;
             }
-            String lex = ts.peek().getLexeme();
+            String lex = ts.peek().lexeme();
             switch (lex) {
                 case "import" -> imports.addAll(importParser.parse(ctx));
                 case "struct" -> structs.add(structParser.parse(ctx));
@@ -72,11 +72,11 @@ public class ModuleParser implements TopLevelParser {
                     ts.expect(":");
                     ts.expectType(TokenType.NEWLINE);
                     while (true) {
-                        if (ts.peek().getType() == TokenType.NEWLINE) {
+                        if (ts.peek().type() == TokenType.NEWLINE) {
                             ts.next();
                             continue;
                         }
-                        String innerLex = ts.peek().getLexeme();
+                        String innerLex = ts.peek().lexeme();
                         if ("declare".equals(innerLex)) {
                             globals.add(globalsParser.parse(ctx));
                         } else if ("function".equals(innerLex)
@@ -87,16 +87,16 @@ public class ModuleParser implements TopLevelParser {
                         } else {
                             throw new UnexpectedToken(
                                     "globals 区块中不支持的内容: " + innerLex,
-                                    ts.peek().getLine(),
-                                    ts.peek().getCol()
+                                    ts.peek().line(),
+                                    ts.peek().col()
                             );
                         }
                     }
                 }
                 default -> throw new UnexpectedToken(
                         "Unexpected token in module: " + lex,
-                        ts.peek().getLine(),
-                        ts.peek().getCol()
+                        ts.peek().line(),
+                        ts.peek().col()
                 );
             }
         }

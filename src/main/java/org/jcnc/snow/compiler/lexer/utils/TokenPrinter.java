@@ -40,21 +40,21 @@ public class TokenPrinter {
         // 逐个 Token 输出对应信息
         for (Token token : tokens) {
             // 对 lexeme 中的特殊字符进行转义，避免表格错位
-            String lexeme = token.getLexeme()
+            String lexeme = token.lexeme()
                     .replace("\n", "\\n")
                     .replace("\t", "\\t")
                     .replace("\r", "\\r");
 
             // 按照固定格式输出: 行号、列号、类型、词素
             System.out.printf("%-6d %-6d %-16s %s%n",
-                    token.getLine(),
-                    token.getCol(),
-                    token.getType(),
+                    token.line(),
+                    token.col(),
+                    token.type(),
                     lexeme
             );
 
             // 如果当前 Token 是换行符类型，则额外打印一行空白行
-            if (token.getType() == TokenType.NEWLINE) {
+            if (token.type() == TokenType.NEWLINE) {
                 System.out.println();
             }
         }

@@ -5,6 +5,12 @@ import org.jcnc.snow.vm.io.FDTable;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.runtime.SnowDictObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.LongValue;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.Value;
 
 import java.io.IOException;
 import java.nio.channels.SeekableByteChannel;
@@ -44,14 +50,14 @@ public class FstatHandler implements SyscallHandler {
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
         // 从操作数栈中弹出参数：fd:int
-        Object fdObj = stack.pop();
-
-        // 校验参数类型
-        if (!(fdObj instanceof Number)) {
-            throw new IllegalArgumentException("FSTAT: fd must be an int, got: " + fdObj);
-        }
-
-        int fd = ((Number) fdObj).intValue();
+        Value fdV = stack.popValue();
+        int fd = switch (fdV) {
+            case IntValue(int i) -> i;
+            case org.jcnc.snow.vm.value.ShortValue(short s) -> s;
+            case org.jcnc.snow.vm.value.ByteValue(byte b) -> b;
+            case org.jcnc.snow.vm.value.LongValue(long l) -> (int) l;
+            default -> throw new IllegalArgumentException("FSTAT: fd must be an int");
+        };
 
         // 从 FDTable 获取通道
         var ch = FDTable.get(fd);
@@ -62,18 +68,18 @@ public class FstatHandler implements SyscallHandler {
         // 由于 Channel 本身无法直接拿 Path，需要 hack：尝试通过 size/position 验证文件存在
         // 这里假设 VM 使用 Files.newByteChannel(path, ...) 打开的文件，所以可用反射或者 FDTable 改进来存 Path。
         // 当前简化：只返回 size，其余字段标记不可用。
-        var result = new java.util.HashMap<String, Object>();
-        result.put("size", sbc.size());
-        result.put("position", sbc.position());
+        var result = new SnowDictObject();
+        result.put("size", new LongValue(sbc.size()));
+        result.put("position", new LongValue(sbc.position()));
 
         // 其余属性目前无法直接获取 Path → BasicFileAttributes，除非 FDTable 保存 path。
         // 暂时填充默认值
-        result.put("isDirectory", false);
-        result.put("isRegularFile", true);
-        result.put("lastModified", -1L);
-        result.put("created", -1L);
+        result.put("isDirectory", new IntValue(0));
+        result.put("isRegularFile", new IntValue(1));
+        result.put("lastModified", new LongValue(-1L));
+        result.put("created", new LongValue(-1L));
 
-        // 压回栈
-        stack.push(result);
+        int rid = SnowRuntime.get().heap().alloc(result);
+        stack.pushValue(new RefValue(rid));
     }
 }

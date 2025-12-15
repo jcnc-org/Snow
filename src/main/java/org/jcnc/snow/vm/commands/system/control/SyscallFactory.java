@@ -1,6 +1,11 @@
 package org.jcnc.snow.vm.commands.system.control;
 
 import org.jcnc.snow.vm.commands.system.control.array.*;
+import org.jcnc.snow.vm.commands.system.control.bytes.BytesConcatHandler;
+import org.jcnc.snow.vm.commands.system.control.bytes.BytesGetHandler;
+import org.jcnc.snow.vm.commands.system.control.bytes.BytesLenHandler;
+import org.jcnc.snow.vm.commands.system.control.bytes.BytesNewHandler;
+import org.jcnc.snow.vm.commands.system.control.bytes.BytesSetHandler;
 import org.jcnc.snow.vm.commands.system.control.console.StderrWriteHandler;
 import org.jcnc.snow.vm.commands.system.control.console.StdinReadHandler;
 import org.jcnc.snow.vm.commands.system.control.console.StdoutWriteHandler;
@@ -151,6 +156,13 @@ public final class SyscallFactory {
         SYSCALLS[SyscallOpCode.STR_TO_UTF8] = new StrToUtf8Handler();
         SYSCALLS[SyscallOpCode.UTF8_TO_STR] = new Utf8ToStrHandler();
         SYSCALLS[SyscallOpCode.STR_FROM_CODEPOINT] = new StrFromCodePointHandler();
+
+        // ================= Bytes（运行时内建） =================
+        SYSCALLS[SyscallOpCode.BYTES_LEN] = new BytesLenHandler();
+        SYSCALLS[SyscallOpCode.BYTES_GET] = new BytesGetHandler();
+        SYSCALLS[SyscallOpCode.BYTES_SET] = new BytesSetHandler();
+        SYSCALLS[SyscallOpCode.BYTES_NEW] = new BytesNewHandler();
+        SYSCALLS[SyscallOpCode.BYTES_CONCAT] = new BytesConcatHandler();
     }
 
     private SyscallFactory() {

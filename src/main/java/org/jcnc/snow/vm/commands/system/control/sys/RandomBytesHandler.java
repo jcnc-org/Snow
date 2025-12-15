@@ -4,6 +4,11 @@ import org.jcnc.snow.vm.commands.system.control.syscalls.SyscallHandler;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.runtime.SnowBytesObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.Value;
 
 import java.security.SecureRandom;
 
@@ -38,23 +43,18 @@ public class RandomBytesHandler implements SyscallHandler {
             throw new IllegalStateException("RANDOM_BYTES requires 1 argument (n:int)");
         }
 
-        Object nObj = stack.pop();
-        if (nObj == null) {
+        Value nVal = stack.popValue();
+        if (nVal == Value.NULL) {
             throw new IllegalArgumentException("RANDOM_BYTES: argument n is null");
         }
 
-        final int n;
-        if (nObj instanceof Number) {
-            n = ((Number) nObj).intValue();
-        } else if (nObj instanceof String) {
-            try {
-                n = Integer.parseInt((String) nObj);
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("RANDOM_BYTES: cannot parse integer from string argument", e);
-            }
-        } else {
-            throw new IllegalArgumentException("RANDOM_BYTES: unsupported argument type: " + nObj.getClass().getName());
-        }
+        final int n = switch (nVal) {
+            case IntValue(int i) -> i;
+            case org.jcnc.snow.vm.value.ShortValue(short s) -> s;
+            case org.jcnc.snow.vm.value.ByteValue(byte b) -> b;
+            case org.jcnc.snow.vm.value.LongValue(long l) -> (int) l;
+            default -> throw new IllegalArgumentException("RANDOM_BYTES: n must be int");
+        };
 
         if (n < 0) {
             throw new IllegalArgumentException("RANDOM_BYTES: n must be non-negative");
@@ -67,6 +67,7 @@ public class RandomBytesHandler implements SyscallHandler {
         SecureRandom rng = new SecureRandom();
         rng.nextBytes(bytes);
 
-        stack.push(bytes);
+        int bid = SnowRuntime.get().heap().alloc(new SnowBytesObject(bytes));
+        stack.pushValue(new RefValue(bid));
     }
 }

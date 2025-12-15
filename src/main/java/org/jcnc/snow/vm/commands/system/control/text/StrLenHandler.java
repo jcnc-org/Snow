@@ -4,6 +4,11 @@ import org.jcnc.snow.vm.commands.system.control.syscalls.SyscallHandler;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.runtime.SnowStringObject;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.Value;
 
 import java.nio.charset.StandardCharsets;
 
@@ -17,15 +22,18 @@ public final class StrLenHandler implements SyscallHandler {
     public void handle(OperandStack stack,
                        LocalVariableStore locals,
                        CallStack callStack) {
-        Object obj = stack.pop();
-        if (obj == null) {
-            stack.push(0);
+        Value v = stack.popValue();
+        if (v == Value.NULL) {
+            stack.pushValue(new IntValue(0));
             return;
         }
-        if (!(obj instanceof String s)) {
-            throw new IllegalArgumentException("STR_LEN: str must be a string");
+        if (!(v instanceof RefValue(int id))) {
+            throw new IllegalArgumentException("STR_LEN: expected string");
         }
-        stack.push(s.getBytes(StandardCharsets.UTF_8).length);
+        var obj = SnowRuntime.get().heap().get(id);
+        if (!(obj instanceof SnowStringObject s)) {
+            throw new IllegalArgumentException("STR_LEN: expected string");
+        }
+        stack.pushValue(new IntValue(s.value().getBytes(StandardCharsets.UTF_8).length));
     }
 }
-

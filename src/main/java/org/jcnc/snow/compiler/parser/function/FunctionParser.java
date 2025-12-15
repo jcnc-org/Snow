@@ -55,8 +55,8 @@ public class FunctionParser implements TopLevelParser {
     public FunctionNode parse(ParserContext ctx) {
         TokenStream ts = ctx.getTokens();
 
-        int line = ts.peek().getLine();
-        int column = ts.peek().getCol();
+        int line = ts.peek().line();
+        int column = ts.peek().col();
         String file = ctx.getSourceName();
 
         parseFunctionHeader(ts);
@@ -97,15 +97,15 @@ public class FunctionParser implements TopLevelParser {
     private Map<String, SectionDefinition> getSectionDefinitions(List<ParameterNode> params, String[] returnType, List<StatementNode> body) {
         Map<String, SectionDefinition> map = new HashMap<>();
         map.put("params", new SectionDefinition(
-                (TokenStream stream) -> stream.peek().getLexeme().equals("params"),
+                (TokenStream stream) -> stream.peek().lexeme().equals("params"),
                 (ParserContext context, TokenStream stream) -> params.addAll(parseParameters(context))
         ));
         map.put("returns", new SectionDefinition(
-                (TokenStream stream) -> stream.peek().getLexeme().equals("returns"),
+                (TokenStream stream) -> stream.peek().lexeme().equals("returns"),
                 (ParserContext context, TokenStream stream) -> returnType[0] = parseReturnType(stream)
         ));
         map.put("body", new SectionDefinition(
-                (TokenStream stream) -> stream.peek().getLexeme().equals("body"),
+                (TokenStream stream) -> stream.peek().lexeme().equals("body"),
                 (ParserContext context, TokenStream stream) -> body.addAll(parseFunctionBody(context, stream))
         ));
         return map;
@@ -130,7 +130,7 @@ public class FunctionParser implements TopLevelParser {
      * @return 函数名称
      */
     private String parseFunctionName(TokenStream ts) {
-        String name = ts.expectType(TokenType.IDENTIFIER).getLexeme();
+        String name = ts.expectType(TokenType.IDENTIFIER).lexeme();
         ts.expectType(TokenType.NEWLINE);
         return name;
     }
@@ -162,19 +162,19 @@ public class FunctionParser implements TopLevelParser {
         List<ParameterNode> list = new ArrayList<>();
         while (true) {
             skipComments(ts);
-            if (ts.peek().getType() == TokenType.NEWLINE) {
+            if (ts.peek().type() == TokenType.NEWLINE) {
                 ts.next();
                 continue;
             }
-            String lex = ts.peek().getLexeme();
+            String lex = ts.peek().lexeme();
             if (lex.equals("returns") || lex.equals("body") || lex.equals("end")) break;
 
-            int line = ts.peek().getLine();
-            int column = ts.peek().getCol();
+            int line = ts.peek().line();
+            int column = ts.peek().col();
             String file = ctx.getSourceName();
 
             ts.expect("declare");
-            String pname = ts.expectType(TokenType.IDENTIFIER).getLexeme();
+            String pname = ts.expectType(TokenType.IDENTIFIER).lexeme();
             ts.expect(":");
             String ptype = parseTypeWithArray(ts);
 
@@ -212,31 +212,31 @@ public class FunctionParser implements TopLevelParser {
      */
     private String parseTypeWithArray(TokenStream ts) {
         Token typeToken;
-        if (ts.peek().getType() == TokenType.TYPE || ts.peek().getType() == TokenType.IDENTIFIER) {
+        if (ts.peek().type() == TokenType.TYPE || ts.peek().type() == TokenType.IDENTIFIER) {
             typeToken = ts.next();
         } else {
             var t = ts.peek();
-            throw new UnexpectedToken("期望 TYPE 或 IDENTIFIER，但得到 " + t.getType() + " ('" + t.getLexeme() + "')", t.getLine(), t.getCol());
+            throw new UnexpectedToken("期望 TYPE 或 IDENTIFIER，但得到 " + t.type() + " ('" + t.lexeme() + "')", t.line(), t.col());
         }
-        StringBuilder typeName = new StringBuilder(typeToken.getLexeme());
+        StringBuilder typeName = new StringBuilder(typeToken.lexeme());
         // 支持限定类型名：module.Type 或 module.sub.Type
-        while (ts.peek().getType() == TokenType.DOT) {
+        while (ts.peek().type() == TokenType.DOT) {
             ts.next(); // consume '.'
             typeName.append('.');
-            if (ts.peek().getType() == TokenType.IDENTIFIER) {
-                typeName.append(ts.next().getLexeme());
+            if (ts.peek().type() == TokenType.IDENTIFIER) {
+                typeName.append(ts.next().lexeme());
             } else {
                 var t = ts.peek();
                 throw new UnexpectedToken(
-                        "限定类型名中点号后必须跟标识符，但得到 " + t.getType() + " ('" + t.getLexeme() + "')",
-                        t.getLine(), t.getCol());
+                        "限定类型名中点号后必须跟标识符，但得到 " + t.type() + " ('" + t.lexeme() + "')",
+                        t.line(), t.col());
             }
         }
-        while (ts.peek().getType() == TokenType.LBRACKET) {
+        while (ts.peek().type() == TokenType.LBRACKET) {
             ts.next(); // [
-            if (ts.peek().getType() != TokenType.RBRACKET) {
+            if (ts.peek().type() != TokenType.RBRACKET) {
                 var t = ts.peek();
-                throw new UnexpectedToken("数组类型应为 []，但遇到 " + t.getType() + " ('" + t.getLexeme() + "')", t.getLine(), t.getCol());
+                throw new UnexpectedToken("数组类型应为 []，但遇到 " + t.type() + " ('" + t.lexeme() + "')", t.line(), t.col());
             }
             ts.next(); // ]
             typeName.append("[]");
@@ -261,12 +261,12 @@ public class FunctionParser implements TopLevelParser {
         List<StatementNode> stmts = new ArrayList<>();
         while (true) {
             skipComments(ts);
-            if (ts.peek().getType() == TokenType.NEWLINE) {
+            if (ts.peek().type() == TokenType.NEWLINE) {
                 ts.next();
                 continue;
             }
-            if ("end".equals(ts.peek().getLexeme())) break;
-            stmts.add(StatementParserFactory.get(ts.peek().getLexeme()).parse(ctx));
+            if ("end".equals(ts.peek().lexeme())) break;
+            stmts.add(StatementParserFactory.get(ts.peek().lexeme()).parse(ctx));
         }
         ts.expect("end");
         ts.expect("body");
@@ -281,7 +281,7 @@ public class FunctionParser implements TopLevelParser {
      * @param ts token 流
      */
     private void skipComments(TokenStream ts) {
-        while (ts.peek().getType() == TokenType.COMMENT) ts.next();
+        while (ts.peek().type() == TokenType.COMMENT) ts.next();
     }
 
     /**
@@ -290,6 +290,6 @@ public class FunctionParser implements TopLevelParser {
      * @param ts token 流
      */
     private void skipNewlines(TokenStream ts) {
-        while (ts.peek().getType() == TokenType.NEWLINE) ts.next();
+        while (ts.peek().type() == TokenType.NEWLINE) ts.next();
     }
 }

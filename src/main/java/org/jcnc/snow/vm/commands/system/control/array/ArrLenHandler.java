@@ -4,9 +4,11 @@ import org.jcnc.snow.vm.commands.system.control.syscalls.SyscallHandler;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
-
-import java.lang.reflect.Array;
-import java.util.List;
+import org.jcnc.snow.vm.runtime.SnowArrayObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.Value;
 
 /**
  * {@code ArrLenHandler} 实现 ARR_LEN (0x1801) 系统调用，
@@ -18,7 +20,7 @@ import java.util.List;
  * </p>
  *
  * <p><b>语义：</b>
- * 返回数组、{@link List} 的长度。
+ * 返回数组的长度。
  * 支持 null、数组、列表等常见类型。
  * </p>
  *
@@ -35,19 +37,18 @@ public class ArrLenHandler implements SyscallHandler {
     public void handle(OperandStack stack,
                        LocalVariableStore locals,
                        CallStack callStack) {
-        Object arrObj = stack.pop();  // 入参：数组/列表/字符串等
-
-        int len;
-        if (arrObj == null) {
-            len = 0;
-        } else if (arrObj instanceof List<?> list) {
-            len = list.size();
-        } else if (arrObj.getClass().isArray()) {
-            len = Array.getLength(arrObj);
-        } else {
-            throw new IllegalArgumentException("ARR_LEN: not an array/list: " + arrObj);
+        Value arrV = stack.popValue();
+        if (arrV == Value.NULL) {
+            stack.pushValue(new IntValue(0));
+            return;
         }
-
-        stack.push(len); // 压回长度（int）
+        if (!(arrV instanceof RefValue(int id))) {
+            throw new IllegalArgumentException("ARR_LEN: not an array");
+        }
+        var obj = SnowRuntime.get().heap().get(id);
+        if (!(obj instanceof SnowArrayObject arr)) {
+            throw new IllegalArgumentException("ARR_LEN: not an array");
+        }
+        stack.pushValue(new IntValue(arr.length()));
     }
 }

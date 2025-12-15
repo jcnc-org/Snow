@@ -40,34 +40,34 @@ public class ExpressionStatementParser implements StatementParser {
         TokenStream ts = ctx.getTokens();
 
         // ----------- 起始 token 合法性检查（放宽以支持 this 开头）-----------
-        if (ts.peek().getType() == TokenType.NEWLINE) {
+        if (ts.peek().type() == TokenType.NEWLINE) {
             // 空行不应进入表达式解析，直接抛出异常
             throw new UnexpectedToken(
                     "无法解析以空行开头的表达式",
-                    ts.peek().getLine(),
-                    ts.peek().getCol()
+                    ts.peek().line(),
+                    ts.peek().col()
             );
         }
-        if (ts.peek().getType() == TokenType.KEYWORD) {
-            String kw = ts.peek().getLexeme();
+        if (ts.peek().type() == TokenType.KEYWORD) {
+            String kw = ts.peek().lexeme();
             // 仅允许 this/super 作为表达式起始；其它关键字（如 end/if/else 等）仍禁止
             if (!"this".equals(kw) && !"super".equals(kw)) {
                 throw new UnexpectedToken(
                         "无法解析以关键字开头的表达式: " + kw,
-                        ts.peek().getLine(),
-                        ts.peek().getCol()
+                        ts.peek().line(),
+                        ts.peek().col()
                 );
             }
         }
 
-        int line = ts.peek().getLine();
-        int column = ts.peek().getCol();
+        int line = ts.peek().line();
+        int column = ts.peek().col();
         String file = ctx.getSourceName();
 
         // ------------- 简单形式: IDENTIFIER = expr -------------
         // 快速路径：如 "a = ..."，直接识别为赋值语句，无需完整表达式树回退
-        if (ts.peek().getType() == TokenType.IDENTIFIER && "=".equals(ts.peek(1).getLexeme())) {
-            String varName = ts.next().getLexeme();    // 消费 IDENTIFIER
+        if (ts.peek().type() == TokenType.IDENTIFIER && "=".equals(ts.peek(1).lexeme())) {
+            String varName = ts.next().lexeme();    // 消费 IDENTIFIER
             ts.expect("=");                            // 消费 '='
             ExpressionNode value = new PrattExpressionParser().parse(ctx); // 解析右侧表达式
             ts.expectType(TokenType.NEWLINE);
@@ -80,31 +80,27 @@ public class ExpressionStatementParser implements StatementParser {
         ExpressionNode lhs = new PrattExpressionParser().parse(ctx);
 
         // 若遇到等号，则尝试回退为赋值语句（兼容更复杂的左值表达式）
-        if ("=".equals(ts.peek().getLexeme())) {
+        if ("=".equals(ts.peek().lexeme())) {
             ts.next(); // 消费 '='
             ExpressionNode rhs = new PrattExpressionParser().parse(ctx); // 解析右值表达式
             ts.expectType(TokenType.NEWLINE);
 
             // 根据左值 AST 类型，生成不同赋值节点
-            if (lhs instanceof org.jcnc.snow.compiler.parser.ast.IdentifierNode id) {
-                // 变量名赋值：a = rhs
-                return new AssignmentNode(id.name(), rhs, new NodeContext(line, column, file));
-
-            } else if (lhs instanceof org.jcnc.snow.compiler.parser.ast.IndexExpressionNode idx) {
-                // 下标赋值：a[i] = rhs
-                return new org.jcnc.snow.compiler.parser.ast.IndexAssignmentNode(idx, rhs, new NodeContext(line, column, file));
-
-            } else if (lhs instanceof org.jcnc.snow.compiler.parser.ast.MemberExpressionNode mem
-                    && mem.object() instanceof org.jcnc.snow.compiler.parser.ast.IdentifierNode oid
-                    && "this".equals(oid.name())) {
-                // 支持：this.field = rhs
-                // 语法糖：降级为对当前作用域同名变量的赋值，相当于 "field = rhs"
-                return new AssignmentNode(mem.member(), rhs, new NodeContext(line, column, file));
-
-            } else {
-                // 其它成员赋值（如 a.b = ...）不支持，报错
-                throw new UnexpectedToken("不支持的赋值左值类型: " + lhs.getClass().getSimpleName(), line, column);
-            }
+            // 其它成员赋值（如 a.b = ...）不支持，报错
+            return switch (lhs) {
+                case org.jcnc.snow.compiler.parser.ast.IdentifierNode id ->
+                    // 变量名赋值：a = rhs
+                        new AssignmentNode(id.name(), rhs, new NodeContext(line, column, file));
+                case org.jcnc.snow.compiler.parser.ast.IndexExpressionNode idx ->
+                    // 下标赋值：a[i] = rhs
+                        new org.jcnc.snow.compiler.parser.ast.IndexAssignmentNode(idx, rhs, new NodeContext(line, column, file));
+                case org.jcnc.snow.compiler.parser.ast.MemberExpressionNode mem when mem.object() instanceof org.jcnc.snow.compiler.parser.ast.IdentifierNode oid && "this".equals(oid.name()) ->
+                    // 支持：this.field = rhs
+                    // 语法糖：降级为对当前作用域同名变量的赋值，相当于 "field = rhs"
+                        new AssignmentNode(mem.member(), rhs, new NodeContext(line, column, file));
+                default ->
+                        throw new UnexpectedToken("不支持的赋值左值类型: " + lhs.getClass().getSimpleName(), line, column);
+            };
         }
 
         // 不是赋值，则当作普通表达式语句处理

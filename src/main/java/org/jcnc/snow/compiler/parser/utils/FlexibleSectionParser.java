@@ -53,7 +53,7 @@ public class FlexibleSectionParser {
         while (true) {
             skipCommentsAndNewlines(tokens);
 
-            String keyword = tokens.peek().getLexeme();
+            String keyword = tokens.peek().lexeme();
 
             if ("end".equals(keyword)) {
                 break;
@@ -65,8 +65,8 @@ public class FlexibleSectionParser {
             } else {
                 throw new UnexpectedToken(
                         "未识别的关键字或条件不满足: " + keyword,
-                        tokens.peek().getLine(),
-                        tokens.peek().getCol()
+                        tokens.peek().line(),
+                        tokens.peek().col()
                 );
             }
         }
@@ -79,7 +79,7 @@ public class FlexibleSectionParser {
      */
     private static void skipCommentsAndNewlines(TokenStream tokens) {
         while (true) {
-            TokenType type = tokens.peek().getType();
+            TokenType type = tokens.peek().type();
             if (type == TokenType.COMMENT || type == TokenType.NEWLINE) {
                 tokens.next();
                 continue;

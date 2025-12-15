@@ -4,8 +4,17 @@ import org.jcnc.snow.vm.commands.system.control.syscalls.SyscallHandler;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.runtime.HeapObject;
+import org.jcnc.snow.vm.runtime.SnowArrayObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.runtime.SnowStringObject;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.Value;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * {@code GetAddrInfoHandler} 实现 GETADDRINFO (0x140E) 系统调用，
@@ -40,9 +49,10 @@ public class GetAddrInfoHandler implements SyscallHandler {
                        CallStack callStack) throws Exception {
 
         // 1. 参数顺序: hints → service → host
-        Object hintsObj = stack.pop();
-        String service = (String) stack.pop();
-        String host = (String) stack.pop();
+        // hints is currently ignored.
+        stack.popValue();
+        String service = asJavaString(stack.popValue(), "GETADDRINFO: service");
+        String host = asJavaString(stack.popValue(), "GETADDRINFO: host");
 
         // 2. 解析 service → port
         int port;
@@ -55,16 +65,27 @@ public class GetAddrInfoHandler implements SyscallHandler {
         // 3. 解析 host → IP 列表
         InetAddress[] addresses = InetAddress.getAllByName(host);
 
-        // 4. 构造返回数组
-        Object[][] results = new Object[addresses.length][3];
-        for (int i = 0; i < addresses.length; i++) {
-            InetAddress addr = addresses[i];
-            results[i][0] = addr.getHostAddress();
-            results[i][1] = port;
-            results[i][2] = (addr instanceof java.net.Inet6Address) ? 6 : 4;
+        // 4. Construct return: array of tuples [addr, port, family]
+        List<Value> out = new ArrayList<>(addresses.length);
+        for (InetAddress a : addresses) {
+            int addrId = SnowRuntime.get().heap().alloc(new SnowStringObject(a.getHostAddress()));
+            int tupleId = SnowRuntime.get().heap().alloc(new SnowArrayObject(List.of(
+                    new RefValue(addrId),
+                    new IntValue(port),
+                    new IntValue((a instanceof java.net.Inet6Address) ? 6 : 4)
+            )));
+            out.add(new RefValue(tupleId));
         }
+        int topId = SnowRuntime.get().heap().alloc(new SnowArrayObject(out));
+        stack.pushValue(new RefValue(topId));
+    }
 
-        // 5. 压回二维数组
-        stack.push(results);
+    private static String asJavaString(Value v, String what) {
+        if (!(v instanceof RefValue(int id))) {
+            throw new IllegalArgumentException(what + " must be string");
+        }
+        HeapObject obj = SnowRuntime.get().heap().get(id);
+        if (obj instanceof SnowStringObject s) return s.value();
+        throw new IllegalArgumentException(what + " must be string");
     }
 }

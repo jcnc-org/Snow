@@ -29,6 +29,6 @@ public class BoolLiteralParselet implements PrefixParselet {
      */
     @Override
     public ExpressionNode parse(ParserContext ctx, Token token) {
-        return new BoolLiteralNode(token.getLexeme(), new NodeContext(token.getLine(), token.getCol(), ctx.getSourceName()));
+        return new BoolLiteralNode(token.lexeme(), new NodeContext(token.line(), token.col(), ctx.getSourceName()));
     }
 }

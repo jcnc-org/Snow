@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * The BAndCommand class implements the {@link Command} interface and represents the byte8 bitwise AND (`&`) operation command.
@@ -45,8 +46,8 @@ public class BAndCommand implements Command {
         }
 
         // Pop the top two operands from the stack
-        final byte b = (byte) operandStack.pop();
-        final byte a = (byte) operandStack.pop();
+        final byte b = NumberUtils.popByte(operandStack, "B_AND");
+        final byte a = NumberUtils.popByte(operandStack, "B_AND");
 
         // Perform the byte8 bitwise AND operation and push the result back onto the stack
         operandStack.push((byte) (a & b));

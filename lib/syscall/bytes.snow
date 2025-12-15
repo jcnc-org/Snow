@@ -1,0 +1,82 @@
+/**
+@module bytes
+@summary Bytes 运行时内建系统调用模块。
+@syscalls
+  0x1A10 BYTES_LEN  获取 byte[] 长度
+  0x1A11 BYTES_GET  获取 byte[] 指定索引字节
+  0x1A12 BYTES_SET  设置 byte[] 指定索引字节
+  0x1A13 BYTES_NEW  分配新的 byte[]
+  0x1A14 BYTES_CONCAT  连接两个 byte[]
+*/
+module: bytes
+
+    /**
+    @function length
+    @summary 获取 byte[] 长度
+    */
+    function: length
+        params:
+            declare data: byte[]
+        returns: int
+        body:
+            return syscall("0x1A10", data)
+        end body
+    end function
+
+    /**
+    @function get
+    @summary 获取 data[idx]
+    */
+    function: get
+        params:
+            declare data: byte[]
+            declare idx: int
+        returns: byte
+        body:
+            return syscall("0x1A11", data, idx)
+        end body
+    end function
+
+    /**
+    @function set
+    @summary 设置 data[idx] = b
+    */
+    function: set
+        params:
+            declare data: byte[]
+            declare idx: int
+            declare b: byte
+        returns: int
+        body:
+            return syscall("0x1A12", data, idx, b)
+        end body
+    end function
+
+    /**
+    @function alloc
+    @summary 分配新的 byte[]，初始值全部为 0。
+    */
+    function: alloc
+        params:
+            declare n: int
+        returns: byte[]
+        body:
+            return syscall("0x1A13", n)
+        end body
+    end function
+
+    /**
+    @function concat
+    @summary 连接两个 byte[] 并返回新的 byte[]。
+    */
+    function: concat
+        params:
+            declare a: byte[]
+            declare b: byte[]
+        returns: byte[]
+        body:
+            return syscall("0x1A14", a, b)
+        end body
+    end function
+
+end module

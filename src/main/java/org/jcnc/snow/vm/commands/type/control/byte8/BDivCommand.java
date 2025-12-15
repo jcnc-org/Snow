@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * BDivCommand Opcode: Represents the byte8 division operation in the virtual machine.
@@ -47,8 +48,8 @@ public class BDivCommand implements Command {
     @Override
     public int execute(String[] parts, int currentPC, OperandStack operandStack, LocalVariableStore localVariableStore, CallStack callStack) {
         // Pop the top two operands from the stack
-        byte b = (byte) operandStack.pop();
-        byte a = (byte) operandStack.pop();
+        byte b = NumberUtils.popByte(operandStack, "B_DIV");
+        byte a = NumberUtils.popByte(operandStack, "B_DIV");
 
         // Check for division by zero
         if (b == 0) {

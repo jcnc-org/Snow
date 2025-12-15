@@ -4,11 +4,14 @@ import org.jcnc.snow.vm.commands.system.control.syscalls.SyscallHandler;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.runtime.SnowDictObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.value.DoubleValue;
+import org.jcnc.snow.vm.value.LongValue;
+import org.jcnc.snow.vm.value.RefValue;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * {@code MemInfoHandler} 实现 MEMINFO (0x1906) 系统调用，
@@ -45,11 +48,11 @@ public class MemInfoHandler implements SyscallHandler {
         long heapUsed = heapTotal - heapFree;
         long heapMax = rt.maxMemory();
 
-        Map<String, Object> info = new HashMap<>();
-        info.put("heapTotal", heapTotal);
-        info.put("heapFree", heapFree);
-        info.put("heapUsed", heapUsed);
-        info.put("heapMax", heapMax);
+        SnowDictObject info = new SnowDictObject();
+        info.put("heapTotal", new LongValue(heapTotal));
+        info.put("heapFree", new LongValue(heapFree));
+        info.put("heapUsed", new LongValue(heapUsed));
+        info.put("heapMax", new LongValue(heapMax));
 
         // Try to get OS-level physical memory info if available
         try {
@@ -61,20 +64,20 @@ public class MemInfoHandler implements SyscallHandler {
                 long physFree = sunOs.getFreeMemorySize();
                 long physUsed = physTotal - physFree;
 
-                info.put("physicalTotal", physTotal);
-                info.put("physicalFree", physFree);
-                info.put("physicalUsed", physUsed);
+                info.put("physicalTotal", new LongValue(physTotal));
+                info.put("physicalFree", new LongValue(physFree));
+                info.put("physicalUsed", new LongValue(physUsed));
 
                 // Additional useful metrics (may return -1 or NaN on some platforms)
                 try {
-                    info.put("committedVirtual", sunOs.getCommittedVirtualMemorySize());
+                    info.put("committedVirtual", new LongValue(sunOs.getCommittedVirtualMemorySize()));
                 } catch (Throwable ignored) {
                 }
 
                 try {
                     // getProcessCpuLoad / getSystemCpuLoad return double in [0.0,1.0] or NaN
-                    info.put("processCpuLoad", sunOs.getProcessCpuLoad());
-                    info.put("systemCpuLoad", sunOs.getCpuLoad());
+                    info.put("processCpuLoad", new DoubleValue(sunOs.getProcessCpuLoad()));
+                    info.put("systemCpuLoad", new DoubleValue(sunOs.getCpuLoad()));
                 } catch (Throwable ignored) {
                 }
             }
@@ -82,7 +85,7 @@ public class MemInfoHandler implements SyscallHandler {
             // 如果无法获取平台级信息，则忽略（仍返回 heap 信息）
         }
 
-        // push the map back onto the operand stack
-        stack.push(info);
+        int id = SnowRuntime.get().heap().alloc(info);
+        stack.pushValue(new RefValue(id));
     }
 }

@@ -31,7 +31,7 @@ public class ArrayLiteralParselet implements PrefixParselet {
      * @param ts 词法流
      */
     private static void skipNewlines(TokenStream ts) {
-        while (ts.peek().getType() == TokenType.NEWLINE) {
+        while (ts.peek().type() == TokenType.NEWLINE) {
             ts.next();
         }
     }
@@ -46,8 +46,8 @@ public class ArrayLiteralParselet implements PrefixParselet {
     @Override
     public ExpressionNode parse(ParserContext ctx, Token token) {
         // token 为已消费的 LBRACKET，使用其位置生成 NodeContext
-        int line = token.getLine();
-        int col = token.getCol();
+        int line = token.line();
+        int col = token.col();
         String file = ctx.getSourceName();
 
         TokenStream ts = ctx.getTokens();
@@ -56,7 +56,7 @@ public class ArrayLiteralParselet implements PrefixParselet {
         List<ExpressionNode> elements = new ArrayList<>();
 
         // 空数组: 直接遇到 RBRACKET
-        if (ts.peek().getType() != TokenType.RBRACKET) {
+        if (ts.peek().type() != TokenType.RBRACKET) {
             while (true) {
                 // 解析一个元素
                 ExpressionNode elem = new PrattExpressionParser().parse(ctx);
@@ -64,7 +64,7 @@ public class ArrayLiteralParselet implements PrefixParselet {
 
                 skipNewlines(ts);
                 // 逗号继续，右中括号结束
-                if (ts.peek().getType() == TokenType.COMMA) {
+                if (ts.peek().type() == TokenType.COMMA) {
                     ts.next();
                     skipNewlines(ts);
                     continue;

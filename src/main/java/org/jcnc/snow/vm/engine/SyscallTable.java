@@ -18,14 +18,26 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class SyscallTable {
 
-    public enum ReturnKind {
-        INT,
-        LONG,
-        REF
+    public enum AbiType {
+        VOID,
+        I8,
+        I16,
+        I32,
+        I64,
+        F32,
+        F64,
+        STRING,
+        BYTES,
+        ARRAY,
+        DICT,
+        ANY
+    }
+
+    public record SyscallSpec(int opcode, String name, AbiType ret, AbiType[] args, boolean varargs) {
     }
 
     private static final Map<String, Integer> NAME_TO_OPCODE = new ConcurrentHashMap<>();
-    private static final Map<Integer, ReturnKind> OPCODE_TO_RETURN = new ConcurrentHashMap<>();
+    private static final Map<Integer, SyscallSpec> OPCODE_TO_SPEC = new ConcurrentHashMap<>();
 
     static {
         // 1) Populate name -> opcode from SyscallOpCode constants via reflection.
@@ -40,51 +52,71 @@ public final class SyscallTable {
             }
         }
 
-        // 2) Declare non-default return kinds.
-        // Default is INT for unspecified opcodes.
-        mark(ReturnKind.REF,
-                SyscallOpCode.READ,
-                SyscallOpCode.STAT,
-                SyscallOpCode.FSTAT,
-                SyscallOpCode.PIPE,
-                SyscallOpCode.READLINK,
-                SyscallOpCode.GETCWD,
-                SyscallOpCode.READDIR,
-                SyscallOpCode.SELECT,
-                SyscallOpCode.EPOLL_WAIT,
-                SyscallOpCode.IO_WAIT,
-                SyscallOpCode.RECV,
-                SyscallOpCode.RECVFROM,
-                SyscallOpCode.GETSOCKOPT,
-                SyscallOpCode.GETPEERNAME,
-                SyscallOpCode.GETSOCKNAME,
-                SyscallOpCode.GETADDRINFO,
-                SyscallOpCode.THREAD_JOIN,
-                SyscallOpCode.GETENV,
-                SyscallOpCode.ERRSTR,
-                SyscallOpCode.RANDOM_BYTES,
-                SyscallOpCode.MEMINFO,
-                SyscallOpCode.TIMEOFDAY,
-                SyscallOpCode.STR_TO_UTF8,
-                SyscallOpCode.UTF8_TO_STR,
-                SyscallOpCode.STR_FROM_CODEPOINT
-        );
+        // 2) Register syscall specs (typed ABI surface).
+        // Default for unknown opcodes is I32.
+        spec(SyscallOpCode.READ, "READ", AbiType.BYTES, AbiType.I32, AbiType.I32);
+        spec(SyscallOpCode.WRITE, "WRITE", AbiType.I32, AbiType.I32, AbiType.ANY);
+        spec(SyscallOpCode.OPEN, "OPEN", AbiType.I32, AbiType.STRING, AbiType.I32);
+        spec(SyscallOpCode.CLOSE, "CLOSE", AbiType.I32, AbiType.I32);
+        spec(SyscallOpCode.SEEK, "SEEK", AbiType.I64, AbiType.I32, AbiType.I64, AbiType.I32);
 
-        mark(ReturnKind.LONG,
-                SyscallOpCode.SEEK,
-                SyscallOpCode.CLOCK_GETTIME,
-                SyscallOpCode.TICK_MS
-        );
-        // STR_LEN returns INT by default (UTF-8 byte length).
+        spec(SyscallOpCode.PIPE, "PIPE", AbiType.ARRAY);
+        spec(SyscallOpCode.STAT, "STAT", AbiType.DICT, AbiType.STRING);
+        spec(SyscallOpCode.FSTAT, "FSTAT", AbiType.DICT, AbiType.I32);
+        spec(SyscallOpCode.READDIR, "READDIR", AbiType.ARRAY, AbiType.STRING);
+
+        spec(SyscallOpCode.SELECT, "SELECT", AbiType.DICT, AbiType.ARRAY, AbiType.ARRAY, AbiType.ARRAY, AbiType.I32);
+        spec(SyscallOpCode.EPOLL_WAIT, "EPOLL_WAIT", AbiType.ARRAY, AbiType.I32, AbiType.I32, AbiType.I32);
+
+        spec(SyscallOpCode.ARR_LEN, "ARR_LEN", AbiType.I32, AbiType.ARRAY);
+        spec(SyscallOpCode.ARR_GET, "ARR_GET", AbiType.ANY, AbiType.ARRAY, AbiType.I32);
+        spec(SyscallOpCode.ARR_SET, "ARR_SET", AbiType.I32, AbiType.ARRAY, AbiType.I32, AbiType.ANY);
+        spec(SyscallOpCode.ARR_PUSH, "ARR_PUSH", AbiType.I32, AbiType.ARRAY, AbiType.ANY);
+        spec(SyscallOpCode.ARR_POP, "ARR_POP", AbiType.ANY, AbiType.ARRAY);
+        spec(SyscallOpCode.ARR_INSERT, "ARR_INSERT", AbiType.I32, AbiType.ARRAY, AbiType.I32, AbiType.ANY);
+        spec(SyscallOpCode.ARR_REMOVE, "ARR_REMOVE", AbiType.ANY, AbiType.ARRAY, AbiType.I32);
+        spec(SyscallOpCode.ARR_RESIZE, "ARR_RESIZE", AbiType.I32, AbiType.ARRAY, AbiType.I32);
+        spec(SyscallOpCode.ARR_CLEAR, "ARR_CLEAR", AbiType.I32, AbiType.ARRAY);
+
+        spec(SyscallOpCode.STR_LEN, "STR_LEN", AbiType.I32, AbiType.STRING);
+        spec(SyscallOpCode.STR_TO_UTF8, "STR_TO_UTF8", AbiType.BYTES, AbiType.STRING);
+        spec(SyscallOpCode.UTF8_TO_STR, "UTF8_TO_STR", AbiType.STRING, AbiType.BYTES);
+        spec(SyscallOpCode.STR_FROM_CODEPOINT, "STR_FROM_CODEPOINT", AbiType.STRING, AbiType.I32);
+
+        spec(SyscallOpCode.BYTES_LEN, "BYTES_LEN", AbiType.I32, AbiType.BYTES);
+        spec(SyscallOpCode.BYTES_GET, "BYTES_GET", AbiType.I8, AbiType.BYTES, AbiType.I32);
+        spec(SyscallOpCode.BYTES_SET, "BYTES_SET", AbiType.I32, AbiType.BYTES, AbiType.I32, AbiType.I8);
+        spec(SyscallOpCode.BYTES_NEW, "BYTES_NEW", AbiType.BYTES, AbiType.I32);
+        spec(SyscallOpCode.BYTES_CONCAT, "BYTES_CONCAT", AbiType.BYTES, AbiType.BYTES, AbiType.BYTES);
+
+        spec(SyscallOpCode.RANDOM_BYTES, "RANDOM_BYTES", AbiType.BYTES, AbiType.I32);
+
+        spec(SyscallOpCode.TIMEOFDAY, "TIMEOFDAY", AbiType.ARRAY);
+
+        spec(SyscallOpCode.STDOUT_WRITE, "STDOUT_WRITE", AbiType.I32, AbiType.ANY);
+        spec(SyscallOpCode.STDERR_WRITE, "STDERR_WRITE", AbiType.I32, AbiType.ANY);
+
+        spec(SyscallOpCode.MEMINFO, "MEMINFO", AbiType.DICT);
+
+        spec(SyscallOpCode.SEND, "SEND", AbiType.I32, AbiType.I32, AbiType.ANY);
+        spec(SyscallOpCode.RECV, "RECV", AbiType.BYTES, AbiType.I32, AbiType.I32);
+        spec(SyscallOpCode.SENDTO, "SENDTO", AbiType.I32, AbiType.I32, AbiType.ANY, AbiType.STRING, AbiType.I32);
+        spec(SyscallOpCode.RECVFROM, "RECVFROM", AbiType.ARRAY, AbiType.I32, AbiType.I32);
+        spec(SyscallOpCode.GETPEERNAME, "GETPEERNAME", AbiType.ARRAY, AbiType.I32);
+        spec(SyscallOpCode.GETSOCKNAME, "GETSOCKNAME", AbiType.ARRAY, AbiType.I32);
+        spec(SyscallOpCode.GETADDRINFO, "GETADDRINFO", AbiType.ARRAY, AbiType.STRING, AbiType.STRING, AbiType.ANY);
+
+        // Returns string or null; represent as ANY (stored in 'R') until nullable types exist.
+        spec(SyscallOpCode.GETENV, "GETENV", AbiType.ANY, AbiType.STRING);
+        spec(SyscallOpCode.ERRSTR, "ERRSTR", AbiType.STRING);
+        spec(SyscallOpCode.ERRNO, "ERRNO", AbiType.I32);
     }
 
     private SyscallTable() {
     }
 
-    private static void mark(ReturnKind kind, int... opcodes) {
-        for (int opcode : opcodes) {
-            OPCODE_TO_RETURN.put(opcode, kind);
-        }
+    private static void spec(int opcode, String name, AbiType ret, AbiType... args) {
+        OPCODE_TO_SPEC.put(opcode, new SyscallSpec(opcode, name, ret, args, false));
     }
 
     /**
@@ -129,13 +161,26 @@ public final class SyscallTable {
      * - 'L' for long values
      * - 'R' for reference values (arrays, strings, maps, objects)
      */
-    public static char returnPrefix(int opcode) {
-        ReturnKind kind = OPCODE_TO_RETURN.getOrDefault(opcode, ReturnKind.INT);
-        return switch (kind) {
-            case REF -> 'R';
-            case LONG -> 'L';
-            case INT -> 'I';
+    public static SyscallSpec spec(int opcode) {
+        return OPCODE_TO_SPEC.get(opcode);
+    }
+
+    /**
+     * Returns the recommended STORE prefix for a syscall return type.
+     * Falls back to 'I' for unknown opcodes (legacy behavior).
+     */
+    public static char returnStorePrefix(int opcode) {
+        SyscallSpec spec = OPCODE_TO_SPEC.get(opcode);
+        AbiType ret = (spec == null) ? AbiType.I32 : spec.ret();
+        return switch (ret) {
+            case VOID -> 'V';
+            case I8 -> 'B';
+            case I16 -> 'S';
+            case I32 -> 'I';
+            case I64 -> 'L';
+            case F32 -> 'F';
+            case F64 -> 'D';
+            case STRING, BYTES, ARRAY, DICT, ANY -> 'R';
         };
     }
 }
-

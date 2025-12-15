@@ -5,6 +5,12 @@ import org.jcnc.snow.vm.io.FDTable;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.runtime.SnowBytesObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.runtime.SnowStringObject;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.Value;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
@@ -52,21 +58,30 @@ public class WriteHandler implements SyscallHandler {
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
         // 1. 取出参数（先弹 data，再弹 fd）
-        Object dataObj = stack.pop();   // data:any
-        Object fdObj = stack.pop();   // fd:int
+        Value dataV = stack.popValue();   // data:any
+        Value fdV = stack.popValue();   // fd:int
 
-        if (!(fdObj instanceof Integer)) {
-            throw new IllegalArgumentException("WRITE: fd must be an int");
-        }
-        int fd = (Integer) fdObj;
-
-        // 2. 统一将数据转换为 byte[]
-        byte[] data = switch (dataObj) {
-            case byte[] b -> b;
-            case String s -> s.getBytes(StandardCharsets.UTF_8);
-            case null -> new byte[0];
-            default -> dataObj.toString().getBytes(StandardCharsets.UTF_8);
+        int fd = switch (fdV) {
+            case IntValue(int i) -> i;
+            case org.jcnc.snow.vm.value.ShortValue(short s) -> s;
+            case org.jcnc.snow.vm.value.ByteValue(byte b) -> b;
+            case org.jcnc.snow.vm.value.LongValue(long l) -> (int) l;
+            default -> throw new IllegalArgumentException("WRITE: fd must be an int");
         };
+
+        byte[] data;
+        if (dataV == Value.NULL) {
+            data = new byte[0];
+        } else if (dataV instanceof RefValue(int id)) {
+            var obj = SnowRuntime.get().heap().get(id);
+            data = switch (obj) {
+                case SnowBytesObject b -> b.unsafeBytes();
+                case SnowStringObject s -> s.value().getBytes(StandardCharsets.UTF_8);
+                default -> obj.toString().getBytes(StandardCharsets.UTF_8);
+            };
+        } else {
+            data = dataV.toString().getBytes(StandardCharsets.UTF_8);
+        }
 
         // 3. 获取并检查可写通道
         var ch = FDTable.get(fd);
@@ -79,6 +94,6 @@ public class WriteHandler implements SyscallHandler {
         int written = wch.write(buffer);
 
         // 5. 将写入字节数压回栈
-        stack.push(written);
+        stack.pushValue(new IntValue(written));
     }
 }

@@ -26,8 +26,8 @@ public class BreakStatementParser implements StatementParser {
     @Override
     public BreakNode parse(ParserContext ctx) {
         // 记录当前位置作为 NodeContext
-        int line = ctx.getTokens().peek().getLine();
-        int column = ctx.getTokens().peek().getCol();
+        int line = ctx.getTokens().peek().line();
+        int column = ctx.getTokens().peek().col();
         String file = ctx.getSourceName();
 
         // 消耗 'break'

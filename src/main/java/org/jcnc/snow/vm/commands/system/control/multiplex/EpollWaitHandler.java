@@ -7,6 +7,12 @@ import org.jcnc.snow.vm.io.EpollRegistry;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.runtime.SnowArrayObject;
+import org.jcnc.snow.vm.runtime.SnowDictObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.value.IntValue;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.Value;
 
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
@@ -53,9 +59,19 @@ public class EpollWaitHandler implements SyscallHandler {
                        CallStack callStack) throws Exception {
 
         // 依次出栈 timeout_ms, max, epfd
-        int timeoutMs = (int) stack.pop();
-        int max = (int) stack.pop();
-        int epfd = (int) stack.pop();
+        int timeoutMs = switch (stack.popValue()) {
+            case IntValue(int i) -> i;
+            case org.jcnc.snow.vm.value.LongValue(long l) -> (int) l;
+            default -> throw new IllegalArgumentException("EPOLL_WAIT: timeout must be int");
+        };
+        int max = switch (stack.popValue()) {
+            case IntValue(int i) -> i;
+            default -> throw new IllegalArgumentException("EPOLL_WAIT: max must be int");
+        };
+        int epfd = switch (stack.popValue()) {
+            case IntValue(int i) -> i;
+            default -> throw new IllegalArgumentException("EPOLL_WAIT: epfd must be int");
+        };
 
         if (max <= 0) {
             throw new IllegalArgumentException("EPOLL_WAIT: max must be > 0");
@@ -66,7 +82,7 @@ public class EpollWaitHandler implements SyscallHandler {
 
         // 1. 检查 fd（标准流）就绪情况
         Map<Integer, Integer> pseudoFds = instance.getPseudoFds();
-        List<Map<String, Object>> ready = new ArrayList<>();
+        SnowArrayObject ready = new SnowArrayObject();
         long deadline = (timeoutMs < 0) ? Long.MAX_VALUE : System.currentTimeMillis() + timeoutMs;
         boolean found = false;
 
@@ -78,17 +94,25 @@ public class EpollWaitHandler implements SyscallHandler {
                 try {
                     if (fd == 0 && (events & 1) != 0) { // stdin 可读
                         if (System.in.available() > 0) {
-                            ready.add(Map.of("fd", 0, "events", 1));
+                            var ev = new SnowDictObject();
+                            ev.put("fd", new IntValue(0));
+                            ev.put("events", new IntValue(1));
+                            int evId = SnowRuntime.get().heap().alloc(ev);
+                            ready.push(new RefValue(evId));
                         }
                     }
                     if ((fd == 1 || fd == 2) && (events & 2) != 0) { // stdout/stderr 可写
-                        ready.add(Map.of("fd", fd, "events", 2));
+                        var ev = new SnowDictObject();
+                        ev.put("fd", new IntValue(fd));
+                        ev.put("events", new IntValue(2));
+                        int evId = SnowRuntime.get().heap().alloc(ev);
+                        ready.push(new RefValue(evId));
                     }
                 } catch (IOException ignored) {
                 }
-                if (ready.size() >= max) break;
+                if (ready.length() >= max) break;
             }
-            if (!ready.isEmpty() || timeoutMs == 0) {
+            if (ready.length() > 0 || timeoutMs == 0) {
                 break;
             }
             if (System.currentTimeMillis() >= deadline) break;
@@ -96,8 +120,9 @@ public class EpollWaitHandler implements SyscallHandler {
         } while (!found);
 
         // 如果已就绪（或者 max 满了），直接返回
-        if (!ready.isEmpty()) {
-            stack.push(ready.size() > max ? ready.subList(0, max) : ready);
+        if (ready.length() > 0) {
+            int id = SnowRuntime.get().heap().alloc(ready);
+            stack.pushValue(new RefValue(id));
             return;
         }
 
@@ -107,7 +132,7 @@ public class EpollWaitHandler implements SyscallHandler {
         if (n > 0) {
             Set<SelectionKey> keys = selector.selectedKeys();
             Iterator<SelectionKey> it = keys.iterator();
-            while (it.hasNext() && ready.size() < max) {
+            while (it.hasNext() && ready.length() < max) {
                 SelectionKey key = it.next();
                 it.remove();
 
@@ -120,10 +145,15 @@ public class EpollWaitHandler implements SyscallHandler {
 
                 Integer fd = instance.fdOf(key.channel());
                 if (fd != null) {
-                    ready.add(Map.of("fd", fd, "events", ev));
+                    var item = new SnowDictObject();
+                    item.put("fd", new IntValue(fd));
+                    item.put("events", new IntValue(ev));
+                    int itemId = SnowRuntime.get().heap().alloc(item);
+                    ready.push(new RefValue(itemId));
                 }
             }
         }
-        stack.push(ready);
+        int rid = SnowRuntime.get().heap().alloc(ready);
+        stack.pushValue(new RefValue(rid));
     }
 }

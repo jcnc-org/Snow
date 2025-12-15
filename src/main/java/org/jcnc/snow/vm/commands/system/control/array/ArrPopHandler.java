@@ -5,7 +5,10 @@ import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
 
-import java.util.List;
+import org.jcnc.snow.vm.runtime.SnowArrayObject;
+import org.jcnc.snow.vm.runtime.SnowRuntime;
+import org.jcnc.snow.vm.value.RefValue;
+import org.jcnc.snow.vm.value.Value;
 
 /**
  * {@code ArrPopHandler} 实现 ARR_POP (0x1811) 系统调用，
@@ -33,28 +36,14 @@ public class ArrPopHandler implements SyscallHandler {
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
 
-        Object arrObj = stack.pop();
-
-        if (!(arrObj instanceof List<?> list)) {
-            throw new IllegalArgumentException("ARR_POP: not a List: " + arrObj);
+        Value arrV = stack.popValue();
+        if (!(arrV instanceof RefValue(int id))) {
+            throw new IllegalArgumentException("ARR_POP: not an array");
         }
-
-        @SuppressWarnings("unchecked")
-        List<Object> mlist = (List<Object>) list;
-
-        if (mlist.isEmpty()) {
-            throw new IndexOutOfBoundsException("ARR_POP: empty list");
+        var obj = SnowRuntime.get().heap().get(id);
+        if (!(obj instanceof SnowArrayObject arr)) {
+            throw new IllegalArgumentException("ARR_POP: not an array");
         }
-
-        Object elem = mlist.remove(mlist.size() - 1);
-
-        // 和 ArrGetHandler 保持一致的推栈规则
-        if (elem instanceof Number n) {
-            stack.push(n);
-        } else if (elem instanceof Boolean b) {
-            stack.push(b ? 1 : 0);
-        } else {
-            stack.push(elem);
-        }
+        stack.pushValue(arr.pop());
     }
 }

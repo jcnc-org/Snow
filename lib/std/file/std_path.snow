@@ -5,6 +5,7 @@
 module: std_path
     import: std_string
     import: std_array
+    import: std_bytes
 
     /**
     @function join
@@ -24,8 +25,7 @@ module: std_path
             end if
 
             declare subBytes: byte[] = std_string.toBytes(sub)
-            declare subArr: std_array.Array = new std_array.Array(subBytes)
-            declare subLen: int = subArr.length()
+            declare subLen: int = std_bytes.length(subBytes)
             if subLen > 0 && std_path._isSeparator(subBytes[0]) then
                 return std_path.normalize(sub)
             end if
@@ -191,8 +191,7 @@ module: std_path
             end if
 
             declare bytes: byte[] = std_string.toBytes(path)
-            declare bytesArr: std_array.Array = new std_array.Array(bytes)
-            declare len: int = bytesArr.length()
+            declare len: int = std_bytes.length(bytes)
             declare absolute: boolean = false
             if len > 0 && std_path._isSeparator(bytes[0]) then
                 absolute = true

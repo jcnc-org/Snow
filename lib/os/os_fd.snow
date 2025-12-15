@@ -115,7 +115,7 @@ module: os_fd
         params:
             declare handle: int
             declare n: int
-        returns: any
+        returns: byte[]
         body:
             return fd.read(handle, n)
         end body
@@ -144,8 +144,9 @@ module: os_fd
             declare handle: int
             declare offset: long
             declare whence: int
+        returns: long
         body:
-            fd.seek(handle, offset, whence)
+            return fd.seek(handle, offset, whence)
         end body
     end function
 

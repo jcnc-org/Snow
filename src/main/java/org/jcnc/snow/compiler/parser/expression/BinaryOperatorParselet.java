@@ -39,8 +39,8 @@ public record BinaryOperatorParselet(Precedence precedence, boolean leftAssoc) i
     @Override
     public ExpressionNode parse(ParserContext ctx, ExpressionNode left) {
         // 获取当前 token 的行号、列号和文件名
-        int line = ctx.getTokens().peek().getLine();
-        int column = ctx.getTokens().peek().getCol();
+        int line = ctx.getTokens().peek().line();
+        int column = ctx.getTokens().peek().col();
         String file = ctx.getSourceName();
 
         Token op = ctx.getTokens().next();
@@ -49,7 +49,7 @@ public record BinaryOperatorParselet(Precedence precedence, boolean leftAssoc) i
         // 右侧表达式根据结合性确定优先级绑定
         ExpressionNode right = new PrattExpressionParser().parseExpression(ctx, leftAssoc ? Precedence.values()[prec] : Precedence.values()[prec - 1]);
 
-        return new BinaryExpressionNode(left, op.getLexeme(), right, new NodeContext(line, column, file));
+        return new BinaryExpressionNode(left, op.lexeme(), right, new NodeContext(line, column, file));
     }
 
     /**

@@ -4,6 +4,7 @@ import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
 import org.jcnc.snow.vm.module.OperandStack;
+import org.jcnc.snow.vm.utils.NumberUtils;
 
 /**
  * BAddCommand Opcode: Represents the byte8 addition operation in the virtual machine.
@@ -46,8 +47,8 @@ public class BAddCommand implements Command {
     @Override
     public int execute(String[] parts, int currentPC, OperandStack operandStack, LocalVariableStore localVariableStore, CallStack callStack) {
         // Pop the top two operands from the stack
-        byte b = (byte) operandStack.pop();
-        byte a = (byte) operandStack.pop();
+        byte b = NumberUtils.popByte(operandStack, "B_ADD");
+        byte a = NumberUtils.popByte(operandStack, "B_ADD");
 
         // Perform the addition and push the result back onto the stack
         operandStack.push((byte) (a + b));
