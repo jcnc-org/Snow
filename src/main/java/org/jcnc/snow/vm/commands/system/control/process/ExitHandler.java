@@ -1,5 +1,6 @@
 package org.jcnc.snow.vm.commands.system.control.process;
 
+import org.jcnc.snow.vm.engine.VMExitSignal;
 import org.jcnc.snow.vm.commands.system.control.syscalls.SyscallHandler;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
@@ -45,6 +46,6 @@ public class ExitHandler implements SyscallHandler {
         int code = (int) codeObj;
 
         // 直接结束整个 JVM 进程
-        System.exit(code);
+        throw new VMExitSignal(code);
     }
 }

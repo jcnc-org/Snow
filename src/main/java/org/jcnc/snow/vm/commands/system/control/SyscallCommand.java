@@ -1,6 +1,7 @@
 package org.jcnc.snow.vm.commands.system.control;
 
 import org.jcnc.snow.vm.commands.system.control.syscalls.SyscallHandler;
+import org.jcnc.snow.vm.engine.VMExitSignal;
 import org.jcnc.snow.vm.engine.SyscallTable;
 import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
@@ -79,6 +80,9 @@ public class SyscallCommand implements Command {
                 SyscallUtils.clearErr();
                 validateReturn(opcode, before, stack);
             }
+        } catch (VMExitSignal exit) {
+            // EXIT is a control-flow syscall: it terminates the Snow process/VM without being treated as an error.
+            throw exit;
         } catch (SnowPanicException e) {
             throw e;
         } catch (Exception e) {

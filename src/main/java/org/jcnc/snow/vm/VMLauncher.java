@@ -44,7 +44,7 @@ public class VMLauncher {
      *             is the file path pointing to the virtual machine's instruction set.
      */
     public static void main(String[] args) {
-        // Call the method that initializes and runs the VM in DEBUG mode
-        initializeAndRunVM(args, Mode.RUN);
+        int exit = org.jcnc.snow.vm.VMInitializer.runVM(args, Mode.RUN);
+        System.exit(exit);
     }
 }

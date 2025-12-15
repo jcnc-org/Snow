@@ -18,7 +18,6 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * {@code TestAllCommand} 实现 CLI 命令 {@code test-all}，
@@ -70,6 +69,12 @@ public final class TestAllCommand implements CLICommand {
         NONE,
         FAIL,
         ALWAYS
+    }
+
+    private enum FailureKind {
+        COMPILE,
+        RUNTIME,
+        OTHER
     }
 
     private record OutputSection(String title, List<String> cmd, String stdout, String stderr, boolean truncated) {
@@ -141,6 +146,16 @@ public final class TestAllCommand implements CLICommand {
     private static volatile boolean inputThreadRunning = true;
 
     /**
+     * Capture mode temporarily redirects {@link System#out}/{@link System#err}. If a demo times out and the task is
+     * cancelled, the worker thread may not restore the streams promptly (or at all), causing subsequent CLI output
+     * (including the final summary) to disappear. We defensively restore the control streams in the main thread.
+     */
+    private static void ensureControlStreams(PrintStream out, PrintStream err) {
+        if (System.out != out) System.setOut(out);
+        if (System.err != err) System.setErr(err);
+    }
+
+    /**
      * 命令行参数带空格时自动加引号（仅用于打印）
      */
     private static List<String> quoteArgs(List<String> args) {
@@ -182,6 +197,63 @@ public final class TestAllCommand implements CLICommand {
         printStreamBlock(out, "stdout", sec.stdout(), sec.truncated());
         printStreamBlock(out, "stderr", sec.stderr(), sec.truncated());
         out.println(BRIGHT_CYAN + "----- end " + demoName + " :: " + sec.title() + " -----" + RESET);
+    }
+
+    private static boolean containsAnyIgnoreCase(String haystack, List<String> needles) {
+        if (haystack == null || haystack.isEmpty()) return false;
+        String lower = haystack.toLowerCase(Locale.ROOT);
+        for (String n : needles) {
+            if (n == null || n.isEmpty()) continue;
+            if (lower.contains(n.toLowerCase(Locale.ROOT))) return true;
+        }
+        return false;
+    }
+
+    private static FailureKind classifyFailure(boolean usedExternalSnow, boolean runAfterCompile, DemoRunResult result) {
+        if (usedExternalSnow && result != null) {
+            OutputSection build = null;
+            OutputSection run = null;
+            for (OutputSection sec : result.sections()) {
+                if (sec == null || sec.title() == null) continue;
+                if (sec.title().startsWith("build")) build = sec;
+                else if (sec.title().startsWith("run")) run = sec;
+            }
+            if (build != null && extractExit(build.title()) != 0) return FailureKind.COMPILE;
+            if (runAfterCompile && run != null && extractExit(run.title()) != 0) return FailureKind.RUNTIME;
+            return FailureKind.OTHER;
+        }
+
+        if (!runAfterCompile) return FailureKind.COMPILE;
+
+        if (result == null || result.sections() == null || result.sections().isEmpty()) return FailureKind.OTHER;
+        OutputSection sec = result.sections().getFirst();
+        String out = (sec.stdout() == null ? "" : sec.stdout()) + "\n" + (sec.stderr() == null ? "" : sec.stderr());
+
+        List<String> runtimeMarkers = List.of(
+                "command execution error",
+                "runtime builtin syscall failed",
+                "snowpanic",
+                "vm error",
+                "panic",
+                "栈溢出",
+                "运行时"
+        );
+        if (containsAnyIgnoreCase(out, runtimeMarkers)) return FailureKind.RUNTIME;
+
+        List<String> compileMarkers = List.of(
+                "语义分析发现",
+                "语法分析发现",
+                "semantic",
+                "syntax",
+                "lexer",
+                "parser",
+                "编译失败",
+                "compile failed"
+        );
+        if (containsAnyIgnoreCase(out, compileMarkers)) return FailureKind.COMPILE;
+
+        // Internal mode cannot always distinguish (no debug logs). Prefer treating unknown non-zero exits as runtime failures.
+        return FailureKind.RUNTIME;
     }
 
     private static CapturedResult<Integer> captureStdoutStderr(Callable<Integer> action, long maxBytes) throws Exception {
@@ -288,6 +360,7 @@ public final class TestAllCommand implements CLICommand {
     public int execute(String[] args) throws Exception {
         final PrintStream controlOut = System.out;
         final PrintStream controlErr = System.err;
+        ensureControlStreams(controlOut, controlErr);
 
         boolean runAfterCompile = true;
         boolean verbose = false;
@@ -442,9 +515,23 @@ public final class TestAllCommand implements CLICommand {
         System.out.println(BRIGHT_YEL + "Timeout per demo: " + timeoutMs + " ms" + RESET);
         System.out.println(BRIGHT_CYAN + "[提示] 测试进行时可随时按 [Enter] 跳过当前 demo" + RESET);
 
-        AtomicInteger passed = new AtomicInteger(0);
-        AtomicInteger failed = new AtomicInteger(0);
-        List<String> failedTests = new ArrayList<>();
+        int passed = 0;
+        int skipped = 0;
+        int timeouts = 0;
+        int exceptions = 0;
+        int compileFailed = 0;
+        int runtimeFailed = 0;
+        int otherFailed = 0;
+
+        List<String> skippedTests = new ArrayList<>();
+        List<String> timeoutTests = new ArrayList<>();
+        List<String> compileFailedTests = new ArrayList<>();
+        List<String> runtimeFailedTests = new ArrayList<>();
+        List<String> otherFailedTests = new ArrayList<>();
+        List<String> exceptionTests = new ArrayList<>();
+
+        int executed = 0;
+        boolean stoppedEarly = false;
 
         // 7. 启动输入监听线程：检测 [Enter] 跳过当前 demo
         Thread inputThread = new Thread(() -> {
@@ -464,19 +551,22 @@ public final class TestAllCommand implements CLICommand {
         // 8. 遍历测试每个 Demo 目录
         for (Path demoDir : demoDirs) {
             skipCurrent = false; // 每个 demo 前重置
+            ensureControlStreams(controlOut, controlErr);
 
             String demoName = demoDir.getFileName().toString();
             if (verbose)
-                System.out.println(CYAN + "Testing " + demoName + " (" + demoDir.toAbsolutePath() + ")..." + RESET);
+                controlOut.println(CYAN + "Testing " + demoName + " (" + demoDir.toAbsolutePath() + ")..." + RESET);
 
             boolean hasCloud = Files.exists(demoDir.resolve("project.cloud"));
             ExecutorService executor = Executors.newSingleThreadExecutor();
 
             try {
+                executed++;
                 Callable<DemoRunResult> task;
+                boolean usedExternalSnow = hasCloud && externalSnowPath != null;
 
                 // 8.1 优先尝试外部 CLI 模式，否则回退内部 CompileTask
-                if (hasCloud && externalSnowPath != null) {
+                if (usedExternalSnow) {
                     String finalSnow = externalSnowPath;
                     boolean finalRun = runAfterCompile;
                     boolean finalVerbose = verbose;
@@ -539,21 +629,30 @@ public final class TestAllCommand implements CLICommand {
                             }
                         }
                     }
-                    if (skipCurrent) continue; // 跳到下一个 demo
+                    if (skipCurrent) {
+                        skipped++;
+                        skippedTests.add(demoName);
+                        continue;
+                    }
                 } catch (TimeoutException te) {
                     future.cancel(true);
+                    ensureControlStreams(controlOut, controlErr);
                     if (!verbose) {
                         controlOut.print(BRIGHT_YEL + "?" + RESET);
                     } else {
                         controlOut.println(BOLD + BRIGHT_YEL + "✗ " + demoName
                                 + " TIMEOUT > " + timeoutMs + "ms" + RESET);
                     }
-                    failed.incrementAndGet();
-                    failedTests.add(demoName + " (Timeout > " + timeoutMs + "ms)");
+                    timeouts++;
+                    timeoutTests.add(demoName + " (Timeout > " + timeoutMs + "ms)");
                     continue;
                 }
 
-                if (skipCurrent) continue; // 跳到下一个 demo
+                if (skipCurrent) {
+                    skipped++;
+                    skippedTests.add(demoName);
+                    continue;
+                }
 
                 int exitCode = (result == null) ? 1 : result.exitCode();
                 boolean showOutput = verbose && switch (outputMode) {
@@ -570,39 +669,58 @@ public final class TestAllCommand implements CLICommand {
                 if (exitCode == 0) {
                     if (!verbose) controlOut.print(BRIGHT_GRN + "." + RESET);
                     else controlOut.println(BOLD + BRIGHT_GRN + "✓ " + demoName + " PASSED" + RESET);
-                    passed.incrementAndGet();
+                    passed++;
                 } else {
                     if (!verbose) controlOut.print(RED + "F" + RESET);
                     else controlOut.println(BOLD + RED + "✗ " + demoName + " FAILED (exit=" + exitCode + ")" + RESET);
-                    failed.incrementAndGet();
-                    failedTests.add(demoName);
+                    FailureKind kind = classifyFailure(usedExternalSnow, runAfterCompile, result);
+                    switch (kind) {
+                        case COMPILE -> {
+                            compileFailed++;
+                            compileFailedTests.add(demoName + " (exit=" + exitCode + ")");
+                        }
+                        case RUNTIME -> {
+                            runtimeFailed++;
+                            runtimeFailedTests.add(demoName + " (exit=" + exitCode + ")");
+                        }
+                        case OTHER -> {
+                            otherFailed++;
+                            otherFailedTests.add(demoName + " (exit=" + exitCode + ")");
+                        }
+                    }
                     if (stopOnFailure) {
                         controlOut.println("\n\n" + BOLD + RED + "=== Test stopped due to failure ===" + RESET);
+                        stoppedEarly = true;
                         break;
                     }
                 }
 
             } catch (Exception e) {
+                ensureControlStreams(controlOut, controlErr);
                 if (skipCurrent) {
                     if (verbose) {
                         controlOut.println(YELLOW + "! " + demoName + " SKIPPED by Enter" + RESET);
                     } else {
                         controlOut.print(BRIGHT_YEL + "S" + RESET);
                     }
+                    skipped++;
+                    skippedTests.add(demoName);
                     continue;
                 }
                 if (!verbose) controlOut.print(RED + "E" + RESET);
                 else
                     controlOut.println(BOLD + RED + "✗ " + demoName + " FAILED with exception: " + e.getMessage() + RESET);
-                failed.incrementAndGet();
-                failedTests.add(demoName + " (Exception: " + e.getMessage() + ")");
-                if (stopOnFailure) {
-                    controlOut.println("\n\n" + BOLD + RED + "=== Test stopped due to exception ===" + RESET);
-                    executor.shutdownNow();
-                    break;
-                }
+                exceptions++;
+                exceptionTests.add(demoName + " (Exception: " + e.getMessage() + ")");
+                    if (stopOnFailure) {
+                        controlOut.println("\n\n" + BOLD + RED + "=== Test stopped due to exception ===" + RESET);
+                        executor.shutdownNow();
+                        stoppedEarly = true;
+                        break;
+                    }
             } finally {
                 executor.shutdownNow();
+                ensureControlStreams(controlOut, controlErr);
             }
             controlOut.flush();
         }
@@ -615,20 +733,50 @@ public final class TestAllCommand implements CLICommand {
         }
 
         // 10. 输出测试总结
+        ensureControlStreams(controlOut, controlErr);
         System.out.println("\n");
         System.out.println(BOLD + CYAN + "=== Test Summary ===" + RESET);
-        System.out.println(BRIGHT_GRN + "Passed: " + passed.get() + RESET);
-        System.out.println(RED + "Failed: " + failed.get() + RESET);
-        System.out.println("Total:  " + (passed.get() + failed.get()));
+        int failed = compileFailed + runtimeFailed + otherFailed;
+        int total = passed + skipped + timeouts + exceptions + failed;
+        System.out.println(BRIGHT_GRN + "Passed:   " + passed + RESET);
+        System.out.println(BRIGHT_YEL + "Skipped:  " + skipped + RESET);
+        System.out.println(BRIGHT_YEL + "Timeout:  " + timeouts + RESET);
+        System.out.println(RED + "Failed:   " + failed + RESET);
+        if (failed > 0) {
+            System.out.println(RED + "  - Compile: " + compileFailed + RESET);
+            System.out.println(RED + "  - Runtime: " + runtimeFailed + RESET);
+            System.out.println(RED + "  - Other:   " + otherFailed + RESET);
+        }
+        System.out.println(RED + "Exception:" + " " + exceptions + RESET);
+        System.out.println("Total:    " + total);
+        System.out.println("Executed: " + executed + " / " + demoDirs.size() + (stoppedEarly ? " (stopped early)" : ""));
 
-        if (!failedTests.isEmpty()) {
-            System.out.println("\n" + BOLD + YELLOW + "Failed tests:" + RESET);
-            for (String f : failedTests) {
-                System.out.println("  - " + f);
-            }
+        if (!timeoutTests.isEmpty()) {
+            System.out.println("\n" + BOLD + BRIGHT_YEL + "Timeouts:" + RESET);
+            for (String t : timeoutTests) System.out.println("  - " + t);
+        }
+        if (!exceptionTests.isEmpty()) {
+            System.out.println("\n" + BOLD + RED + "Exceptions:" + RESET);
+            for (String t : exceptionTests) System.out.println("  - " + t);
+        }
+        if (!compileFailedTests.isEmpty()) {
+            System.out.println("\n" + BOLD + RED + "Compile failures:" + RESET);
+            for (String t : compileFailedTests) System.out.println("  - " + t);
+        }
+        if (!runtimeFailedTests.isEmpty()) {
+            System.out.println("\n" + BOLD + RED + "Runtime failures:" + RESET);
+            for (String t : runtimeFailedTests) System.out.println("  - " + t);
+        }
+        if (!otherFailedTests.isEmpty()) {
+            System.out.println("\n" + BOLD + YELLOW + "Other failures:" + RESET);
+            for (String t : otherFailedTests) System.out.println("  - " + t);
+        }
+        if (!skippedTests.isEmpty()) {
+            System.out.println("\n" + BOLD + YELLOW + "Skipped:" + RESET);
+            for (String t : skippedTests) System.out.println("  - " + t);
         }
 
-        return failed.get() > 0 ? 1 : 0;
+        return (failed + timeouts + exceptions) > 0 ? 1 : 0;
     }
 
     /**

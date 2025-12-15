@@ -2,6 +2,7 @@ package org.jcnc.snow.vm.execution;
 
 
 import org.jcnc.snow.vm.factories.CommandFactory;
+import org.jcnc.snow.vm.engine.VMExitSignal;
 import org.jcnc.snow.vm.interfaces.Command;
 import org.jcnc.snow.vm.module.CallStack;
 import org.jcnc.snow.vm.module.LocalVariableStore;
@@ -51,6 +52,9 @@ public record CommandExecutionHandler(OperandStack operandStack, LocalVariableSt
             LocalVariableStore currentLVS = callStack.peekFrame().getLocalVariableStore();
 
             return command.execute(parts, currentPC, operandStack, currentLVS, callStack);
+        } catch (VMExitSignal exit) {
+            // EXIT is control-flow: it must unwind to the VM engine, not be treated as an error.
+            throw exit;
         } catch (Exception e) {
             System.err.println("Command execution error (PC=" + currentPC + ") -> "
                     + e.getMessage());

@@ -86,7 +86,6 @@ public final class CompileCommand implements CLICommand {
         }
 
         // 委托给 CompileTask 完成实际编译/运行
-        new CompileTask(project, compileArgs).run();
-        return 0;
+        return new CompileTask(project, compileArgs).execute(compileArgs);
     }
 }

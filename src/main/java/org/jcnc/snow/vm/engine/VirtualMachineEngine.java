@@ -49,6 +49,8 @@ public class VirtualMachineEngine {
     private final CommandExecutionHandler commandExecutionHandler;
 
     private int programCounter;
+    private boolean exited = false;
+    private int exitCode = 0;
 
     /* ---------- Construction ---------- */
 
@@ -62,6 +64,14 @@ public class VirtualMachineEngine {
         this.commandExecutionHandler =
                 new CommandExecutionHandler(operandStack, localVariableStore, callStack);
         this.programCounter = 0;
+    }
+
+    public boolean exited() {
+        return exited;
+    }
+
+    public int exitCode() {
+        return exitCode;
     }
 
     /* package-private accessor used by debug helpers */
@@ -125,6 +135,11 @@ public class VirtualMachineEngine {
                 /* 如果处理器未修改 PC，则默认顺序执行下一行 */
                 programCounter = (nextPC == programCounter) ? programCounter + 1 : nextPC;
 
+            } catch (VMExitSignal exit) {
+                exited = true;
+                exitCode = exit.exitCode();
+                programCounter = PROGRAM_END;
+                continue;
             } catch (IllegalArgumentException e) {
                 System.err.println("Command error at PC=" + programCounter + " -> "
                         + e.getMessage());

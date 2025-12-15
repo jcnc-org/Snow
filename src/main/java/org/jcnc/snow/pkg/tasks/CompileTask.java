@@ -446,8 +446,9 @@ public record CompileTask(Project project, String[] args) implements Task {
 
         if (runAfterCompile) {
             print("\nLaunching VM");
-            VMLauncher.main(new String[]{outFile.toString()});
-            print("\nVM exited");
+            int exitCode = org.jcnc.snow.vm.VMInitializer.runVM(new String[]{outFile.toString()}, Mode.RUN);
+            print("\nVM exited (code=" + exitCode + ")");
+            if (exitCode != 0) return exitCode;
         }
         return 0;
     }

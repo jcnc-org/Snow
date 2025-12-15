@@ -46,13 +46,22 @@ public class VMInitializer {
      *               This can be used to specify different operational modes (e.g., debug mode, normal mode).
      */
     public static void initializeAndRunVM(String[] args, Mode vmMode) {
+        runVM(args, vmMode);
+    }
+
+    /**
+     * Runs the VM and returns the Snow-level process exit code.
+     *
+     * <p>Unlike {@link System#exit(int)}, this does not terminate the host JVM.</p>
+     */
+    public static int runVM(String[] args, Mode vmMode) {
         // Retrieve and validate file path
         String filePath = FilePathResolver.getFilePath(args);
-        if (filePath == null) return;
+        if (filePath == null) return 1;
 
         // Load commands from the file
         List<String> commands = CommandLoader.loadInstructions(filePath);
-        if (commands.isEmpty()) return;
+        if (commands.isEmpty()) return 1;
 
         // Execute the commands using the virtual machine engine
         VirtualMachineEngine virtualMachineEngine = new VirtualMachineEngine();
@@ -60,5 +69,8 @@ public class VMInitializer {
 
         // Print the virtual machine's state
         VMStateLogger.printVMState(virtualMachineEngine);
+
+        if (virtualMachineEngine.exited()) return virtualMachineEngine.exitCode();
+        return 0;
     }
 }
