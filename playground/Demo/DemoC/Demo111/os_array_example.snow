@@ -6,6 +6,7 @@
 module: os_array_example
 
     import: os_array
+    import: os_string
     import: std_io
 
     function: main
@@ -24,7 +25,7 @@ module: os_array_example
             std_io.println("[2] length() - 获取字符串长度")
             declare s: string = "Hello OS Array"
             std_io.print("长度 = ")
-            std_io.println(os_array.length(s))
+            std_io.println(os_string.length(s))
             std_io.println("")
 
             std_io.println("[3] length() - 空数组")

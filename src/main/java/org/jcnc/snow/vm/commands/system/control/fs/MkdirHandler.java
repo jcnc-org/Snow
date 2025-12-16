@@ -14,9 +14,9 @@ import java.nio.file.attribute.PosixFilePermissions;
  * {@code MkdirHandler} 实现 MKDIR (0x1100) 系统调用，
  * 用于在虚拟机内创建新目录。
  *
- * <p><b>Stack：</b> 入参 {@code (path:String, mode:int?)} → 出参 {@code (0:int)}</p>
+ * <p><b>Stack：</b> 入参 {@code (path:String, mode:any)} → 出参 {@code (0:int)}</p>
  *
- * <p><b>语义：</b> 创建 path 指定的目录。若 mode 指定且系统支持，按 POSIX 权限创建。</p>
+ * <p><b>语义：</b> 创建 path 指定的目录。必须提供 mode 参数：int 表示 POSIX 权限，null 表示使用默认权限。</p>
  *
  * <p><b>返回：</b> 成功时返回 0。</p>
  *

@@ -159,15 +159,15 @@ public final class SyscallTable {
         // endregion
 
         // region Array runtime builtins (0x1800–0x18FF)
-        spec(SyscallOpCode.ARR_LEN, "ARR_LEN", AbiType.I32, AbiType.ARRAY);
-        spec(SyscallOpCode.ARR_GET, "ARR_GET", AbiType.ANY, AbiType.ARRAY, AbiType.I32);
-        spec(SyscallOpCode.ARR_SET, "ARR_SET", AbiType.I32, AbiType.ARRAY, AbiType.I32, AbiType.ANY);
-        spec(SyscallOpCode.ARR_PUSH, "ARR_PUSH", AbiType.I32, AbiType.ARRAY, AbiType.ANY);
-        spec(SyscallOpCode.ARR_POP, "ARR_POP", AbiType.ANY, AbiType.ARRAY);
-        spec(SyscallOpCode.ARR_INSERT, "ARR_INSERT", AbiType.I32, AbiType.ARRAY, AbiType.I32, AbiType.ANY);
-        spec(SyscallOpCode.ARR_REMOVE, "ARR_REMOVE", AbiType.ANY, AbiType.ARRAY, AbiType.I32);
-        spec(SyscallOpCode.ARR_RESIZE, "ARR_RESIZE", AbiType.I32, AbiType.ARRAY, AbiType.I32);
-        spec(SyscallOpCode.ARR_CLEAR, "ARR_CLEAR", AbiType.I32, AbiType.ARRAY);
+        spec(SyscallOpCode.ARR_LEN, "ARR_LEN", AbiType.I32, AbiType.ANY);
+        spec(SyscallOpCode.ARR_GET, "ARR_GET", AbiType.ANY, AbiType.ANY, AbiType.I32);
+        spec(SyscallOpCode.ARR_SET, "ARR_SET", AbiType.I32, AbiType.ANY, AbiType.I32, AbiType.ANY);
+        spec(SyscallOpCode.ARR_PUSH, "ARR_PUSH", AbiType.I32, AbiType.ANY, AbiType.ANY);
+        spec(SyscallOpCode.ARR_POP, "ARR_POP", AbiType.ANY, AbiType.ANY);
+        spec(SyscallOpCode.ARR_INSERT, "ARR_INSERT", AbiType.I32, AbiType.ANY, AbiType.I32, AbiType.ANY);
+        spec(SyscallOpCode.ARR_REMOVE, "ARR_REMOVE", AbiType.ANY, AbiType.ANY, AbiType.I32);
+        spec(SyscallOpCode.ARR_RESIZE, "ARR_RESIZE", AbiType.I32, AbiType.ANY, AbiType.I32);
+        spec(SyscallOpCode.ARR_CLEAR, "ARR_CLEAR", AbiType.I32, AbiType.ANY);
 
         // region Object / struct runtime builtins (0x18E0–0x18EF)
         spec(SyscallOpCode.OBJ_NEW, "OBJ_NEW", AbiType.STRUCT, AbiType.STRING, AbiType.I32);

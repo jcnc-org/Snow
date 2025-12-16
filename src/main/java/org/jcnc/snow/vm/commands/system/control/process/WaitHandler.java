@@ -10,10 +10,10 @@ import org.jcnc.snow.vm.module.OperandStack;
  * {@code WaitHandler} 实现 WAIT (0x1503) 系统调用，
  * 用于等待子进程结束并返回其退出状态码。
  *
- * <p><b>Stack</b>：入参 {@code (pid:int?)} → 出参 {@code (status:int)}</p>
+ * <p><b>Stack</b>：入参 {@code (pid:int)} → 出参 {@code (status:int)}</p>
  *
  * <p><b>语义</b>：等待指定 pid 的子进程或任意子进程结束，并返回其退出码。
- * pid 为 null 或 0 时表示等待任意一个子进程。</p>
+ * pid 参数必须提供，pid 为 null 或 0 时表示等待任意一个子进程。</p>
  *
  * <p><b>返回</b>：子进程退出码（int）。</p>
  *

@@ -12,14 +12,14 @@ import org.jcnc.snow.vm.module.OperandStack;
  *
  * <p>栈约定：</p>
  * <ul>
- *   <li>参数：flags（int，可选）</li>
+ *   <li>参数：flags（int，必须提供）</li>
  *   <li>返回：epfd（int，分配的 epoll 文件描述符）</li>
  * </ul>
  *
  * <p>语义：</p>
  * <ul>
  *   <li>在 {@link EpollRegistry} 中注册一个新的 epoll 实例</li>
- *   <li>flags 参数当前可选，默认值为 0</li>
+ *   <li>flags 参数必须提供，当前实现中通常为 0</li>
  *   <li>成功时返回分配的 epfd</li>
  * </ul>
  */
@@ -38,13 +38,9 @@ public class EpollCreateHandler implements SyscallHandler {
                        LocalVariableStore locals,
                        CallStack callStack) throws Exception {
 
-        // 1. 取出 flags 参数（可选，默认 0）
-        int flags;
-        if (!stack.isEmpty() && stack.peek() instanceof Integer) {
-            flags = (int) stack.pop();
-        } else {
-            flags = 0;
-        }
+        // 1. 取出 flags 参数（必须提供）
+        Object flagsObj = stack.pop();
+        int flags = (flagsObj instanceof Integer) ? (Integer) flagsObj : 0;
 
         // 2. 注册新 epoll 实例，获取 epfd
         int epfd = EpollRegistry.create(flags);

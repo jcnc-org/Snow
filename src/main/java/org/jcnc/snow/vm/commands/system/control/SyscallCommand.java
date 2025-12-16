@@ -31,6 +31,10 @@ import java.util.Locale;
  * <ol>
  *   <li>从指令参数解析出 syscall opcode（支持 16 进制或 10 进制字符串）</li>
  *   <li>根据 opcode 查找 {@link SyscallHandler}</li>
+ *   <li><b>强制校验</b>操作数栈上可用参数数量与 {@link SyscallTable.SyscallSpec#args()} 声明的期望参数个数是否严格匹配</li>
+ *   <li>参数个数不匹配时，立即抛出 {@link SnowPanicException}，拒绝执行 handler</li>
+ *   <li><b>强制校验</b>每个参数的 Value 类别是否与 ABI 声明匹配（I32/I64/F64/REF 等）</li>
+ *   <li>对 REF 类型参数，验证 HeapObjectKind 是否与期望的 STRING/BYTES/ARRAY/DICT/STRUCT 匹配</li>
  *   <li>调用 handler 处理，成功时清除全局 errno/errstr，失败时压入错误并记录异常信息</li>
  * </ol>
  *
@@ -38,6 +42,7 @@ import java.util.Locale;
  * <ul>
  *   <li>如果指令参数不足，直接压入参数错误并返回</li>
  *   <li>如果 opcode 解析失败，抛出 {@link IllegalArgumentException}</li>
+ *   <li><b>如果操作数栈上可用参数个数与 ABI 声明不匹配，抛出 {@link SnowPanicException}（VM 在 handler 执行前拒绝）</b></li>
  *   <li>系统调用 handler 抛出异常时，自动通过 {@link SyscallUtils#pushErr} 压入 -1 并记录错误串</li>
  * </ul>
  *
@@ -81,6 +86,26 @@ public class SyscallCommand implements Command {
                         + " (register it in SyscallTable before execution)");
             }
             String name = spec.name();
+            
+            // 强制校验参数个数（在调用 handler 前）
+            int expectedArgCount = (spec.args() == null) ? 0 : spec.args().length;
+            int availableArgCount = before; // before = stack.size() before handler execution
+            if (availableArgCount < expectedArgCount) {
+                throw new SnowPanicException("Syscall " + name + " (0x"
+                        + Integer.toHexString(opcode).toUpperCase(Locale.ROOT)
+                        + ") requires " + expectedArgCount + " argument(s), but only "
+                        + availableArgCount + " available on stack");
+            }
+            if (availableArgCount > expectedArgCount) {
+                throw new SnowPanicException("Syscall " + name + " (0x"
+                        + Integer.toHexString(opcode).toUpperCase(Locale.ROOT)
+                        + ") requires " + expectedArgCount + " argument(s), but "
+                        + availableArgCount + " provided on stack");
+            }
+            
+            // 强制校验参数类别（Value 层，不靠类型系统）
+            validateArguments(spec, stack, opcode);
+            
             try (AutoCloseable ignored = SnowRuntime.get().enterSyscall(opcode, name, handler.getClass().getName())) {
                 handler.handle(stack, locals, callStack);
                 // 成功时重置 errno/errstr
@@ -99,11 +124,25 @@ public class SyscallCommand implements Command {
                 String name = spec.name();
                 throw new SnowPanicException("Runtime builtin syscall failed: " + name, e);
             }
-            // 失败：记录 errno/errstr，并根据 ABI 返回类型压入"同类别"的失败哨兵值（或不返回值）。
+            // 失败路径：记录 errno/errstr，并根据 ABI 返回类型压入“同类别”的失败哨兵值（或不返回值）。
             SyscallTable.SyscallSpec spec = SyscallTable.spec(opcode);
             // spec cannot be null here since we already validated above
             SyscallUtils.recordErr(e);
-            normalizeArgsAfterFailure(spec, before, stack);
+                    
+            // 检查失败时的栈状态：必须严格消耗所有参数
+            int afterFailure = stack.size();
+            int argCount = (spec.args() == null) ? 0 : spec.args().length;
+            int expectedAfterConsume = before - argCount;
+            if (afterFailure != expectedAfterConsume) {
+                throw new SnowPanicException("Syscall " + spec.name() + " (0x"
+                        + Integer.toHexString(opcode).toUpperCase(Locale.ROOT)
+                        + ") failed with incorrect stack consumption: expected to consume "
+                        + argCount + " args (stack size " + before + " -> " + expectedAfterConsume
+                        + "), but actual stack size is " + afterFailure
+                        + ". Handler must consume all args even on failure.");
+            }
+                    
+            // 压入失败哨兵值
             switch (spec.ret()) {
                 case VOID -> {
                     // no return value
@@ -121,31 +160,177 @@ public class SyscallCommand implements Command {
         return pc + 1;
     }
 
-    /**
-     * Best-effort stack repair for failed syscalls.
-     *
-     * <p>{@code beforeSize} is the operand stack size right before dispatching into the handler,
-     * i.e. after the compiler has pushed all syscall arguments.</p>
-     *
-     * <p>On failure, a handler may throw before consuming all arguments. If those arguments remain
-     * on the stack, the VM will be corrupted and subsequent code will observe a shifted stack.
-     * We repair this by trimming/padding the stack back to {@code beforeSize - argCount} before
-     * pushing the failure sentinel return value.</p>
-     */
-    private static void normalizeArgsAfterFailure(SyscallTable.SyscallSpec spec, int beforeSize, OperandStack stack) {
-        int argCount = (spec.args() == null) ? 0 : spec.args().length;
-        int desired = beforeSize - argCount;
-        while (stack.size() > desired) {
-            stack.popValue();
-        }
-        while (stack.size() < desired) {
-            stack.pushValue(Value.NULL);
-        }
-    }
-
     private static boolean isRuntimeBuiltin(int opcode) {
         // Array builtins live under 0x18xx; string/bytes builtins under 0x1Axx.
         return (opcode >= 0x1800 && opcode <= 0x18FF) || (opcode >= 0x1A00 && opcode <= 0x1A1F);
+    }
+
+    /**
+     * 强制校验 syscall 参数类别（Value 层校验，不依赖类型系统）。
+     * 
+     * <p>此方法在调用 handler 前检查每个参数的 Value 类别是否与 ABI 声明匹配。</p>
+     * 
+     * <p><b>校验规则：</b></p>
+     * <ul>
+     *   <li>I8/I16/I32/I64/F32/F64 → 检查 Value 子类</li>
+     *   <li>REF 类型 → 必须是 RefValue，并检查 HeapObjectKind</li>
+     *   <li>STRING/BYTES/ARRAY/DICT/STRUCT → 检查 HeapObjectKind 是否匹配</li>
+     *   <li>ANY → 允许任意类型（但不推荐，标记为 unsafe）</li>
+     * </ul>
+     * 
+     * @param spec 系统调用 ABI 规范
+     * @param stack 操作数栈
+     * @param opcode 系统调用 opcode
+     * @throws SnowPanicException 参数类型不匹配时抛出
+     */
+    private static void validateArguments(SyscallTable.SyscallSpec spec, OperandStack stack, int opcode) {
+        if (spec.args() == null || spec.args().length == 0) {
+            return; // 无参数，无需校验
+        }
+        
+        // 从栈顶往下获取参数（不 pop，只 peek）
+        // 注意：栈上参数顺序是反的，最后一个参数在栈顶
+        SyscallTable.AbiType[] argTypes = spec.args();
+        int stackSize = stack.size();
+        
+        for (int i = 0; i < argTypes.length; i++) {
+            // 栈上第 i 个参数的位置（从栈顶往下数）
+            int stackIndex = stackSize - argTypes.length + i;
+            Value argValue = peekAt(stack, stackIndex);
+            SyscallTable.AbiType expectedType = argTypes[i];
+            
+            validateSingleArgument(spec.name(), i, argValue, expectedType, opcode);
+        }
+    }
+    
+    /**
+     * 从栈中获取指定位置的 Value（不修改栈）。
+     * 
+     * @param stack 操作数栈
+     * @param index 从栈底开始的索引（0-based）
+     * @return 指定位置的 Value
+     */
+    private static Value peekAt(OperandStack stack, int index) {
+        // 保存当前栈状态
+        java.util.Deque<Value> tempStack = new java.util.ArrayDeque<>();
+        int size = stack.size();
+        
+        // pop 到目标位置
+        for (int i = 0; i < size - index - 1; i++) {
+            tempStack.push(stack.popValue());
+        }
+        
+        // 获取目标 Value
+        Value target = stack.peekValue();
+        
+        // 恢复栈
+        while (!tempStack.isEmpty()) {
+            stack.pushValue(tempStack.pop());
+        }
+        
+        return target;
+    }
+    
+    /**
+     * 校验单个参数的类型。
+     * 
+     * @param syscallName 系统调用名称
+     * @param argIndex 参数索引（0-based）
+     * @param argValue 参数值
+     * @param expectedType 期望的类型
+     * @param opcode 系统调用 opcode
+     * @throws SnowPanicException 类型不匹配时抛出
+     */
+    private static void validateSingleArgument(String syscallName, int argIndex, 
+                                                Value argValue, SyscallTable.AbiType expectedType, 
+                                                int opcode) {
+        switch (expectedType) {
+            case I8 -> {
+                if (!(argValue instanceof ByteValue)) {
+                    throw new SnowPanicException("Syscall " + syscallName + " (0x"
+                            + Integer.toHexString(opcode).toUpperCase(Locale.ROOT)
+                            + ") arg[" + argIndex + "] expected I8 (ByteValue), but got "
+                            + argValue.getClass().getSimpleName());
+                }
+            }
+            case I16 -> {
+                if (!(argValue instanceof ShortValue)) {
+                    throw new SnowPanicException("Syscall " + syscallName + " (0x"
+                            + Integer.toHexString(opcode).toUpperCase(Locale.ROOT)
+                            + ") arg[" + argIndex + "] expected I16 (ShortValue), but got "
+                            + argValue.getClass().getSimpleName());
+                }
+            }
+            case I32 -> {
+                if (!(argValue instanceof IntValue)) {
+                    throw new SnowPanicException("Syscall " + syscallName + " (0x"
+                            + Integer.toHexString(opcode).toUpperCase(Locale.ROOT)
+                            + ") arg[" + argIndex + "] expected I32 (IntValue), but got "
+                            + argValue.getClass().getSimpleName());
+                }
+            }
+            case I64 -> {
+                if (!(argValue instanceof LongValue)) {
+                    throw new SnowPanicException("Syscall " + syscallName + " (0x"
+                            + Integer.toHexString(opcode).toUpperCase(Locale.ROOT)
+                            + ") arg[" + argIndex + "] expected I64 (LongValue), but got "
+                            + argValue.getClass().getSimpleName());
+                }
+            }
+            case F32 -> {
+                if (!(argValue instanceof FloatValue)) {
+                    throw new SnowPanicException("Syscall " + syscallName + " (0x"
+                            + Integer.toHexString(opcode).toUpperCase(Locale.ROOT)
+                            + ") arg[" + argIndex + "] expected F32 (FloatValue), but got "
+                            + argValue.getClass().getSimpleName());
+                }
+            }
+            case F64 -> {
+                if (!(argValue instanceof DoubleValue)) {
+                    throw new SnowPanicException("Syscall " + syscallName + " (0x"
+                            + Integer.toHexString(opcode).toUpperCase(Locale.ROOT)
+                            + ") arg[" + argIndex + "] expected F64 (DoubleValue), but got "
+                            + argValue.getClass().getSimpleName());
+                }
+            }
+            case STRING, BYTES, ARRAY, DICT, STRUCT -> {
+                // REF 类型：必须是 RefValue
+                if (!(argValue instanceof RefValue(int id))) {
+                    throw new SnowPanicException("Syscall " + syscallName + " (0x"
+                            + Integer.toHexString(opcode).toUpperCase(Locale.ROOT)
+                            + ") arg[" + argIndex + "] expected REF (RefValue), but got "
+                            + argValue.getClass().getSimpleName());
+                }
+                
+                // 检查 HeapObjectKind
+                HeapObject obj = SnowRuntime.get().heap().get(id);
+                HeapObjectKind actualKind = obj.kind();
+                HeapObjectKind expectedKind = switch (expectedType) {
+                    case STRING -> HeapObjectKind.STRING;
+                    case BYTES -> HeapObjectKind.BYTES;
+                    case ARRAY -> HeapObjectKind.ARRAY;
+                    case DICT -> HeapObjectKind.DICT;
+                    case STRUCT -> HeapObjectKind.STRUCT;
+                    default -> throw new SnowPanicException("unreachable");
+                };
+                
+                if (actualKind != expectedKind) {
+                    throw new SnowPanicException("Syscall " + syscallName + " (0x"
+                            + Integer.toHexString(opcode).toUpperCase(Locale.ROOT)
+                            + ") arg[" + argIndex + "] expected HeapObjectKind." + expectedKind
+                            + ", but got HeapObjectKind." + actualKind);
+                }
+            }
+            case ANY -> {
+                // ANY 允许任意类型，但这是 unsafe 的
+                // 未来可以考虑警告或记录
+            }
+            case VOID -> {
+                throw new SnowPanicException("Syscall " + syscallName + " (0x"
+                        + Integer.toHexString(opcode).toUpperCase(Locale.ROOT)
+                        + ") has VOID in args, which is invalid");
+            }
+        }
     }
 
     private static void validateReturn(int opcode, int beforeSize, OperandStack stack) {
