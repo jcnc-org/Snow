@@ -137,26 +137,56 @@ public final class IRProgramBuilder {
      *   <li>如有父类，先复制父类布局和类型表，索引续接。</li>
      *   <li>子类字段与父类重名时跳过，防止覆盖。</li>
      *   <li>最终注册到全局布局表，并登记继承关系。</li>
+     *   <li>使用多次遍历确保父类先于子类注册。</li>
      * </ol>
      *
      * @param roots AST 顶层节点列表
      */
     private void preloadStructLayouts(List<Node> roots) {
+        // 收集所有结构体节点
+        List<StructNode> allStructs = new ArrayList<>();
         for (Node n : roots) {
             if (!(n instanceof ModuleNode mod)) continue;
             if (mod.structs() == null) continue;
+            allStructs.addAll(mod.structs());
+        }
 
-            for (StructNode s : mod.structs()) {
+        // 多次遍历直到所有结构体都注册完成
+        Set<String> registered = new HashSet<>();
+        int maxIterations = allStructs.size() + 1; // 防止无限循环
+        int iteration = 0;
+
+        while (registered.size() < allStructs.size() && iteration < maxIterations) {
+            iteration++;
+            int prevSize = registered.size();
+
+            for (StructNode s : allStructs) {
+                if (registered.contains(s.name())) continue;
+
+                // 处理父类布局及字段类型
+                String parentName = s.parent();
+                boolean canRegister = true;
+
+                if (parentName != null && !parentName.isBlank()) {
+                    IRBuilderScope.registerStructParent(s.name(), parentName);
+                    // 检查父类是否已注册
+                    Map<String, Integer> parentLayout = IRBuilderScope.getStructLayout(parentName);
+                    if (parentLayout == null) {
+                        // 父类还未注册，跳过本次处理
+                        canRegister = false;
+                    }
+                }
+
+                if (!canRegister) continue;
+
+                // 开始注册当前结构体
                 List<DeclarationNode> fields = s.fields();
                 Map<String, Integer> layout = new LinkedHashMap<>();
                 Map<String, String> fieldTypes = new LinkedHashMap<>();
                 int idx = 0;
 
-                // 处理父类布局及字段类型
-                String parentName = s.parent();
+                // 如果有父类，加载父类布局
                 if (parentName != null && !parentName.isBlank()) {
-                    IRBuilderScope.registerStructParent(s.name(), parentName);
-
                     Map<String, Integer> parentLayout = IRBuilderScope.getStructLayout(parentName);
                     if (parentLayout != null && !parentLayout.isEmpty()) {
                         layout.putAll(parentLayout);
@@ -183,6 +213,22 @@ public final class IRProgramBuilder {
 
                 IRBuilderScope.registerStructLayout(s.name(), layout);
                 IRBuilderScope.registerStructFieldTypes(s.name(), fieldTypes);
+                registered.add(s.name());
+            }
+
+            // 如果本轮没有新的注册，说明存在循环依赖或其他问题
+            if (registered.size() == prevSize) {
+                break;
+            }
+        }
+
+        // 检查是否有未注册的结构体
+        if (registered.size() < allStructs.size()) {
+            System.err.println("警告: 以下结构体无法注册（可能存在循环继承或未找到父类）:");
+            for (StructNode s : allStructs) {
+                if (!registered.contains(s.name())) {
+                    System.err.println("  - " + s.name() + " (parent: " + s.parent() + ")");
+                }
             }
         }
     }
