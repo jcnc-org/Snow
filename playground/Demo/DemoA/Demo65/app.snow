@@ -6,9 +6,9 @@ module: app
         params:
             declare args: any
         body:
-
+            // 不执行,因为要键盘输入
             // ────────────── epoll 用到的常量 ──────────────
-            declare EPOLL_CTL_ADD: int = 1          // 与 Linux epoll_ctl 保持一致
+/*            declare EPOLL_CTL_ADD: int = 1          // 与 Linux epoll_ctl 保持一致
             declare EPOLLIN: int = 1          // 关心 "可读" 事件
 
             // 1) 创建 epoll 实例
@@ -24,7 +24,7 @@ module: app
             declare ready: any = multiplex.epollWait(epfd, 16, 5000)
 
             // 4) 输出 epollWait 的结果
-            io.stdoutWrite("epollWait 返回: " + ready + "\n")
+            io.stdoutWrite("epollWait 返回: " + ready + "\n")*/
         end body
     end function
 end module

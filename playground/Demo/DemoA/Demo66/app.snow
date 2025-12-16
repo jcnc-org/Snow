@@ -6,14 +6,15 @@ module: app
         params:
             declare args: any
         body:
-            // 1) 提示
-            io.stdoutWrite("ioWait 演示：请在 5 秒内输入内容（回车结束）：\n")
-
-            // 2) 监听 stdin (fd=0)，5 秒超时
-            declare ready: any = multiplex.ioWait([0], 5000)
-
-            // 3) 打印 ioWait 返回内容
-            io.stdoutWrite("ioWait 返回: " + ready + "\n")
+            // 不执行,因为要键盘输入
+//            // 1) 提示
+//            io.stdoutWrite("ioWait 演示：请在 5 秒内输入内容（回车结束）：\n")
+//
+//            // 2) 监听 stdin (fd=0)，5 秒超时
+//            declare ready: any = multiplex.ioWait([0], 5000)
+//
+//            // 3) 打印 ioWait 返回内容
+//            io.stdoutWrite("ioWait 返回: " + ready + "\n")
         end body
     end function
 end module

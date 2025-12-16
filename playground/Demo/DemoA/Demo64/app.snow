@@ -6,12 +6,14 @@ module: app
         params:
             declare args: any
         body:
-            io.stdoutWrite("请输入内容 (5 秒内):\n")
+            // 不执行,因为要键盘输入
 
-            // 只监听 stdin (fd=0)，超时 5000ms
-            declare ready: any = multiplex.select([0], [], [], 5000)
-
-            io.stdoutWrite("select 返回结果: " + ready + "\n")
+//            io.stdoutWrite("请输入内容 (5 秒内):\n")
+//
+//            // 只监听 stdin (fd=0)，超时 5000ms
+//            declare ready: any = multiplex.select([0], [], [], 5000)
+//
+//            io.stdoutWrite("select 返回结果: " + ready + "\n")
         end body
     end function
 end module

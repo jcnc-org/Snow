@@ -8,35 +8,36 @@ module: app
         params:
             declare args: any
         body:
-            declare fd: int = web.socket(2, 2, 0)
-            io.stdoutWrite("UDP 服务器套接字 fd=" + fd + "\n")
-
-            // 可选：重用地址
-            declare SOL_SOCKET: int = 1
-            declare SO_REUSEADDR: int = 2
-            declare rc: int = web.setSockOpt(fd, SOL_SOCKET, SO_REUSEADDR, 1)
-            io.stdoutWrite("设置套接字选项 SO_REUSEADDR 返回值 rc=" + rc + "\n")
-
-            rc = web.bind(fd, "127.0.0.1", 9090)
-            io.stdoutWrite("绑定返回值 rc=" + rc + " @127.0.0.1:9090\n")
-            io.stdoutWrite("等待接收数据报...\n")
-
-            // RECVFROM 返回数组 [bytes:any, addr:string, port:int]
-            declare pkt: any[] = web.recvFrom(fd, 2048)
-            io.stdoutWrite("接收到的数据报 -> ")
-            io.stdoutWrite(pkt)
-            io.stdoutWrite("\n")
-
-            // 解构：pkt[0]=data, pkt[1]=addr, pkt[2]=port
-            declare data: any = pkt[0]
-            declare raddr: string = pkt[1]
-            declare rport: int = pkt[2]
-
-            rc = web.sendTo(fd, data, raddr, rport)
-            io.stdoutWrite("回显发送返回值 rc=" + rc + "，目标 " + raddr + ":" + rport + "\n")
-
-            rc = web.shutdown(fd, 2)
-            io.stdoutWrite("关闭套接字返回值 rc=" + rc + "\n")
+            // 不执行,因为要键盘输入
+//            declare fd: int = web.socket(2, 2, 0)
+//            io.stdoutWrite("UDP 服务器套接字 fd=" + fd + "\n")
+//
+//            // 可选：重用地址
+//            declare SOL_SOCKET: int = 1
+//            declare SO_REUSEADDR: int = 2
+//            declare rc: int = web.setSockOpt(fd, SOL_SOCKET, SO_REUSEADDR, 1)
+//            io.stdoutWrite("设置套接字选项 SO_REUSEADDR 返回值 rc=" + rc + "\n")
+//
+//            rc = web.bind(fd, "127.0.0.1", 9090)
+//            io.stdoutWrite("绑定返回值 rc=" + rc + " @127.0.0.1:9090\n")
+//            io.stdoutWrite("等待接收数据报...\n")
+//
+//            // RECVFROM 返回数组 [bytes:any, addr:string, port:int]
+//            declare pkt: any[] = web.recvFrom(fd, 2048)
+//            io.stdoutWrite("接收到的数据报 -> ")
+//            io.stdoutWrite(pkt)
+//            io.stdoutWrite("\n")
+//
+//            // 解构：pkt[0]=data, pkt[1]=addr, pkt[2]=port
+//            declare data: any = pkt[0]
+//            declare raddr: string = pkt[1]
+//            declare rport: int = pkt[2]
+//
+//            rc = web.sendTo(fd, data, raddr, rport)
+//            io.stdoutWrite("回显发送返回值 rc=" + rc + "，目标 " + raddr + ":" + rport + "\n")
+//
+//            rc = web.shutdown(fd, 2)
+//            io.stdoutWrite("关闭套接字返回值 rc=" + rc + "\n")
         end body
     end function
 end module
