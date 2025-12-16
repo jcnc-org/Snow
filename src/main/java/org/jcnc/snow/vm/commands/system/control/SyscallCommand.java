@@ -20,6 +20,8 @@ import org.jcnc.snow.vm.value.RefValue;
 import org.jcnc.snow.vm.value.ShortValue;
 import org.jcnc.snow.vm.value.Value;
 
+import java.util.Locale;
+
 /**
  * {@code SyscallCommand} 实现虚拟机系统调用分发器，负责根据系统调用 opcode 路由到对应的 {@link SyscallHandler} 实现。
  * <p>
@@ -73,7 +75,12 @@ public class SyscallCommand implements Command {
 
         try {
             SyscallTable.SyscallSpec spec = SyscallTable.spec(opcode);
-            String name = spec == null ? String.format("0x%04X", opcode) : spec.name();
+            if (spec == null) {
+                throw new SnowPanicException("No ABI spec registered for syscall opcode: 0x"
+                        + Integer.toHexString(opcode).toUpperCase(Locale.ROOT)
+                        + " (register it in SyscallTable before execution)");
+            }
+            String name = spec.name();
             try (AutoCloseable ignored = SnowRuntime.get().enterSyscall(opcode, name, handler.getClass().getName())) {
                 handler.handle(stack, locals, callStack);
                 // 成功时重置 errno/errstr
@@ -88,16 +95,13 @@ public class SyscallCommand implements Command {
         } catch (Exception e) {
             if (isRuntimeBuiltin(opcode)) {
                 SyscallTable.SyscallSpec spec = SyscallTable.spec(opcode);
-                String name = spec == null ? String.format("0x%04X", opcode) : spec.name();
+                // spec cannot be null here since we already validated above
+                String name = spec.name();
                 throw new SnowPanicException("Runtime builtin syscall failed: " + name, e);
             }
-            // 失败：记录 errno/errstr，并根据 ABI 返回类型压入“同类别”的失败哨兵值（或不返回值）。
+            // 失败：记录 errno/errstr，并根据 ABI 返回类型压入"同类别"的失败哨兵值（或不返回值）。
             SyscallTable.SyscallSpec spec = SyscallTable.spec(opcode);
-            if (spec == null) {
-                // Legacy / unknown ABI: keep the historical behavior (push -1 int).
-                SyscallUtils.pushErr(stack, e);
-                return pc + 1;
-            }
+            // spec cannot be null here since we already validated above
             SyscallUtils.recordErr(e);
             normalizeArgsAfterFailure(spec, before, stack);
             switch (spec.ret()) {
@@ -147,7 +151,12 @@ public class SyscallCommand implements Command {
     private static void validateReturn(int opcode, int beforeSize, OperandStack stack) {
         if (SyscallUtils.getErrno() != 0) return;
         SyscallTable.SyscallSpec spec = SyscallTable.spec(opcode);
-        if (spec == null) return;
+        // spec must not be null (already validated in execute())
+        if (spec == null) {
+            throw new SnowPanicException("validateReturn: spec is null for opcode 0x"
+                    + Integer.toHexString(opcode).toUpperCase(Locale.ROOT)
+                    + " (should have been caught earlier)");
+        }
         int argCount = (spec.args() == null) ? 0 : spec.args().length;
         int expectedDelta = (spec.ret() == SyscallTable.AbiType.VOID ? 0 : 1) - argCount;
         int actualDelta = stack.size() - beforeSize;
