@@ -15,16 +15,16 @@ module: fs
 
     /**
     @function mkdir
-    @summary 在 path 创建目录，可选权限 mode。
+    @summary 在 path 创建目录，必须提供 mode 参数。
     @param path 目录路径（字符串或路径对象）
-    @param mode 可选权限位，在部分平台可能被忽略
+    @param mode POSIX 权限位（int）或 null（使用默认权限），在部分平台可能被忽略
     @returns 0 表示成功
     @throws EINVAL 路径非法; EEXIST 目录已存在; ENOENT 父目录不存在; EPERM 权限不足; EIO I/O错误
     */
     function: mkdir
         params:
             declare path: any
-            declare mode: int   // optional: 可传 null
+            declare mode: any   // int 或 null，必须提供
         returns: int
         body:
             return syscall("0x1100", path, mode)

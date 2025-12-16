@@ -98,7 +98,7 @@ module: sync
     @summary 等待条件变量，返回前重新加锁。
     @param cid 条件变量 ID
     @param mid 互斥量 ID
-    @param timeout 可选超时时间（毫秒）
+    @param timeout 超时时间（毫秒），必须提供；0 表示无限等待，正数表示最大等待时间
     @returns 0=唤醒，1=超时，-1=中断
     @throws Exception 无效 ID 时抛出异常
     */
@@ -164,7 +164,7 @@ module: sync
     @function semWait
     @summary 等待信号量。
     @param sid 信号量 ID
-    @param timeout 可选超时时间（毫秒）
+    @param timeout 超时时间（毫秒），必须提供；0 表示无限等待，正数表示最大等待时间
     @returns 1=成功，0=超时，-1=中断
     @throws Exception 无效 ID 时抛出异常
     */

@@ -63,7 +63,7 @@ module: process
     /**
     @function wait
     @summary 阻塞等待子进程退出。
-    @param pid 可选的进程 ID，如果为 0 或 null，表示等待任意子进程
+    @param pid 进程 ID，必须提供；如果为 0 或 null，表示等待任意子进程
     @returns 子进程的退出状态码
     @throws Exception 进程不存在、无子进程、等待失败
     */

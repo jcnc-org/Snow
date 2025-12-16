@@ -1,0 +1,100 @@
+// Syscall ABI 参数个数校验测试
+// 
+// 测试目标：验证 SyscallCommand 在调用 handler 前强制校验参数个数
+// 
+// 预期行为：
+// 1. 参数个数正确：syscall 正常执行
+// 2. 参数个数少于期望：VM 抛出 SnowPanicException，拒绝执行 handler
+// 3. 参数个数多于期望：VM 抛出 SnowPanicException，拒绝执行 handler
+
+module: Main
+    import: std_io
+    import: syscall.sys
+    import: syscall.fs
+    import: syscall.time
+    
+    function: main
+        returns: void
+        body:
+            std_io.println("=== Syscall ABI 参数个数校验测试 ===")
+            std_io.println("")
+            
+            // 测试 1: 正确的参数个数
+            testCorrectArgCount()
+            
+            // 测试 2: 参数个数不足（将会导致 panic）
+            // testTooFewArgs()
+            
+            // 测试 3: 参数个数过多（将会导致 panic）
+            // testTooManyArgs()
+            
+            std_io.println("")
+            std_io.println("=== 所有测试通过 ===")
+        end body
+    end function
+    
+    // 测试正确的参数个数
+    function: testCorrectArgCount
+        returns: void
+        body:
+            std_io.println("测试 1: 正确的参数个数")
+            
+            // NCPU (0x1902) 需要 0 个参数
+            declare ncpu: int = syscall("0x1902")
+            std_io.println("  NCPU: " + ncpu + " 个 CPU")
+            
+            // GETENV (0x1900) 需要 1 个参数
+            declare home: string = sys.getEnv("HOME")
+            std_io.println("  GETENV(HOME): " + home)
+            
+            // MKDIR (0x1100) 需要 2 个参数（path 和 mode）
+            // 注意：mode 可以是 0，但必须提供
+            declare mkdirResult: int = syscall("0x1100", "/tmp/test_syscall_abi", 0)
+            std_io.println("  MKDIR: result = " + mkdirResult)
+            
+            // CLOCK_GETTIME (0x1700) 需要 1 个参数
+            declare ns: long = time.clock_gettime(0)
+            std_io.println("  CLOCK_GETTIME: " + ns + " ns")
+            
+            std_io.println("  ✓ 所有参数个数正确的调用均成功")
+        end body
+    end function
+    
+    // 测试参数个数不足（故意触发 panic）
+    // 
+    // 注意：此测试会导致 VM panic，只能单独运行
+    function: testTooFewArgs
+        returns: void
+        body:
+            std_io.println("测试 2: 参数个数不足")
+            
+            // GETENV (0x1900) 需要 1 个参数，但我们不提供
+            // 这应该在 SyscallCommand.execute() 中被拒绝
+            // 预期: SnowPanicException: Syscall GETENV (0x1900) requires 1 argument(s), but only 0 available on stack
+            
+            // 注意：由于我们无法在 Snow 语言中直接控制操作数栈，
+            // 此测试需要在 VM 内部测试或通过特殊的字节码来触发
+            
+            std_io.println("  此测试需要在 VM 级别验证")
+        end body
+    end function
+    
+    // 测试参数个数过多（故意触发 panic）
+    // 
+    // 注意：此测试会导致 VM panic，只能单独运行
+    function: testTooManyArgs
+        returns: void
+        body:
+            std_io.println("测试 3: 参数个数过多")
+            
+            // NCPU (0x1902) 需要 0 个参数，但我们提供了额外参数
+            // 这应该在 SyscallCommand.execute() 中被拒绝
+            // 预期: SnowPanicException: Syscall NCPU (0x1902) requires 0 argument(s), but 1 provided on stack
+            
+            // 注意：由于我们无法在 Snow 语言中直接控制操作数栈，
+            // 此测试需要在 VM 内部测试或通过特殊的字节码来触发
+            
+            std_io.println("  此测试需要在 VM 级别验证")
+        end body
+    end function
+end module

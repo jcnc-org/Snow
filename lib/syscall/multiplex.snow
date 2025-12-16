@@ -35,13 +35,13 @@ module: multiplex
     /**
     @function epollCreate
     @summary 创建一个 epoll 实例，返回新的 epfd。
-    @param flags 可选参数
+    @param flags 标志位，必须提供（通常为 0）
     @returns 成功时返回新的 epfd
     @throws Exception flags 非法、资源不足或底层 I/O 错误时抛出异常
     */
     function: epollCreate
         params:
-            declare flags: int   // 可选
+            declare flags: int   // 必须提供，通常为 0
         returns: int
         body:
             return syscall("0x1301", flags)
