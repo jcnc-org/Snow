@@ -1,6 +1,7 @@
 #include "snow/driver/driver.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -58,6 +59,19 @@ std::string ReplaceAll(std::string text, const char a, const char b) {
     if (c == a) {
       c = b;
     }
+  }
+  return text;
+}
+
+std::string SanitizeFileStem(std::string text) {
+  for (char& ch : text) {
+    const auto uch = static_cast<unsigned char>(ch);
+    if (!(std::isalnum(uch) || ch == '_' || ch == '-')) {
+      ch = '_';
+    }
+  }
+  while (!text.empty() && text.front() == '_') {
+    text.erase(text.begin());
   }
   return text;
 }
@@ -120,6 +134,7 @@ std::filesystem::path DefaultArtifactPath(const CompileRequest& request, const s
   const std::filesystem::path out_dir = std::filesystem::current_path() / "snow-build";
   std::string name = module_path;
   name = ReplaceAll(name, '.', '_');
+  name = SanitizeFileStem(name);
   if (name.empty()) {
     name = input_path.stem().string();
   }
@@ -197,7 +212,8 @@ int RunProcess(const std::string& program, const std::vector<std::string>& args)
 }
 
 bool TryEmitNativeArtifact(const std::filesystem::path& output_path, const OutputKind output_kind,
-                           const std::string& target_triple, const std::string& llvm_ir) {
+                           const std::string& target_triple, const std::vector<std::string>& link_inputs,
+                           const std::string& llvm_ir) {
   if (target_triple != common::DetectHostTriple()) {
     return false;
   }
@@ -237,8 +253,33 @@ bool TryEmitNativeArtifact(const std::filesystem::path& output_path, const Outpu
     }
 
     case OutputKind::Executable: {
-      const bool ok = compile_ir(output_path, false);
-      cleanup();
+      if (link_inputs.empty()) {
+        const bool ok = compile_ir(output_path, false);
+        cleanup();
+        return ok;
+      }
+
+#if defined(_WIN32)
+      const std::filesystem::path temp_obj = output_path.string() + ".tmp.obj";
+#else
+      const std::filesystem::path temp_obj = output_path.string() + ".tmp.o";
+#endif
+      if (!compile_ir(temp_obj, true)) {
+        cleanup(temp_obj);
+        return false;
+      }
+
+      std::vector<std::string> link_args;
+      link_args.reserve(link_inputs.size() + 3);
+      link_args.push_back(temp_obj.string());
+      for (const auto& input : link_inputs) {
+        link_args.push_back(input);
+      }
+      link_args.push_back("-o");
+      link_args.push_back(output_path.string());
+
+      const bool ok = RunProcess(clang, link_args) == 0;
+      cleanup(temp_obj);
       return ok;
     }
 
@@ -252,7 +293,15 @@ bool TryEmitNativeArtifact(const std::filesystem::path& output_path, const Outpu
         cleanup(temp_obj);
         return false;
       }
-      const bool ok = RunProcess(llvm_ar, {"rcs", output_path.string(), temp_obj.string()}) == 0;
+      std::vector<std::string> ar_args;
+      ar_args.reserve(link_inputs.size() + 3);
+      ar_args.push_back("rcs");
+      ar_args.push_back(output_path.string());
+      ar_args.push_back(temp_obj.string());
+      for (const auto& input : link_inputs) {
+        ar_args.push_back(input);
+      }
+      const bool ok = RunProcess(llvm_ar, ar_args) == 0;
       cleanup(temp_obj);
       return ok;
     }
@@ -281,7 +330,8 @@ bool WriteBootstrapArtifact(const std::filesystem::path& output_path, const Outp
 }
 
 bool WriteArtifact(const std::filesystem::path& output_path, const OutputKind output_kind, const std::string& target_triple,
-                   const std::string& module_path, const std::string& llvm_ir, common::DiagnosticEngine& diagnostics) {
+                   const std::string& module_path, const std::vector<std::string>& link_inputs,
+                   const std::string& llvm_ir, common::DiagnosticEngine& diagnostics) {
   std::error_code ec;
   std::filesystem::create_directories(output_path.parent_path(), ec);
   if (ec) {
@@ -290,7 +340,7 @@ bool WriteArtifact(const std::filesystem::path& output_path, const OutputKind ou
     return false;
   }
 
-  if (TryEmitNativeArtifact(output_path, output_kind, target_triple, llvm_ir)) {
+  if (TryEmitNativeArtifact(output_path, output_kind, target_triple, link_inputs, llvm_ir)) {
     return true;
   }
   return WriteBootstrapArtifact(output_path, output_kind, target_triple, module_path, llvm_ir, diagnostics);
@@ -580,7 +630,7 @@ CompileResult Driver::Compile(const CompileRequest& request) const {
       const std::filesystem::path out_path = request.output_path.empty()
                                                  ? DefaultArtifactPath(request, module_path)
                                                  : std::filesystem::path(request.output_path);
-      if (WriteArtifact(out_path, request.output_kind, target_triple, module_path, llvm_result.llvm_ir,
+      if (WriteArtifact(out_path, request.output_kind, target_triple, module_path, request.link_inputs, llvm_result.llvm_ir,
                         result.diagnostics)) {
         result.artifact_path = out_path.string();
       }
@@ -615,12 +665,14 @@ BuildResult Driver::BuildProject(const BuildRequest& request) const {
   std::vector<std::string> topo;
   (void)TopologicalOrder(nodes, topo, result.diagnostics);
   result.module_order = topo;
+  std::vector<std::string> linkable_objects;
 
   for (const auto& module_id : topo) {
     const auto it = nodes.find(module_id);
     if (it == nodes.end()) {
       continue;
     }
+    const bool is_main_module = std::filesystem::weakly_canonical(it->second.file_path) == main_file_abs;
 
     CompileRequest module_request;
     module_request.input_path = it->second.file_path.string();
@@ -629,9 +681,12 @@ BuildResult Driver::BuildProject(const BuildRequest& request) const {
     module_request.output_kind = OutputKind::Object;
     module_request.write_artifact = true;
 
-    if (std::filesystem::weakly_canonical(it->second.file_path) == main_file_abs) {
+    if (is_main_module) {
       module_request.emit = request.emit;
       module_request.output_kind = request.output_kind;
+      if (request.output_kind != OutputKind::Object) {
+        module_request.link_inputs = linkable_objects;
+      }
       if (!request.output_path.empty()) {
         module_request.output_path = request.output_path;
       } else if (!request.project_root.empty()) {
@@ -647,6 +702,10 @@ BuildResult Driver::BuildProject(const BuildRequest& request) const {
 
     auto compile_result = Compile(module_request);
     result.diagnostics.Append(compile_result.diagnostics);
+    if (!is_main_module && module_request.output_kind == OutputKind::Object && compile_result.success &&
+        !compile_result.artifact_path.empty()) {
+      linkable_objects.push_back(compile_result.artifact_path);
+    }
     result.module_compiles.push_back(std::move(compile_result));
   }
 

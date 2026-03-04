@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include "snow/passes/pass_manager.h"
 
@@ -27,6 +28,7 @@ struct CompileRequest {
   snow::passes::OptLevel opt_level = snow::passes::OptLevel::O0;
   OutputKind output_kind = OutputKind::Executable;
   std::string output_path;
+  std::vector<std::string> link_inputs;
   bool write_artifact = true;
   EmitOptions emit;
 };

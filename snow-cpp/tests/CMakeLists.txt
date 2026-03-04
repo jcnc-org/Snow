@@ -34,6 +34,13 @@ add_test(
   COMMAND $<TARGET_FILE:snow-sema-tests>
 )
 
+add_executable(snow-common-tests unit/snow_common_tests.cpp)
+target_link_libraries(snow-common-tests PRIVATE snow_compiler)
+add_test(
+  NAME snow_common_tests
+  COMMAND $<TARGET_FILE:snow-common-tests>
+)
+
 function(add_cli_assert_test NAME EXE EXIT_CODE ARGS EXPECT REJECT EXPECT_FILE)
   add_test(
     NAME ${NAME}
@@ -527,6 +534,15 @@ add_cli_assert_test(
   ""
   "${PROJECT_OK_DIR}/snow-build/main.exe"
 )
+
+add_test(
+  NAME snowc_build_project_ok_run_binary
+  COMMAND ${CMAKE_COMMAND}
+    -DEXE=${PROJECT_OK_DIR}/snow-build/main.exe
+    -DEXPECT_EXIT=0
+    -P ${ASSERT_SCRIPT}
+)
+set_tests_properties(snowc_build_project_ok_run_binary PROPERTIES DEPENDS snowc_build_project_ok)
 
 add_cli_assert_test(
   snowc_build_project_ok_emit_lib

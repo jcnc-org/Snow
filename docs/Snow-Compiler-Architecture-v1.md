@@ -247,6 +247,7 @@ Mangle format v1:
 Rules:
 
 - `<module_path>` replaces `.` with `_`
+- any non-identifier character in module path (for example `:`, `/`, `\`, `-`) is normalized to `_`
 - `<sig8>` is an 8-hex stable signature hash
 - `extern "C"` disables mangling for FFI surface
 

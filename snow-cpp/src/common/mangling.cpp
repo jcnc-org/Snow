@@ -1,5 +1,6 @@
 #include "snow/common/mangling.h"
 
+#include <cctype>
 #include <iomanip>
 #include <sstream>
 
@@ -19,12 +20,12 @@ uint32_t Fnva32(const std::string& input) {
 std::string NormalizePath(std::string_view module_path) {
   std::string out;
   out.reserve(module_path.size());
-  for (char ch : module_path) {
-    if (ch == '.' || ch == '/' || ch == '\\') {
-      out.push_back('_');
-    } else {
-      out.push_back(ch);
+  for (const unsigned char ch : module_path) {
+    if (std::isalnum(ch) || ch == '_') {
+      out.push_back(static_cast<char>(ch));
+      continue;
     }
+    out.push_back('_');
   }
   return out;
 }
