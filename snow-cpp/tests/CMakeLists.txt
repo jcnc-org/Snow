@@ -215,6 +215,26 @@ add_cli_assert_test(
 )
 
 add_cli_assert_test(
+  snowc_compile_while_cfg_llvm
+  snowc
+  0
+  "compile|--emit-llvm|-o|${ARTIFACT_DIR}/while_cfg_llvm.exe|${CASES_DIR}/while_cfg.snow"
+  "entry:|br label %loop_cond|loop_cond:|br i1 %[0-9]+, label %loop_body, label %loop_exit|loop_body:|br label %loop_cond|loop_exit:|ret i32 7"
+  ""
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_while_cond_type_mismatch
+  snowc
+  1
+  "compile|-o|${ARTIFACT_DIR}/while_cond_bad.exe|${CASES_DIR}/while_cond_bad.snow"
+  "E_SEMA_WHILE_COND_TYPE"
+  ""
+  ""
+)
+
+add_cli_assert_test(
   snowc_compile_dup_symbol_fail
   snowc
   1
