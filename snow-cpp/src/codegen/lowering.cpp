@@ -288,6 +288,24 @@ std::string LowerTextual(const snow::sir::Module& module, const TargetConfig& ta
             }
             break;
 
+          case snow::sir::Opcode::Call: {
+            if (!instr.result.has_value() || instr.operands.empty()) {
+              oss << "  ; malformed call instruction\n";
+              break;
+            }
+            const std::string call_ret_ty = ToLlvmTypeText(instr.type.empty() ? "i32" : instr.type);
+            const std::string callee = instr.operands[0];
+            oss << "  " << instr.result.value() << " = call " << call_ret_ty << " @" << callee << "(";
+            for (std::size_t i = 1; i < instr.operands.size(); ++i) {
+              if (i > 1) {
+                oss << ", ";
+              }
+              oss << "i32 " << NormalizeOperand(instr.operands[i]);
+            }
+            oss << ")\n";
+            break;
+          }
+
           case snow::sir::Opcode::Ret: {
             const std::string value =
                 instr.operands.empty() ? ZeroValueText(ret_ty) : NormalizeOperand(instr.operands.front());

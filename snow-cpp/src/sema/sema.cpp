@@ -62,6 +62,7 @@ bool IsArithmeticOp(const snow::frontend::BinaryOp op) {
 
 ExprTypeResult InferExprType(const std::shared_ptr<snow::frontend::Expr>& expr,
                              const std::unordered_map<std::string, std::string>& symbol_types,
+                             const std::unordered_map<std::string, std::string>& function_return_types,
                              const std::string& module_path, snow::common::DiagnosticEngine& diagnostics) {
   if (!expr) {
     return ExprTypeResult{.type = "unknown", .known = false};
@@ -80,9 +81,20 @@ ExprTypeResult InferExprType(const std::shared_ptr<snow::frontend::Expr>& expr,
       return ExprTypeResult{.type = it->second, .known = true};
     }
 
+    case snow::frontend::Expr::Kind::Call: {
+      for (const auto& arg : expr->args) {
+        (void)InferExprType(arg, symbol_types, function_return_types, module_path, diagnostics);
+      }
+      const auto it = function_return_types.find(expr->value);
+      if (it == function_return_types.end()) {
+        return ExprTypeResult{.type = "unknown", .known = false};
+      }
+      return ExprTypeResult{.type = it->second, .known = true};
+    }
+
     case snow::frontend::Expr::Kind::Binary: {
-      const ExprTypeResult lhs = InferExprType(expr->lhs, symbol_types, module_path, diagnostics);
-      const ExprTypeResult rhs = InferExprType(expr->rhs, symbol_types, module_path, diagnostics);
+      const ExprTypeResult lhs = InferExprType(expr->lhs, symbol_types, function_return_types, module_path, diagnostics);
+      const ExprTypeResult rhs = InferExprType(expr->rhs, symbol_types, function_return_types, module_path, diagnostics);
 
       if (expr->op == snow::frontend::BinaryOp::Mod) {
         diagnostics.Error("E_SEMA_UNSUPPORTED_OP", "operator '%' is not supported in Snow v1 MVP", module_path,
@@ -181,6 +193,11 @@ SemaModule SemanticAnalyzer::Analyze(const snow::frontend::AstModule& ast_module
   }
 
   std::unordered_map<std::string, bool> symbol_seen;
+  std::unordered_map<std::string, std::string> function_return_types;
+  for (const auto& function : ast_module.functions) {
+    function_return_types[function.name] = function.return_type.empty() ? "i32" : function.return_type;
+  }
+
   for (const auto& function : ast_module.functions) {
     if (symbol_seen.contains(function.name)) {
       diagnostics.Error("E_SEMA_DUP_SYMBOL", "Duplicate symbol in module: " + function.name, ast_module.module_path,
@@ -197,7 +214,7 @@ SemaModule SemanticAnalyzer::Analyze(const snow::frontend::AstModule& ast_module
 
     if (function.return_expr) {
       const ExprTypeResult return_expr_type =
-          InferExprType(function.return_expr, symbol_types, ast_module.module_path, diagnostics);
+          InferExprType(function.return_expr, symbol_types, function_return_types, ast_module.module_path, diagnostics);
       if (return_expr_type.known &&
           !IsReturnTypeCompatible(function.return_type.empty() ? "i32" : function.return_type, return_expr_type.type)) {
         diagnostics.Error("E_SEMA_RET_TYPE",

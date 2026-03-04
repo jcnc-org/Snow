@@ -202,6 +202,17 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
               }
             }
             break;
+          case Opcode::Call:
+            if (instr.operands.empty()) {
+              diagnostics.Error("E_SIR_CALL_ARITY", "call requires callee operand", module.module_path,
+                                {0, 0, 0, 0});
+              report.ok = false;
+            }
+            if (!instr.result.has_value()) {
+              diagnostics.Warning("W_SIR_CALL_NO_RESULT", "call result is ignored in MVP pipeline", module.module_path,
+                                  {0, 0, 0, 0});
+            }
+            break;
           case Opcode::Ret:
             if (instr.operands.size() != 1) {
               diagnostics.Error("E_SIR_RET_ARITY", "ret requires exactly one operand", module.module_path,

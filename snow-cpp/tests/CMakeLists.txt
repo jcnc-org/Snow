@@ -195,6 +195,16 @@ add_cli_assert_test(
 )
 
 add_cli_assert_test(
+  snowc_compile_call_with_args_sir
+  snowc
+  0
+  "compile|--emit-sir|-o|${ARTIFACT_DIR}/call_with_args.exe|${CASES_DIR}/call_with_args.snow"
+  "call _snow_.*_sum_[0-9a-f]+, 1, 2|ret %[0-9]+ : i32"
+  ""
+  ""
+)
+
+add_cli_assert_test(
   snowc_compile_artifact_object
   snowc
   0

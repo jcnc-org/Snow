@@ -65,6 +65,8 @@ Opcode ToSirOpcode(const snow::frontend::BinaryOp op) {
 
 EmittedValue EmitExpr(const std::shared_ptr<snow::frontend::Expr>& expr,
                       const std::unordered_map<std::string, std::string>& symbol_types,
+                      const std::unordered_map<std::string, std::string>& callee_symbols,
+                      const std::unordered_map<std::string, std::string>& callee_return_types,
                       std::vector<Instruction>& instructions, int& next_ssa_id) {
   if (!expr) {
     return EmittedValue{.value = "0", .type = "i32"};
@@ -82,14 +84,42 @@ EmittedValue EmitExpr(const std::shared_ptr<snow::frontend::Expr>& expr,
       return EmittedValue{.value = expr->value, .type = "i32"};
     }
 
+    case snow::frontend::Expr::Kind::Call: {
+      std::vector<std::string> operands;
+      const auto callee_it = callee_symbols.find(expr->value);
+      operands.push_back(callee_it != callee_symbols.end() ? callee_it->second : expr->value);
+
+      for (const auto& arg : expr->args) {
+        const EmittedValue arg_value =
+            EmitExpr(arg, symbol_types, callee_symbols, callee_return_types, instructions, next_ssa_id);
+        operands.push_back(arg_value.value);
+      }
+
+      const auto ret_it = callee_return_types.find(expr->value);
+      const std::string call_ret_type = ret_it != callee_return_types.end() ? ret_it->second : "i32";
+      const std::string result_name = "%" + std::to_string(next_ssa_id++);
+
+      instructions.push_back(Instruction{
+          .result = result_name,
+          .type = call_ret_type,
+          .opcode = Opcode::Call,
+          .operands = std::move(operands),
+          .is_terminator = false,
+      });
+
+      return EmittedValue{.value = result_name, .type = call_ret_type};
+    }
+
     case snow::frontend::Expr::Kind::Binary: {
       if (expr->op == snow::frontend::BinaryOp::Mod) {
         // Unsupported in MVP; semantic analyzer reports E_SEMA_UNSUPPORTED_OP.
         return EmittedValue{.value = "0", .type = "i32"};
       }
 
-      const EmittedValue lhs = EmitExpr(expr->lhs, symbol_types, instructions, next_ssa_id);
-      const EmittedValue rhs = EmitExpr(expr->rhs, symbol_types, instructions, next_ssa_id);
+      const EmittedValue lhs =
+          EmitExpr(expr->lhs, symbol_types, callee_symbols, callee_return_types, instructions, next_ssa_id);
+      const EmittedValue rhs =
+          EmitExpr(expr->rhs, symbol_types, callee_symbols, callee_return_types, instructions, next_ssa_id);
 
       const std::string result_name = "%" + std::to_string(next_ssa_id++);
       const bool comparison = IsComparisonOp(expr->op);
@@ -248,6 +278,20 @@ Module SirBuilder::Build(const snow::sema::SemaModule& sema_module,
     ownership_by_symbol[fact.symbol] = fact.is_copy_type;
   }
 
+  std::unordered_map<std::string, std::string> callee_symbols;
+  std::unordered_map<std::string, std::string> callee_return_types;
+  for (const auto& function_ast : sema_module.ast.functions) {
+    std::vector<std::string> param_types;
+    param_types.reserve(function_ast.params.size());
+    for (const auto& param : function_ast.params) {
+      param_types.push_back(param.type);
+    }
+    const std::string mangled =
+        snow::common::MangleSymbol(sema_module.ast.module_path, function_ast.name, param_types, function_ast.return_type, false);
+    callee_symbols[function_ast.name] = mangled;
+    callee_return_types[function_ast.name] = function_ast.return_type.empty() ? "i32" : function_ast.return_type;
+  }
+
   for (const auto& function_ast : sema_module.ast.functions) {
     Function function;
     function.original_name = function_ast.name;
@@ -256,8 +300,11 @@ Module SirBuilder::Build(const snow::sema::SemaModule& sema_module,
     for (const auto& param : function_ast.params) {
       param_types.push_back(param.type);
     }
-    function.name = snow::common::MangleSymbol(sema_module.ast.module_path, function_ast.name, param_types,
-                                               function_ast.return_type, false);
+    const auto callee_it = callee_symbols.find(function_ast.name);
+    function.name = callee_it != callee_symbols.end()
+                        ? callee_it->second
+                        : snow::common::MangleSymbol(sema_module.ast.module_path, function_ast.name, param_types,
+                                                     function_ast.return_type, false);
     function.return_type = function_ast.return_type;
     switch (function_ast.visibility) {
       case snow::frontend::Visibility::Public:
@@ -283,7 +330,8 @@ Module SirBuilder::Build(const snow::sema::SemaModule& sema_module,
     int next_ssa_id = 1;
     EmittedValue return_value;
     if (function_ast.return_expr) {
-      return_value = EmitExpr(function_ast.return_expr, symbol_types, entry.instructions, next_ssa_id);
+      return_value =
+          EmitExpr(function_ast.return_expr, symbol_types, callee_symbols, callee_return_types, entry.instructions, next_ssa_id);
     } else if (function.return_type == "bool" || function.return_type == "i1") {
       return_value = EmittedValue{.value = "0", .type = "bool"};
     } else {

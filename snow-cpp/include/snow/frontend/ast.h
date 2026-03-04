@@ -41,6 +41,7 @@ struct Expr {
   enum class Kind {
     Number,
     Identifier,
+    Call,
     Binary,
   };
 
@@ -49,6 +50,7 @@ struct Expr {
   BinaryOp op = BinaryOp::Add;
   std::shared_ptr<Expr> lhs;
   std::shared_ptr<Expr> rhs;
+  std::vector<std::shared_ptr<Expr>> args;
 };
 
 struct FunctionDecl {

@@ -85,6 +85,14 @@ ExprPtr MakeIdentifierExpr(std::string value) {
   return expr;
 }
 
+ExprPtr MakeCallExpr(std::string callee, std::vector<ExprPtr> args) {
+  auto expr = std::make_shared<Expr>();
+  expr->kind = Expr::Kind::Call;
+  expr->value = std::move(callee);
+  expr->args = std::move(args);
+  return expr;
+}
+
 ExprPtr MakeBinaryExpr(BinaryOp op, ExprPtr lhs, ExprPtr rhs) {
   auto expr = std::make_shared<Expr>();
   expr->kind = Expr::Kind::Binary;
@@ -182,6 +190,18 @@ std::string DumpExpr(const ExprPtr& expr) {
       return expr->value;
     case Expr::Kind::Identifier:
       return expr->value;
+    case Expr::Kind::Call: {
+      std::ostringstream oss;
+      oss << expr->value << "(";
+      for (std::size_t i = 0; i < expr->args.size(); ++i) {
+        if (i > 0) {
+          oss << ", ";
+        }
+        oss << DumpExpr(expr->args[i]);
+      }
+      oss << ")";
+      return oss.str();
+    }
     case Expr::Kind::Binary: {
       const std::string lhs = DumpExpr(expr->lhs);
       const std::string rhs = DumpExpr(expr->rhs);
@@ -201,25 +221,25 @@ ExprPtr ParsePrimary(Cursor& cursor, snow::common::DiagnosticEngine& diagnostics
 
   if (cursor.Peek().type == TokenType::Identifier) {
     const std::string ident = cursor.Advance().lexeme;
-    // Bootstrap call parsing: consume "(...)" so return helper() can be represented as identifier.
-    if (cursor.Match(TokenType::LParen)) {
-      int depth = 1;
-      while (!cursor.AtEnd() && depth > 0) {
-        if (cursor.Match(TokenType::LParen)) {
-          ++depth;
-          continue;
+
+    if (!cursor.Match(TokenType::LParen)) {
+      return MakeIdentifierExpr(ident);
+    }
+
+    std::vector<ExprPtr> args;
+    if (cursor.Peek().type != TokenType::RParen) {
+      while (!cursor.AtEnd()) {
+        args.push_back(ParseExpression(cursor, diagnostics, module_path, 1));
+        if (!cursor.Match(TokenType::Comma)) {
+          break;
         }
-        if (cursor.Match(TokenType::RParen)) {
-          --depth;
-          continue;
-        }
-        cursor.Advance();
-      }
-      if (depth != 0) {
-        diagnostics.Error("E_PARSE_CALL_RPAREN", "Unclosed call expression", module_path, cursor.Peek().range);
       }
     }
-    return MakeIdentifierExpr(ident);
+
+    if (!cursor.Match(TokenType::RParen)) {
+      diagnostics.Error("E_PARSE_CALL_RPAREN", "Unclosed call expression", module_path, cursor.Peek().range);
+    }
+    return MakeCallExpr(ident, std::move(args));
   }
 
   if (cursor.Match(TokenType::LParen)) {
