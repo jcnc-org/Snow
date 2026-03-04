@@ -135,6 +135,16 @@ add_cli_assert_test(
 )
 
 add_cli_assert_test(
+  snowc_compile_expr_arith_llvm
+  snowc
+  0
+  "compile|--emit-llvm|-o|${ARTIFACT_DIR}/expr_arith_llvm.exe|${CASES_DIR}/expr_arith.snow"
+  "mul i32 2, 3|add i32 1, %[0-9]+|ret i32 %[0-9]+"
+  ""
+  ""
+)
+
+add_cli_assert_test(
   snowc_compile_expr_compare_sir
   snowc
   0

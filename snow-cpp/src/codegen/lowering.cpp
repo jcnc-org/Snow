@@ -1,5 +1,6 @@
 #include "snow/codegen/lowering.h"
 
+#include <cctype>
 #include <sstream>
 
 #if SNOW_ENABLE_LLVM
@@ -41,6 +42,61 @@ std::string ZeroValueText(const std::string& llvm_type) {
     return "0.0";
   }
   return "0";
+}
+
+bool IsIntegerLiteral(const std::string& text) {
+  if (text.empty()) {
+    return false;
+  }
+  std::size_t i = 0;
+  if (text[0] == '+' || text[0] == '-') {
+    i = 1;
+    if (i >= text.size()) {
+      return false;
+    }
+  }
+  for (; i < text.size(); ++i) {
+    if (!std::isdigit(static_cast<unsigned char>(text[i]))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+std::string NormalizeOperand(const std::string& operand) {
+  if (operand.empty()) {
+    return "0";
+  }
+  if (operand[0] == '%' || IsIntegerLiteral(operand)) {
+    return operand;
+  }
+  if (operand == "true") {
+    return "1";
+  }
+  if (operand == "false") {
+    return "0";
+  }
+  // Bootstrap fallback for unresolved symbols (for example function names in expressions).
+  return "0";
+}
+
+std::string ComparePredicateText(const snow::sir::Opcode opcode) {
+  switch (opcode) {
+    case snow::sir::Opcode::Eq:
+      return "eq";
+    case snow::sir::Opcode::Ne:
+      return "ne";
+    case snow::sir::Opcode::Lt:
+      return "slt";
+    case snow::sir::Opcode::Gt:
+      return "sgt";
+    case snow::sir::Opcode::Le:
+      return "sle";
+    case snow::sir::Opcode::Ge:
+      return "sge";
+    default:
+      return "eq";
+  }
 }
 
 const snow::sir::Function* FindUserMain(const snow::sir::Module& module) {
@@ -166,8 +222,93 @@ std::string LowerTextual(const snow::sir::Module& module, const TargetConfig& ta
   for (const auto& function : module.functions) {
     const std::string ret_ty = ToLlvmTypeText(function.return_type);
     oss << "define " << LinkagePrefixText(function.linkage) << ret_ty << " @" << function.name << "() {\n";
-    oss << "entry:\n";
-    oss << "  ret " << ret_ty << " " << ZeroValueText(ret_ty) << "\n";
+    bool emitted_ret = false;
+    bool emitted_block = false;
+
+    for (const auto& block : function.blocks) {
+      emitted_block = true;
+      oss << block.label << ":\n";
+      for (const auto& instr : block.instructions) {
+        switch (instr.opcode) {
+          case snow::sir::Opcode::Add:
+          case snow::sir::Opcode::Sub:
+          case snow::sir::Opcode::Mul:
+          case snow::sir::Opcode::Div: {
+            if (!instr.result.has_value() || instr.operands.size() != 2) {
+              oss << "  ; malformed arithmetic instruction\n";
+              break;
+            }
+            const std::string op_ty = ToLlvmTypeText(instr.type);
+            const std::string lhs = NormalizeOperand(instr.operands[0]);
+            const std::string rhs = NormalizeOperand(instr.operands[1]);
+            std::string op;
+            switch (instr.opcode) {
+              case snow::sir::Opcode::Add:
+                op = "add";
+                break;
+              case snow::sir::Opcode::Sub:
+                op = "sub";
+                break;
+              case snow::sir::Opcode::Mul:
+                op = "mul";
+                break;
+              case snow::sir::Opcode::Div:
+                op = "sdiv";
+                break;
+              default:
+                op = "add";
+                break;
+            }
+            oss << "  " << instr.result.value() << " = " << op << " " << op_ty << " " << lhs << ", " << rhs << "\n";
+            break;
+          }
+
+          case snow::sir::Opcode::Eq:
+          case snow::sir::Opcode::Ne:
+          case snow::sir::Opcode::Lt:
+          case snow::sir::Opcode::Gt:
+          case snow::sir::Opcode::Le:
+          case snow::sir::Opcode::Ge: {
+            if (!instr.result.has_value() || instr.operands.size() != 2) {
+              oss << "  ; malformed compare instruction\n";
+              break;
+            }
+            const std::string lhs = NormalizeOperand(instr.operands[0]);
+            const std::string rhs = NormalizeOperand(instr.operands[1]);
+            oss << "  " << instr.result.value() << " = icmp " << ComparePredicateText(instr.opcode) << " i32 " << lhs
+                << ", " << rhs << "\n";
+            break;
+          }
+
+          case snow::sir::Opcode::Drop:
+            if (!instr.operands.empty()) {
+              oss << "  ; drop " << instr.operands[0] << "\n";
+            } else {
+              oss << "  ; drop\n";
+            }
+            break;
+
+          case snow::sir::Opcode::Ret: {
+            const std::string value =
+                instr.operands.empty() ? ZeroValueText(ret_ty) : NormalizeOperand(instr.operands.front());
+            oss << "  ret " << ret_ty << " " << value << "\n";
+            emitted_ret = true;
+            break;
+          }
+
+          default:
+            oss << "  ; unsupported instruction: " << snow::sir::ToString(instr.opcode) << "\n";
+            break;
+        }
+      }
+    }
+
+    if (!emitted_block) {
+      oss << "entry:\n";
+    }
+    if (!emitted_ret) {
+      oss << "  ret " << ret_ty << " " << ZeroValueText(ret_ty) << "\n";
+    }
     oss << "}\n\n";
   }
 
