@@ -10,6 +10,12 @@ cmake --build snow-cpp/build
 ctest --test-dir snow-cpp/build --output-on-failure
 ```
 
+Windows one-click environment setup:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File builds/tools/install-snow-cpp-env.ps1
+```
+
 ## Commands
 
 ```bash
