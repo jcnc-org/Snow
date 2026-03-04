@@ -204,6 +204,7 @@ if ($IncludeMsvc) {
     & cmd /c 'where cl'
   } catch {
     Write-Step 'cl not visible in current shell PATH yet (open Developer PowerShell after MSVC install).'
+    Write-Step 'Or dot-source: . .\builds\tools\enter-msvc-env.ps1'
   }
 }
 

@@ -28,6 +28,12 @@ powershell -ExecutionPolicy Bypass -File builds/tools/install-snow-cpp-env.ps1 -
 
 Note: MSVC installation usually requires Administrator PowerShell.
 
+After MSVC installation, load `cl` environment into current PowerShell session:
+
+```powershell
+. .\builds\tools\enter-msvc-env.ps1
+```
+
 ## Force reinstall
 
 ```powershell
