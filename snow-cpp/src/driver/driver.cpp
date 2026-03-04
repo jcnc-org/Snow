@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "snow/codegen/lowering.h"
+#include "snow/common/manifest.h"
 #include "snow/common/source_file.h"
 #include "snow/common/target.h"
 #include "snow/frontend/lexer.h"
@@ -56,14 +57,10 @@ std::string ReplaceAll(std::string text, const char a, const char b) {
   return text;
 }
 
-std::string Trim(const std::string& in) {
-  const auto first = in.find_first_not_of(" \t\r\n");
-  if (first == std::string::npos) {
-    return "";
-  }
-  const auto last = in.find_last_not_of(" \t\r\n");
-  return in.substr(first, last - first + 1);
-}
+struct ProjectBuildConfig {
+  std::filesystem::path main_file;
+  std::string manifest_target;
+};
 
 std::string ToString(const OutputKind output_kind) {
   switch (output_kind) {
@@ -161,36 +158,33 @@ std::string JoinSegments(const std::vector<std::string>& segments) {
 }
 
 std::filesystem::path ResolveMainFile(const std::filesystem::path& project_root) {
+  return project_root / "src" / "main.snow";
+}
+
+ProjectBuildConfig ResolveProjectBuildConfig(const std::filesystem::path& project_root, common::DiagnosticEngine& diagnostics) {
+  ProjectBuildConfig config;
+  config.main_file = ResolveMainFile(project_root);
+
   const auto manifest = project_root / "snow.toml";
   if (!std::filesystem::exists(manifest)) {
-    return project_root / "src" / "main.snow";
+    return config;
   }
 
-  std::ifstream in(manifest);
-  if (!in) {
-    return project_root / "src" / "main.snow";
+  common::SnowManifest parsed;
+  std::string error;
+  if (!common::ParseSnowToml(manifest.string(), parsed, error)) {
+    diagnostics.Error("E_MANIFEST_PARSE", "Cannot parse snow.toml", manifest.string(), {0, 0, 0, 0}, error);
+    return config;
   }
 
-  std::string line;
-  while (std::getline(in, line)) {
-    const std::string t = Trim(line);
-    if (t.rfind("main", 0) != 0) {
-      continue;
-    }
-    const auto pos = t.find('=');
-    if (pos == std::string::npos) {
-      continue;
-    }
-    std::string value = Trim(t.substr(pos + 1));
-    if (!value.empty() && value.front() == '"' && value.back() == '"' && value.size() >= 2) {
-      value = value.substr(1, value.size() - 2);
-    }
-    if (!value.empty()) {
-      return project_root / value;
-    }
+  if (!parsed.main.empty()) {
+    config.main_file = project_root / parsed.main;
+  }
+  if (!parsed.target.empty()) {
+    config.manifest_target = parsed.target;
   }
 
-  return project_root / "src" / "main.snow";
+  return config;
 }
 
 std::vector<std::filesystem::path> ResolveImportFiles(const frontend::ImportDecl& import, const std::filesystem::path& src_root,
@@ -453,14 +447,17 @@ BuildResult Driver::BuildProject(const BuildRequest& request) const {
   const std::filesystem::path root = request.project_root.empty() ? std::filesystem::current_path()
                                                                   : std::filesystem::path(request.project_root);
   const std::filesystem::path src_root = root / "src";
-  const std::filesystem::path main_file = ResolveMainFile(root);
-  const std::filesystem::path main_file_abs = std::filesystem::weakly_canonical(main_file);
+  const ProjectBuildConfig project_config = ResolveProjectBuildConfig(root, result.diagnostics);
+  const std::filesystem::path main_file = project_config.main_file;
+  const std::string build_target =
+      request.target_triple.empty() ? project_config.manifest_target : request.target_triple;
 
   if (!std::filesystem::exists(main_file)) {
     result.diagnostics.Error("E_BUILD_MAIN_NOT_FOUND", "Main source file not found", main_file.string(), {0, 0, 0, 0},
                              "Create src/main.snow or set main in snow.toml");
     return result;
   }
+  const std::filesystem::path main_file_abs = std::filesystem::weakly_canonical(main_file);
 
   std::unordered_map<std::string, ModuleNode> nodes;
   (void)BuildModuleGraph(main_file_abs, src_root, nodes, result.diagnostics);
@@ -477,7 +474,7 @@ BuildResult Driver::BuildProject(const BuildRequest& request) const {
 
     CompileRequest module_request;
     module_request.input_path = it->second.file_path.string();
-    module_request.target_triple = request.target_triple;
+    module_request.target_triple = build_target;
     module_request.opt_level = request.opt_level;
     module_request.output_kind = OutputKind::Object;
     module_request.write_artifact = true;

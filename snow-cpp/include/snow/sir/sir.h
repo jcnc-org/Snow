@@ -31,6 +31,12 @@ enum class Opcode {
   Insert,
 };
 
+enum class Linkage {
+  External,
+  Internal,
+  Private,
+};
+
 struct Instruction {
   std::optional<std::string> result;
   std::string type;
@@ -48,6 +54,7 @@ struct Function {
   std::string original_name;
   std::string name;
   std::string return_type;
+  Linkage linkage = Linkage::Internal;
   std::vector<BasicBlock> blocks;
 };
 
@@ -57,6 +64,7 @@ struct Module {
 };
 
 std::string ToString(Opcode opcode);
+std::string ToString(Linkage linkage);
 std::string DumpSir(const Module& module);
 std::string DumpCfg(const Module& module);
 

@@ -57,11 +57,24 @@ std::string ToString(const Opcode opcode) {
   return "unknown";
 }
 
+std::string ToString(const Linkage linkage) {
+  switch (linkage) {
+    case Linkage::External:
+      return "external";
+    case Linkage::Internal:
+      return "internal";
+    case Linkage::Private:
+      return "private";
+  }
+  return "internal";
+}
+
 std::string DumpSir(const Module& module) {
   std::ostringstream oss;
   oss << "sir module " << module.module_path << "\n";
   for (const auto& function : module.functions) {
     oss << "fn " << function.name;
+    oss << " ; linkage=" << ToString(function.linkage);
     if (!function.original_name.empty()) {
       oss << " ; original=" << function.original_name;
     }
@@ -141,6 +154,18 @@ Module SirBuilder::Build(const snow::sema::SemaModule& sema_module,
     function.name = snow::common::MangleSymbol(sema_module.ast.module_path, function_ast.name, param_types,
                                                function_ast.return_type, false);
     function.return_type = function_ast.return_type;
+    switch (function_ast.visibility) {
+      case snow::frontend::Visibility::Public:
+        function.linkage = Linkage::External;
+        break;
+      case snow::frontend::Visibility::Internal:
+        function.linkage = Linkage::Internal;
+        break;
+      case snow::frontend::Visibility::Private:
+      default:
+        function.linkage = Linkage::Private;
+        break;
+    }
 
     BasicBlock entry;
     entry.label = "entry";

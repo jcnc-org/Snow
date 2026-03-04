@@ -1,0 +1,10 @@
+[package]
+name = "project-manifest"
+version = "0.1.0"
+edition = "v2"
+main = "src/app.snow"
+
+[build]
+target = "x86_64-unknown-linux-gnu"
+
+[dependencies]

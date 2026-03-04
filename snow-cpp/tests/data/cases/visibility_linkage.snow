@@ -1,0 +1,11 @@
+private fn helper() -> i32 {
+  return 1;
+}
+
+internal fn util() -> i32 {
+  return 2;
+}
+
+pub fn main() -> i32 {
+  return helper();
+}

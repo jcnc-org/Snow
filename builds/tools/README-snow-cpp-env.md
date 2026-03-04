@@ -46,6 +46,12 @@ powershell -ExecutionPolicy Bypass -File builds/tools/install-snow-cpp-env.ps1 -
 powershell -ExecutionPolicy Bypass -File builds/tools/build-snow-cpp.ps1
 ```
 
+Build with real LLVM API lowering enabled:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File builds/tools/build-snow-cpp.ps1 -EnableLlvm
+```
+
 ## Run v1 compliance checklist
 
 ```powershell
