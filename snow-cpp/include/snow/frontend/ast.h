@@ -1,6 +1,6 @@
 #pragma once
 
-#include <optional>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -23,12 +23,40 @@ struct ParamDecl {
   std::string type;
 };
 
+enum class BinaryOp {
+  Add,
+  Sub,
+  Mul,
+  Div,
+  Mod,
+  Eq,
+  Ne,
+  Lt,
+  Gt,
+  Le,
+  Ge,
+};
+
+struct Expr {
+  enum class Kind {
+    Number,
+    Identifier,
+    Binary,
+  };
+
+  Kind kind = Kind::Number;
+  std::string value;
+  BinaryOp op = BinaryOp::Add;
+  std::shared_ptr<Expr> lhs;
+  std::shared_ptr<Expr> rhs;
+};
+
 struct FunctionDecl {
   Visibility visibility = Visibility::Private;
   std::string name;
   std::vector<ParamDecl> params;
   std::string return_type;
-  std::optional<std::string> return_literal;
+  std::shared_ptr<Expr> return_expr;
 };
 
 struct AstModule {

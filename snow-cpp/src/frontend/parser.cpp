@@ -1,5 +1,6 @@
 #include "snow/frontend/parser.h"
 
+#include <optional>
 #include <sstream>
 #include <utility>
 
@@ -44,6 +45,8 @@ class Cursor {
   std::size_t index_ = 0;
 };
 
+using ExprPtr = std::shared_ptr<Expr>;
+
 std::string JoinPath(const std::vector<std::string>& segments) {
   std::ostringstream oss;
   for (std::size_t i = 0; i < segments.size(); ++i) {
@@ -66,6 +69,198 @@ Visibility ParseVisibility(Cursor& cursor) {
     return Visibility::Private;
   }
   return Visibility::Private;
+}
+
+ExprPtr MakeNumberExpr(std::string value) {
+  auto expr = std::make_shared<Expr>();
+  expr->kind = Expr::Kind::Number;
+  expr->value = std::move(value);
+  return expr;
+}
+
+ExprPtr MakeIdentifierExpr(std::string value) {
+  auto expr = std::make_shared<Expr>();
+  expr->kind = Expr::Kind::Identifier;
+  expr->value = std::move(value);
+  return expr;
+}
+
+ExprPtr MakeBinaryExpr(BinaryOp op, ExprPtr lhs, ExprPtr rhs) {
+  auto expr = std::make_shared<Expr>();
+  expr->kind = Expr::Kind::Binary;
+  expr->op = op;
+  expr->lhs = std::move(lhs);
+  expr->rhs = std::move(rhs);
+  return expr;
+}
+
+std::optional<BinaryOp> TokenToBinaryOp(const TokenType type) {
+  switch (type) {
+    case TokenType::Plus:
+      return BinaryOp::Add;
+    case TokenType::Minus:
+      return BinaryOp::Sub;
+    case TokenType::Star:
+      return BinaryOp::Mul;
+    case TokenType::Slash:
+      return BinaryOp::Div;
+    case TokenType::Percent:
+      return BinaryOp::Mod;
+    case TokenType::EqualEqual:
+      return BinaryOp::Eq;
+    case TokenType::BangEqual:
+      return BinaryOp::Ne;
+    case TokenType::Less:
+      return BinaryOp::Lt;
+    case TokenType::Greater:
+      return BinaryOp::Gt;
+    case TokenType::LessEqual:
+      return BinaryOp::Le;
+    case TokenType::GreaterEqual:
+      return BinaryOp::Ge;
+    default:
+      return std::nullopt;
+  }
+}
+
+int PrecedenceFor(const TokenType type) {
+  switch (type) {
+    case TokenType::EqualEqual:
+    case TokenType::BangEqual:
+      return 1;
+    case TokenType::Less:
+    case TokenType::Greater:
+    case TokenType::LessEqual:
+    case TokenType::GreaterEqual:
+      return 2;
+    case TokenType::Plus:
+    case TokenType::Minus:
+      return 3;
+    case TokenType::Star:
+    case TokenType::Slash:
+    case TokenType::Percent:
+      return 4;
+    default:
+      return 0;
+  }
+}
+
+std::string BinaryOpToString(const BinaryOp op) {
+  switch (op) {
+    case BinaryOp::Add:
+      return "+";
+    case BinaryOp::Sub:
+      return "-";
+    case BinaryOp::Mul:
+      return "*";
+    case BinaryOp::Div:
+      return "/";
+    case BinaryOp::Mod:
+      return "%";
+    case BinaryOp::Eq:
+      return "==";
+    case BinaryOp::Ne:
+      return "!=";
+    case BinaryOp::Lt:
+      return "<";
+    case BinaryOp::Gt:
+      return ">";
+    case BinaryOp::Le:
+      return "<=";
+    case BinaryOp::Ge:
+      return ">=";
+  }
+  return "?";
+}
+
+std::string DumpExpr(const ExprPtr& expr) {
+  if (!expr) {
+    return "<none>";
+  }
+  switch (expr->kind) {
+    case Expr::Kind::Number:
+      return expr->value;
+    case Expr::Kind::Identifier:
+      return expr->value;
+    case Expr::Kind::Binary: {
+      const std::string lhs = DumpExpr(expr->lhs);
+      const std::string rhs = DumpExpr(expr->rhs);
+      return "(" + lhs + " " + BinaryOpToString(expr->op) + " " + rhs + ")";
+    }
+  }
+  return "<none>";
+}
+
+ExprPtr ParseExpression(Cursor& cursor, snow::common::DiagnosticEngine& diagnostics, const std::string& module_path,
+                        const int min_precedence);
+
+ExprPtr ParsePrimary(Cursor& cursor, snow::common::DiagnosticEngine& diagnostics, const std::string& module_path) {
+  if (cursor.Peek().type == TokenType::Number) {
+    return MakeNumberExpr(cursor.Advance().lexeme);
+  }
+
+  if (cursor.Peek().type == TokenType::Identifier) {
+    const std::string ident = cursor.Advance().lexeme;
+    // Bootstrap call parsing: consume "(...)" so return helper() can be represented as identifier.
+    if (cursor.Match(TokenType::LParen)) {
+      int depth = 1;
+      while (!cursor.AtEnd() && depth > 0) {
+        if (cursor.Match(TokenType::LParen)) {
+          ++depth;
+          continue;
+        }
+        if (cursor.Match(TokenType::RParen)) {
+          --depth;
+          continue;
+        }
+        cursor.Advance();
+      }
+      if (depth != 0) {
+        diagnostics.Error("E_PARSE_CALL_RPAREN", "Unclosed call expression", module_path, cursor.Peek().range);
+      }
+    }
+    return MakeIdentifierExpr(ident);
+  }
+
+  if (cursor.Match(TokenType::LParen)) {
+    auto expr = ParseExpression(cursor, diagnostics, module_path, 1);
+    if (!cursor.Match(TokenType::RParen)) {
+      diagnostics.Error("E_PARSE_EXPR_RPAREN", "Expected ')' to close grouped expression", module_path,
+                        cursor.Peek().range);
+    }
+    return expr;
+  }
+
+  diagnostics.Error("E_PARSE_EXPR_PRIMARY", "Expected expression", module_path, cursor.Peek().range);
+  if (!cursor.AtEnd()) {
+    cursor.Advance();
+  }
+  return MakeNumberExpr("0");
+}
+
+ExprPtr ParseExpression(Cursor& cursor, snow::common::DiagnosticEngine& diagnostics, const std::string& module_path,
+                        const int min_precedence) {
+  auto lhs = ParsePrimary(cursor, diagnostics, module_path);
+
+  while (!cursor.AtEnd()) {
+    const auto maybe_op = TokenToBinaryOp(cursor.Peek().type);
+    if (!maybe_op.has_value()) {
+      break;
+    }
+
+    const int precedence = PrecedenceFor(cursor.Peek().type);
+    if (precedence < min_precedence) {
+      break;
+    }
+
+    const BinaryOp op = maybe_op.value();
+    cursor.Advance();
+
+    auto rhs = ParseExpression(cursor, diagnostics, module_path, precedence + 1);
+    lhs = MakeBinaryExpr(op, std::move(lhs), std::move(rhs));
+  }
+
+  return lhs;
 }
 
 }  // namespace
@@ -104,8 +299,8 @@ std::string DumpAst(const AstModule& module) {
       oss << function.params[i].name << ": " << function.params[i].type;
     }
     oss << ") -> " << function.return_type;
-    if (function.return_literal.has_value()) {
-      oss << " ; return-literal=" << function.return_literal.value();
+    if (function.return_expr) {
+      oss << " ; return-expr=" << DumpExpr(function.return_expr);
     }
     oss << "\n";
   }
@@ -212,10 +407,13 @@ AstModule Parser::Parse(std::string module_path, const TokenStream& tokens,
       if (cursor.Match(TokenType::LBrace)) {
         int depth = 1;
         while (!cursor.AtEnd() && depth > 0) {
-          if (depth == 1 && cursor.Peek().type == TokenType::Identifier && cursor.Peek().lexeme == "return") {
-            cursor.Advance();
-            if (cursor.Peek().type == TokenType::Number && !function.return_literal.has_value()) {
-              function.return_literal = cursor.Advance().lexeme;
+          if (depth == 1 && cursor.Match(TokenType::KeywordReturn)) {
+            if (cursor.Peek().type != TokenType::Semicolon) {
+              function.return_expr = ParseExpression(cursor, diagnostics, module.module_path, 1);
+            }
+            if (!cursor.Match(TokenType::Semicolon)) {
+              diagnostics.Error("E_PARSE_RETURN_SEMI", "Expected ';' after return expression", module.module_path,
+                                cursor.Peek().range);
             }
             continue;
           }

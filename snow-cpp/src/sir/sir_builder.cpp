@@ -7,6 +7,111 @@
 
 namespace snow::sir {
 
+namespace {
+
+struct EmittedValue {
+  std::string value;
+  std::string type;
+};
+
+bool IsComparisonOp(const snow::frontend::BinaryOp op) {
+  switch (op) {
+    case snow::frontend::BinaryOp::Eq:
+    case snow::frontend::BinaryOp::Ne:
+    case snow::frontend::BinaryOp::Lt:
+    case snow::frontend::BinaryOp::Gt:
+    case snow::frontend::BinaryOp::Le:
+    case snow::frontend::BinaryOp::Ge:
+      return true;
+    default:
+      return false;
+  }
+}
+
+std::string MergeNumericType(const std::string& a, const std::string& b) {
+  if (a == "i64" || b == "i64") {
+    return "i64";
+  }
+  return "i32";
+}
+
+Opcode ToSirOpcode(const snow::frontend::BinaryOp op) {
+  switch (op) {
+    case snow::frontend::BinaryOp::Add:
+      return Opcode::Add;
+    case snow::frontend::BinaryOp::Sub:
+      return Opcode::Sub;
+    case snow::frontend::BinaryOp::Mul:
+      return Opcode::Mul;
+    case snow::frontend::BinaryOp::Div:
+      return Opcode::Div;
+    case snow::frontend::BinaryOp::Eq:
+      return Opcode::Eq;
+    case snow::frontend::BinaryOp::Ne:
+      return Opcode::Ne;
+    case snow::frontend::BinaryOp::Lt:
+      return Opcode::Lt;
+    case snow::frontend::BinaryOp::Gt:
+      return Opcode::Gt;
+    case snow::frontend::BinaryOp::Le:
+      return Opcode::Le;
+    case snow::frontend::BinaryOp::Ge:
+      return Opcode::Ge;
+    case snow::frontend::BinaryOp::Mod:
+      return Opcode::Unreachable;
+  }
+  return Opcode::Add;
+}
+
+EmittedValue EmitExpr(const std::shared_ptr<snow::frontend::Expr>& expr,
+                      const std::unordered_map<std::string, std::string>& symbol_types,
+                      std::vector<Instruction>& instructions, int& next_ssa_id) {
+  if (!expr) {
+    return EmittedValue{.value = "0", .type = "i32"};
+  }
+
+  switch (expr->kind) {
+    case snow::frontend::Expr::Kind::Number:
+      return EmittedValue{.value = expr->value, .type = "i32"};
+
+    case snow::frontend::Expr::Kind::Identifier: {
+      const auto it = symbol_types.find(expr->value);
+      if (it != symbol_types.end()) {
+        return EmittedValue{.value = expr->value, .type = it->second};
+      }
+      return EmittedValue{.value = expr->value, .type = "i32"};
+    }
+
+    case snow::frontend::Expr::Kind::Binary: {
+      if (expr->op == snow::frontend::BinaryOp::Mod) {
+        // Unsupported in MVP; semantic analyzer reports E_SEMA_UNSUPPORTED_OP.
+        return EmittedValue{.value = "0", .type = "i32"};
+      }
+
+      const EmittedValue lhs = EmitExpr(expr->lhs, symbol_types, instructions, next_ssa_id);
+      const EmittedValue rhs = EmitExpr(expr->rhs, symbol_types, instructions, next_ssa_id);
+
+      const std::string result_name = "%" + std::to_string(next_ssa_id++);
+      const bool comparison = IsComparisonOp(expr->op);
+      const std::string result_type = comparison ? "bool" : MergeNumericType(lhs.type, rhs.type);
+
+      instructions.push_back(Instruction{
+          .result = result_name,
+          .type = result_type,
+          .opcode = ToSirOpcode(expr->op),
+          .operands = {lhs.value, rhs.value},
+          .is_terminator = false,
+      });
+
+      return EmittedValue{.value = result_name, .type = result_type};
+    }
+  }
+
+  return EmittedValue{.value = "0", .type = "i32"};
+}
+
+}  // namespace
+
 std::string ToString(const Opcode opcode) {
   switch (opcode) {
     case Opcode::Add:
@@ -170,57 +275,42 @@ Module SirBuilder::Build(const snow::sema::SemaModule& sema_module,
     BasicBlock entry;
     entry.label = "entry";
 
-    if (function.return_type == "i32" || function.return_type == "i64") {
-      const std::string ret_seed = function_ast.return_literal.has_value() ? function_ast.return_literal.value() : "0";
-      entry.instructions.push_back(Instruction{
-          .result = std::string("%1"),
-          .type = function.return_type,
-          .opcode = Opcode::Add,
-          .operands = {ret_seed, "0"},
-          .is_terminator = false,
-      });
-      for (const auto& param : function_ast.params) {
-        const std::string key = function_ast.name + "::" + param.name;
-        const bool copy_type = ownership_by_symbol.contains(key) ? ownership_by_symbol[key] : false;
-        if (!copy_type) {
-          entry.instructions.push_back(Instruction{
-              .result = std::nullopt,
-              .type = param.type,
-              .opcode = Opcode::Drop,
-              .operands = {param.name},
-              .is_terminator = false,
-          });
-        }
-      }
-      entry.instructions.push_back(Instruction{
-          .result = std::nullopt,
-          .type = function.return_type,
-          .opcode = Opcode::Ret,
-          .operands = {"%1"},
-          .is_terminator = true,
-      });
-    } else {
-      for (const auto& param : function_ast.params) {
-        const std::string key = function_ast.name + "::" + param.name;
-        const bool copy_type = ownership_by_symbol.contains(key) ? ownership_by_symbol[key] : false;
-        if (!copy_type) {
-          entry.instructions.push_back(Instruction{
-              .result = std::nullopt,
-              .type = param.type,
-              .opcode = Opcode::Drop,
-              .operands = {param.name},
-              .is_terminator = false,
-          });
-        }
-      }
-      entry.instructions.push_back(Instruction{
-          .result = std::nullopt,
-          .type = function.return_type,
-          .opcode = Opcode::Ret,
-          .operands = {"0"},
-          .is_terminator = true,
-      });
+    std::unordered_map<std::string, std::string> symbol_types;
+    for (const auto& param : function_ast.params) {
+      symbol_types[param.name] = param.type;
     }
+
+    int next_ssa_id = 1;
+    EmittedValue return_value;
+    if (function_ast.return_expr) {
+      return_value = EmitExpr(function_ast.return_expr, symbol_types, entry.instructions, next_ssa_id);
+    } else if (function.return_type == "bool" || function.return_type == "i1") {
+      return_value = EmittedValue{.value = "0", .type = "bool"};
+    } else {
+      return_value = EmittedValue{.value = "0", .type = function.return_type.empty() ? "i32" : function.return_type};
+    }
+
+    for (const auto& param : function_ast.params) {
+      const std::string key = function_ast.name + "::" + param.name;
+      const bool copy_type = ownership_by_symbol.contains(key) ? ownership_by_symbol[key] : false;
+      if (!copy_type) {
+        entry.instructions.push_back(Instruction{
+            .result = std::nullopt,
+            .type = param.type,
+            .opcode = Opcode::Drop,
+            .operands = {param.name},
+            .is_terminator = false,
+        });
+      }
+    }
+
+    entry.instructions.push_back(Instruction{
+        .result = std::nullopt,
+        .type = function.return_type,
+        .opcode = Opcode::Ret,
+        .operands = {return_value.value},
+        .is_terminator = true,
+    });
 
     function.blocks.push_back(std::move(entry));
     module.functions.push_back(std::move(function));

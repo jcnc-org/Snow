@@ -5,6 +5,10 @@
 
 #include "snow/common/diagnostic_engine.h"
 #include "snow/common/manifest.h"
+#include "snow/common/source_file.h"
+#include "snow/frontend/lexer.h"
+#include "snow/frontend/parser.h"
+#include "snow/sema/sema.h"
 #include "snow/sir/validator.h"
 
 namespace {
@@ -196,6 +200,64 @@ bool TestSirValidatorMissingTerminator() {
   return true;
 }
 
+bool TestParserExpressionPrecedence() {
+  const std::string test_name = "TestParserExpressionPrecedence";
+  const snow::common::SourceFile source{
+      "unit_expr.snow",
+      "pub fn main() -> i32 { return 1 + 2 * 3; }",
+  };
+
+  snow::common::DiagnosticEngine diagnostics;
+  snow::frontend::Lexer lexer;
+  snow::frontend::Parser parser;
+
+  const auto tokens = lexer.Tokenize(source, diagnostics);
+  const auto ast = parser.Parse("unit.expr", tokens, diagnostics);
+
+  if (diagnostics.HasErrors()) {
+    return Fail(test_name, "unexpected parse diagnostics");
+  }
+  if (ast.functions.empty()) {
+    return Fail(test_name, "expected parsed function");
+  }
+  const auto& fn = ast.functions.front();
+  if (!fn.return_expr) {
+    return Fail(test_name, "expected return expression");
+  }
+  if (fn.return_expr->kind != snow::frontend::Expr::Kind::Binary ||
+      fn.return_expr->op != snow::frontend::BinaryOp::Add) {
+    return Fail(test_name, "top-level return expression should be add");
+  }
+  if (!fn.return_expr->rhs || fn.return_expr->rhs->kind != snow::frontend::Expr::Kind::Binary ||
+      fn.return_expr->rhs->op != snow::frontend::BinaryOp::Mul) {
+    return Fail(test_name, "rhs of add should be mul expression");
+  }
+
+  return true;
+}
+
+bool TestSemaReturnTypeMismatch() {
+  const std::string test_name = "TestSemaReturnTypeMismatch";
+  const snow::common::SourceFile source{
+      "unit_sema.snow",
+      "pub fn main() -> i32 { return 1 < 2; }",
+  };
+
+  snow::common::DiagnosticEngine diagnostics;
+  snow::frontend::Lexer lexer;
+  snow::frontend::Parser parser;
+  snow::sema::SemanticAnalyzer sema;
+
+  const auto tokens = lexer.Tokenize(source, diagnostics);
+  const auto ast = parser.Parse("unit.sema", tokens, diagnostics);
+  (void)sema.Analyze(ast, diagnostics);
+
+  if (!ContainsCode(diagnostics, "E_SEMA_RET_TYPE")) {
+    return Fail(test_name, "expected E_SEMA_RET_TYPE");
+  }
+  return true;
+}
+
 }  // namespace
 
 int main() {
@@ -204,6 +266,8 @@ int main() {
   failed += TestSirValidatorValidModule() ? 0 : 1;
   failed += TestSirValidatorDoubleDrop() ? 0 : 1;
   failed += TestSirValidatorMissingTerminator() ? 0 : 1;
+  failed += TestParserExpressionPrecedence() ? 0 : 1;
+  failed += TestSemaReturnTypeMismatch() ? 0 : 1;
 
   if (failed == 0) {
     std::cout << "[PASS] snow-unit-tests\n";

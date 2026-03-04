@@ -1,5 +1,6 @@
 #include "snow/sir/validator.h"
 
+#include <cctype>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -15,6 +16,47 @@ bool LooksLikeValue(const std::string& operand) {
   return !operand.empty() && operand[0] == '%';
 }
 
+bool IsNumericType(const std::string& type) {
+  return type == "i32" || type == "i64";
+}
+
+bool IsBooleanType(const std::string& type) {
+  return type == "bool" || type == "i1";
+}
+
+std::optional<std::string> InferOperandType(const std::string& operand,
+                                            const std::unordered_map<std::string, std::string>& value_types) {
+  if (LooksLikeValue(operand)) {
+    const auto it = value_types.find(operand);
+    if (it != value_types.end()) {
+      return it->second;
+    }
+    return std::nullopt;
+  }
+
+  if (operand == "true" || operand == "false") {
+    return "bool";
+  }
+
+  bool numeric = !operand.empty();
+  std::size_t start = 0;
+  if (numeric && (operand[0] == '-' || operand[0] == '+')) {
+    start = 1;
+    numeric = start < operand.size();
+  }
+  for (std::size_t i = start; i < operand.size(); ++i) {
+    if (!std::isdigit(static_cast<unsigned char>(operand[i]))) {
+      numeric = false;
+      break;
+    }
+  }
+  if (numeric) {
+    return "i32";
+  }
+
+  return std::nullopt;
+}
+
 }  // namespace
 
 ValidationReport SirValidator::Validate(const Module& module, const ValidationLevel level,
@@ -25,6 +67,7 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
     std::unordered_set<std::string> defs;
     std::unordered_map<std::string, int> drop_counts;
     std::unordered_set<std::string> block_labels;
+    std::unordered_map<std::string, std::string> value_types;
 
     for (const auto& block : function.blocks) {
       block_labels.insert(block.label);
@@ -60,6 +103,9 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
             report.ok = false;
           }
           defs.insert(instr.result.value());
+          if (!instr.type.empty()) {
+            value_types[instr.result.value()] = instr.type;
+          }
         }
 
         for (const auto& operand : instr.operands) {
@@ -93,6 +139,26 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
               diagnostics.Error("E_SIR_ARITY", "Binary instruction requires 2 operands", module.module_path,
                                 {0, 0, 0, 0});
               report.ok = false;
+            } else {
+              const auto lhs_type = InferOperandType(instr.operands[0], value_types);
+              const auto rhs_type = InferOperandType(instr.operands[1], value_types);
+              if (lhs_type.has_value() && rhs_type.has_value() && lhs_type.value() != rhs_type.value()) {
+                diagnostics.Error("E_SIR_TYPE_MISMATCH", "Binary operands have incompatible types", module.module_path,
+                                  {0, 0, 0, 0});
+                report.ok = false;
+              }
+              if (instr.opcode == Opcode::Add || instr.opcode == Opcode::Sub || instr.opcode == Opcode::Mul ||
+                  instr.opcode == Opcode::Div) {
+                if (!instr.type.empty() && !IsNumericType(instr.type)) {
+                  diagnostics.Error("E_SIR_TYPE_ARITH", "Arithmetic instruction result must be numeric",
+                                    module.module_path, {0, 0, 0, 0});
+                  report.ok = false;
+                }
+              } else if (!instr.type.empty() && !IsBooleanType(instr.type)) {
+                diagnostics.Error("E_SIR_TYPE_CMP", "Comparison instruction result must be bool/i1",
+                                  module.module_path, {0, 0, 0, 0});
+                report.ok = false;
+              }
             }
             break;
           case Opcode::CondBr:
@@ -133,6 +199,25 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
                 diagnostics.Error("E_SIR_DOUBLE_DROP", "value dropped more than once: " + dropped, module.module_path,
                                   {0, 0, 0, 0});
                 report.ok = false;
+              }
+            }
+            break;
+          case Opcode::Ret:
+            if (instr.operands.size() != 1) {
+              diagnostics.Error("E_SIR_RET_ARITY", "ret requires exactly one operand", module.module_path,
+                                {0, 0, 0, 0});
+              report.ok = false;
+            } else {
+              const auto ret_type = InferOperandType(instr.operands[0], value_types);
+              if (ret_type.has_value() && !function.return_type.empty() && ret_type.value() != function.return_type) {
+                const bool bool_compat =
+                    IsBooleanType(ret_type.value()) && IsBooleanType(function.return_type);
+                const bool i32_to_i64 = ret_type.value() == "i32" && function.return_type == "i64";
+                if (!bool_compat && !i32_to_i64) {
+                  diagnostics.Error("E_SIR_RET_TYPE", "ret operand type does not match function return type",
+                                    module.module_path, {0, 0, 0, 0});
+                  report.ok = false;
+                }
               }
             }
             break;

@@ -119,7 +119,47 @@ add_cli_assert_test(
   snowc
   0
   "compile|--emit-sir|-o|${ARTIFACT_DIR}/return_literal.exe|${CASES_DIR}/return_literal.snow"
-  "add 7, 0"
+  "ret 7 : i32"
+  ""
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_expr_arith_sir
+  snowc
+  0
+  "compile|--emit-sir|-o|${ARTIFACT_DIR}/expr_arith.exe|${CASES_DIR}/expr_arith.snow"
+  "mul 2, 3|add 1, %"
+  ""
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_expr_compare_sir
+  snowc
+  0
+  "compile|--emit-sir|-o|${ARTIFACT_DIR}/expr_compare.exe|${CASES_DIR}/expr_compare.snow"
+  "add 1, 2|lt %[0-9]+, 5|ret %[0-9]+ : bool"
+  ""
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_expr_return_type_mismatch
+  snowc
+  1
+  "compile|-o|${ARTIFACT_DIR}/expr_ret_mismatch.exe|${CASES_DIR}/expr_ret_mismatch.snow"
+  "E_SEMA_RET_TYPE"
+  ""
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_expr_mod_unsupported
+  snowc
+  1
+  "compile|-o|${ARTIFACT_DIR}/expr_mod_unsupported.exe|${CASES_DIR}/expr_mod_unsupported.snow"
+  "E_SEMA_UNSUPPORTED_OP"
   ""
   ""
 )

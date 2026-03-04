@@ -24,6 +24,7 @@ TokenType KeywordType(const std::string& lexeme) {
       {"pub", TokenType::KeywordPub},
       {"internal", TokenType::KeywordInternal},
       {"private", TokenType::KeywordPrivate},
+      {"return", TokenType::KeywordReturn},
   };
   const auto it = kKeywords.find(lexeme);
   if (it == kKeywords.end()) {
@@ -52,6 +53,8 @@ std::string ToString(const TokenType type) {
       return "KeywordInternal";
     case TokenType::KeywordPrivate:
       return "KeywordPrivate";
+    case TokenType::KeywordReturn:
+      return "KeywordReturn";
     case TokenType::Arrow:
       return "Arrow";
     case TokenType::Dot:
@@ -74,12 +77,20 @@ std::string ToString(const TokenType type) {
       return "Percent";
     case TokenType::Equal:
       return "Equal";
+    case TokenType::EqualEqual:
+      return "EqualEqual";
     case TokenType::Less:
       return "Less";
+    case TokenType::LessEqual:
+      return "LessEqual";
     case TokenType::Greater:
       return "Greater";
+    case TokenType::GreaterEqual:
+      return "GreaterEqual";
     case TokenType::Bang:
       return "Bang";
+    case TokenType::BangEqual:
+      return "BangEqual";
     case TokenType::LParen:
       return "LParen";
     case TokenType::RParen:
@@ -165,6 +176,30 @@ TokenStream Lexer::Tokenize(const snow::common::SourceFile& source, snow::common
 
     if (ch == '-' && i + 1 < source.content.size() && source.content[i + 1] == '>') {
       tokens.push_back(MakeToken(TokenType::Arrow, "->", start_line, start_col, line, column + 2));
+      i += 2;
+      column += 2;
+      continue;
+    }
+    if (ch == '=' && i + 1 < source.content.size() && source.content[i + 1] == '=') {
+      tokens.push_back(MakeToken(TokenType::EqualEqual, "==", start_line, start_col, line, column + 2));
+      i += 2;
+      column += 2;
+      continue;
+    }
+    if (ch == '!' && i + 1 < source.content.size() && source.content[i + 1] == '=') {
+      tokens.push_back(MakeToken(TokenType::BangEqual, "!=", start_line, start_col, line, column + 2));
+      i += 2;
+      column += 2;
+      continue;
+    }
+    if (ch == '<' && i + 1 < source.content.size() && source.content[i + 1] == '=') {
+      tokens.push_back(MakeToken(TokenType::LessEqual, "<=", start_line, start_col, line, column + 2));
+      i += 2;
+      column += 2;
+      continue;
+    }
+    if (ch == '>' && i + 1 < source.content.size() && source.content[i + 1] == '=') {
+      tokens.push_back(MakeToken(TokenType::GreaterEqual, ">=", start_line, start_col, line, column + 2));
       i += 2;
       column += 2;
       continue;
