@@ -288,6 +288,40 @@ std::string LowerTextual(const snow::sir::Module& module, const TargetConfig& ta
             }
             break;
 
+          case snow::sir::Opcode::Phi: {
+            if (!instr.result.has_value() || instr.operands.size() < 4 || (instr.operands.size() % 2) != 0) {
+              oss << "  ; malformed phi instruction\n";
+              break;
+            }
+            const std::string phi_ty = ToLlvmTypeText(instr.type.empty() ? "i32" : instr.type);
+            oss << "  " << instr.result.value() << " = phi " << phi_ty << " ";
+            for (std::size_t i = 0; i + 1 < instr.operands.size(); i += 2) {
+              if (i > 0) {
+                oss << ", ";
+              }
+              oss << "[ " << NormalizeOperand(instr.operands[i]) << ", %" << instr.operands[i + 1] << " ]";
+            }
+            oss << "\n";
+            break;
+          }
+
+          case snow::sir::Opcode::Br:
+            if (instr.operands.size() != 1) {
+              oss << "  ; malformed br instruction\n";
+              break;
+            }
+            oss << "  br label %" << instr.operands[0] << "\n";
+            break;
+
+          case snow::sir::Opcode::CondBr:
+            if (instr.operands.size() != 3) {
+              oss << "  ; malformed cond_br instruction\n";
+              break;
+            }
+            oss << "  br i1 " << NormalizeOperand(instr.operands[0]) << ", label %" << instr.operands[1]
+                << ", label %" << instr.operands[2] << "\n";
+            break;
+
           case snow::sir::Opcode::Call: {
             if (!instr.result.has_value() || instr.operands.empty()) {
               oss << "  ; malformed call instruction\n";

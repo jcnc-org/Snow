@@ -223,6 +223,47 @@ SemaModule SemanticAnalyzer::Analyze(const snow::frontend::AstModule& ast_module
                           ast_module.module_path, {0, 0, 0, 0});
       }
     }
+
+    if (function.if_expr) {
+      const ExprTypeResult cond_type = InferExprType(function.if_expr->condition, symbol_types, function_return_types,
+                                                     ast_module.module_path, diagnostics);
+      if (cond_type.known && !IsBooleanType(cond_type.type)) {
+        diagnostics.Error("E_SEMA_IF_COND_TYPE", "if condition must be bool/i1", ast_module.module_path,
+                          {0, 0, 0, 0});
+      }
+
+      const ExprTypeResult then_type = InferExprType(function.if_expr->then_expr, symbol_types, function_return_types,
+                                                     ast_module.module_path, diagnostics);
+      const ExprTypeResult else_type = InferExprType(function.if_expr->else_expr, symbol_types, function_return_types,
+                                                     ast_module.module_path, diagnostics);
+      if (then_type.known && else_type.known && then_type.type != else_type.type) {
+        diagnostics.Error("E_SEMA_IF_BRANCH_TYPE", "if branch return expressions must have same type",
+                          ast_module.module_path, {0, 0, 0, 0});
+      }
+
+      const std::string expected_return = function.return_type.empty() ? "i32" : function.return_type;
+      if (then_type.known && !IsReturnTypeCompatible(expected_return, then_type.type)) {
+        diagnostics.Error("E_SEMA_RET_TYPE",
+                          "if then-branch type '" + then_type.type + "' does not match function return type '" +
+                              expected_return + "'",
+                          ast_module.module_path, {0, 0, 0, 0});
+      }
+      if (else_type.known && !IsReturnTypeCompatible(expected_return, else_type.type)) {
+        diagnostics.Error("E_SEMA_RET_TYPE",
+                          "if else-branch type '" + else_type.type + "' does not match function return type '" +
+                              expected_return + "'",
+                          ast_module.module_path, {0, 0, 0, 0});
+      }
+    }
+
+    if (function.while_condition) {
+      const ExprTypeResult while_cond_type =
+          InferExprType(function.while_condition, symbol_types, function_return_types, ast_module.module_path, diagnostics);
+      if (while_cond_type.known && !IsBooleanType(while_cond_type.type)) {
+        diagnostics.Error("E_SEMA_WHILE_COND_TYPE", "while condition must be bool/i1", ast_module.module_path,
+                          {0, 0, 0, 0});
+      }
+    }
   }
 
   return sema;

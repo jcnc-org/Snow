@@ -1,6 +1,7 @@
 #include "snow/sir/validator.h"
 
 #include <cctype>
+#include <optional>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -167,6 +168,12 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
                                 {0, 0, 0, 0});
               report.ok = false;
             } else {
+              const auto cond_type = InferOperandType(instr.operands[0], value_types);
+              if (cond_type.has_value() && !IsBooleanType(cond_type.value())) {
+                diagnostics.Error("E_SIR_CONDBR_TYPE", "cond_br condition must be bool/i1", module.module_path,
+                                  {0, 0, 0, 0});
+                report.ok = false;
+              }
               const auto& true_label = instr.operands[1];
               const auto& false_label = instr.operands[2];
               if (!block_labels.contains(true_label) || !block_labels.contains(false_label)) {
@@ -185,6 +192,32 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
               diagnostics.Error("E_SIR_CFG_TARGET", "br target label does not exist", module.module_path,
                                 {0, 0, 0, 0});
               report.ok = false;
+            }
+            break;
+          case Opcode::Phi:
+            if (instr.operands.size() < 4 || (instr.operands.size() % 2) != 0) {
+              diagnostics.Error("E_SIR_PHI_ARITY", "phi requires value/label pairs", module.module_path,
+                                {0, 0, 0, 0});
+              report.ok = false;
+            } else {
+              for (std::size_t phi_i = 0; phi_i + 1 < instr.operands.size(); phi_i += 2) {
+                const auto value_type = InferOperandType(instr.operands[phi_i], value_types);
+                const auto& pred_label = instr.operands[phi_i + 1];
+                if (!block_labels.contains(pred_label)) {
+                  diagnostics.Error("E_SIR_PHI_LABEL", "phi predecessor label does not exist", module.module_path,
+                                    {0, 0, 0, 0});
+                  report.ok = false;
+                }
+                if (value_type.has_value() && !instr.type.empty() && value_type.value() != instr.type) {
+                  const bool bool_compat = IsBooleanType(value_type.value()) && IsBooleanType(instr.type);
+                  const bool i32_to_i64 = value_type.value() == "i32" && instr.type == "i64";
+                  if (!bool_compat && !i32_to_i64) {
+                    diagnostics.Error("E_SIR_PHI_TYPE", "phi incoming value type mismatch", module.module_path,
+                                      {0, 0, 0, 0});
+                    report.ok = false;
+                  }
+                }
+              }
             }
             break;
           case Opcode::Drop:

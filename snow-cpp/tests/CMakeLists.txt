@@ -175,6 +175,46 @@ add_cli_assert_test(
 )
 
 add_cli_assert_test(
+  snowc_compile_if_phi_sir
+  snowc
+  0
+  "compile|--emit-sir|-o|${ARTIFACT_DIR}/if_phi.exe|${CASES_DIR}/if_phi.snow"
+  "cond_br %[0-9]+, if_then, if_else|phi [0-9%]+, if_then, [0-9%]+, if_else|ret %[0-9]+ : i32"
+  ""
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_if_phi_llvm
+  snowc
+  0
+  "compile|--emit-llvm|-o|${ARTIFACT_DIR}/if_phi_llvm.exe|${CASES_DIR}/if_phi.snow"
+  "br i1 %[0-9]+, label %if_then, label %if_else|phi i32 \\[ [0-9%]+, %if_then \\], \\[ [0-9%]+, %if_else \\]"
+  ""
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_if_cond_type_mismatch
+  snowc
+  1
+  "compile|-o|${ARTIFACT_DIR}/if_cond_bad.exe|${CASES_DIR}/if_cond_bad.snow"
+  "E_SEMA_IF_COND_TYPE"
+  ""
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_while_cfg_sir
+  snowc
+  0
+  "compile|--emit-sir|-o|${ARTIFACT_DIR}/while_cfg.exe|${CASES_DIR}/while_cfg.snow"
+  "entry:|br loop_cond|loop_cond:|cond_br %[0-9]+, loop_body, loop_exit|loop_body:|br loop_cond|loop_exit:|ret 7 : i32"
+  ""
+  ""
+)
+
+add_cli_assert_test(
   snowc_compile_dup_symbol_fail
   snowc
   1

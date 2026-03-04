@@ -214,6 +214,49 @@ std::string DumpExpr(const ExprPtr& expr) {
 ExprPtr ParseExpression(Cursor& cursor, snow::common::DiagnosticEngine& diagnostics, const std::string& module_path,
                         const int min_precedence);
 
+ExprPtr ParseReturnOnlyBlock(Cursor& cursor, snow::common::DiagnosticEngine& diagnostics,
+                             const std::string& module_path) {
+  if (!cursor.Match(TokenType::LBrace)) {
+    diagnostics.Error("E_PARSE_BLOCK_LBRACE", "Expected '{' to start block", module_path, cursor.Peek().range);
+    return MakeNumberExpr("0");
+  }
+
+  int depth = 1;
+  ExprPtr return_expr;
+  while (!cursor.AtEnd() && depth > 0) {
+    if (depth == 1 && cursor.Match(TokenType::KeywordReturn)) {
+      if (cursor.Peek().type != TokenType::Semicolon) {
+        return_expr = ParseExpression(cursor, diagnostics, module_path, 1);
+      }
+      if (!cursor.Match(TokenType::Semicolon)) {
+        diagnostics.Error("E_PARSE_RETURN_SEMI", "Expected ';' after return expression", module_path,
+                          cursor.Peek().range);
+      }
+      continue;
+    }
+
+    if (cursor.Match(TokenType::LBrace)) {
+      ++depth;
+      continue;
+    }
+    if (cursor.Match(TokenType::RBrace)) {
+      --depth;
+      continue;
+    }
+    cursor.Advance();
+  }
+
+  if (depth != 0) {
+    diagnostics.Error("E_PARSE_FN_BODY", "Unclosed block", module_path, cursor.Peek().range);
+  }
+  if (!return_expr) {
+    diagnostics.Error("E_PARSE_IF_BRANCH_RETURN", "Expected return expression in branch block", module_path,
+                      cursor.Peek().range);
+    return MakeNumberExpr("0");
+  }
+  return return_expr;
+}
+
 ExprPtr ParsePrimary(Cursor& cursor, snow::common::DiagnosticEngine& diagnostics, const std::string& module_path) {
   if (cursor.Peek().type == TokenType::Number) {
     return MakeNumberExpr(cursor.Advance().lexeme);
@@ -321,6 +364,13 @@ std::string DumpAst(const AstModule& module) {
     oss << ") -> " << function.return_type;
     if (function.return_expr) {
       oss << " ; return-expr=" << DumpExpr(function.return_expr);
+    }
+    if (function.if_expr) {
+      oss << " ; if=(" << DumpExpr(function.if_expr->condition) << " ? " << DumpExpr(function.if_expr->then_expr)
+          << " : " << DumpExpr(function.if_expr->else_expr) << ")";
+    }
+    if (function.while_condition) {
+      oss << " ; while-cond=" << DumpExpr(function.while_condition);
     }
     oss << "\n";
   }
@@ -433,6 +483,43 @@ AstModule Parser::Parse(std::string module_path, const TokenStream& tokens,
             }
             if (!cursor.Match(TokenType::Semicolon)) {
               diagnostics.Error("E_PARSE_RETURN_SEMI", "Expected ';' after return expression", module.module_path,
+                                cursor.Peek().range);
+            }
+            continue;
+          }
+          if (depth == 1 && cursor.Match(TokenType::KeywordIf)) {
+            auto if_expr = std::make_shared<IfExpr>();
+            if_expr->condition = ParseExpression(cursor, diagnostics, module.module_path, 1);
+            const ExprPtr then_expr = ParseReturnOnlyBlock(cursor, diagnostics, module.module_path);
+            if (cursor.Match(TokenType::KeywordElse)) {
+              if_expr->then_expr = then_expr;
+              if_expr->else_expr = ParseReturnOnlyBlock(cursor, diagnostics, module.module_path);
+              function.if_expr = if_expr;
+            }
+            continue;
+          }
+          if (depth == 1 && cursor.Match(TokenType::KeywordWhile)) {
+            function.while_condition = ParseExpression(cursor, diagnostics, module.module_path, 1);
+            if (!cursor.Match(TokenType::LBrace)) {
+              diagnostics.Error("E_PARSE_WHILE_BLOCK", "Expected while block", module.module_path,
+                                cursor.Peek().range);
+              continue;
+            }
+
+            int while_depth = 1;
+            while (!cursor.AtEnd() && while_depth > 0) {
+              if (cursor.Match(TokenType::LBrace)) {
+                ++while_depth;
+                continue;
+              }
+              if (cursor.Match(TokenType::RBrace)) {
+                --while_depth;
+                continue;
+              }
+              cursor.Advance();
+            }
+            if (while_depth != 0) {
+              diagnostics.Error("E_PARSE_WHILE_BLOCK", "Unclosed while block", module.module_path,
                                 cursor.Peek().range);
             }
             continue;

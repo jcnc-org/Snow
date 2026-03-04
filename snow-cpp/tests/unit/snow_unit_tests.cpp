@@ -258,6 +258,58 @@ bool TestSemaReturnTypeMismatch() {
   return true;
 }
 
+bool TestParserControlFlowForms() {
+  const std::string test_name = "TestParserControlFlowForms";
+  const snow::common::SourceFile source{
+      "unit_cfg.snow",
+      "pub fn main() -> i32 { while 1 < 0 { } if 1 < 2 { return 10; } else { return 20; } }",
+  };
+
+  snow::common::DiagnosticEngine diagnostics;
+  snow::frontend::Lexer lexer;
+  snow::frontend::Parser parser;
+
+  const auto tokens = lexer.Tokenize(source, diagnostics);
+  const auto ast = parser.Parse("unit.cfg", tokens, diagnostics);
+
+  if (diagnostics.HasErrors()) {
+    return Fail(test_name, "unexpected parse diagnostics");
+  }
+  if (ast.functions.empty()) {
+    return Fail(test_name, "expected parsed function");
+  }
+  const auto& fn = ast.functions.front();
+  if (!fn.while_condition) {
+    return Fail(test_name, "expected while condition");
+  }
+  if (!fn.if_expr || !fn.if_expr->condition || !fn.if_expr->then_expr || !fn.if_expr->else_expr) {
+    return Fail(test_name, "expected parsed if expression branches");
+  }
+  return true;
+}
+
+bool TestSemaIfConditionTypeMismatch() {
+  const std::string test_name = "TestSemaIfConditionTypeMismatch";
+  const snow::common::SourceFile source{
+      "unit_if_bad.snow",
+      "pub fn main() -> i32 { if 1 { return 10; } else { return 20; } }",
+  };
+
+  snow::common::DiagnosticEngine diagnostics;
+  snow::frontend::Lexer lexer;
+  snow::frontend::Parser parser;
+  snow::sema::SemanticAnalyzer sema;
+
+  const auto tokens = lexer.Tokenize(source, diagnostics);
+  const auto ast = parser.Parse("unit.if_bad", tokens, diagnostics);
+  (void)sema.Analyze(ast, diagnostics);
+
+  if (!ContainsCode(diagnostics, "E_SEMA_IF_COND_TYPE")) {
+    return Fail(test_name, "expected E_SEMA_IF_COND_TYPE");
+  }
+  return true;
+}
+
 }  // namespace
 
 int main() {
@@ -268,6 +320,8 @@ int main() {
   failed += TestSirValidatorMissingTerminator() ? 0 : 1;
   failed += TestParserExpressionPrecedence() ? 0 : 1;
   failed += TestSemaReturnTypeMismatch() ? 0 : 1;
+  failed += TestParserControlFlowForms() ? 0 : 1;
+  failed += TestSemaIfConditionTypeMismatch() ? 0 : 1;
 
   if (failed == 0) {
     std::cout << "[PASS] snow-unit-tests\n";

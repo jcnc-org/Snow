@@ -25,6 +25,9 @@ TokenType KeywordType(const std::string& lexeme) {
       {"internal", TokenType::KeywordInternal},
       {"private", TokenType::KeywordPrivate},
       {"return", TokenType::KeywordReturn},
+      {"if", TokenType::KeywordIf},
+      {"else", TokenType::KeywordElse},
+      {"while", TokenType::KeywordWhile},
   };
   const auto it = kKeywords.find(lexeme);
   if (it == kKeywords.end()) {
@@ -55,6 +58,12 @@ std::string ToString(const TokenType type) {
       return "KeywordPrivate";
     case TokenType::KeywordReturn:
       return "KeywordReturn";
+    case TokenType::KeywordIf:
+      return "KeywordIf";
+    case TokenType::KeywordElse:
+      return "KeywordElse";
+    case TokenType::KeywordWhile:
+      return "KeywordWhile";
     case TokenType::Arrow:
       return "Arrow";
     case TokenType::Dot:

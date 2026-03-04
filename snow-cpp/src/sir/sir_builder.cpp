@@ -328,33 +328,162 @@ Module SirBuilder::Build(const snow::sema::SemaModule& sema_module,
     }
 
     int next_ssa_id = 1;
-    EmittedValue return_value;
-    if (function_ast.return_expr) {
-      return_value =
-          EmitExpr(function_ast.return_expr, symbol_types, callee_symbols, callee_return_types, entry.instructions, next_ssa_id);
-    } else if (function.return_type == "bool" || function.return_type == "i1") {
-      return_value = EmittedValue{.value = "0", .type = "bool"};
-    } else {
-      return_value = EmittedValue{.value = "0", .type = function.return_type.empty() ? "i32" : function.return_type};
+    auto append_param_drops = [&](BasicBlock& block) {
+      for (const auto& param : function_ast.params) {
+        const std::string key = function_ast.name + "::" + param.name;
+        const bool copy_type = ownership_by_symbol.contains(key) ? ownership_by_symbol[key] : false;
+        if (!copy_type) {
+          block.instructions.push_back(Instruction{
+              .result = std::nullopt,
+              .type = param.type,
+              .opcode = Opcode::Drop,
+              .operands = {param.name},
+              .is_terminator = false,
+          });
+        }
+      }
+    };
+
+    const std::string return_type = function.return_type.empty() ? "i32" : function.return_type;
+
+    if (function_ast.if_expr) {
+      BasicBlock then_block;
+      then_block.label = "if_then";
+      BasicBlock else_block;
+      else_block.label = "if_else";
+      BasicBlock merge_block;
+      merge_block.label = "if_merge";
+
+      const EmittedValue cond_value = EmitExpr(function_ast.if_expr->condition, symbol_types, callee_symbols,
+                                               callee_return_types, entry.instructions, next_ssa_id);
+      entry.instructions.push_back(Instruction{
+          .result = std::nullopt,
+          .type = "void",
+          .opcode = Opcode::CondBr,
+          .operands = {cond_value.value, then_block.label, else_block.label},
+          .is_terminator = true,
+      });
+
+      const EmittedValue then_value = EmitExpr(function_ast.if_expr->then_expr, symbol_types, callee_symbols,
+                                               callee_return_types, then_block.instructions, next_ssa_id);
+      then_block.instructions.push_back(Instruction{
+          .result = std::nullopt,
+          .type = "void",
+          .opcode = Opcode::Br,
+          .operands = {merge_block.label},
+          .is_terminator = true,
+      });
+
+      const EmittedValue else_value = EmitExpr(function_ast.if_expr->else_expr, symbol_types, callee_symbols,
+                                               callee_return_types, else_block.instructions, next_ssa_id);
+      else_block.instructions.push_back(Instruction{
+          .result = std::nullopt,
+          .type = "void",
+          .opcode = Opcode::Br,
+          .operands = {merge_block.label},
+          .is_terminator = true,
+      });
+
+      const std::string phi_name = "%" + std::to_string(next_ssa_id++);
+      merge_block.instructions.push_back(Instruction{
+          .result = phi_name,
+          .type = return_type,
+          .opcode = Opcode::Phi,
+          .operands = {then_value.value, then_block.label, else_value.value, else_block.label},
+          .is_terminator = false,
+      });
+      append_param_drops(merge_block);
+      merge_block.instructions.push_back(Instruction{
+          .result = std::nullopt,
+          .type = return_type,
+          .opcode = Opcode::Ret,
+          .operands = {phi_name},
+          .is_terminator = true,
+      });
+
+      function.blocks.push_back(std::move(entry));
+      function.blocks.push_back(std::move(then_block));
+      function.blocks.push_back(std::move(else_block));
+      function.blocks.push_back(std::move(merge_block));
+      module.functions.push_back(std::move(function));
+      continue;
     }
 
-    for (const auto& param : function_ast.params) {
-      const std::string key = function_ast.name + "::" + param.name;
-      const bool copy_type = ownership_by_symbol.contains(key) ? ownership_by_symbol[key] : false;
-      if (!copy_type) {
-        entry.instructions.push_back(Instruction{
-            .result = std::nullopt,
-            .type = param.type,
-            .opcode = Opcode::Drop,
-            .operands = {param.name},
-            .is_terminator = false,
-        });
+    if (function_ast.while_condition) {
+      BasicBlock cond_block;
+      cond_block.label = "loop_cond";
+      BasicBlock body_block;
+      body_block.label = "loop_body";
+      BasicBlock exit_block;
+      exit_block.label = "loop_exit";
+
+      entry.instructions.push_back(Instruction{
+          .result = std::nullopt,
+          .type = "void",
+          .opcode = Opcode::Br,
+          .operands = {cond_block.label},
+          .is_terminator = true,
+      });
+
+      const EmittedValue cond_value = EmitExpr(function_ast.while_condition, symbol_types, callee_symbols,
+                                               callee_return_types, cond_block.instructions, next_ssa_id);
+      cond_block.instructions.push_back(Instruction{
+          .result = std::nullopt,
+          .type = "void",
+          .opcode = Opcode::CondBr,
+          .operands = {cond_value.value, body_block.label, exit_block.label},
+          .is_terminator = true,
+      });
+
+      body_block.instructions.push_back(Instruction{
+          .result = std::nullopt,
+          .type = "void",
+          .opcode = Opcode::Br,
+          .operands = {cond_block.label},
+          .is_terminator = true,
+      });
+
+      EmittedValue return_value;
+      if (function_ast.return_expr) {
+        return_value = EmitExpr(function_ast.return_expr, symbol_types, callee_symbols, callee_return_types,
+                                exit_block.instructions, next_ssa_id);
+      } else if (return_type == "bool" || return_type == "i1") {
+        return_value = EmittedValue{.value = "0", .type = "bool"};
+      } else {
+        return_value = EmittedValue{.value = "0", .type = return_type};
       }
+      append_param_drops(exit_block);
+      exit_block.instructions.push_back(Instruction{
+          .result = std::nullopt,
+          .type = return_type,
+          .opcode = Opcode::Ret,
+          .operands = {return_value.value},
+          .is_terminator = true,
+      });
+
+      function.blocks.push_back(std::move(entry));
+      function.blocks.push_back(std::move(cond_block));
+      function.blocks.push_back(std::move(body_block));
+      function.blocks.push_back(std::move(exit_block));
+      module.functions.push_back(std::move(function));
+      continue;
     }
+
+    EmittedValue return_value;
+    if (function_ast.return_expr) {
+      return_value = EmitExpr(function_ast.return_expr, symbol_types, callee_symbols, callee_return_types,
+                              entry.instructions, next_ssa_id);
+    } else if (return_type == "bool" || return_type == "i1") {
+      return_value = EmittedValue{.value = "0", .type = "bool"};
+    } else {
+      return_value = EmittedValue{.value = "0", .type = return_type};
+    }
+
+    append_param_drops(entry);
 
     entry.instructions.push_back(Instruction{
         .result = std::nullopt,
-        .type = function.return_type,
+        .type = return_type,
         .opcode = Opcode::Ret,
         .operands = {return_value.value},
         .is_terminator = true,

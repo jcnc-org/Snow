@@ -53,12 +53,20 @@ struct Expr {
   std::vector<std::shared_ptr<Expr>> args;
 };
 
+struct IfExpr {
+  std::shared_ptr<Expr> condition;
+  std::shared_ptr<Expr> then_expr;
+  std::shared_ptr<Expr> else_expr;
+};
+
 struct FunctionDecl {
   Visibility visibility = Visibility::Private;
   std::string name;
   std::vector<ParamDecl> params;
   std::string return_type;
   std::shared_ptr<Expr> return_expr;
+  std::shared_ptr<IfExpr> if_expr;
+  std::shared_ptr<Expr> while_condition;
 };
 
 struct AstModule {
