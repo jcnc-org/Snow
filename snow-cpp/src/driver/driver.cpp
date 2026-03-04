@@ -1,6 +1,7 @@
 #include "snow/driver/driver.h"
 
 #include <algorithm>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <functional>
@@ -12,6 +13,10 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
+#if defined(_WIN32)
+#include <process.h>
+#endif
 
 #include "snow/codegen/lowering.h"
 #include "snow/common/manifest.h"
@@ -121,16 +126,145 @@ std::filesystem::path DefaultArtifactPath(const CompileRequest& request, const s
   return out_dir / (name + ExtensionForOutputKind(request.output_kind));
 }
 
-bool WriteArtifact(const std::filesystem::path& output_path, const OutputKind output_kind, const std::string& target_triple,
-                   const std::string& module_path, const std::string& llvm_ir, common::DiagnosticEngine& diagnostics) {
-  std::error_code ec;
-  std::filesystem::create_directories(output_path.parent_path(), ec);
-  if (ec) {
-    diagnostics.Error("E_DRIVER_OUTDIR", "Cannot create output directory", output_path.string(), {0, 0, 0, 0},
-                      ec.message());
+std::string QuoteShellArg(const std::string& value) {
+  return "\"" + value + "\"";
+}
+
+std::string QuoteShellArg(const std::filesystem::path& value) {
+  return QuoteShellArg(value.string());
+}
+
+std::optional<std::string> ReadEnvValue(const char* env_name) {
+#if defined(_WIN32)
+  char* buffer = nullptr;
+  std::size_t size = 0;
+  if (_dupenv_s(&buffer, &size, env_name) != 0 || buffer == nullptr) {
+    return std::nullopt;
+  }
+  std::string value(buffer);
+  std::free(buffer);
+  if (value.empty()) {
+    return std::nullopt;
+  }
+  return value;
+#else
+  const char* env_value = std::getenv(env_name);
+  if (env_value == nullptr || env_value[0] == '\0') {
+    return std::nullopt;
+  }
+  return std::string(env_value);
+#endif
+}
+
+std::string ResolveToolPath(const char* env_name, const std::string& fallback_name) {
+  if (const auto env_value = ReadEnvValue(env_name); env_value.has_value()) {
+    return env_value.value();
+  }
+  return fallback_name;
+}
+
+bool WriteTextFile(const std::filesystem::path& path, const std::string& content) {
+  std::ofstream out(path, std::ios::out | std::ios::binary);
+  if (!out) {
+    return false;
+  }
+  out << content;
+  return true;
+}
+
+int RunSystemCommand(const std::string& command) {
+  return std::system(command.c_str());
+}
+
+int RunProcess(const std::string& program, const std::vector<std::string>& args) {
+#if defined(_WIN32)
+  std::vector<const char*> argv;
+  argv.reserve(args.size() + 2);
+  argv.push_back(program.c_str());
+  for (const auto& arg : args) {
+    argv.push_back(arg.c_str());
+  }
+  argv.push_back(nullptr);
+  return _spawnvp(_P_WAIT, program.c_str(), argv.data());
+#else
+  std::ostringstream command;
+  command << QuoteShellArg(program);
+  for (const auto& arg : args) {
+    command << " " << QuoteShellArg(arg);
+  }
+  return RunSystemCommand(command.str());
+#endif
+}
+
+bool TryEmitNativeArtifact(const std::filesystem::path& output_path, const OutputKind output_kind,
+                           const std::string& target_triple, const std::string& llvm_ir) {
+  if (target_triple != common::DetectHostTriple()) {
     return false;
   }
 
+  const std::string clang = ResolveToolPath("SNOW_CLANG", "clang");
+  const std::string llvm_ar = ResolveToolPath("SNOW_LLVM_AR", "llvm-ar");
+
+  const std::filesystem::path ir_path = output_path.string() + ".ll";
+  if (!WriteTextFile(ir_path, llvm_ir)) {
+    return false;
+  }
+
+  auto cleanup = [&](const std::optional<std::filesystem::path>& extra = std::nullopt) {
+    std::error_code ignore_ec;
+    std::filesystem::remove(ir_path, ignore_ec);
+    if (extra.has_value()) {
+      std::filesystem::remove(extra.value(), ignore_ec);
+    }
+  };
+
+  auto compile_ir = [&](const std::filesystem::path& destination, const bool object_only) {
+    std::vector<std::string> args = {"-Wno-override-module", "-x", "ir"};
+    if (object_only) {
+      args.push_back("-c");
+    }
+    args.push_back(ir_path.string());
+    args.push_back("-o");
+    args.push_back(destination.string());
+    return RunProcess(clang, args) == 0;
+  };
+
+  switch (output_kind) {
+    case OutputKind::Object: {
+      const bool ok = compile_ir(output_path, true);
+      cleanup();
+      return ok;
+    }
+
+    case OutputKind::Executable: {
+      const bool ok = compile_ir(output_path, false);
+      cleanup();
+      return ok;
+    }
+
+    case OutputKind::Library: {
+#if defined(_WIN32)
+      const std::filesystem::path temp_obj = output_path.string() + ".tmp.obj";
+#else
+      const std::filesystem::path temp_obj = output_path.string() + ".tmp.o";
+#endif
+      if (!compile_ir(temp_obj, true)) {
+        cleanup(temp_obj);
+        return false;
+      }
+      const bool ok = RunProcess(llvm_ar, {"rcs", output_path.string(), temp_obj.string()}) == 0;
+      cleanup(temp_obj);
+      return ok;
+    }
+  }
+
+  cleanup();
+  return false;
+}
+
+bool WriteBootstrapArtifact(const std::filesystem::path& output_path, const OutputKind output_kind,
+                            const std::string& target_triple, const std::string& module_path,
+                            const std::string& llvm_ir, common::DiagnosticEngine& diagnostics) {
   std::ofstream out(output_path, std::ios::out | std::ios::binary);
   if (!out) {
     diagnostics.Error("E_DRIVER_OUTFILE", "Cannot write output artifact", output_path.string(), {0, 0, 0, 0});
@@ -144,6 +278,22 @@ bool WriteArtifact(const std::filesystem::path& output_path, const OutputKind ou
   out << "--- llvm ---\\n";
   out << llvm_ir;
   return true;
+}
+
+bool WriteArtifact(const std::filesystem::path& output_path, const OutputKind output_kind, const std::string& target_triple,
+                   const std::string& module_path, const std::string& llvm_ir, common::DiagnosticEngine& diagnostics) {
+  std::error_code ec;
+  std::filesystem::create_directories(output_path.parent_path(), ec);
+  if (ec) {
+    diagnostics.Error("E_DRIVER_OUTDIR", "Cannot create output directory", output_path.string(), {0, 0, 0, 0},
+                      ec.message());
+    return false;
+  }
+
+  if (TryEmitNativeArtifact(output_path, output_kind, target_triple, llvm_ir)) {
+    return true;
+  }
+  return WriteBootstrapArtifact(output_path, output_kind, target_triple, module_path, llvm_ir, diagnostics);
 }
 
 std::string JoinSegments(const std::vector<std::string>& segments) {

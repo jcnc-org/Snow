@@ -2,7 +2,9 @@
 
 #include <optional>
 #include <sstream>
+#include <iterator>
 #include <utility>
+#include <vector>
 
 namespace snow::frontend {
 
@@ -202,59 +204,38 @@ std::string DumpExpr(const ExprPtr& expr) {
       oss << ")";
       return oss.str();
     }
-    case Expr::Kind::Binary: {
-      const std::string lhs = DumpExpr(expr->lhs);
-      const std::string rhs = DumpExpr(expr->rhs);
-      return "(" + lhs + " " + BinaryOpToString(expr->op) + " " + rhs + ")";
-    }
+    case Expr::Kind::Binary:
+      return "(" + DumpExpr(expr->lhs) + " " + BinaryOpToString(expr->op) + " " + DumpExpr(expr->rhs) + ")";
   }
   return "<none>";
 }
 
 ExprPtr ParseExpression(Cursor& cursor, snow::common::DiagnosticEngine& diagnostics, const std::string& module_path,
-                        const int min_precedence);
+                        int min_precedence);
+std::optional<Statement> ParseStatement(Cursor& cursor, snow::common::DiagnosticEngine& diagnostics,
+                                        const std::string& module_path);
+std::vector<Statement> ParseBlock(Cursor& cursor, snow::common::DiagnosticEngine& diagnostics,
+                                  const std::string& module_path);
 
-ExprPtr ParseReturnOnlyBlock(Cursor& cursor, snow::common::DiagnosticEngine& diagnostics,
-                             const std::string& module_path) {
-  if (!cursor.Match(TokenType::LBrace)) {
-    diagnostics.Error("E_PARSE_BLOCK_LBRACE", "Expected '{' to start block", module_path, cursor.Peek().range);
-    return MakeNumberExpr("0");
-  }
-
-  int depth = 1;
-  ExprPtr return_expr;
-  while (!cursor.AtEnd() && depth > 0) {
-    if (depth == 1 && cursor.Match(TokenType::KeywordReturn)) {
-      if (cursor.Peek().type != TokenType::Semicolon) {
-        return_expr = ParseExpression(cursor, diagnostics, module_path, 1);
-      }
-      if (!cursor.Match(TokenType::Semicolon)) {
-        diagnostics.Error("E_PARSE_RETURN_SEMI", "Expected ';' after return expression", module_path,
-                          cursor.Peek().range);
-      }
-      continue;
+void RecoverToStatementBoundary(Cursor& cursor) {
+  while (!cursor.AtEnd()) {
+    if (cursor.Match(TokenType::Semicolon)) {
+      return;
     }
-
-    if (cursor.Match(TokenType::LBrace)) {
-      ++depth;
-      continue;
-    }
-    if (cursor.Match(TokenType::RBrace)) {
-      --depth;
-      continue;
+    if (cursor.Peek().type == TokenType::RBrace) {
+      return;
     }
     cursor.Advance();
   }
+}
 
-  if (depth != 0) {
-    diagnostics.Error("E_PARSE_FN_BODY", "Unclosed block", module_path, cursor.Peek().range);
+bool ExpectToken(Cursor& cursor, const TokenType expected, const std::string& error_code, const std::string& message,
+                 snow::common::DiagnosticEngine& diagnostics, const std::string& module_path) {
+  if (cursor.Match(expected)) {
+    return true;
   }
-  if (!return_expr) {
-    diagnostics.Error("E_PARSE_IF_BRANCH_RETURN", "Expected return expression in branch block", module_path,
-                      cursor.Peek().range);
-    return MakeNumberExpr("0");
-  }
-  return return_expr;
+  diagnostics.Error(error_code, message, module_path, cursor.Peek().range);
+  return false;
 }
 
 ExprPtr ParsePrimary(Cursor& cursor, snow::common::DiagnosticEngine& diagnostics, const std::string& module_path) {
@@ -326,6 +307,205 @@ ExprPtr ParseExpression(Cursor& cursor, snow::common::DiagnosticEngine& diagnost
   return lhs;
 }
 
+std::vector<Statement> ParseBlock(Cursor& cursor, snow::common::DiagnosticEngine& diagnostics,
+                                  const std::string& module_path) {
+  std::vector<Statement> statements;
+  if (!cursor.Match(TokenType::LBrace)) {
+    diagnostics.Error("E_PARSE_BLOCK_LBRACE", "Expected '{' to start block", module_path, cursor.Peek().range);
+    return statements;
+  }
+
+  while (!cursor.AtEnd() && cursor.Peek().type != TokenType::RBrace) {
+    if (cursor.Peek().type == TokenType::LBrace) {
+      auto nested = ParseBlock(cursor, diagnostics, module_path);
+      statements.insert(statements.end(), std::make_move_iterator(nested.begin()), std::make_move_iterator(nested.end()));
+      continue;
+    }
+
+    auto maybe_stmt = ParseStatement(cursor, diagnostics, module_path);
+    if (maybe_stmt.has_value()) {
+      statements.push_back(std::move(maybe_stmt.value()));
+    }
+  }
+
+  if (!cursor.Match(TokenType::RBrace)) {
+    diagnostics.Error("E_PARSE_BLOCK_RBRACE", "Expected '}' to close block", module_path, cursor.Peek().range);
+  }
+  return statements;
+}
+
+std::optional<Statement> ParseStatement(Cursor& cursor, snow::common::DiagnosticEngine& diagnostics,
+                                        const std::string& module_path) {
+  if (cursor.Match(TokenType::KeywordReturn)) {
+    Statement stmt;
+    stmt.kind = Statement::Kind::Return;
+    if (cursor.Peek().type != TokenType::Semicolon) {
+      stmt.expr = ParseExpression(cursor, diagnostics, module_path, 1);
+    }
+    if (!ExpectToken(cursor, TokenType::Semicolon, "E_PARSE_RETURN_SEMI", "Expected ';' after return statement",
+                     diagnostics, module_path)) {
+      RecoverToStatementBoundary(cursor);
+    }
+    return stmt;
+  }
+
+  if (cursor.Match(TokenType::KeywordLet)) {
+    Statement stmt;
+    stmt.kind = Statement::Kind::Let;
+
+    if (cursor.Peek().type != TokenType::Identifier) {
+      diagnostics.Error("E_PARSE_LET_NAME", "Expected variable name after 'let'", module_path, cursor.Peek().range);
+      RecoverToStatementBoundary(cursor);
+      return stmt;
+    }
+    stmt.name = cursor.Advance().lexeme;
+
+    if (cursor.Match(TokenType::Colon) && cursor.Peek().type == TokenType::Identifier) {
+      stmt.type_name = cursor.Advance().lexeme;
+    }
+
+    if (!ExpectToken(cursor, TokenType::Equal, "E_PARSE_LET_ASSIGN", "Expected '=' in let declaration", diagnostics,
+                     module_path)) {
+      RecoverToStatementBoundary(cursor);
+      return stmt;
+    }
+
+    stmt.expr = ParseExpression(cursor, diagnostics, module_path, 1);
+    if (!ExpectToken(cursor, TokenType::Semicolon, "E_PARSE_LET_SEMI", "Expected ';' after let declaration",
+                     diagnostics, module_path)) {
+      RecoverToStatementBoundary(cursor);
+    }
+    return stmt;
+  }
+
+  if (cursor.Match(TokenType::KeywordIf)) {
+    Statement stmt;
+    stmt.kind = Statement::Kind::If;
+    stmt.expr = ParseExpression(cursor, diagnostics, module_path, 1);
+    stmt.then_body = ParseBlock(cursor, diagnostics, module_path);
+    if (cursor.Match(TokenType::KeywordElse)) {
+      stmt.else_body = ParseBlock(cursor, diagnostics, module_path);
+    }
+    return stmt;
+  }
+
+  if (cursor.Match(TokenType::KeywordWhile)) {
+    Statement stmt;
+    stmt.kind = Statement::Kind::While;
+    stmt.expr = ParseExpression(cursor, diagnostics, module_path, 1);
+    stmt.body = ParseBlock(cursor, diagnostics, module_path);
+    return stmt;
+  }
+
+  if (cursor.Match(TokenType::KeywordBreak)) {
+    Statement stmt;
+    stmt.kind = Statement::Kind::Break;
+    if (!ExpectToken(cursor, TokenType::Semicolon, "E_PARSE_BREAK_SEMI", "Expected ';' after break", diagnostics,
+                     module_path)) {
+      RecoverToStatementBoundary(cursor);
+    }
+    return stmt;
+  }
+
+  if (cursor.Match(TokenType::KeywordContinue)) {
+    Statement stmt;
+    stmt.kind = Statement::Kind::Continue;
+    if (!ExpectToken(cursor, TokenType::Semicolon, "E_PARSE_CONTINUE_SEMI", "Expected ';' after continue", diagnostics,
+                     module_path)) {
+      RecoverToStatementBoundary(cursor);
+    }
+    return stmt;
+  }
+
+  if (cursor.Peek().type == TokenType::Identifier && cursor.Peek(1).type == TokenType::Equal) {
+    Statement stmt;
+    stmt.kind = Statement::Kind::Assign;
+    stmt.name = cursor.Advance().lexeme;
+    (void)cursor.Advance();
+    stmt.expr = ParseExpression(cursor, diagnostics, module_path, 1);
+    if (!ExpectToken(cursor, TokenType::Semicolon, "E_PARSE_ASSIGN_SEMI", "Expected ';' after assignment",
+                     diagnostics, module_path)) {
+      RecoverToStatementBoundary(cursor);
+    }
+    return stmt;
+  }
+
+  if (cursor.Peek().type == TokenType::RBrace) {
+    return std::nullopt;
+  }
+
+  Statement stmt;
+  stmt.kind = Statement::Kind::Expr;
+  stmt.expr = ParseExpression(cursor, diagnostics, module_path, 1);
+  if (!ExpectToken(cursor, TokenType::Semicolon, "E_PARSE_STMT_SEMI", "Expected ';' after expression statement",
+                   diagnostics, module_path)) {
+    RecoverToStatementBoundary(cursor);
+  }
+  return stmt;
+}
+
+std::string Indent(const int spaces) {
+  return std::string(static_cast<std::size_t>(spaces), ' ');
+}
+
+void DumpStatement(std::ostringstream& oss, const Statement& stmt, const int indent) {
+  switch (stmt.kind) {
+    case Statement::Kind::Return:
+      oss << Indent(indent) << "return";
+      if (stmt.expr) {
+        oss << " " << DumpExpr(stmt.expr);
+      }
+      oss << "\n";
+      return;
+    case Statement::Kind::Expr:
+      oss << Indent(indent) << "expr " << DumpExpr(stmt.expr) << "\n";
+      return;
+    case Statement::Kind::Assign:
+      oss << Indent(indent) << stmt.name << " = " << DumpExpr(stmt.expr) << "\n";
+      return;
+    case Statement::Kind::Let:
+      oss << Indent(indent) << "let " << stmt.name;
+      if (!stmt.type_name.empty()) {
+        oss << ": " << stmt.type_name;
+      }
+      if (stmt.expr) {
+        oss << " = " << DumpExpr(stmt.expr);
+      }
+      oss << "\n";
+      return;
+    case Statement::Kind::Break:
+      oss << Indent(indent) << "break\n";
+      return;
+    case Statement::Kind::Continue:
+      oss << Indent(indent) << "continue\n";
+      return;
+    case Statement::Kind::If:
+      oss << Indent(indent) << "if " << DumpExpr(stmt.expr) << "\n";
+      oss << Indent(indent) << "{\n";
+      for (const auto& then_stmt : stmt.then_body) {
+        DumpStatement(oss, then_stmt, indent + 2);
+      }
+      oss << Indent(indent) << "}";
+      if (!stmt.else_body.empty()) {
+        oss << " else {\n";
+        for (const auto& else_stmt : stmt.else_body) {
+          DumpStatement(oss, else_stmt, indent + 2);
+        }
+        oss << Indent(indent) << "}";
+      }
+      oss << "\n";
+      return;
+    case Statement::Kind::While:
+      oss << Indent(indent) << "while " << DumpExpr(stmt.expr) << "\n";
+      oss << Indent(indent) << "{\n";
+      for (const auto& body_stmt : stmt.body) {
+        DumpStatement(oss, body_stmt, indent + 2);
+      }
+      oss << Indent(indent) << "}\n";
+      return;
+  }
+}
+
 }  // namespace
 
 std::string ToString(const Visibility visibility) {
@@ -361,21 +541,10 @@ std::string DumpAst(const AstModule& module) {
       }
       oss << function.params[i].name << ": " << function.params[i].type;
     }
-    oss << ") -> " << function.return_type;
-    if (function.return_expr) {
-      oss << " ; return-expr=" << DumpExpr(function.return_expr);
+    oss << ") -> " << function.return_type << "\n";
+    for (const auto& stmt : function.statements) {
+      DumpStatement(oss, stmt, 2);
     }
-    if (function.if_expr) {
-      oss << " ; if=(" << DumpExpr(function.if_expr->condition) << " ? " << DumpExpr(function.if_expr->then_expr)
-          << " : " << DumpExpr(function.if_expr->else_expr) << ")";
-    }
-    if (function.while_condition) {
-      oss << " ; while-cond=" << DumpExpr(function.while_condition);
-    }
-    if (function.while_has_break) {
-      oss << " ; while-break=true";
-    }
-    oss << "\n";
   }
   return oss.str();
 }
@@ -477,77 +646,8 @@ AstModule Parser::Parse(std::string module_path, const TokenStream& tokens,
         function.return_type = cursor.Advance().lexeme;
       }
 
-      if (cursor.Match(TokenType::LBrace)) {
-        int depth = 1;
-        while (!cursor.AtEnd() && depth > 0) {
-          if (depth == 1 && cursor.Match(TokenType::KeywordReturn)) {
-            if (cursor.Peek().type != TokenType::Semicolon) {
-              function.return_expr = ParseExpression(cursor, diagnostics, module.module_path, 1);
-            }
-            if (!cursor.Match(TokenType::Semicolon)) {
-              diagnostics.Error("E_PARSE_RETURN_SEMI", "Expected ';' after return expression", module.module_path,
-                                cursor.Peek().range);
-            }
-            continue;
-          }
-          if (depth == 1 && cursor.Match(TokenType::KeywordIf)) {
-            auto if_expr = std::make_shared<IfExpr>();
-            if_expr->condition = ParseExpression(cursor, diagnostics, module.module_path, 1);
-            const ExprPtr then_expr = ParseReturnOnlyBlock(cursor, diagnostics, module.module_path);
-            if (cursor.Match(TokenType::KeywordElse)) {
-              if_expr->then_expr = then_expr;
-              if_expr->else_expr = ParseReturnOnlyBlock(cursor, diagnostics, module.module_path);
-              function.if_expr = if_expr;
-            }
-            continue;
-          }
-          if (depth == 1 && cursor.Match(TokenType::KeywordWhile)) {
-            function.while_condition = ParseExpression(cursor, diagnostics, module.module_path, 1);
-            if (!cursor.Match(TokenType::LBrace)) {
-              diagnostics.Error("E_PARSE_WHILE_BLOCK", "Expected while block", module.module_path,
-                                cursor.Peek().range);
-              continue;
-            }
-
-            int while_depth = 1;
-            while (!cursor.AtEnd() && while_depth > 0) {
-              if (while_depth == 1 && cursor.Match(TokenType::KeywordBreak)) {
-                function.while_has_break = true;
-                if (!cursor.Match(TokenType::Semicolon)) {
-                  diagnostics.Error("E_PARSE_BREAK_SEMI", "Expected ';' after break", module.module_path,
-                                    cursor.Peek().range);
-                }
-                continue;
-              }
-              if (cursor.Match(TokenType::LBrace)) {
-                ++while_depth;
-                continue;
-              }
-              if (cursor.Match(TokenType::RBrace)) {
-                --while_depth;
-                continue;
-              }
-              cursor.Advance();
-            }
-            if (while_depth != 0) {
-              diagnostics.Error("E_PARSE_WHILE_BLOCK", "Unclosed while block", module.module_path,
-                                cursor.Peek().range);
-            }
-            continue;
-          }
-          if (cursor.Match(TokenType::LBrace)) {
-            ++depth;
-            continue;
-          }
-          if (cursor.Match(TokenType::RBrace)) {
-            --depth;
-            continue;
-          }
-          cursor.Advance();
-        }
-        if (depth != 0) {
-          diagnostics.Error("E_PARSE_FN_BODY", "Unclosed function body", module.module_path, cursor.Peek().range);
-        }
+      if (cursor.Peek().type == TokenType::LBrace) {
+        function.statements = ParseBlock(cursor, diagnostics, module.module_path);
       } else {
         (void)cursor.Match(TokenType::Semicolon);
       }
@@ -560,8 +660,7 @@ AstModule Parser::Parse(std::string module_path, const TokenStream& tokens,
     }
 
     if (!cursor.AtEnd()) {
-      diagnostics.Error("E_PARSE_TOPLEVEL", "Unexpected token at top-level", module.module_path,
-                        cursor.Peek().range);
+      diagnostics.Error("E_PARSE_TOPLEVEL", "Unexpected token at top-level", module.module_path, cursor.Peek().range);
       cursor.Advance();
     }
   }

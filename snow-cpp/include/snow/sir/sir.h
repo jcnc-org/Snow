@@ -50,11 +50,17 @@ struct BasicBlock {
   std::vector<Instruction> instructions;
 };
 
+struct FunctionParam {
+  std::string name;
+  std::string type;
+};
+
 struct Function {
   std::string original_name;
   std::string name;
   std::string return_type;
   Linkage linkage = Linkage::Internal;
+  std::vector<FunctionParam> params;
   std::vector<BasicBlock> blocks;
 };
 

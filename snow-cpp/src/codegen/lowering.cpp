@@ -2,6 +2,8 @@
 
 #include <cctype>
 #include <sstream>
+#include <unordered_map>
+#include <vector>
 
 #if SNOW_ENABLE_LLVM
 #include <llvm/IR/BasicBlock.h>
@@ -78,6 +80,24 @@ std::string NormalizeOperand(const std::string& operand) {
   }
   // Bootstrap fallback for unresolved symbols (for example function names in expressions).
   return "0";
+}
+
+std::string InferOperandLlvmTypeText(const std::string& operand,
+                                     const std::unordered_map<std::string, std::string>& value_types) {
+  if (operand == "true" || operand == "false") {
+    return "i1";
+  }
+  if (!operand.empty() && operand[0] == '%') {
+    const auto it = value_types.find(operand);
+    if (it != value_types.end()) {
+      return ToLlvmTypeText(it->second);
+    }
+    return "i32";
+  }
+  if (IsIntegerLiteral(operand)) {
+    return "i32";
+  }
+  return "i32";
 }
 
 std::string ComparePredicateText(const snow::sir::Opcode opcode) {
@@ -169,7 +189,12 @@ std::string LowerWithLlvmApi(const snow::sir::Module& module, const TargetConfig
 
   for (const auto& function : module.functions) {
     llvm::Type* ret_type = ToLlvmType(context, function.return_type);
-    auto* fn_type = llvm::FunctionType::get(ret_type, {}, false);
+    std::vector<llvm::Type*> arg_types;
+    arg_types.reserve(function.params.size());
+    for (const auto& param : function.params) {
+      arg_types.push_back(ToLlvmType(context, param.type));
+    }
+    auto* fn_type = llvm::FunctionType::get(ret_type, arg_types, false);
     auto* fn = llvm::Function::Create(fn_type, ToLlvmLinkage(function.linkage), function.name, llvm_module.get());
 
     auto* entry = llvm::BasicBlock::Create(context, "entry", fn);
@@ -184,8 +209,15 @@ std::string LowerWithLlvmApi(const snow::sir::Module& module, const TargetConfig
       auto* ptr_ty = llvm::PointerType::get(context, 0);
 
       auto* runtime_type = llvm::FunctionType::get(i32_ty, {ptr_ty}, false);
-      auto* runtime_fn = llvm::Function::Create(runtime_type, llvm::Function::ExternalLinkage, "snow_runtime_start",
-                                                llvm_module.get());
+      auto* runtime_fn =
+          llvm::Function::Create(runtime_type, llvm::Function::ExternalLinkage, "snow_runtime_start", llvm_module.get());
+      if (runtime_fn->empty()) {
+        auto* entry = llvm::BasicBlock::Create(context, "entry", runtime_fn);
+        llvm::IRBuilder<> runtime_builder(entry);
+        auto* user_main_ptr = runtime_fn->getArg(0);
+        auto* result = runtime_builder.CreateCall(runtime_type, user_main_ptr, {});
+        runtime_builder.CreateRet(result);
+      }
 
       auto* host_type = llvm::FunctionType::get(i32_ty, {}, false);
       auto* host_main = llvm::Function::Create(host_type, llvm::Function::ExternalLinkage, "main", llvm_module.get());
@@ -221,7 +253,18 @@ std::string LowerTextual(const snow::sir::Module& module, const TargetConfig& ta
 
   for (const auto& function : module.functions) {
     const std::string ret_ty = ToLlvmTypeText(function.return_type);
-    oss << "define " << LinkagePrefixText(function.linkage) << ret_ty << " @" << function.name << "() {\n";
+    std::unordered_map<std::string, std::string> value_types;
+    std::unordered_map<std::string, std::string> pointer_element_types;
+    oss << "define " << LinkagePrefixText(function.linkage) << ret_ty << " @" << function.name << "(";
+    for (std::size_t i = 0; i < function.params.size(); ++i) {
+      if (i > 0) {
+        oss << ", ";
+      }
+      const auto& param = function.params[i];
+      oss << ToLlvmTypeText(param.type) << " %" << param.name;
+      value_types["%" + param.name] = param.type;
+    }
+    oss << ") {\n";
     bool emitted_ret = false;
     bool emitted_block = false;
 
@@ -275,8 +318,9 @@ std::string LowerTextual(const snow::sir::Module& module, const TargetConfig& ta
             }
             const std::string lhs = NormalizeOperand(instr.operands[0]);
             const std::string rhs = NormalizeOperand(instr.operands[1]);
-            oss << "  " << instr.result.value() << " = icmp " << ComparePredicateText(instr.opcode) << " i32 " << lhs
-                << ", " << rhs << "\n";
+            const std::string cmp_ty = InferOperandLlvmTypeText(instr.operands[0], value_types);
+            oss << "  " << instr.result.value() << " = icmp " << ComparePredicateText(instr.opcode) << " " << cmp_ty
+                << " " << lhs << ", " << rhs << "\n";
             break;
           }
 
@@ -287,6 +331,45 @@ std::string LowerTextual(const snow::sir::Module& module, const TargetConfig& ta
               oss << "  ; drop\n";
             }
             break;
+
+          case snow::sir::Opcode::Alloc: {
+            if (!instr.result.has_value()) {
+              oss << "  ; malformed alloc instruction\n";
+              break;
+            }
+            const std::string element_type =
+                ToLlvmTypeText((instr.operands.empty() || instr.operands[0].empty()) ? "i32" : instr.operands[0]);
+            oss << "  " << instr.result.value() << " = alloca " << element_type << "\n";
+            pointer_element_types[instr.result.value()] = element_type;
+            break;
+          }
+
+          case snow::sir::Opcode::Load: {
+            if (!instr.result.has_value() || instr.operands.size() != 1) {
+              oss << "  ; malformed load instruction\n";
+              break;
+            }
+            const std::string ptr = NormalizeOperand(instr.operands[0]);
+            const std::string element_type =
+                pointer_element_types.contains(ptr) ? pointer_element_types[ptr]
+                                                    : ToLlvmTypeText(instr.type.empty() ? "i32" : instr.type);
+            oss << "  " << instr.result.value() << " = load " << element_type << ", ptr " << ptr << "\n";
+            break;
+          }
+
+          case snow::sir::Opcode::Store: {
+            if (instr.operands.size() != 2) {
+              oss << "  ; malformed store instruction\n";
+              break;
+            }
+            const std::string value = NormalizeOperand(instr.operands[0]);
+            const std::string ptr = NormalizeOperand(instr.operands[1]);
+            const std::string element_type = pointer_element_types.contains(ptr)
+                                                 ? pointer_element_types[ptr]
+                                                 : InferOperandLlvmTypeText(instr.operands[0], value_types);
+            oss << "  store " << element_type << " " << value << ", ptr " << ptr << "\n";
+            break;
+          }
 
           case snow::sir::Opcode::Phi: {
             if (!instr.result.has_value() || instr.operands.size() < 4 || (instr.operands.size() % 2) != 0) {
@@ -334,7 +417,8 @@ std::string LowerTextual(const snow::sir::Module& module, const TargetConfig& ta
               if (i > 1) {
                 oss << ", ";
               }
-              oss << "i32 " << NormalizeOperand(instr.operands[i]);
+              const std::string arg_ty = InferOperandLlvmTypeText(instr.operands[i], value_types);
+              oss << arg_ty << " " << NormalizeOperand(instr.operands[i]);
             }
             oss << ")\n";
             break;
@@ -352,6 +436,10 @@ std::string LowerTextual(const snow::sir::Module& module, const TargetConfig& ta
             oss << "  ; unsupported instruction: " << snow::sir::ToString(instr.opcode) << "\n";
             break;
         }
+
+        if (instr.result.has_value() && !instr.type.empty()) {
+          value_types[instr.result.value()] = instr.type;
+        }
       }
     }
 
@@ -367,11 +455,15 @@ std::string LowerTextual(const snow::sir::Module& module, const TargetConfig& ta
   if (target.executable_entry_wrapper) {
     const snow::sir::Function* user_main = FindUserMain(module);
     if (user_main != nullptr) {
-      oss << "declare i32 @snow_runtime_start(ptr)\n\n";
+      oss << "define i32 @snow_runtime_start(ptr %user_main) {\n";
+      oss << "entry:\n";
+      oss << "  %0 = call i32 %user_main()\n";
+      oss << "  ret i32 %0\n";
+      oss << "}\n\n";
       oss << "define i32 @main() {\n";
       oss << "entry:\n";
-      oss << "  %0 = call i32 @snow_runtime_start(ptr @" << user_main->name << ")\n";
-      oss << "  ret i32 %0\n";
+      oss << "  %1 = call i32 @snow_runtime_start(ptr @" << user_main->name << ")\n";
+      oss << "  ret i32 %1\n";
       oss << "}\n\n";
     }
   }

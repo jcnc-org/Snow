@@ -20,6 +20,20 @@ add_test(
   COMMAND $<TARGET_FILE:snow-unit-tests>
 )
 
+add_executable(snow-pass-tests unit/pass_pipeline_tests.cpp)
+target_link_libraries(snow-pass-tests PRIVATE snow_compiler)
+add_test(
+  NAME snow_pass_tests
+  COMMAND $<TARGET_FILE:snow-pass-tests>
+)
+
+add_executable(snow-sema-tests unit/snow_sema_tests.cpp)
+target_link_libraries(snow-sema-tests PRIVATE snow_compiler)
+add_test(
+  NAME snow_sema_tests
+  COMMAND $<TARGET_FILE:snow-sema-tests>
+)
+
 function(add_cli_assert_test NAME EXE EXIT_CODE ARGS EXPECT REJECT EXPECT_FILE)
   add_test(
     NAME ${NAME}
@@ -41,6 +55,16 @@ add_cli_assert_test(
   "version"
   "snowc v1\\.0\\.0-cpp-alpha"
   ""
+  ""
+)
+
+add_cli_assert_test(
+  snowc_run_minimal
+  snowc
+  0
+  "run|${DATA_DIR}/minimal.snow"
+  "run: exit-code=0"
+  "not implemented"
   ""
 )
 
@@ -135,12 +159,42 @@ add_cli_assert_test(
 )
 
 add_cli_assert_test(
+  snowc_compile_expr_arith_sir_o2_folded
+  snowc
+  0
+  "compile|--opt=2|--emit-sir|-o|${ARTIFACT_DIR}/expr_arith_o2.exe|${CASES_DIR}/expr_arith.snow"
+  "ret 7 : i32"
+  "add|mul"
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_copy_prop_local_sir_o2
+  snowc
+  0
+  "compile|--opt=2|--emit-sir|-o|${ARTIFACT_DIR}/copy_prop_local_o2.exe|${CASES_DIR}/copy_prop_local.snow"
+  "ret 41 : i32"
+  "load "
+  ""
+)
+
+add_cli_assert_test(
   snowc_compile_expr_arith_llvm
   snowc
   0
   "compile|--emit-llvm|-o|${ARTIFACT_DIR}/expr_arith_llvm.exe|${CASES_DIR}/expr_arith.snow"
   "mul i32 2, 3|add i32 1, %[0-9]+|ret i32 %[0-9]+"
   ""
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_expr_arith_llvm_o2_folded
+  snowc
+  0
+  "compile|--opt=2|--emit-llvm|-o|${ARTIFACT_DIR}/expr_arith_llvm_o2.exe|${CASES_DIR}/expr_arith.snow"
+  "ret i32 7"
+  " add i32 | mul i32 "
   ""
 )
 
@@ -185,6 +239,16 @@ add_cli_assert_test(
 )
 
 add_cli_assert_test(
+  snowc_compile_if_phi_sir_o2_simplified
+  snowc
+  0
+  "compile|--opt=2|--emit-sir|-o|${ARTIFACT_DIR}/if_phi_o2.exe|${CASES_DIR}/if_phi.snow"
+  "entry:|br if_then|if_then:|ret 10 : i32"
+  "cond_br| = phi |if_else:"
+  ""
+)
+
+add_cli_assert_test(
   snowc_compile_if_phi_llvm
   snowc
   0
@@ -225,6 +289,36 @@ add_cli_assert_test(
 )
 
 add_cli_assert_test(
+  snowc_compile_while_continue_sir
+  snowc
+  0
+  "compile|--emit-sir|-o|${ARTIFACT_DIR}/while_continue.exe|${CASES_DIR}/while_continue.snow"
+  "loop_body:|br loop_cond|loop_exit:|load %[0-9]+ : i32|br fn_return|fn_return:|ret %[0-9]+ : i32"
+  ""
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_while_assign_sir
+  snowc
+  0
+  "compile|--emit-sir|-o|${ARTIFACT_DIR}/while_assign.exe|${CASES_DIR}/while_assign.snow"
+  "alloc i32|store 0, %|loop_cond:|load %[0-9]+ : i32|add %[0-9]+, 1|store %[0-9]+, %[0-9]+|ret %[0-9]+ : i32"
+  ""
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_while_assign_llvm
+  snowc
+  0
+  "compile|--emit-llvm|-o|${ARTIFACT_DIR}/while_assign_llvm.exe|${CASES_DIR}/while_assign.snow"
+  "alloca i32|load i32, ptr %[0-9]+|store i32 %[0-9]+, ptr %[0-9]+|ret i32 %[0-9]+"
+  ""
+  ""
+)
+
+add_cli_assert_test(
   snowc_compile_while_cfg_llvm
   snowc
   0
@@ -255,6 +349,46 @@ add_cli_assert_test(
 )
 
 add_cli_assert_test(
+  snowc_compile_assign_undefined_fail
+  snowc
+  1
+  "compile|-o|${ARTIFACT_DIR}/assign_undefined.exe|${CASES_DIR}/assign_undefined.snow"
+  "E_SEMA_ASSIGN_UNDEFINED"
+  ""
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_assign_type_bad_fail
+  snowc
+  1
+  "compile|-o|${ARTIFACT_DIR}/assign_type_bad.exe|${CASES_DIR}/assign_type_bad.snow"
+  "E_SEMA_ASSIGN_TYPE"
+  ""
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_break_outside_fail
+  snowc
+  1
+  "compile|-o|${ARTIFACT_DIR}/break_outside.exe|${CASES_DIR}/break_outside.snow"
+  "E_SEMA_BREAK_OUTSIDE_LOOP"
+  ""
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_continue_outside_fail
+  snowc
+  1
+  "compile|-o|${ARTIFACT_DIR}/continue_outside.exe|${CASES_DIR}/continue_outside.snow"
+  "E_SEMA_CONTINUE_OUTSIDE_LOOP"
+  ""
+  ""
+)
+
+add_cli_assert_test(
   snowc_compile_dup_symbol_fail
   snowc
   1
@@ -280,6 +414,96 @@ add_cli_assert_test(
   0
   "compile|--emit-sir|-o|${ARTIFACT_DIR}/call_with_args.exe|${CASES_DIR}/call_with_args.snow"
   "call _snow_.*_sum_[0-9a-f]+, 1, 2|ret %[0-9]+ : i32"
+  ""
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_call_with_args_llvm
+  snowc
+  0
+  "compile|--emit-llvm|-o|${ARTIFACT_DIR}/call_with_args_llvm.exe|${CASES_DIR}/call_with_args.snow"
+  "define private i32 @_snow_.*_sum_[0-9a-f]+\\(i32 %a, i32 %b\\)|call i32 @_snow_.*_sum_[0-9a-f]+\\(i32 1, i32 2\\)"
+  ""
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_inline_const_sir_o2
+  snowc
+  0
+  "compile|--opt=2|--emit-sir|-o|${ARTIFACT_DIR}/inline_const_o2.exe|${CASES_DIR}/inline_const.snow"
+  "fn _snow_.*_main_[0-9a-f]+|ret 7 : i32"
+  "call "
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_call_arity_bad
+  snowc
+  1
+  "compile|-o|${ARTIFACT_DIR}/call_arity_bad.exe|${CASES_DIR}/call_arity_bad.snow"
+  "E_SEMA_CALL_ARITY"
+  ""
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_call_arg_type_bad
+  snowc
+  1
+  "compile|-o|${ARTIFACT_DIR}/call_arg_type_bad.exe|${CASES_DIR}/call_arg_type_bad.snow"
+  "E_SEMA_CALL_ARG_TYPE"
+  ""
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_ownership_use_after_move
+  snowc
+  1
+  "compile|-o|${ARTIFACT_DIR}/ownership_use_after_move.exe|${CASES_DIR}/ownership_use_after_move.snow"
+  "E_OWNERSHIP_USE_AFTER_MOVE"
+  ""
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_ownership_move_no_drop
+  snowc
+  0
+  "compile|--emit-sir|-o|${ARTIFACT_DIR}/ownership_move_no_drop.exe|${CASES_DIR}/ownership_move_no_drop.snow"
+  "fn_return:|ret 0 : i32"
+  "drop x"
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_let_binding_sir
+  snowc
+  0
+  "compile|--emit-sir|-o|${ARTIFACT_DIR}/let_binding.exe|${CASES_DIR}/let_binding.snow"
+  "add 1, 2|add %[0-9]+, 3|ret %[0-9]+ : i32"
+  ""
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_let_typed_ok
+  snowc
+  0
+  "compile|--emit-sir|-o|${ARTIFACT_DIR}/let_typed_ok.exe|${CASES_DIR}/let_typed_ok.snow"
+  "alloc i32|store 1, %[0-9]+|ret %[0-9]+ : i32"
+  ""
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_let_typed_bad
+  snowc
+  1
+  "compile|-o|${ARTIFACT_DIR}/let_typed_bad.exe|${CASES_DIR}/let_typed_bad.snow"
+  "E_SEMA_LET_TYPE"
   ""
   ""
 )

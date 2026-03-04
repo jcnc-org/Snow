@@ -1,0 +1,7 @@
+private fn one() -> i32 {
+  return 3 + 4;
+}
+
+pub fn main() -> i32 {
+  return one();
+}

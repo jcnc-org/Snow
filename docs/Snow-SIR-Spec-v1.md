@@ -134,6 +134,8 @@ Rules:
 - `load`
 - `store`
 
+MVP lowering rule: mutable/local reassignment is represented through explicit `alloc/load/store`, not hidden state.
+
 ### 6.5 Memory / Lifetime
 
 - `drop <value>`

@@ -29,6 +29,8 @@ TokenType KeywordType(const std::string& lexeme) {
       {"else", TokenType::KeywordElse},
       {"while", TokenType::KeywordWhile},
       {"break", TokenType::KeywordBreak},
+      {"continue", TokenType::KeywordContinue},
+      {"let", TokenType::KeywordLet},
   };
   const auto it = kKeywords.find(lexeme);
   if (it == kKeywords.end()) {
@@ -67,6 +69,10 @@ std::string ToString(const TokenType type) {
       return "KeywordWhile";
     case TokenType::KeywordBreak:
       return "KeywordBreak";
+    case TokenType::KeywordContinue:
+      return "KeywordContinue";
+    case TokenType::KeywordLet:
+      return "KeywordLet";
     case TokenType::Arrow:
       return "Arrow";
     case TokenType::Dot:

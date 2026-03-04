@@ -53,10 +53,25 @@ struct Expr {
   std::vector<std::shared_ptr<Expr>> args;
 };
 
-struct IfExpr {
-  std::shared_ptr<Expr> condition;
-  std::shared_ptr<Expr> then_expr;
-  std::shared_ptr<Expr> else_expr;
+struct Statement {
+  enum class Kind {
+    Return,
+    Expr,
+    Assign,
+    If,
+    While,
+    Break,
+    Continue,
+    Let,
+  };
+
+  Kind kind = Kind::Expr;
+  std::shared_ptr<Expr> expr;
+  std::string name;
+  std::string type_name;
+  std::vector<Statement> then_body;
+  std::vector<Statement> else_body;
+  std::vector<Statement> body;
 };
 
 struct FunctionDecl {
@@ -64,10 +79,7 @@ struct FunctionDecl {
   std::string name;
   std::vector<ParamDecl> params;
   std::string return_type;
-  std::shared_ptr<Expr> return_expr;
-  std::shared_ptr<IfExpr> if_expr;
-  std::shared_ptr<Expr> while_condition;
-  bool while_has_break = false;
+  std::vector<Statement> statements;
 };
 
 struct AstModule {

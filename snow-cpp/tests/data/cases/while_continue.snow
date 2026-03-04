@@ -1,0 +1,7 @@
+pub fn main() -> i32 {
+  let x = 1;
+  while x < 3 {
+    continue;
+  }
+  return x;
+}

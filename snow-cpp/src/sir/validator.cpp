@@ -25,6 +25,20 @@ bool IsBooleanType(const std::string& type) {
   return type == "bool" || type == "i1";
 }
 
+bool IsPointerType(const std::string& type) {
+  return type == "ptr" || type.rfind("ptr<", 0) == 0;
+}
+
+bool IsTypeCompatible(const std::string& expected, const std::string& actual) {
+  if (expected == actual) {
+    return true;
+  }
+  if (IsBooleanType(expected) && IsBooleanType(actual)) {
+    return true;
+  }
+  return false;
+}
+
 std::optional<std::string> InferOperandType(const std::string& operand,
                                             const std::unordered_map<std::string, std::string>& value_types) {
   if (LooksLikeValue(operand)) {
@@ -64,11 +78,33 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
                                         snow::common::DiagnosticEngine& diagnostics) const {
   ValidationReport report;
 
+  struct FunctionSignature {
+    std::vector<std::string> param_types;
+    std::string return_type;
+  };
+  std::unordered_map<std::string, FunctionSignature> signatures;
+  for (const auto& function : module.functions) {
+    FunctionSignature sig;
+    sig.return_type = function.return_type;
+    sig.param_types.reserve(function.params.size());
+    for (const auto& param : function.params) {
+      sig.param_types.push_back(param.type);
+    }
+    signatures.emplace(function.name, std::move(sig));
+  }
+
   for (const auto& function : module.functions) {
     std::unordered_set<std::string> defs;
     std::unordered_map<std::string, int> drop_counts;
     std::unordered_set<std::string> block_labels;
     std::unordered_map<std::string, std::string> value_types;
+    std::unordered_map<std::string, std::string> pointer_element_types;
+
+    for (const auto& param : function.params) {
+      const std::string param_value = "%" + param.name;
+      defs.insert(param_value);
+      value_types[param_value] = param.type;
+    }
 
     for (const auto& block : function.blocks) {
       block_labels.insert(block.label);
@@ -209,9 +245,7 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
                   report.ok = false;
                 }
                 if (value_type.has_value() && !instr.type.empty() && value_type.value() != instr.type) {
-                  const bool bool_compat = IsBooleanType(value_type.value()) && IsBooleanType(instr.type);
-                  const bool i32_to_i64 = value_type.value() == "i32" && instr.type == "i64";
-                  if (!bool_compat && !i32_to_i64) {
+                  if (!IsTypeCompatible(instr.type, value_type.value())) {
                     diagnostics.Error("E_SIR_PHI_TYPE", "phi incoming value type mismatch", module.module_path,
                                       {0, 0, 0, 0});
                     report.ok = false;
@@ -240,10 +274,103 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
               diagnostics.Error("E_SIR_CALL_ARITY", "call requires callee operand", module.module_path,
                                 {0, 0, 0, 0});
               report.ok = false;
+            } else {
+              const auto sig_it = signatures.find(instr.operands[0]);
+              if (sig_it != signatures.end()) {
+                const std::size_t expected = sig_it->second.param_types.size();
+                const std::size_t actual = instr.operands.size() - 1;
+                if (expected != actual) {
+                  diagnostics.Error("E_SIR_CALL_ARITY", "call argument count mismatch", module.module_path,
+                                    {0, 0, 0, 0});
+                  report.ok = false;
+                } else {
+                  for (std::size_t arg_i = 0; arg_i < expected; ++arg_i) {
+                    const auto arg_type = InferOperandType(instr.operands[arg_i + 1], value_types);
+                    if (arg_type.has_value() &&
+                        !IsTypeCompatible(sig_it->second.param_types[arg_i], arg_type.value())) {
+                      diagnostics.Error("E_SIR_CALL_TYPE", "call argument type mismatch", module.module_path,
+                                        {0, 0, 0, 0});
+                      report.ok = false;
+                    }
+                  }
+                }
+
+                if (!instr.type.empty() && !sig_it->second.return_type.empty() &&
+                    !IsTypeCompatible(sig_it->second.return_type, instr.type)) {
+                  diagnostics.Error("E_SIR_CALL_RET_TYPE", "call result type mismatch with callee signature",
+                                    module.module_path, {0, 0, 0, 0});
+                  report.ok = false;
+                }
+              }
             }
             if (!instr.result.has_value()) {
               diagnostics.Warning("W_SIR_CALL_NO_RESULT", "call result is ignored in MVP pipeline", module.module_path,
                                   {0, 0, 0, 0});
+            }
+            break;
+          case Opcode::Alloc:
+            if (!instr.result.has_value()) {
+              diagnostics.Error("E_SIR_ALLOC_RESULT", "alloc requires SSA result", module.module_path, {0, 0, 0, 0});
+              report.ok = false;
+            }
+            if (instr.operands.size() != 1) {
+              diagnostics.Error("E_SIR_ALLOC_ARITY", "alloc requires exactly one element type operand",
+                                module.module_path, {0, 0, 0, 0});
+              report.ok = false;
+            } else if (instr.result.has_value()) {
+              pointer_element_types[instr.result.value()] = instr.operands[0];
+            }
+            if (!instr.type.empty() && !IsPointerType(instr.type)) {
+              diagnostics.Error("E_SIR_ALLOC_TYPE", "alloc result type must be pointer-like", module.module_path,
+                                {0, 0, 0, 0});
+              report.ok = false;
+            }
+            break;
+          case Opcode::Load:
+            if (!instr.result.has_value()) {
+              diagnostics.Error("E_SIR_LOAD_RESULT", "load requires SSA result", module.module_path, {0, 0, 0, 0});
+              report.ok = false;
+            }
+            if (instr.operands.size() != 1) {
+              diagnostics.Error("E_SIR_LOAD_ARITY", "load requires exactly one pointer operand", module.module_path,
+                                {0, 0, 0, 0});
+              report.ok = false;
+              break;
+            }
+            if (!LooksLikeValue(instr.operands[0])) {
+              diagnostics.Error("E_SIR_LOAD_PTR", "load operand must be pointer SSA value", module.module_path,
+                                {0, 0, 0, 0});
+              report.ok = false;
+              break;
+            }
+            if (pointer_element_types.contains(instr.operands[0]) && !instr.type.empty() &&
+                !IsTypeCompatible(pointer_element_types[instr.operands[0]], instr.type)) {
+              diagnostics.Error("E_SIR_LOAD_TYPE", "load result type mismatch with pointer element type",
+                                module.module_path, {0, 0, 0, 0});
+              report.ok = false;
+            }
+            break;
+          case Opcode::Store:
+            if (instr.operands.size() != 2) {
+              diagnostics.Error("E_SIR_STORE_ARITY", "store requires value and pointer operands", module.module_path,
+                                {0, 0, 0, 0});
+              report.ok = false;
+              break;
+            }
+            if (!LooksLikeValue(instr.operands[1])) {
+              diagnostics.Error("E_SIR_STORE_PTR", "store pointer operand must be SSA value", module.module_path,
+                                {0, 0, 0, 0});
+              report.ok = false;
+              break;
+            }
+            if (pointer_element_types.contains(instr.operands[1])) {
+              const auto stored_type = InferOperandType(instr.operands[0], value_types);
+              if (stored_type.has_value() &&
+                  !IsTypeCompatible(pointer_element_types[instr.operands[1]], stored_type.value())) {
+                diagnostics.Error("E_SIR_STORE_TYPE", "store value type mismatch with pointer element type",
+                                  module.module_path, {0, 0, 0, 0});
+                report.ok = false;
+              }
             }
             break;
           case Opcode::Ret:
@@ -254,10 +381,7 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
             } else {
               const auto ret_type = InferOperandType(instr.operands[0], value_types);
               if (ret_type.has_value() && !function.return_type.empty() && ret_type.value() != function.return_type) {
-                const bool bool_compat =
-                    IsBooleanType(ret_type.value()) && IsBooleanType(function.return_type);
-                const bool i32_to_i64 = ret_type.value() == "i32" && function.return_type == "i64";
-                if (!bool_compat && !i32_to_i64) {
+                if (!IsTypeCompatible(function.return_type, ret_type.value())) {
                   diagnostics.Error("E_SIR_RET_TYPE", "ret operand type does not match function return type",
                                     module.module_path, {0, 0, 0, 0});
                   report.ok = false;

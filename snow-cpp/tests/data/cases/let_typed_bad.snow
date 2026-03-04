@@ -1,0 +1,4 @@
+pub fn main() -> i32 {
+  let x: i32 = 1 < 2;
+  return 0;
+}

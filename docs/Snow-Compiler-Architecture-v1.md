@@ -133,6 +133,21 @@ If multiple imports expose the same unqualified symbol, compilation fails with `
 
 Module dependency graph is a DAG. Build order uses topological sort. Cycles are compile errors.
 
+### 5.6 Function Statement Model
+
+Function bodies are modeled as ordered statement lists in AST, not single ad-hoc control-flow fields.
+
+MVP statements:
+
+- `return <expr>;`
+- `if <cond> { ... } else { ... }`
+- `while <cond> { ... }`
+- `break;`
+- `continue;`
+- `let <name>[: <type>] = <expr>;`
+- `<name> = <expr>;`
+- expression statement (`<expr>;`)
+
 ## 6. Memory and Ownership Model
 
 - Local variables use stack semantics by default.
@@ -146,6 +161,8 @@ Drop semantics:
 - Variables drop on scope exit in reverse declaration order.
 - Using moved values is an error (`use-after-move`).
 - Branch/loop control flow must prove exactly-once drop for owned values.
+- Call arguments are pass-by-value; passing non-copy values consumes ownership.
+- Assignment reinitializes target ownership from right-hand side value.
 
 ## 7. SIR and Validation
 
@@ -157,6 +174,8 @@ Validator checks:
 - CFG validity
 - Type consistency
 - Lifetime/drop consistency
+
+SIR builder uses a canonical function return block (`fn_return`) to merge return paths and keep drop insertion deterministic.
 
 Validation policy:
 

@@ -21,6 +21,8 @@ enum class TokenType {
   KeywordElse,
   KeywordWhile,
   KeywordBreak,
+  KeywordContinue,
+  KeywordLet,
   Arrow,
   Dot,
   Comma,

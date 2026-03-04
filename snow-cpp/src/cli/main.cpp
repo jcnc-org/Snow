@@ -1,5 +1,6 @@
 #include <filesystem>
 #include <fstream>
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -212,13 +213,57 @@ int RunBuild(const std::vector<std::string>& args) {
 }
 
 int RunRun(const std::vector<std::string>& args) {
-  const int rc = RunCompile(args);
-  if (rc != 0) {
-    return rc;
+  ParsedOptions parsed;
+  std::string error;
+  if (!ParseCommonOptions(args, parsed, error)) {
+    std::cerr << error << "\n";
+    return 2;
   }
 
-  std::cout << "run: runtime execution not implemented in bootstrap yet\n";
-  return 0;
+  if (parsed.positional.empty()) {
+    std::cerr << "missing input file\n";
+    return 2;
+  }
+
+  snow::driver::CompileRequest request;
+  request.input_path = parsed.positional[0];
+  request.target_triple = parsed.target_triple;
+  request.opt_level = parsed.opt_level;
+  request.output_kind = snow::driver::OutputKind::Executable;
+  request.output_path = parsed.output_path;
+  request.emit = parsed.emit;
+
+  const snow::driver::Driver driver;
+  const auto result = driver.Compile(request);
+  const int compile_rc = PrintCompileResult(result, request);
+  if (compile_rc != 0) {
+    return compile_rc;
+  }
+
+  if (result.artifact_path.empty()) {
+    std::cerr << "run: no executable artifact produced\n";
+    return 1;
+  }
+
+  std::ifstream in(result.artifact_path, std::ios::in | std::ios::binary);
+  if (in) {
+    std::string first_line;
+    std::getline(in, first_line);
+    if (first_line.rfind("# snow artifact (bootstrap)", 0) == 0) {
+      std::cerr << "run: executable artifact is bootstrap text (native toolchain unavailable)\n";
+      return 1;
+    }
+  }
+
+  const std::string command = "\"" + result.artifact_path + "\"";
+  const int run_rc = std::system(command.c_str());
+  if (run_rc < 0) {
+    std::cerr << "run: failed to execute artifact\n";
+    return 1;
+  }
+
+  std::cout << "run: exit-code=" << run_rc << "\n";
+  return run_rc;
 }
 
 int RunInit(const std::vector<std::string>& args) {

@@ -1,7 +1,9 @@
 #include "snow/sir/sir_builder.h"
 
+#include <functional>
 #include <sstream>
 #include <unordered_map>
+#include <utility>
 
 #include "snow/common/mangling.h"
 
@@ -12,6 +14,11 @@ namespace {
 struct EmittedValue {
   std::string value;
   std::string type;
+};
+
+struct LoopTargets {
+  std::string break_label;
+  std::string continue_label;
 };
 
 bool IsComparisonOp(const snow::frontend::BinaryOp op) {
@@ -26,6 +33,14 @@ bool IsComparisonOp(const snow::frontend::BinaryOp op) {
     default:
       return false;
   }
+}
+
+bool IsTerminatorOpcode(const Opcode opcode) {
+  return opcode == Opcode::Br || opcode == Opcode::CondBr || opcode == Opcode::Ret || opcode == Opcode::Unreachable;
+}
+
+bool IsBooleanType(const std::string& type) {
+  return type == "bool" || type == "i1";
 }
 
 std::string MergeNumericType(const std::string& a, const std::string& b) {
@@ -63,8 +78,26 @@ Opcode ToSirOpcode(const snow::frontend::BinaryOp op) {
   return Opcode::Add;
 }
 
+bool BlockTerminated(const BasicBlock& block) {
+  if (block.instructions.empty()) {
+    return false;
+  }
+  const auto& last = block.instructions.back();
+  return last.is_terminator || IsTerminatorOpcode(last.opcode);
+}
+
+EmittedValue DefaultReturnValue(const std::string& function_return_type) {
+  if (IsBooleanType(function_return_type)) {
+    return EmittedValue{.value = "false", .type = "bool"};
+  }
+  return EmittedValue{.value = "0", .type = function_return_type.empty() ? "i32" : function_return_type};
+}
+
+using SymbolPtrMap = std::unordered_map<std::string, std::string>;
+
 EmittedValue EmitExpr(const std::shared_ptr<snow::frontend::Expr>& expr,
                       const std::unordered_map<std::string, std::string>& symbol_types,
+                      const SymbolPtrMap& symbol_ptrs,
                       const std::unordered_map<std::string, std::string>& callee_symbols,
                       const std::unordered_map<std::string, std::string>& callee_return_types,
                       std::vector<Instruction>& instructions, int& next_ssa_id) {
@@ -77,10 +110,24 @@ EmittedValue EmitExpr(const std::shared_ptr<snow::frontend::Expr>& expr,
       return EmittedValue{.value = expr->value, .type = "i32"};
 
     case snow::frontend::Expr::Kind::Identifier: {
-      const auto it = symbol_types.find(expr->value);
-      if (it != symbol_types.end()) {
-        return EmittedValue{.value = expr->value, .type = it->second};
+      const auto ptr_it = symbol_ptrs.find(expr->value);
+      const auto type_it = symbol_types.find(expr->value);
+      if (ptr_it != symbol_ptrs.end() && type_it != symbol_types.end()) {
+        const std::string result_name = "%" + std::to_string(next_ssa_id++);
+        instructions.push_back(Instruction{
+            .result = result_name,
+            .type = type_it->second,
+            .opcode = Opcode::Load,
+            .operands = {ptr_it->second},
+            .is_terminator = false,
+        });
+        return EmittedValue{.value = result_name, .type = type_it->second};
       }
+
+      if (type_it != symbol_types.end()) {
+        return EmittedValue{.value = expr->value, .type = type_it->second};
+      }
+
       return EmittedValue{.value = expr->value, .type = "i32"};
     }
 
@@ -91,7 +138,7 @@ EmittedValue EmitExpr(const std::shared_ptr<snow::frontend::Expr>& expr,
 
       for (const auto& arg : expr->args) {
         const EmittedValue arg_value =
-            EmitExpr(arg, symbol_types, callee_symbols, callee_return_types, instructions, next_ssa_id);
+            EmitExpr(arg, symbol_types, symbol_ptrs, callee_symbols, callee_return_types, instructions, next_ssa_id);
         operands.push_back(arg_value.value);
       }
 
@@ -117,9 +164,9 @@ EmittedValue EmitExpr(const std::shared_ptr<snow::frontend::Expr>& expr,
       }
 
       const EmittedValue lhs =
-          EmitExpr(expr->lhs, symbol_types, callee_symbols, callee_return_types, instructions, next_ssa_id);
+          EmitExpr(expr->lhs, symbol_types, symbol_ptrs, callee_symbols, callee_return_types, instructions, next_ssa_id);
       const EmittedValue rhs =
-          EmitExpr(expr->rhs, symbol_types, callee_symbols, callee_return_types, instructions, next_ssa_id);
+          EmitExpr(expr->rhs, symbol_types, symbol_ptrs, callee_symbols, callee_return_types, instructions, next_ssa_id);
 
       const std::string result_name = "%" + std::to_string(next_ssa_id++);
       const bool comparison = IsComparisonOp(expr->op);
@@ -273,9 +320,14 @@ Module SirBuilder::Build(const snow::sema::SemaModule& sema_module,
   Module module;
   module.module_path = sema_module.ast.module_path;
 
-  std::unordered_map<std::string, bool> ownership_by_symbol;
+  std::unordered_map<std::string, std::vector<snow::ownership::OwnershipFact>> ownership_facts_by_function;
   for (const auto& fact : ownership_facts.facts) {
-    ownership_by_symbol[fact.symbol] = fact.is_copy_type;
+    const auto sep = fact.symbol.find("::");
+    if (sep == std::string::npos) {
+      continue;
+    }
+    const std::string function_name = fact.symbol.substr(0, sep);
+    ownership_facts_by_function[function_name].push_back(fact);
   }
 
   std::unordered_map<std::string, std::string> callee_symbols;
@@ -286,8 +338,8 @@ Module SirBuilder::Build(const snow::sema::SemaModule& sema_module,
     for (const auto& param : function_ast.params) {
       param_types.push_back(param.type);
     }
-    const std::string mangled =
-        snow::common::MangleSymbol(sema_module.ast.module_path, function_ast.name, param_types, function_ast.return_type, false);
+    const std::string mangled = snow::common::MangleSymbol(sema_module.ast.module_path, function_ast.name, param_types,
+                                                            function_ast.return_type, false);
     callee_symbols[function_ast.name] = mangled;
     callee_return_types[function_ast.name] = function_ast.return_type.empty() ? "i32" : function_ast.return_type;
   }
@@ -305,7 +357,13 @@ Module SirBuilder::Build(const snow::sema::SemaModule& sema_module,
                         ? callee_it->second
                         : snow::common::MangleSymbol(sema_module.ast.module_path, function_ast.name, param_types,
                                                      function_ast.return_type, false);
-    function.return_type = function_ast.return_type;
+    function.return_type = function_ast.return_type.empty() ? "i32" : function_ast.return_type;
+    for (const auto& param : function_ast.params) {
+      function.params.push_back(FunctionParam{
+          .name = param.name,
+          .type = param.type,
+      });
+    }
     switch (function_ast.visibility) {
       case snow::frontend::Visibility::Public:
         function.linkage = Linkage::External;
@@ -319,177 +377,360 @@ Module SirBuilder::Build(const snow::sema::SemaModule& sema_module,
         break;
     }
 
-    BasicBlock entry;
-    entry.label = "entry";
-
     std::unordered_map<std::string, std::string> symbol_types;
+    SymbolPtrMap symbol_ptrs;
     for (const auto& param : function_ast.params) {
       symbol_types[param.name] = param.type;
     }
 
+    std::unordered_map<std::string, int> block_label_count;
+    auto next_label = [&](const std::string& base) {
+      int& count = block_label_count[base];
+      if (count == 0) {
+        count = 1;
+        return base;
+      }
+      const std::string label = base + "_" + std::to_string(count);
+      ++count;
+      return label;
+    };
+
+    function.blocks.push_back(BasicBlock{.label = "entry"});
+    block_label_count["entry"] = 1;
+    std::size_t current_block_idx = 0;
+    const std::string return_label = next_label("fn_return");
+    std::vector<std::pair<std::string, std::string>> return_incoming;
     int next_ssa_id = 1;
-    auto append_param_drops = [&](BasicBlock& block) {
-      for (const auto& param : function_ast.params) {
-        const std::string key = function_ast.name + "::" + param.name;
-        const bool copy_type = ownership_by_symbol.contains(key) ? ownership_by_symbol[key] : false;
-        if (!copy_type) {
-          block.instructions.push_back(Instruction{
-              .result = std::nullopt,
-              .type = param.type,
-              .opcode = Opcode::Drop,
-              .operands = {param.name},
-              .is_terminator = false,
-          });
+    std::vector<LoopTargets> loop_stack;
+
+    auto block_terminated = [&](const std::size_t index) {
+      return BlockTerminated(function.blocks[index]);
+    };
+
+    auto create_block = [&](const std::string& base) {
+      function.blocks.push_back(BasicBlock{.label = next_label(base)});
+      return function.blocks.size() - 1;
+    };
+
+    auto emit_branch_to = [&](const std::string& target_label) {
+      if (block_terminated(current_block_idx)) {
+        return;
+      }
+      function.blocks[current_block_idx].instructions.push_back(Instruction{
+          .result = std::nullopt,
+          .type = "void",
+          .opcode = Opcode::Br,
+          .operands = {target_label},
+          .is_terminator = true,
+      });
+    };
+
+    auto append_owned_drops = [&](BasicBlock& block) {
+      const auto it = ownership_facts_by_function.find(function_ast.name);
+      if (it == ownership_facts_by_function.end()) {
+        return;
+      }
+
+      for (auto rit = it->second.rbegin(); rit != it->second.rend(); ++rit) {
+        if (rit->is_copy_type || !rit->drop_at_exit) {
+          continue;
+        }
+        block.instructions.push_back(Instruction{
+            .result = std::nullopt,
+            .type = rit->type_name.empty() ? "unknown" : rit->type_name,
+            .opcode = Opcode::Drop,
+            .operands = {rit->name.empty() ? rit->symbol : rit->name},
+            .is_terminator = false,
+        });
+      }
+    };
+
+    auto emit_return_jump = [&](const std::shared_ptr<snow::frontend::Expr>& expr) {
+      if (block_terminated(current_block_idx)) {
+        return;
+      }
+
+      EmittedValue return_value = DefaultReturnValue(function.return_type);
+      if (expr) {
+        return_value = EmitExpr(expr, symbol_types, symbol_ptrs, callee_symbols, callee_return_types,
+                                function.blocks[current_block_idx].instructions, next_ssa_id);
+      }
+
+      return_incoming.emplace_back(return_value.value, function.blocks[current_block_idx].label);
+      function.blocks[current_block_idx].instructions.push_back(Instruction{
+          .result = std::nullopt,
+          .type = "void",
+          .opcode = Opcode::Br,
+          .operands = {return_label},
+          .is_terminator = true,
+      });
+    };
+
+    // Materialize parameters into stack slots so assignment semantics are explicit via load/store.
+    for (const auto& param : function_ast.params) {
+      const std::string slot_name = "%" + std::to_string(next_ssa_id++);
+      function.blocks[current_block_idx].instructions.push_back(Instruction{
+          .result = slot_name,
+          .type = "ptr",
+          .opcode = Opcode::Alloc,
+          .operands = {param.type},
+          .is_terminator = false,
+      });
+      function.blocks[current_block_idx].instructions.push_back(Instruction{
+          .result = std::nullopt,
+          .type = param.type,
+          .opcode = Opcode::Store,
+          .operands = {"%" + param.name, slot_name},
+          .is_terminator = false,
+      });
+      symbol_ptrs[param.name] = slot_name;
+    }
+
+    std::function<void(const std::vector<snow::frontend::Statement>&)> emit_statements;
+    emit_statements = [&](const std::vector<snow::frontend::Statement>& statements) {
+      for (const auto& stmt : statements) {
+        if (block_terminated(current_block_idx)) {
+          break;
+        }
+
+        switch (stmt.kind) {
+          case snow::frontend::Statement::Kind::Expr:
+            (void)EmitExpr(stmt.expr, symbol_types, symbol_ptrs, callee_symbols, callee_return_types,
+                           function.blocks[current_block_idx].instructions, next_ssa_id);
+            break;
+
+          case snow::frontend::Statement::Kind::Assign: {
+            if (stmt.name.empty() || !symbol_ptrs.contains(stmt.name)) {
+              break;
+            }
+            EmittedValue assigned = DefaultReturnValue(symbol_types[stmt.name]);
+            if (stmt.expr) {
+              assigned = EmitExpr(stmt.expr, symbol_types, symbol_ptrs, callee_symbols, callee_return_types,
+                                  function.blocks[current_block_idx].instructions, next_ssa_id);
+            }
+            function.blocks[current_block_idx].instructions.push_back(Instruction{
+                .result = std::nullopt,
+                .type = assigned.type.empty() ? symbol_types[stmt.name] : assigned.type,
+                .opcode = Opcode::Store,
+                .operands = {assigned.value, symbol_ptrs[stmt.name]},
+                .is_terminator = false,
+            });
+            break;
+          }
+
+          case snow::frontend::Statement::Kind::Let: {
+            EmittedValue init = DefaultReturnValue("i32");
+            if (stmt.expr) {
+              init = EmitExpr(stmt.expr, symbol_types, symbol_ptrs, callee_symbols, callee_return_types,
+                              function.blocks[current_block_idx].instructions, next_ssa_id);
+            }
+            if (!stmt.name.empty()) {
+              const std::string value_type =
+                  !stmt.type_name.empty() ? stmt.type_name : (init.type.empty() ? "i32" : init.type);
+              const std::string slot_name = "%" + std::to_string(next_ssa_id++);
+              function.blocks[current_block_idx].instructions.push_back(Instruction{
+                  .result = slot_name,
+                  .type = "ptr",
+                  .opcode = Opcode::Alloc,
+                  .operands = {value_type},
+                  .is_terminator = false,
+              });
+              function.blocks[current_block_idx].instructions.push_back(Instruction{
+                  .result = std::nullopt,
+                  .type = value_type,
+                  .opcode = Opcode::Store,
+                  .operands = {init.value, slot_name},
+                  .is_terminator = false,
+              });
+              symbol_types[stmt.name] = value_type;
+              symbol_ptrs[stmt.name] = slot_name;
+            }
+            break;
+          }
+
+          case snow::frontend::Statement::Kind::Return:
+            emit_return_jump(stmt.expr);
+            break;
+
+          case snow::frontend::Statement::Kind::Break:
+            if (!loop_stack.empty()) {
+              emit_branch_to(loop_stack.back().break_label);
+            } else {
+              function.blocks[current_block_idx].instructions.push_back(Instruction{
+                  .result = std::nullopt,
+                  .type = "void",
+                  .opcode = Opcode::Unreachable,
+                  .operands = {},
+                  .is_terminator = true,
+              });
+            }
+            break;
+
+          case snow::frontend::Statement::Kind::Continue:
+            if (!loop_stack.empty()) {
+              emit_branch_to(loop_stack.back().continue_label);
+            } else {
+              function.blocks[current_block_idx].instructions.push_back(Instruction{
+                  .result = std::nullopt,
+                  .type = "void",
+                  .opcode = Opcode::Unreachable,
+                  .operands = {},
+                  .is_terminator = true,
+              });
+            }
+            break;
+
+          case snow::frontend::Statement::Kind::If: {
+            const EmittedValue cond_value =
+                EmitExpr(stmt.expr, symbol_types, symbol_ptrs, callee_symbols, callee_return_types,
+                         function.blocks[current_block_idx].instructions, next_ssa_id);
+
+            const auto saved_symbol_types = symbol_types;
+            const auto saved_symbol_ptrs = symbol_ptrs;
+
+            const std::size_t then_idx = create_block("if_then");
+            std::size_t else_idx = then_idx;
+            if (!stmt.else_body.empty()) {
+              else_idx = create_block("if_else");
+            }
+            const std::size_t merge_idx = create_block("if_merge");
+
+            function.blocks[current_block_idx].instructions.push_back(Instruction{
+                .result = std::nullopt,
+                .type = "void",
+                .opcode = Opcode::CondBr,
+                .operands = {cond_value.value, function.blocks[then_idx].label, function.blocks[else_idx].label},
+                .is_terminator = true,
+            });
+
+            current_block_idx = then_idx;
+            symbol_types = saved_symbol_types;
+            symbol_ptrs = saved_symbol_ptrs;
+            emit_statements(stmt.then_body);
+            const bool then_falls_through = !block_terminated(current_block_idx);
+            if (then_falls_through) {
+              emit_branch_to(function.blocks[merge_idx].label);
+            }
+
+            bool else_falls_through = false;
+            if (!stmt.else_body.empty()) {
+              current_block_idx = else_idx;
+              symbol_types = saved_symbol_types;
+              symbol_ptrs = saved_symbol_ptrs;
+              emit_statements(stmt.else_body);
+              else_falls_through = !block_terminated(current_block_idx);
+              if (else_falls_through) {
+                emit_branch_to(function.blocks[merge_idx].label);
+              }
+            } else {
+              else_falls_through = true;
+            }
+
+            if (!stmt.else_body.empty() && !then_falls_through && !else_falls_through) {
+              if (merge_idx + 1 == function.blocks.size()) {
+                function.blocks.pop_back();
+              }
+              symbol_types = saved_symbol_types;
+              symbol_ptrs = saved_symbol_ptrs;
+              current_block_idx = then_idx;
+              break;
+            }
+
+            symbol_types = saved_symbol_types;
+            symbol_ptrs = saved_symbol_ptrs;
+            current_block_idx = merge_idx;
+            break;
+          }
+
+          case snow::frontend::Statement::Kind::While: {
+            const auto saved_symbol_types = symbol_types;
+            const auto saved_symbol_ptrs = symbol_ptrs;
+
+            const std::size_t cond_idx = create_block("loop_cond");
+            const std::size_t body_idx = create_block("loop_body");
+            const std::size_t exit_idx = create_block("loop_exit");
+
+            emit_branch_to(function.blocks[cond_idx].label);
+
+            current_block_idx = cond_idx;
+            symbol_types = saved_symbol_types;
+            symbol_ptrs = saved_symbol_ptrs;
+            const EmittedValue cond_value =
+                EmitExpr(stmt.expr, symbol_types, symbol_ptrs, callee_symbols, callee_return_types,
+                         function.blocks[current_block_idx].instructions, next_ssa_id);
+            function.blocks[current_block_idx].instructions.push_back(Instruction{
+                .result = std::nullopt,
+                .type = "void",
+                .opcode = Opcode::CondBr,
+                .operands = {cond_value.value, function.blocks[body_idx].label, function.blocks[exit_idx].label},
+                .is_terminator = true,
+            });
+
+            current_block_idx = body_idx;
+            symbol_types = saved_symbol_types;
+            symbol_ptrs = saved_symbol_ptrs;
+            loop_stack.push_back(LoopTargets{
+                .break_label = function.blocks[exit_idx].label,
+                .continue_label = function.blocks[cond_idx].label,
+            });
+            emit_statements(stmt.body);
+            loop_stack.pop_back();
+            if (!block_terminated(current_block_idx)) {
+              emit_branch_to(function.blocks[cond_idx].label);
+            }
+
+            symbol_types = saved_symbol_types;
+            symbol_ptrs = saved_symbol_ptrs;
+            current_block_idx = exit_idx;
+            break;
+          }
         }
       }
     };
 
-    const std::string return_type = function.return_type.empty() ? "i32" : function.return_type;
+    emit_statements(function_ast.statements);
+    if (!block_terminated(current_block_idx)) {
+      emit_return_jump(nullptr);
+    }
 
-    if (function_ast.if_expr) {
-      BasicBlock then_block;
-      then_block.label = "if_then";
-      BasicBlock else_block;
-      else_block.label = "if_else";
-      BasicBlock merge_block;
-      merge_block.label = "if_merge";
+    if (return_incoming.empty()) {
+      const std::size_t fallback_idx = create_block("fn_fallback");
+      current_block_idx = fallback_idx;
+      emit_return_jump(nullptr);
+    }
 
-      const EmittedValue cond_value = EmitExpr(function_ast.if_expr->condition, symbol_types, callee_symbols,
-                                               callee_return_types, entry.instructions, next_ssa_id);
-      entry.instructions.push_back(Instruction{
-          .result = std::nullopt,
-          .type = "void",
-          .opcode = Opcode::CondBr,
-          .operands = {cond_value.value, then_block.label, else_block.label},
-          .is_terminator = true,
-      });
-
-      const EmittedValue then_value = EmitExpr(function_ast.if_expr->then_expr, symbol_types, callee_symbols,
-                                               callee_return_types, then_block.instructions, next_ssa_id);
-      then_block.instructions.push_back(Instruction{
-          .result = std::nullopt,
-          .type = "void",
-          .opcode = Opcode::Br,
-          .operands = {merge_block.label},
-          .is_terminator = true,
-      });
-
-      const EmittedValue else_value = EmitExpr(function_ast.if_expr->else_expr, symbol_types, callee_symbols,
-                                               callee_return_types, else_block.instructions, next_ssa_id);
-      else_block.instructions.push_back(Instruction{
-          .result = std::nullopt,
-          .type = "void",
-          .opcode = Opcode::Br,
-          .operands = {merge_block.label},
-          .is_terminator = true,
-      });
-
+    BasicBlock return_block;
+    return_block.label = return_label;
+    std::string ret_operand = DefaultReturnValue(function.return_type).value;
+    if (return_incoming.size() == 1) {
+      ret_operand = return_incoming.front().first;
+    } else {
       const std::string phi_name = "%" + std::to_string(next_ssa_id++);
-      merge_block.instructions.push_back(Instruction{
+      std::vector<std::string> operands;
+      operands.reserve(return_incoming.size() * 2);
+      for (const auto& incoming : return_incoming) {
+        operands.push_back(incoming.first);
+        operands.push_back(incoming.second);
+      }
+      return_block.instructions.push_back(Instruction{
           .result = phi_name,
-          .type = return_type,
+          .type = function.return_type,
           .opcode = Opcode::Phi,
-          .operands = {then_value.value, then_block.label, else_value.value, else_block.label},
+          .operands = std::move(operands),
           .is_terminator = false,
       });
-      append_param_drops(merge_block);
-      merge_block.instructions.push_back(Instruction{
-          .result = std::nullopt,
-          .type = return_type,
-          .opcode = Opcode::Ret,
-          .operands = {phi_name},
-          .is_terminator = true,
-      });
-
-      function.blocks.push_back(std::move(entry));
-      function.blocks.push_back(std::move(then_block));
-      function.blocks.push_back(std::move(else_block));
-      function.blocks.push_back(std::move(merge_block));
-      module.functions.push_back(std::move(function));
-      continue;
+      ret_operand = phi_name;
     }
 
-    if (function_ast.while_condition) {
-      BasicBlock cond_block;
-      cond_block.label = "loop_cond";
-      BasicBlock body_block;
-      body_block.label = "loop_body";
-      BasicBlock exit_block;
-      exit_block.label = "loop_exit";
-
-      entry.instructions.push_back(Instruction{
-          .result = std::nullopt,
-          .type = "void",
-          .opcode = Opcode::Br,
-          .operands = {cond_block.label},
-          .is_terminator = true,
-      });
-
-      const EmittedValue cond_value = EmitExpr(function_ast.while_condition, symbol_types, callee_symbols,
-                                               callee_return_types, cond_block.instructions, next_ssa_id);
-      cond_block.instructions.push_back(Instruction{
-          .result = std::nullopt,
-          .type = "void",
-          .opcode = Opcode::CondBr,
-          .operands = {cond_value.value, body_block.label, exit_block.label},
-          .is_terminator = true,
-      });
-
-      body_block.instructions.push_back(Instruction{
-          .result = std::nullopt,
-          .type = "void",
-          .opcode = Opcode::Br,
-          .operands = {function_ast.while_has_break ? exit_block.label : cond_block.label},
-          .is_terminator = true,
-      });
-
-      EmittedValue return_value;
-      if (function_ast.return_expr) {
-        return_value = EmitExpr(function_ast.return_expr, symbol_types, callee_symbols, callee_return_types,
-                                exit_block.instructions, next_ssa_id);
-      } else if (return_type == "bool" || return_type == "i1") {
-        return_value = EmittedValue{.value = "0", .type = "bool"};
-      } else {
-        return_value = EmittedValue{.value = "0", .type = return_type};
-      }
-      append_param_drops(exit_block);
-      exit_block.instructions.push_back(Instruction{
-          .result = std::nullopt,
-          .type = return_type,
-          .opcode = Opcode::Ret,
-          .operands = {return_value.value},
-          .is_terminator = true,
-      });
-
-      function.blocks.push_back(std::move(entry));
-      function.blocks.push_back(std::move(cond_block));
-      function.blocks.push_back(std::move(body_block));
-      function.blocks.push_back(std::move(exit_block));
-      module.functions.push_back(std::move(function));
-      continue;
-    }
-
-    EmittedValue return_value;
-    if (function_ast.return_expr) {
-      return_value = EmitExpr(function_ast.return_expr, symbol_types, callee_symbols, callee_return_types,
-                              entry.instructions, next_ssa_id);
-    } else if (return_type == "bool" || return_type == "i1") {
-      return_value = EmittedValue{.value = "0", .type = "bool"};
-    } else {
-      return_value = EmittedValue{.value = "0", .type = return_type};
-    }
-
-    append_param_drops(entry);
-
-    entry.instructions.push_back(Instruction{
+    append_owned_drops(return_block);
+    return_block.instructions.push_back(Instruction{
         .result = std::nullopt,
-        .type = return_type,
+        .type = function.return_type,
         .opcode = Opcode::Ret,
-        .operands = {return_value.value},
+        .operands = {ret_operand},
         .is_terminator = true,
     });
-
-    function.blocks.push_back(std::move(entry));
+    function.blocks.push_back(std::move(return_block));
     module.functions.push_back(std::move(function));
   }
 

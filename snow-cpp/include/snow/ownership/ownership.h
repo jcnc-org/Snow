@@ -10,7 +10,11 @@ namespace snow::ownership {
 
 struct OwnershipFact {
   std::string symbol;
+  std::string name;
+  std::string type_name;
   bool is_copy_type = false;
+  bool drop_at_exit = false;
+  std::size_t declaration_index = 0;
 };
 
 struct OwnershipFacts {

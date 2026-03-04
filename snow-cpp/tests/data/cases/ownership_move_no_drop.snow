@@ -1,0 +1,8 @@
+private fn consume(a: Box) -> i32 {
+  return 0;
+}
+
+pub fn main(x: Box) -> i32 {
+  consume(x);
+  return 0;
+}

@@ -1,5 +1,6 @@
 #include "snow/sema/sema.h"
 
+#include <algorithm>
 #include <sstream>
 #include <unordered_map>
 #include <utility>
@@ -11,6 +12,13 @@ namespace {
 struct ExprTypeResult {
   std::string type;
   bool known = false;
+};
+
+struct StatementContext {
+  const std::unordered_map<std::string, std::string>& function_return_types;
+  const std::unordered_map<std::string, std::vector<std::string>>& function_param_types;
+  std::string expected_return_type;
+  std::string module_path;
 };
 
 std::string JoinPath(const std::vector<std::string>& parts) {
@@ -60,9 +68,20 @@ bool IsArithmeticOp(const snow::frontend::BinaryOp op) {
   }
 }
 
+bool IsTypeCompatible(const std::string& expected, const std::string& actual) {
+  if (expected == actual) {
+    return true;
+  }
+  if (IsBooleanType(expected) && IsBooleanType(actual)) {
+    return true;
+  }
+  return false;
+}
+
 ExprTypeResult InferExprType(const std::shared_ptr<snow::frontend::Expr>& expr,
                              const std::unordered_map<std::string, std::string>& symbol_types,
                              const std::unordered_map<std::string, std::string>& function_return_types,
+                             const std::unordered_map<std::string, std::vector<std::string>>& function_param_types,
                              const std::string& module_path, snow::common::DiagnosticEngine& diagnostics) {
   if (!expr) {
     return ExprTypeResult{.type = "unknown", .known = false};
@@ -75,15 +94,33 @@ ExprTypeResult InferExprType(const std::shared_ptr<snow::frontend::Expr>& expr,
     case snow::frontend::Expr::Kind::Identifier: {
       const auto it = symbol_types.find(expr->value);
       if (it == symbol_types.end()) {
-        // Bootstrap stage: unresolved names may be functions/import members. Do not hard-fail yet.
         return ExprTypeResult{.type = "unknown", .known = false};
       }
       return ExprTypeResult{.type = it->second, .known = true};
     }
 
     case snow::frontend::Expr::Kind::Call: {
+      const auto sig_it = function_param_types.find(expr->value);
+      if (sig_it != function_param_types.end() && sig_it->second.size() != expr->args.size()) {
+        diagnostics.Error("E_SEMA_CALL_ARITY", "Call argument count mismatch for function '" + expr->value + "'",
+                          module_path, {0, 0, 0, 0});
+      }
+
       for (const auto& arg : expr->args) {
-        (void)InferExprType(arg, symbol_types, function_return_types, module_path, diagnostics);
+        (void)InferExprType(arg, symbol_types, function_return_types, function_param_types, module_path, diagnostics);
+      }
+      if (sig_it != function_param_types.end()) {
+        const std::size_t count = std::min(sig_it->second.size(), expr->args.size());
+        for (std::size_t i = 0; i < count; ++i) {
+          const ExprTypeResult arg_type = InferExprType(expr->args[i], symbol_types, function_return_types,
+                                                        function_param_types, module_path, diagnostics);
+          if (arg_type.known && !IsTypeCompatible(sig_it->second[i], arg_type.type)) {
+            diagnostics.Error("E_SEMA_CALL_ARG_TYPE",
+                              "Call argument type mismatch at index " + std::to_string(i) + " for function '" +
+                                  expr->value + "'",
+                              module_path, {0, 0, 0, 0});
+          }
+        }
       }
       const auto it = function_return_types.find(expr->value);
       if (it == function_return_types.end()) {
@@ -93,8 +130,10 @@ ExprTypeResult InferExprType(const std::shared_ptr<snow::frontend::Expr>& expr,
     }
 
     case snow::frontend::Expr::Kind::Binary: {
-      const ExprTypeResult lhs = InferExprType(expr->lhs, symbol_types, function_return_types, module_path, diagnostics);
-      const ExprTypeResult rhs = InferExprType(expr->rhs, symbol_types, function_return_types, module_path, diagnostics);
+      const ExprTypeResult lhs =
+          InferExprType(expr->lhs, symbol_types, function_return_types, function_param_types, module_path, diagnostics);
+      const ExprTypeResult rhs =
+          InferExprType(expr->rhs, symbol_types, function_return_types, function_param_types, module_path, diagnostics);
 
       if (expr->op == snow::frontend::BinaryOp::Mod) {
         diagnostics.Error("E_SEMA_UNSUPPORTED_OP", "operator '%' is not supported in Snow v1 MVP", module_path,
@@ -140,17 +179,124 @@ ExprTypeResult InferExprType(const std::shared_ptr<snow::frontend::Expr>& expr,
   return ExprTypeResult{.type = "unknown", .known = false};
 }
 
-bool IsReturnTypeCompatible(const std::string& expected, const std::string& actual) {
-  if (expected == actual) {
-    return true;
+void AnalyzeStatements(const std::vector<snow::frontend::Statement>& statements,
+                       std::unordered_map<std::string, std::string>& symbol_types, const StatementContext& context,
+                       const bool inside_loop, snow::common::DiagnosticEngine& diagnostics) {
+  for (const auto& stmt : statements) {
+    switch (stmt.kind) {
+      case snow::frontend::Statement::Kind::Return: {
+        if (!stmt.expr) {
+          diagnostics.Error("E_SEMA_RET_MISSING", "return statement requires a value in Snow v1", context.module_path,
+                            {0, 0, 0, 0});
+          break;
+        }
+        const ExprTypeResult return_expr_type =
+            InferExprType(stmt.expr, symbol_types, context.function_return_types, context.function_param_types,
+                          context.module_path, diagnostics);
+        if (return_expr_type.known && !IsTypeCompatible(context.expected_return_type, return_expr_type.type)) {
+          diagnostics.Error("E_SEMA_RET_TYPE",
+                            "Return expression type '" + return_expr_type.type +
+                                "' does not match function return type '" + context.expected_return_type + "'",
+                            context.module_path, {0, 0, 0, 0});
+        }
+        break;
+      }
+
+      case snow::frontend::Statement::Kind::Expr:
+        (void)InferExprType(stmt.expr, symbol_types, context.function_return_types, context.function_param_types,
+                            context.module_path, diagnostics);
+        break;
+
+      case snow::frontend::Statement::Kind::Assign: {
+        if (stmt.name.empty() || !symbol_types.contains(stmt.name)) {
+          diagnostics.Error("E_SEMA_ASSIGN_UNDEFINED", "Assignment target is not defined: " + stmt.name,
+                            context.module_path, {0, 0, 0, 0});
+          break;
+        }
+        const ExprTypeResult assigned =
+            InferExprType(stmt.expr, symbol_types, context.function_return_types, context.function_param_types,
+                          context.module_path, diagnostics);
+        if (assigned.known && !IsTypeCompatible(symbol_types[stmt.name], assigned.type)) {
+          diagnostics.Error("E_SEMA_ASSIGN_TYPE",
+                            "Cannot assign value of type '" + assigned.type + "' to '" + stmt.name + "' of type '" +
+                                symbol_types[stmt.name] + "'",
+                            context.module_path, {0, 0, 0, 0});
+        }
+        break;
+      }
+
+      case snow::frontend::Statement::Kind::Let: {
+        if (stmt.name.empty()) {
+          diagnostics.Error("E_SEMA_LET_NAME", "let statement missing variable name", context.module_path,
+                            {0, 0, 0, 0});
+          break;
+        }
+        if (symbol_types.contains(stmt.name)) {
+          diagnostics.Error("E_SEMA_DUP_LOCAL", "Duplicate local symbol: " + stmt.name, context.module_path,
+                            {0, 0, 0, 0});
+          break;
+        }
+        const ExprTypeResult init_type =
+            InferExprType(stmt.expr, symbol_types, context.function_return_types, context.function_param_types,
+                          context.module_path, diagnostics);
+        if (!stmt.type_name.empty()) {
+          if (init_type.known && !IsTypeCompatible(stmt.type_name, init_type.type)) {
+            diagnostics.Error("E_SEMA_LET_TYPE",
+                              "Initializer type '" + init_type.type + "' does not match declared let type '" +
+                                  stmt.type_name + "'",
+                              context.module_path, {0, 0, 0, 0});
+          }
+          symbol_types[stmt.name] = stmt.type_name;
+        } else {
+          symbol_types[stmt.name] = init_type.known ? init_type.type : "i32";
+        }
+        break;
+      }
+
+      case snow::frontend::Statement::Kind::If: {
+        const ExprTypeResult cond_type =
+            InferExprType(stmt.expr, symbol_types, context.function_return_types, context.function_param_types,
+                          context.module_path, diagnostics);
+        if (cond_type.known && !IsBooleanType(cond_type.type)) {
+          diagnostics.Error("E_SEMA_IF_COND_TYPE", "if condition must be bool/i1", context.module_path,
+                            {0, 0, 0, 0});
+        }
+
+        auto then_symbols = symbol_types;
+        AnalyzeStatements(stmt.then_body, then_symbols, context, inside_loop, diagnostics);
+        auto else_symbols = symbol_types;
+        AnalyzeStatements(stmt.else_body, else_symbols, context, inside_loop, diagnostics);
+        break;
+      }
+
+      case snow::frontend::Statement::Kind::While: {
+        const ExprTypeResult cond_type =
+            InferExprType(stmt.expr, symbol_types, context.function_return_types, context.function_param_types,
+                          context.module_path, diagnostics);
+        if (cond_type.known && !IsBooleanType(cond_type.type)) {
+          diagnostics.Error("E_SEMA_WHILE_COND_TYPE", "while condition must be bool/i1", context.module_path,
+                            {0, 0, 0, 0});
+        }
+        auto loop_symbols = symbol_types;
+        AnalyzeStatements(stmt.body, loop_symbols, context, true, diagnostics);
+        break;
+      }
+
+      case snow::frontend::Statement::Kind::Break:
+        if (!inside_loop) {
+          diagnostics.Error("E_SEMA_BREAK_OUTSIDE_LOOP", "break can only appear inside while loop", context.module_path,
+                            {0, 0, 0, 0});
+        }
+        break;
+
+      case snow::frontend::Statement::Kind::Continue:
+        if (!inside_loop) {
+          diagnostics.Error("E_SEMA_CONTINUE_OUTSIDE_LOOP", "continue can only appear inside while loop",
+                            context.module_path, {0, 0, 0, 0});
+        }
+        break;
+    }
   }
-  if (expected == "i64" && actual == "i32") {
-    return true;
-  }
-  if (IsBooleanType(expected) && IsBooleanType(actual)) {
-    return true;
-  }
-  return false;
 }
 
 }  // namespace
@@ -194,8 +340,15 @@ SemaModule SemanticAnalyzer::Analyze(const snow::frontend::AstModule& ast_module
 
   std::unordered_map<std::string, bool> symbol_seen;
   std::unordered_map<std::string, std::string> function_return_types;
+  std::unordered_map<std::string, std::vector<std::string>> function_param_types;
   for (const auto& function : ast_module.functions) {
     function_return_types[function.name] = function.return_type.empty() ? "i32" : function.return_type;
+    std::vector<std::string> params;
+    params.reserve(function.params.size());
+    for (const auto& param : function.params) {
+      params.push_back(param.type);
+    }
+    function_param_types[function.name] = std::move(params);
   }
 
   for (const auto& function : ast_module.functions) {
@@ -212,58 +365,13 @@ SemaModule SemanticAnalyzer::Analyze(const snow::frontend::AstModule& ast_module
       symbol_types[param.name] = param.type;
     }
 
-    if (function.return_expr) {
-      const ExprTypeResult return_expr_type =
-          InferExprType(function.return_expr, symbol_types, function_return_types, ast_module.module_path, diagnostics);
-      if (return_expr_type.known &&
-          !IsReturnTypeCompatible(function.return_type.empty() ? "i32" : function.return_type, return_expr_type.type)) {
-        diagnostics.Error("E_SEMA_RET_TYPE",
-                          "Return expression type '" + return_expr_type.type +
-                              "' does not match function return type '" + function.return_type + "'",
-                          ast_module.module_path, {0, 0, 0, 0});
-      }
-    }
-
-    if (function.if_expr) {
-      const ExprTypeResult cond_type = InferExprType(function.if_expr->condition, symbol_types, function_return_types,
-                                                     ast_module.module_path, diagnostics);
-      if (cond_type.known && !IsBooleanType(cond_type.type)) {
-        diagnostics.Error("E_SEMA_IF_COND_TYPE", "if condition must be bool/i1", ast_module.module_path,
-                          {0, 0, 0, 0});
-      }
-
-      const ExprTypeResult then_type = InferExprType(function.if_expr->then_expr, symbol_types, function_return_types,
-                                                     ast_module.module_path, diagnostics);
-      const ExprTypeResult else_type = InferExprType(function.if_expr->else_expr, symbol_types, function_return_types,
-                                                     ast_module.module_path, diagnostics);
-      if (then_type.known && else_type.known && then_type.type != else_type.type) {
-        diagnostics.Error("E_SEMA_IF_BRANCH_TYPE", "if branch return expressions must have same type",
-                          ast_module.module_path, {0, 0, 0, 0});
-      }
-
-      const std::string expected_return = function.return_type.empty() ? "i32" : function.return_type;
-      if (then_type.known && !IsReturnTypeCompatible(expected_return, then_type.type)) {
-        diagnostics.Error("E_SEMA_RET_TYPE",
-                          "if then-branch type '" + then_type.type + "' does not match function return type '" +
-                              expected_return + "'",
-                          ast_module.module_path, {0, 0, 0, 0});
-      }
-      if (else_type.known && !IsReturnTypeCompatible(expected_return, else_type.type)) {
-        diagnostics.Error("E_SEMA_RET_TYPE",
-                          "if else-branch type '" + else_type.type + "' does not match function return type '" +
-                              expected_return + "'",
-                          ast_module.module_path, {0, 0, 0, 0});
-      }
-    }
-
-    if (function.while_condition) {
-      const ExprTypeResult while_cond_type =
-          InferExprType(function.while_condition, symbol_types, function_return_types, ast_module.module_path, diagnostics);
-      if (while_cond_type.known && !IsBooleanType(while_cond_type.type)) {
-        diagnostics.Error("E_SEMA_WHILE_COND_TYPE", "while condition must be bool/i1", ast_module.module_path,
-                          {0, 0, 0, 0});
-      }
-    }
+    StatementContext context{
+        .function_return_types = function_return_types,
+        .function_param_types = function_param_types,
+        .expected_return_type = function.return_type.empty() ? "i32" : function.return_type,
+        .module_path = ast_module.module_path,
+    };
+    AnalyzeStatements(function.statements, symbol_types, context, false, diagnostics);
   }
 
   return sema;
