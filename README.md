@@ -426,6 +426,19 @@ Snow/
     * **`StringEscape.java`** - 字符串转义处理
 
 
+## C++ 重构（Snow Compiler v1.0）
+
+当前仓库已新增 C++20 + LLVM 路线的 v1.0 规范与工程骨架：
+
+- 约束文件：`AGENTS.md`
+- 架构规范：`docs/Snow-Compiler-Architecture-v1.md`
+- SIR 规范：`docs/Snow-SIR-Spec-v1.md`
+- Runtime ABI：`docs/Snow-Runtime-ABI-v1.md`
+- 迁移计划：`docs/Snow-Migration-Plan-Java-to-CPP.md`
+- C++ 工程：`snow-cpp/`
+
+> 现阶段 Java 实现仍保留作为差分基线，C++ 实现作为新主线逐步替换。
+
 ## 版权声明
 
 版权所有 © 2025 许轲（Luke），代表 SnowLang 项目。  

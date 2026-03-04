@@ -1,0 +1,11 @@
+set(SNOW_LLVM_FOUND OFF)
+
+if(SNOW_ENABLE_LLVM)
+  find_package(LLVM 17 CONFIG QUIET)
+  if(LLVM_FOUND)
+    message(STATUS "LLVM found: ${LLVM_PACKAGE_VERSION}")
+    set(SNOW_LLVM_FOUND ON)
+  else()
+    message(WARNING "SNOW_ENABLE_LLVM=ON but LLVM >= 17 not found. Falling back to stub lowering.")
+  endif()
+endif()

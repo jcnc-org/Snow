@@ -44,3 +44,4 @@ target/
 *.txt
 /demoDir/
 /.env
+/snow-cpp/build/
