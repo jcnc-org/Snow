@@ -171,11 +171,12 @@ Module SirBuilder::Build(const snow::sema::SemaModule& sema_module,
     entry.label = "entry";
 
     if (function.return_type == "i32" || function.return_type == "i64") {
+      const std::string ret_seed = function_ast.return_literal.has_value() ? function_ast.return_literal.value() : "0";
       entry.instructions.push_back(Instruction{
           .result = std::string("%1"),
           .type = function.return_type,
           .opcode = Opcode::Add,
-          .operands = {"0", "0"},
+          .operands = {ret_seed, "0"},
           .is_terminator = false,
       });
       for (const auto& param : function_ast.params) {

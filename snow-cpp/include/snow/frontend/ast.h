@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -27,6 +28,7 @@ struct FunctionDecl {
   std::string name;
   std::vector<ParamDecl> params;
   std::string return_type;
+  std::optional<std::string> return_literal;
 };
 
 struct AstModule {

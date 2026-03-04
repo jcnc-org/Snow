@@ -103,7 +103,11 @@ std::string DumpAst(const AstModule& module) {
       }
       oss << function.params[i].name << ": " << function.params[i].type;
     }
-    oss << ") -> " << function.return_type << "\n";
+    oss << ") -> " << function.return_type;
+    if (function.return_literal.has_value()) {
+      oss << " ; return-literal=" << function.return_literal.value();
+    }
+    oss << "\n";
   }
   return oss.str();
 }
@@ -208,6 +212,13 @@ AstModule Parser::Parse(std::string module_path, const TokenStream& tokens,
       if (cursor.Match(TokenType::LBrace)) {
         int depth = 1;
         while (!cursor.AtEnd() && depth > 0) {
+          if (depth == 1 && cursor.Peek().type == TokenType::Identifier && cursor.Peek().lexeme == "return") {
+            cursor.Advance();
+            if (cursor.Peek().type == TokenType::Number && !function.return_literal.has_value()) {
+              function.return_literal = cursor.Advance().lexeme;
+            }
+            continue;
+          }
           if (cursor.Match(TokenType::LBrace)) {
             ++depth;
             continue;

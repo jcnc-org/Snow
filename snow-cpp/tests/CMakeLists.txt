@@ -105,6 +105,26 @@ add_cli_assert_test(
 )
 
 add_cli_assert_test(
+  snowc_compile_body_ops_ok
+  snowc
+  0
+  "compile|-o|${ARTIFACT_DIR}/body_ops_ok.exe|${CASES_DIR}/body_ops_ok.snow"
+  "artifact:"
+  "E_LEX_UNKNOWN_CHAR"
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_return_literal_sir
+  snowc
+  0
+  "compile|--emit-sir|-o|${ARTIFACT_DIR}/return_literal.exe|${CASES_DIR}/return_literal.snow"
+  "add 7, 0"
+  ""
+  ""
+)
+
+add_cli_assert_test(
   snowc_compile_dup_symbol_fail
   snowc
   1

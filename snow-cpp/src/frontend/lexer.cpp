@@ -64,6 +64,22 @@ std::string ToString(const TokenType type) {
       return "Semicolon";
     case TokenType::Star:
       return "Star";
+    case TokenType::Plus:
+      return "Plus";
+    case TokenType::Minus:
+      return "Minus";
+    case TokenType::Slash:
+      return "Slash";
+    case TokenType::Percent:
+      return "Percent";
+    case TokenType::Equal:
+      return "Equal";
+    case TokenType::Less:
+      return "Less";
+    case TokenType::Greater:
+      return "Greater";
+    case TokenType::Bang:
+      return "Bang";
     case TokenType::LParen:
       return "LParen";
     case TokenType::RParen:
@@ -170,6 +186,30 @@ TokenStream Lexer::Tokenize(const snow::common::SourceFile& source, snow::common
         break;
       case '*':
         single_type = TokenType::Star;
+        break;
+      case '+':
+        single_type = TokenType::Plus;
+        break;
+      case '-':
+        single_type = TokenType::Minus;
+        break;
+      case '/':
+        single_type = TokenType::Slash;
+        break;
+      case '%':
+        single_type = TokenType::Percent;
+        break;
+      case '=':
+        single_type = TokenType::Equal;
+        break;
+      case '<':
+        single_type = TokenType::Less;
+        break;
+      case '>':
+        single_type = TokenType::Greater;
+        break;
+      case '!':
+        single_type = TokenType::Bang;
         break;
       case '(':
         single_type = TokenType::LParen;
