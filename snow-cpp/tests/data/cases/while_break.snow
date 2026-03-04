@@ -1,0 +1,6 @@
+pub fn main() -> i32 {
+  while 1 < 2 {
+    break;
+  }
+  return 9;
+}

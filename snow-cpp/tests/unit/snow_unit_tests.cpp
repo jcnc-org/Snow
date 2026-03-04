@@ -282,6 +282,9 @@ bool TestParserControlFlowForms() {
   if (!fn.while_condition) {
     return Fail(test_name, "expected while condition");
   }
+  if (fn.while_has_break) {
+    return Fail(test_name, "did not expect while break flag in this test");
+  }
   if (!fn.if_expr || !fn.if_expr->condition || !fn.if_expr->then_expr || !fn.if_expr->else_expr) {
     return Fail(test_name, "expected parsed if expression branches");
   }
@@ -332,6 +335,34 @@ bool TestSemaWhileConditionTypeMismatch() {
   return true;
 }
 
+bool TestParserWhileBreakFlag() {
+  const std::string test_name = "TestParserWhileBreakFlag";
+  const snow::common::SourceFile source{
+      "unit_while_break.snow",
+      "pub fn main() -> i32 { while 1 < 2 { break; } return 9; }",
+  };
+
+  snow::common::DiagnosticEngine diagnostics;
+  snow::frontend::Lexer lexer;
+  snow::frontend::Parser parser;
+
+  const auto tokens = lexer.Tokenize(source, diagnostics);
+  const auto ast = parser.Parse("unit.while_break", tokens, diagnostics);
+  if (diagnostics.HasErrors()) {
+    return Fail(test_name, "unexpected parse diagnostics");
+  }
+  if (ast.functions.empty()) {
+    return Fail(test_name, "expected parsed function");
+  }
+  if (!ast.functions.front().while_condition) {
+    return Fail(test_name, "expected while condition");
+  }
+  if (!ast.functions.front().while_has_break) {
+    return Fail(test_name, "expected while break flag");
+  }
+  return true;
+}
+
 }  // namespace
 
 int main() {
@@ -345,6 +376,7 @@ int main() {
   failed += TestParserControlFlowForms() ? 0 : 1;
   failed += TestSemaIfConditionTypeMismatch() ? 0 : 1;
   failed += TestSemaWhileConditionTypeMismatch() ? 0 : 1;
+  failed += TestParserWhileBreakFlag() ? 0 : 1;
 
   if (failed == 0) {
     std::cout << "[PASS] snow-unit-tests\n";

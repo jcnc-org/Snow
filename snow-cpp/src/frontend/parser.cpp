@@ -372,6 +372,9 @@ std::string DumpAst(const AstModule& module) {
     if (function.while_condition) {
       oss << " ; while-cond=" << DumpExpr(function.while_condition);
     }
+    if (function.while_has_break) {
+      oss << " ; while-break=true";
+    }
     oss << "\n";
   }
   return oss.str();
@@ -508,6 +511,14 @@ AstModule Parser::Parse(std::string module_path, const TokenStream& tokens,
 
             int while_depth = 1;
             while (!cursor.AtEnd() && while_depth > 0) {
+              if (while_depth == 1 && cursor.Match(TokenType::KeywordBreak)) {
+                function.while_has_break = true;
+                if (!cursor.Match(TokenType::Semicolon)) {
+                  diagnostics.Error("E_PARSE_BREAK_SEMI", "Expected ';' after break", module.module_path,
+                                    cursor.Peek().range);
+                }
+                continue;
+              }
               if (cursor.Match(TokenType::LBrace)) {
                 ++while_depth;
                 continue;

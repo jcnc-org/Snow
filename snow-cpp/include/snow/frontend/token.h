@@ -20,6 +20,7 @@ enum class TokenType {
   KeywordIf,
   KeywordElse,
   KeywordWhile,
+  KeywordBreak,
   Arrow,
   Dot,
   Comma,

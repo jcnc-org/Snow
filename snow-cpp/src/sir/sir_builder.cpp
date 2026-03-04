@@ -439,7 +439,7 @@ Module SirBuilder::Build(const snow::sema::SemaModule& sema_module,
           .result = std::nullopt,
           .type = "void",
           .opcode = Opcode::Br,
-          .operands = {cond_block.label},
+          .operands = {function_ast.while_has_break ? exit_block.label : cond_block.label},
           .is_terminator = true,
       });
 

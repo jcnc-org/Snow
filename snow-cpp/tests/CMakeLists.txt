@@ -215,11 +215,31 @@ add_cli_assert_test(
 )
 
 add_cli_assert_test(
+  snowc_compile_while_break_sir
+  snowc
+  0
+  "compile|--emit-sir|-o|${ARTIFACT_DIR}/while_break.exe|${CASES_DIR}/while_break.snow"
+  "loop_body:|br loop_exit|loop_exit:|ret 9 : i32"
+  ""
+  ""
+)
+
+add_cli_assert_test(
   snowc_compile_while_cfg_llvm
   snowc
   0
   "compile|--emit-llvm|-o|${ARTIFACT_DIR}/while_cfg_llvm.exe|${CASES_DIR}/while_cfg.snow"
   "entry:|br label %loop_cond|loop_cond:|br i1 %[0-9]+, label %loop_body, label %loop_exit|loop_body:|br label %loop_cond|loop_exit:|ret i32 7"
+  ""
+  ""
+)
+
+add_cli_assert_test(
+  snowc_compile_while_break_llvm
+  snowc
+  0
+  "compile|--emit-llvm|-o|${ARTIFACT_DIR}/while_break_llvm.exe|${CASES_DIR}/while_break.snow"
+  "loop_body:|br label %loop_exit|loop_exit:|ret i32 9"
   ""
   ""
 )

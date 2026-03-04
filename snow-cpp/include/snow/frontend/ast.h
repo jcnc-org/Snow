@@ -67,6 +67,7 @@ struct FunctionDecl {
   std::shared_ptr<Expr> return_expr;
   std::shared_ptr<IfExpr> if_expr;
   std::shared_ptr<Expr> while_condition;
+  bool while_has_break = false;
 };
 
 struct AstModule {
