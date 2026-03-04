@@ -1,0 +1,7 @@
+[package]
+name = "project-ok"
+version = "0.1.0"
+edition = "v2"
+main = "src/main.snow"
+
+[dependencies]

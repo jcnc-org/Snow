@@ -3,6 +3,8 @@
 #include <sstream>
 #include <unordered_map>
 
+#include "snow/common/mangling.h"
+
 namespace snow::sir {
 
 std::string ToString(const Opcode opcode) {
@@ -59,7 +61,11 @@ std::string DumpSir(const Module& module) {
   std::ostringstream oss;
   oss << "sir module " << module.module_path << "\n";
   for (const auto& function : module.functions) {
-    oss << "fn " << function.name << "() -> " << function.return_type << "\n";
+    oss << "fn " << function.name;
+    if (!function.original_name.empty()) {
+      oss << " ; original=" << function.original_name;
+    }
+    oss << "\n";
     for (const auto& block : function.blocks) {
       oss << block.label << ":\n";
       for (const auto& instr : block.instructions) {
@@ -126,7 +132,14 @@ Module SirBuilder::Build(const snow::sema::SemaModule& sema_module,
 
   for (const auto& function_ast : sema_module.ast.functions) {
     Function function;
-    function.name = function_ast.name;
+    function.original_name = function_ast.name;
+    std::vector<std::string> param_types;
+    param_types.reserve(function_ast.params.size());
+    for (const auto& param : function_ast.params) {
+      param_types.push_back(param.type);
+    }
+    function.name = snow::common::MangleSymbol(sema_module.ast.module_path, function_ast.name, param_types,
+                                               function_ast.return_type, false);
     function.return_type = function_ast.return_type;
 
     BasicBlock entry;

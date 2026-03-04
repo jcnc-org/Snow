@@ -35,6 +35,15 @@ std::string ZeroValue(const std::string& llvm_type) {
   return "0";
 }
 
+const snow::sir::Function* FindUserMain(const snow::sir::Module& module) {
+  for (const auto& function : module.functions) {
+    if (function.original_name == "main") {
+      return &function;
+    }
+  }
+  return nullptr;
+}
+
 }  // namespace
 
 LoweringResult LlvmLowering::Lower(const snow::sir::Module& module, const TargetConfig& target,
@@ -50,6 +59,7 @@ LoweringResult LlvmLowering::Lower(const snow::sir::Module& module, const Target
   std::ostringstream oss;
   oss << "; snow llvm ir (textual lowering)\n";
   oss << "target triple = \"" << target.triple << "\"\n";
+  oss << "; entry-wrapper = " << (target.executable_entry_wrapper ? "enabled" : "disabled") << "\n";
   oss << "; opt-level = " << (opt_level == snow::passes::OptLevel::O0 ? "O0" : "O2") << "\n\n";
 
   for (const auto& function : module.functions) {
@@ -58,6 +68,18 @@ LoweringResult LlvmLowering::Lower(const snow::sir::Module& module, const Target
     oss << "entry:\n";
     oss << "  ret " << ret_ty << " " << ZeroValue(ret_ty) << "\n";
     oss << "}\n\n";
+  }
+
+  if (target.executable_entry_wrapper) {
+    const snow::sir::Function* user_main = FindUserMain(module);
+    if (user_main != nullptr) {
+      oss << "declare i32 @snow_runtime_start(ptr)\n\n";
+      oss << "define i32 @main() {\n";
+      oss << "entry:\n";
+      oss << "  %0 = call i32 @snow_runtime_start(ptr @" << user_main->name << ")\n";
+      oss << "  ret i32 %0\n";
+      oss << "}\n\n";
+    }
   }
 
   result.llvm_ir = oss.str();

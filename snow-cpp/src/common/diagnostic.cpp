@@ -35,6 +35,10 @@ void DiagnosticEngine::Add(const Diagnostic& diagnostic) {
   diagnostics_.push_back(diagnostic);
 }
 
+void DiagnosticEngine::Append(const DiagnosticEngine& other) {
+  diagnostics_.insert(diagnostics_.end(), other.diagnostics_.begin(), other.diagnostics_.end());
+}
+
 void DiagnosticEngine::Error(std::string code, std::string message, std::string file, const SourceRange range,
                              std::optional<std::string> suggestion) {
   diagnostics_.push_back(Diagnostic{

@@ -21,8 +21,8 @@ powershell -ExecutionPolicy Bypass -File builds/tools/install-snow-cpp-env.ps1
 ```bash
 snowc version
 snowc compile --emit-tokens --emit-ast --emit-sema --emit-sir --emit-cfg --emit-llvm input.snow
+snowc build path/to/project-root
 snowc run input.snow
-snowc build input.snow
 snowc init
 snowc clean
 ```
@@ -31,3 +31,4 @@ snowc clean
 
 - LLVM integration is currently a textual lowering stub unless `SNOW_ENABLE_LLVM=ON` and LLVM >= 17 is available.
 - Architecture and constraints are defined by root `AGENTS.md` and v1 docs in `docs/`.
+- Differential helper executable: `snow-diff-harness`.

@@ -1,5 +1,6 @@
 #include "snow/sir/validator.h"
 
+#include <unordered_map>
 #include <unordered_set>
 
 namespace snow::sir {
@@ -22,6 +23,12 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
 
   for (const auto& function : module.functions) {
     std::unordered_set<std::string> defs;
+    std::unordered_map<std::string, int> drop_counts;
+    std::unordered_set<std::string> block_labels;
+
+    for (const auto& block : function.blocks) {
+      block_labels.insert(block.label);
+    }
 
     for (const auto& block : function.blocks) {
       if (block.instructions.empty()) {
@@ -93,6 +100,25 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
               diagnostics.Error("E_SIR_CONDBR_ARITY", "cond_br requires condition and two targets", module.module_path,
                                 {0, 0, 0, 0});
               report.ok = false;
+            } else {
+              const auto& true_label = instr.operands[1];
+              const auto& false_label = instr.operands[2];
+              if (!block_labels.contains(true_label) || !block_labels.contains(false_label)) {
+                diagnostics.Error("E_SIR_CFG_TARGET", "cond_br target label does not exist", module.module_path,
+                                  {0, 0, 0, 0});
+                report.ok = false;
+              }
+            }
+            break;
+          case Opcode::Br:
+            if (instr.operands.size() != 1) {
+              diagnostics.Error("E_SIR_BR_ARITY", "br requires exactly one target label", module.module_path,
+                                {0, 0, 0, 0});
+              report.ok = false;
+            } else if (!block_labels.contains(instr.operands[0])) {
+              diagnostics.Error("E_SIR_CFG_TARGET", "br target label does not exist", module.module_path,
+                                {0, 0, 0, 0});
+              report.ok = false;
             }
             break;
           case Opcode::Drop:
@@ -100,6 +126,14 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
               diagnostics.Error("E_SIR_DROP_ARITY", "drop requires exactly one operand", module.module_path,
                                 {0, 0, 0, 0});
               report.ok = false;
+            } else {
+              const auto& dropped = instr.operands[0];
+              drop_counts[dropped] += 1;
+              if (drop_counts[dropped] > 1) {
+                diagnostics.Error("E_SIR_DOUBLE_DROP", "value dropped more than once: " + dropped, module.module_path,
+                                  {0, 0, 0, 0});
+                report.ok = false;
+              }
             }
             break;
           default:

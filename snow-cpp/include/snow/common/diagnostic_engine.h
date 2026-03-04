@@ -9,6 +9,7 @@ namespace snow::common {
 class DiagnosticEngine {
  public:
   void Add(const Diagnostic& diagnostic);
+  void Append(const DiagnosticEngine& other);
   void Error(std::string code, std::string message, std::string file, SourceRange range,
              std::optional<std::string> suggestion = std::nullopt);
   void Warning(std::string code, std::string message, std::string file, SourceRange range,

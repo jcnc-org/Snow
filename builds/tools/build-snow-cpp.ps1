@@ -15,7 +15,7 @@ if ($Clean -and (Test-Path $BuildDir)) {
   Remove-Item -Recurse -Force $BuildDir
 }
 
-cmake -S snow-cpp -B $BuildDir -G $Generator -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+cmake -S snow-cpp -B $BuildDir -G $Generator -DCMAKE_CXX_COMPILER=clang++
 cmake --build $BuildDir
 ctest --test-dir $BuildDir --output-on-failure
 

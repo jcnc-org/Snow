@@ -6,6 +6,12 @@
 
 namespace snow::driver {
 
+enum class OutputKind {
+  Object,
+  Library,
+  Executable,
+};
+
 struct EmitOptions {
   bool tokens = false;
   bool ast = false;
@@ -19,6 +25,7 @@ struct CompileRequest {
   std::string input_path;
   std::string target_triple;
   snow::passes::OptLevel opt_level = snow::passes::OptLevel::O0;
+  OutputKind output_kind = OutputKind::Executable;
   EmitOptions emit;
 };
 

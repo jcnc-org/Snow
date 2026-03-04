@@ -9,13 +9,22 @@
 namespace {
 
 void PrintUsage() {
-  std::cout << "snowc <command> [options] [input]\\n"
-            << "commands: compile run build init clean version\\n"
-            << "compile options:\\n"
-            << "  --target <triple>\\n"
-            << "  --opt=0|2\\n"
-            << "  --emit-tokens --emit-ast --emit-sema --emit-sir --emit-cfg --emit-llvm\\n";
+  std::cout << "snowc <command> [options] [input]\n"
+            << "commands: compile run build init clean version\n"
+            << "shared options:\n"
+            << "  --target <triple>\n"
+            << "  --opt=0|2\n"
+            << "  --emit-tokens --emit-ast --emit-sema --emit-sir --emit-cfg --emit-llvm\n"
+            << "  --emit-object --emit-lib --emit-exe\n";
 }
+
+struct ParsedOptions {
+  std::string target_triple;
+  snow::passes::OptLevel opt_level = snow::passes::OptLevel::O0;
+  snow::driver::OutputKind output_kind = snow::driver::OutputKind::Executable;
+  snow::driver::EmitOptions emit;
+  std::vector<std::string> positional;
+};
 
 snow::passes::OptLevel ParseOpt(const std::string& arg) {
   if (arg == "--opt=2") {
@@ -24,70 +33,74 @@ snow::passes::OptLevel ParseOpt(const std::string& arg) {
   return snow::passes::OptLevel::O0;
 }
 
-int RunCompileLike(const std::string& command, const std::vector<std::string>& args) {
-  snow::driver::CompileRequest request;
-  request.target_triple = "";
-
+bool ParseCommonOptions(const std::vector<std::string>& args, ParsedOptions& parsed, std::string& error) {
   for (std::size_t i = 0; i < args.size(); ++i) {
     const auto& arg = args[i];
 
     if (arg == "--target") {
       if (i + 1 >= args.size()) {
-        std::cerr << "missing target triple after --target\\n";
-        return 2;
+        error = "missing target triple after --target";
+        return false;
       }
-      request.target_triple = args[++i];
+      parsed.target_triple = args[++i];
       continue;
     }
 
     if (arg.rfind("--opt=", 0) == 0) {
-      request.opt_level = ParseOpt(arg);
+      parsed.opt_level = ParseOpt(arg);
+      continue;
+    }
+
+    if (arg == "--emit-object") {
+      parsed.output_kind = snow::driver::OutputKind::Object;
+      continue;
+    }
+    if (arg == "--emit-lib") {
+      parsed.output_kind = snow::driver::OutputKind::Library;
+      continue;
+    }
+    if (arg == "--emit-exe") {
+      parsed.output_kind = snow::driver::OutputKind::Executable;
       continue;
     }
 
     if (arg == "--emit-tokens") {
-      request.emit.tokens = true;
+      parsed.emit.tokens = true;
       continue;
     }
     if (arg == "--emit-ast") {
-      request.emit.ast = true;
+      parsed.emit.ast = true;
       continue;
     }
     if (arg == "--emit-sema") {
-      request.emit.sema = true;
+      parsed.emit.sema = true;
       continue;
     }
     if (arg == "--emit-sir") {
-      request.emit.sir = true;
+      parsed.emit.sir = true;
       continue;
     }
     if (arg == "--emit-cfg") {
-      request.emit.cfg = true;
+      parsed.emit.cfg = true;
       continue;
     }
     if (arg == "--emit-llvm") {
-      request.emit.llvm = true;
+      parsed.emit.llvm = true;
       continue;
     }
 
     if (!arg.empty() && arg[0] == '-') {
-      std::cerr << "unknown option: " << arg << "\\n";
-      return 2;
+      error = "unknown option: " + arg;
+      return false;
     }
 
-    if (request.input_path.empty()) {
-      request.input_path = arg;
-    }
+    parsed.positional.push_back(arg);
   }
 
-  if (request.input_path.empty()) {
-    std::cerr << "missing input file\\n";
-    return 2;
-  }
+  return true;
+}
 
-  const snow::driver::Driver driver;
-  const auto result = driver.Compile(request);
-
+void PrintCompileDumps(const snow::driver::CompileResult& result, const snow::driver::CompileRequest& request) {
   if (!result.token_dump.empty()) {
     std::cout << result.token_dump;
   }
@@ -109,20 +122,86 @@ int RunCompileLike(const std::string& command, const std::vector<std::string>& a
   if (!result.llvm_dump.empty()) {
     std::cout << result.llvm_dump;
   }
+}
+
+int PrintCompileResult(const snow::driver::CompileResult& result, const snow::driver::CompileRequest& request) {
+  PrintCompileDumps(result, request);
+  const auto diag_text = snow::driver::RenderDiagnostics(result.diagnostics);
+  if (!diag_text.empty()) {
+    std::cerr << diag_text;
+  }
+
+  return result.success ? 0 : 1;
+}
+
+int RunCompile(const std::vector<std::string>& args) {
+  ParsedOptions parsed;
+  std::string error;
+  if (!ParseCommonOptions(args, parsed, error)) {
+    std::cerr << error << "\n";
+    return 2;
+  }
+
+  if (parsed.positional.empty()) {
+    std::cerr << "missing input file\n";
+    return 2;
+  }
+
+  snow::driver::CompileRequest request;
+  request.input_path = parsed.positional[0];
+  request.target_triple = parsed.target_triple;
+  request.opt_level = parsed.opt_level;
+  request.output_kind = parsed.output_kind;
+  request.emit = parsed.emit;
+
+  const snow::driver::Driver driver;
+  const auto result = driver.Compile(request);
+  return PrintCompileResult(result, request);
+}
+
+int RunBuild(const std::vector<std::string>& args) {
+  ParsedOptions parsed;
+  std::string error;
+  if (!ParseCommonOptions(args, parsed, error)) {
+    std::cerr << error << "\n";
+    return 2;
+  }
+
+  snow::driver::BuildRequest request;
+  request.project_root = parsed.positional.empty() ? "." : parsed.positional[0];
+  request.target_triple = parsed.target_triple;
+  request.opt_level = parsed.opt_level;
+  request.output_kind = parsed.output_kind;
+  request.emit = parsed.emit;
+
+  const snow::driver::Driver driver;
+  const auto result = driver.BuildProject(request);
+
+  if (!result.summary.empty()) {
+    std::cout << result.summary;
+  }
+
+  for (const auto& module_result : result.module_compiles) {
+    snow::driver::CompileRequest module_request;
+    module_request.emit = parsed.emit;
+    PrintCompileDumps(module_result, module_request);
+  }
 
   const auto diag_text = snow::driver::RenderDiagnostics(result.diagnostics);
   if (!diag_text.empty()) {
     std::cerr << diag_text;
   }
 
-  if (!result.success) {
-    return 1;
+  return result.success ? 0 : 1;
+}
+
+int RunRun(const std::vector<std::string>& args) {
+  const int rc = RunCompile(args);
+  if (rc != 0) {
+    return rc;
   }
 
-  if (command == "run") {
-    std::cout << "run: code execution not implemented in bootstrap yet\\n";
-  }
-
+  std::cout << "run: runtime execution not implemented in bootstrap yet\n";
   return 0;
 }
 
@@ -137,21 +216,23 @@ int RunInit(const std::vector<std::string>& args) {
   const auto manifest = root / "snow.toml";
   if (!std::filesystem::exists(manifest)) {
     std::ofstream out(manifest);
-    out << "[package]\\n";
-    out << "name = \"snow-app\"\\n";
-    out << "version = \"0.1.0\"\\n";
-    out << "edition = \"v2\"\\n";
+    out << "[package]\n";
+    out << "name = \"snow-app\"\n";
+    out << "version = \"0.1.0\"\n";
+    out << "edition = \"v2\"\n";
+    out << "main = \"src/main.snow\"\n";
+    out << "\n[dependencies]\n";
   }
 
   const auto main_file = root / "src" / "main.snow";
   if (!std::filesystem::exists(main_file)) {
     std::ofstream out(main_file);
-    out << "fn main() -> i32 {\\n";
-    out << "  return 0;\\n";
-    out << "}\\n";
+    out << "fn main() -> i32 {\n";
+    out << "  return 0;\n";
+    out << "}\n";
   }
 
-  std::cout << "initialized Snow project at " << root.string() << "\\n";
+  std::cout << "initialized Snow project at " << root.string() << "\n";
   return 0;
 }
 
@@ -159,7 +240,8 @@ int RunClean() {
   std::error_code ec;
   std::filesystem::remove_all("snow-build", ec);
   std::filesystem::remove_all("build", ec);
-  std::cout << "cleaned build artifacts\\n";
+  std::filesystem::remove_all("snow-cpp/build", ec);
+  std::cout << "cleaned build artifacts\n";
   return 0;
 }
 
@@ -175,12 +257,20 @@ int main(int argc, char** argv) {
   const std::vector<std::string> args(argv + 2, argv + argc);
 
   if (command == "version") {
-    std::cout << "snowc v1.0.0-cpp-alpha\\n";
+    std::cout << "snowc v1.0.0-cpp-alpha\n";
     return 0;
   }
 
-  if (command == "compile" || command == "run" || command == "build") {
-    return RunCompileLike(command, args);
+  if (command == "compile") {
+    return RunCompile(args);
+  }
+
+  if (command == "build") {
+    return RunBuild(args);
+  }
+
+  if (command == "run") {
+    return RunRun(args);
   }
 
   if (command == "init") {

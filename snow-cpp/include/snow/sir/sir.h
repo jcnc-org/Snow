@@ -45,6 +45,7 @@ struct BasicBlock {
 };
 
 struct Function {
+  std::string original_name;
   std::string name;
   std::string return_type;
   std::vector<BasicBlock> blocks;

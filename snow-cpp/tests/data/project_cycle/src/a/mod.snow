@@ -1,0 +1,5 @@
+import b.mod;
+
+pub fn go() -> i32 {
+  return 1;
+}

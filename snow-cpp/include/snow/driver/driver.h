@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include "snow/common/diagnostic_engine.h"
 #include "snow/driver/compile_options.h"
@@ -19,9 +20,26 @@ struct CompileResult {
   snow::common::DiagnosticEngine diagnostics;
 };
 
+struct BuildRequest {
+  std::string project_root;
+  std::string target_triple;
+  snow::passes::OptLevel opt_level = snow::passes::OptLevel::O0;
+  OutputKind output_kind = OutputKind::Executable;
+  EmitOptions emit;
+};
+
+struct BuildResult {
+  bool success = false;
+  std::vector<std::string> module_order;
+  std::vector<CompileResult> module_compiles;
+  std::string summary;
+  snow::common::DiagnosticEngine diagnostics;
+};
+
 class Driver {
  public:
   CompileResult Compile(const CompileRequest& request) const;
+  BuildResult BuildProject(const BuildRequest& request) const;
 };
 
 std::string RenderDiagnostics(const snow::common::DiagnosticEngine& diagnostics);

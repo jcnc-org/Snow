@@ -1,0 +1,5 @@
+import a.mod;
+
+pub fn back() -> i32 {
+  return 2;
+}
