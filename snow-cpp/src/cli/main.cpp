@@ -20,6 +20,7 @@ void PrintUsage() {
 
 struct ParsedOptions {
   std::string target_triple;
+  std::string output_path;
   snow::passes::OptLevel opt_level = snow::passes::OptLevel::O0;
   snow::driver::OutputKind output_kind = snow::driver::OutputKind::Executable;
   snow::driver::EmitOptions emit;
@@ -48,6 +49,15 @@ bool ParseCommonOptions(const std::vector<std::string>& args, ParsedOptions& par
 
     if (arg.rfind("--opt=", 0) == 0) {
       parsed.opt_level = ParseOpt(arg);
+      continue;
+    }
+
+    if (arg == "-o" || arg == "--out") {
+      if (i + 1 >= args.size()) {
+        error = "missing output path after " + arg;
+        return false;
+      }
+      parsed.output_path = args[++i];
       continue;
     }
 
@@ -126,6 +136,10 @@ void PrintCompileDumps(const snow::driver::CompileResult& result, const snow::dr
 
 int PrintCompileResult(const snow::driver::CompileResult& result, const snow::driver::CompileRequest& request) {
   PrintCompileDumps(result, request);
+  if (result.success && !result.artifact_path.empty()) {
+    std::cout << "artifact: " << result.artifact_path << "\n";
+    std::cout << "target: " << result.target_triple << "\n";
+  }
   const auto diag_text = snow::driver::RenderDiagnostics(result.diagnostics);
   if (!diag_text.empty()) {
     std::cerr << diag_text;
@@ -152,6 +166,7 @@ int RunCompile(const std::vector<std::string>& args) {
   request.target_triple = parsed.target_triple;
   request.opt_level = parsed.opt_level;
   request.output_kind = parsed.output_kind;
+  request.output_path = parsed.output_path;
   request.emit = parsed.emit;
 
   const snow::driver::Driver driver;
@@ -170,6 +185,7 @@ int RunBuild(const std::vector<std::string>& args) {
   snow::driver::BuildRequest request;
   request.project_root = parsed.positional.empty() ? "." : parsed.positional[0];
   request.target_triple = parsed.target_triple;
+  request.output_path = parsed.output_path;
   request.opt_level = parsed.opt_level;
   request.output_kind = parsed.output_kind;
   request.emit = parsed.emit;

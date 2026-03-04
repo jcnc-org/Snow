@@ -10,6 +10,8 @@ namespace snow::driver {
 
 struct CompileResult {
   bool success = false;
+  std::string target_triple;
+  std::string artifact_path;
   std::string token_dump;
   std::string ast_dump;
   std::string sema_dump;
@@ -23,6 +25,7 @@ struct CompileResult {
 struct BuildRequest {
   std::string project_root;
   std::string target_triple;
+  std::string output_path;
   snow::passes::OptLevel opt_level = snow::passes::OptLevel::O0;
   OutputKind output_kind = OutputKind::Executable;
   EmitOptions emit;

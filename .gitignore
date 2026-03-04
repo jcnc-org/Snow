@@ -45,3 +45,4 @@ target/
 /demoDir/
 /.env
 /snow-cpp/build/
+/builds/tmp/

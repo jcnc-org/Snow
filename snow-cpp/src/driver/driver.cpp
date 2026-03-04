@@ -15,6 +15,7 @@
 
 #include "snow/codegen/lowering.h"
 #include "snow/common/source_file.h"
+#include "snow/common/target.h"
 #include "snow/frontend/lexer.h"
 #include "snow/frontend/parser.h"
 #include "snow/ownership/ownership.h"
@@ -64,6 +65,34 @@ std::string Trim(const std::string& in) {
   return in.substr(first, last - first + 1);
 }
 
+std::string ToString(const OutputKind output_kind) {
+  switch (output_kind) {
+    case OutputKind::Object:
+      return "object";
+    case OutputKind::Library:
+      return "library";
+    case OutputKind::Executable:
+      return "executable";
+  }
+  return "object";
+}
+
+std::string ExtensionForOutputKind(const OutputKind output_kind) {
+  switch (output_kind) {
+    case OutputKind::Object:
+      return ".o";
+    case OutputKind::Library:
+      return ".a";
+    case OutputKind::Executable:
+#if defined(_WIN32)
+      return ".exe";
+#else
+      return "";
+#endif
+  }
+  return ".o";
+}
+
 std::string GuessModulePathFromFile(const std::filesystem::path& file_path) {
   std::filesystem::path p = file_path;
   p.replace_extension();
@@ -82,6 +111,42 @@ std::string GuessModulePathFromFile(const std::filesystem::path& file_path) {
     module.pop_back();
   }
   return module;
+}
+
+std::filesystem::path DefaultArtifactPath(const CompileRequest& request, const std::string& module_path) {
+  const std::filesystem::path input_path = request.input_path;
+  const std::filesystem::path out_dir = std::filesystem::current_path() / "snow-build";
+  std::string name = module_path;
+  name = ReplaceAll(name, '.', '_');
+  if (name.empty()) {
+    name = input_path.stem().string();
+  }
+  return out_dir / (name + ExtensionForOutputKind(request.output_kind));
+}
+
+bool WriteArtifact(const std::filesystem::path& output_path, const OutputKind output_kind, const std::string& target_triple,
+                   const std::string& module_path, const std::string& llvm_ir, common::DiagnosticEngine& diagnostics) {
+  std::error_code ec;
+  std::filesystem::create_directories(output_path.parent_path(), ec);
+  if (ec) {
+    diagnostics.Error("E_DRIVER_OUTDIR", "Cannot create output directory", output_path.string(), {0, 0, 0, 0},
+                      ec.message());
+    return false;
+  }
+
+  std::ofstream out(output_path, std::ios::out | std::ios::binary);
+  if (!out) {
+    diagnostics.Error("E_DRIVER_OUTFILE", "Cannot write output artifact", output_path.string(), {0, 0, 0, 0});
+    return false;
+  }
+
+  out << "# snow artifact (bootstrap)\\n";
+  out << "kind=" << ToString(output_kind) << "\\n";
+  out << "target=" << target_triple << "\\n";
+  out << "module=" << module_path << "\\n";
+  out << "--- llvm ---\\n";
+  out << llvm_ir;
+  return true;
 }
 
 std::string JoinSegments(const std::vector<std::string>& segments) {
@@ -308,6 +373,8 @@ CompileResult Driver::Compile(const CompileRequest& request) const {
   }
 
   const auto module_path = GuessModulePathFromFile(std::filesystem::path(request.input_path));
+  const std::string target_triple = request.target_triple.empty() ? snow::common::DetectHostTriple() : request.target_triple;
+  result.target_triple = target_triple;
   const snow::common::SourceFile source{request.input_path, source_text.value()};
 
   frontend::Lexer lexer;
@@ -357,12 +424,22 @@ CompileResult Driver::Compile(const CompileRequest& request) const {
   if (!result.diagnostics.HasErrors()) {
     codegen::LlvmLowering lowering;
     codegen::TargetConfig target{
-        .triple = request.target_triple.empty() ? "host" : request.target_triple,
+        .triple = target_triple,
         .executable_entry_wrapper = request.output_kind == OutputKind::Executable,
     };
     const auto llvm_result = lowering.Lower(pass_result.module, target, request.opt_level);
     if (request.emit.llvm) {
       result.llvm_dump = llvm_result.llvm_ir;
+    }
+
+    if (request.write_artifact) {
+      const std::filesystem::path out_path = request.output_path.empty()
+                                                 ? DefaultArtifactPath(request, module_path)
+                                                 : std::filesystem::path(request.output_path);
+      if (WriteArtifact(out_path, request.output_kind, target_triple, module_path, llvm_result.llvm_ir,
+                        result.diagnostics)) {
+        result.artifact_path = out_path.string();
+      }
     }
   }
 
@@ -402,10 +479,23 @@ BuildResult Driver::BuildProject(const BuildRequest& request) const {
     module_request.input_path = it->second.file_path.string();
     module_request.target_triple = request.target_triple;
     module_request.opt_level = request.opt_level;
-    module_request.output_kind = request.output_kind;
+    module_request.output_kind = OutputKind::Object;
+    module_request.write_artifact = true;
 
     if (std::filesystem::weakly_canonical(it->second.file_path) == main_file_abs) {
       module_request.emit = request.emit;
+      module_request.output_kind = request.output_kind;
+      if (!request.output_path.empty()) {
+        module_request.output_path = request.output_path;
+      } else if (!request.project_root.empty()) {
+        const std::filesystem::path root_path = std::filesystem::path(request.project_root);
+        const std::filesystem::path out_dir = root_path / "snow-build";
+        module_request.output_path = (out_dir / ("main" + ExtensionForOutputKind(request.output_kind))).string();
+      }
+    } else if (!request.project_root.empty()) {
+      const std::filesystem::path root_path = std::filesystem::path(request.project_root);
+      const std::string module_name = ReplaceAll(module_id, '.', '_');
+      module_request.output_path = (root_path / "snow-build" / (module_name + ExtensionForOutputKind(OutputKind::Object))).string();
     }
 
     auto compile_result = Compile(module_request);
@@ -415,8 +505,12 @@ BuildResult Driver::BuildProject(const BuildRequest& request) const {
 
   std::ostringstream summary;
   summary << "build modules: " << result.module_order.size() << "\n";
-  for (const auto& module_id : result.module_order) {
-    summary << "  - " << module_id << "\n";
+  for (std::size_t i = 0; i < result.module_order.size(); ++i) {
+    summary << "  - " << result.module_order[i];
+    if (i < result.module_compiles.size() && !result.module_compiles[i].artifact_path.empty()) {
+      summary << " -> " << result.module_compiles[i].artifact_path;
+    }
+    summary << "\n";
   }
   result.summary = summary.str();
 

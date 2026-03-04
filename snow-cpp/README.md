@@ -16,6 +16,12 @@ Windows one-click environment setup:
 powershell -ExecutionPolicy Bypass -File builds/tools/install-snow-cpp-env.ps1
 ```
 
+Compliance check:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File builds/tools/check-snow-v1-compliance.ps1
+```
+
 ## Commands
 
 ```bash

@@ -1,0 +1,6 @@
+import a.mod;
+import b.mod;
+
+fn main() -> i32 {
+  return 0;
+}

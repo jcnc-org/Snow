@@ -26,6 +26,8 @@ struct CompileRequest {
   std::string target_triple;
   snow::passes::OptLevel opt_level = snow::passes::OptLevel::O0;
   OutputKind output_kind = OutputKind::Executable;
+  std::string output_path;
+  bool write_artifact = true;
   EmitOptions emit;
 };
 

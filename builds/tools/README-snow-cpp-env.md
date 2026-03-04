@@ -45,3 +45,9 @@ powershell -ExecutionPolicy Bypass -File builds/tools/install-snow-cpp-env.ps1 -
 ```powershell
 powershell -ExecutionPolicy Bypass -File builds/tools/build-snow-cpp.ps1
 ```
+
+## Run v1 compliance checklist
+
+```powershell
+powershell -ExecutionPolicy Bypass -File builds/tools/check-snow-v1-compliance.ps1
+```

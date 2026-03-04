@@ -1,0 +1,7 @@
+fn dup() -> i32 {
+  return 1;
+}
+
+fn dup() -> i32 {
+  return 2;
+}

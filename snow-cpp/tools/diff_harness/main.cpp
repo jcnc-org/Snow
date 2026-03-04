@@ -21,6 +21,13 @@ std::string Quote(const std::string& text) {
   return out;
 }
 
+std::string EnsureQuoted(const std::string& text) {
+  if (text.size() >= 2 && text.front() == '"' && text.back() == '"') {
+    return text;
+  }
+  return Quote(text);
+}
+
 std::string ExecCapture(const std::string& command, int& exit_code) {
   std::array<char, 512> buffer{};
   std::string output;
@@ -102,8 +109,8 @@ int main(int argc, char** argv) {
     return 2;
   }
 
-  const std::string java_compile = java_cmd + " compile " + Quote(input);
-  const std::string cpp_compile = Quote(snowc_cmd) + " compile --emit-llvm " + Quote(input);
+  const std::string java_compile = EnsureQuoted(java_cmd) + " compile " + EnsureQuoted(input);
+  const std::string cpp_compile = EnsureQuoted(snowc_cmd) + " compile --emit-llvm " + EnsureQuoted(input);
 
   int java_rc = 0;
   int cpp_rc = 0;
