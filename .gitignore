@@ -49,3 +49,4 @@ target/
 /build/
 /builds/tmp/
 tests/perf/latest_timing_report.txt
+/snow-build/
