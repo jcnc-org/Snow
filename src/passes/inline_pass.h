@@ -1,9 +1,12 @@
 #pragma once
 
+#include "snow/passes/pass_contract.h"
 #include "snow/sir/sir.h"
 
 namespace snow::passes {
 
-bool InlineModule(snow::sir::Module& module);
+    const PassContract &InlineContract();
 
-}  // namespace snow::passes
+    bool InlineModule(snow::sir::Module &module);
+
+} // namespace snow::passes

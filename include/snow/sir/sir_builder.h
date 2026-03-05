@@ -6,10 +6,10 @@
 
 namespace snow::sir {
 
-class SirBuilder {
- public:
-  Module Build(const snow::sema::SemaModule& sema_module,
-               const snow::ownership::OwnershipFacts& ownership_facts) const;
-};
+    class SirBuilder {
+    public:
+        Module Build(const snow::sema::SemaModule &sema_module,
+                     const snow::ownership::OwnershipFacts &ownership_facts) const;
+    };
 
-}  // namespace snow::sir
+} // namespace snow::sir

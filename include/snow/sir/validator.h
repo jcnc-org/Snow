@@ -8,20 +8,20 @@
 
 namespace snow::sir {
 
-enum class ValidationLevel {
-  Debug,
-  Release,
-};
+    enum class ValidationLevel {
+        Debug,
+        Release,
+    };
 
-struct ValidationReport {
-  bool ok = true;
-  std::vector<std::string> notes;
-};
+    struct ValidationReport {
+        bool ok = true;
+        std::vector<std::string> notes;
+    };
 
-class SirValidator {
- public:
-  ValidationReport Validate(const Module& module, ValidationLevel level,
-                            snow::common::DiagnosticEngine& diagnostics) const;
-};
+    class SirValidator {
+    public:
+        ValidationReport Validate(const Module &module, ValidationLevel level,
+                                  snow::common::DiagnosticEngine &diagnostics) const;
+    };
 
-}  // namespace snow::sir
+} // namespace snow::sir
