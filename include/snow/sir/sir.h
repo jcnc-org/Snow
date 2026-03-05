@@ -8,82 +8,82 @@
 
 namespace snow::sir {
 
-enum class Opcode {
-  Add,
-  Sub,
-  Mul,
-  Div,
-  Eq,
-  Ne,
-  Lt,
-  Gt,
-  Le,
-  Ge,
-  Phi,
-  Br,
-  CondBr,
-  Ret,
-  Unreachable,
-  Alloc,
-  Load,
-  Store,
-  Drop,
-  Call,
-  Extract,
-  Insert,
-};
+    enum class Opcode {
+        Add,
+        Sub,
+        Mul,
+        Div,
+        Eq,
+        Ne,
+        Lt,
+        Gt,
+        Le,
+        Ge,
+        Phi,
+        Br,
+        CondBr,
+        Ret,
+        Unreachable,
+        Alloc,
+        Load,
+        Store,
+        Drop,
+        Call,
+        Extract,
+        Insert,
+    };
 
-enum class Linkage {
-  External,
-  Internal,
-  Private,
-};
+    enum class Linkage {
+        External,
+        Internal,
+        Private,
+    };
 
-struct Instruction {
-  std::optional<std::string> result;
-  std::string type;
-  Opcode opcode = Opcode::Unreachable;
-  std::vector<std::string> operands;
-  bool is_terminator = false;
-  snow::common::SourceRange range;
-};
+    struct Instruction {
+        std::optional<std::string> result;
+        std::string type;
+        Opcode opcode = Opcode::Unreachable;
+        std::vector<std::string> operands;
+        bool is_terminator = false;
+        snow::common::SourceRange range;
+    };
 
-struct BasicBlock {
-  std::string label;
-  std::vector<Instruction> instructions;
-};
+    struct BasicBlock {
+        std::string label;
+        std::vector<Instruction> instructions;
+    };
 
-struct FunctionParam {
-  std::string name;
-  std::string type;
-};
+    struct FunctionParam {
+        std::string name;
+        std::string type;
+    };
 
-struct Function {
-  std::string original_name;
-  std::string name;
-  std::string return_type;
-  Linkage linkage = Linkage::Internal;
-  std::vector<FunctionParam> params;
-  std::vector<BasicBlock> blocks;
-  snow::common::SourceRange range;
-};
+    struct Function {
+        std::string original_name;
+        std::string name;
+        std::string return_type;
+        Linkage linkage = Linkage::Internal;
+        std::vector<FunctionParam> params;
+        std::vector<BasicBlock> blocks;
+        snow::common::SourceRange range;
+    };
 
-struct ExternalFunction {
-  std::string name;
-  std::vector<std::string> param_types;
-  std::string return_type;
-};
+    struct ExternalFunction {
+        std::string name;
+        std::vector<std::string> param_types;
+        std::string return_type;
+    };
 
-struct Module {
-  std::string module_path;
-  std::string source_path;
-  std::vector<ExternalFunction> external_functions;
-  std::vector<Function> functions;
-};
+    struct Module {
+        std::string module_path;
+        std::string source_path;
+        std::vector<ExternalFunction> external_functions;
+        std::vector<Function> functions;
+    };
 
-std::string ToString(Opcode opcode);
-std::string ToString(Linkage linkage);
-std::string DumpSir(const Module& module);
-std::string DumpCfg(const Module& module);
+    std::string ToString(Opcode opcode);
+    std::string ToString(Linkage linkage);
+    std::string DumpSir(const Module &module);
+    std::string DumpCfg(const Module &module);
 
-}  // namespace snow::sir
+} // namespace snow::sir

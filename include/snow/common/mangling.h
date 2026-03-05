@@ -6,8 +6,8 @@
 
 namespace snow::common {
 
-std::string MangleSymbol(std::string_view module_path, std::string_view item_name,
-                         const std::vector<std::string>& param_types, std::string_view return_type,
-                         bool extern_c = false);
+    std::string MangleSymbol(std::string_view module_path, std::string_view item_name,
+                             const std::vector<std::string> &param_types, std::string_view return_type,
+                             bool extern_c = false);
 
-}  // namespace snow::common
+} // namespace snow::common

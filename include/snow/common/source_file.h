@@ -4,9 +4,9 @@
 
 namespace snow::common {
 
-struct SourceFile {
-  std::string path;
-  std::string content;
-};
+    struct SourceFile {
+        std::string path;
+        std::string content;
+    };
 
-}  // namespace snow::common
+} // namespace snow::common

@@ -8,94 +8,94 @@
 
 namespace snow::frontend {
 
-enum class Visibility {
-  Private,
-  Internal,
-  Public,
-};
+    enum class Visibility {
+        Private,
+        Internal,
+        Public,
+    };
 
-struct ImportDecl {
-  std::vector<std::string> path_segments;
-  std::string alias;
-  bool is_star = false;
-  snow::common::SourceRange range;
-};
+    struct ImportDecl {
+        std::vector<std::string> path_segments;
+        std::string alias;
+        bool is_star = false;
+        snow::common::SourceRange range;
+    };
 
-struct ParamDecl {
-  std::string name;
-  std::string type;
-};
+    struct ParamDecl {
+        std::string name;
+        std::string type;
+    };
 
-enum class BinaryOp {
-  Add,
-  Sub,
-  Mul,
-  Div,
-  Mod,
-  Eq,
-  Ne,
-  Lt,
-  Gt,
-  Le,
-  Ge,
-};
+    enum class BinaryOp {
+        Add,
+        Sub,
+        Mul,
+        Div,
+        Mod,
+        Eq,
+        Ne,
+        Lt,
+        Gt,
+        Le,
+        Ge,
+    };
 
-struct Expr {
-  enum class Kind {
-    Number,
-    Identifier,
-    Call,
-    Binary,
-  };
+    struct Expr {
+        enum class Kind {
+            Number,
+            Identifier,
+            Call,
+            Binary,
+        };
 
-  Kind kind = Kind::Number;
-  std::string value;
-  BinaryOp op = BinaryOp::Add;
-  std::shared_ptr<Expr> lhs;
-  std::shared_ptr<Expr> rhs;
-  std::vector<std::shared_ptr<Expr>> args;
-  snow::common::SourceRange range;
-};
+        Kind kind = Kind::Number;
+        std::string value;
+        BinaryOp op = BinaryOp::Add;
+        std::shared_ptr<Expr> lhs;
+        std::shared_ptr<Expr> rhs;
+        std::vector<std::shared_ptr<Expr>> args;
+        snow::common::SourceRange range;
+    };
 
-struct Statement {
-  enum class Kind {
-    Return,
-    Expr,
-    Assign,
-    If,
-    While,
-    Break,
-    Continue,
-    Let,
-  };
+    struct Statement {
+        enum class Kind {
+            Return,
+            Expr,
+            Assign,
+            If,
+            While,
+            Break,
+            Continue,
+            Let,
+        };
 
-  Kind kind = Kind::Expr;
-  std::shared_ptr<Expr> expr;
-  std::string name;
-  std::string type_name;
-  std::vector<Statement> then_body;
-  std::vector<Statement> else_body;
-  std::vector<Statement> body;
-  snow::common::SourceRange range;
-};
+        Kind kind = Kind::Expr;
+        std::shared_ptr<Expr> expr;
+        std::string name;
+        std::string type_name;
+        std::vector<Statement> then_body;
+        std::vector<Statement> else_body;
+        std::vector<Statement> body;
+        snow::common::SourceRange range;
+    };
 
-struct FunctionDecl {
-  Visibility visibility = Visibility::Private;
-  std::string name;
-  std::vector<ParamDecl> params;
-  std::string return_type;
-  std::vector<Statement> statements;
-  snow::common::SourceRange range;
-};
+    struct FunctionDecl {
+        Visibility visibility = Visibility::Private;
+        std::string name;
+        std::vector<ParamDecl> params;
+        std::string return_type;
+        std::vector<Statement> statements;
+        snow::common::SourceRange range;
+    };
 
-struct AstModule {
-  std::string module_path;
-  std::string source_path;
-  std::vector<ImportDecl> imports;
-  std::vector<FunctionDecl> functions;
-};
+    struct AstModule {
+        std::string module_path;
+        std::string source_path;
+        std::vector<ImportDecl> imports;
+        std::vector<FunctionDecl> functions;
+    };
 
-std::string ToString(Visibility visibility);
-std::string DumpAst(const AstModule& module);
+    std::string ToString(Visibility visibility);
+    std::string DumpAst(const AstModule &module);
 
-}  // namespace snow::frontend
+} // namespace snow::frontend

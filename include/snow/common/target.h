@@ -5,8 +5,8 @@
 
 namespace snow::common {
 
-std::string DetectHostTriple();
-const std::vector<std::string>& SupportedTargetTriples();
-bool IsSupportedTargetTriple(const std::string& triple);
+    std::string DetectHostTriple();
+    const std::vector<std::string> &SupportedTargetTriples();
+    bool IsSupportedTargetTriple(const std::string &triple);
 
-}  // namespace snow::common
+} // namespace snow::common

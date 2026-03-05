@@ -6,9 +6,9 @@
 
 namespace snow::frontend {
 
-class Lexer {
- public:
-  TokenStream Tokenize(const snow::common::SourceFile& source, snow::common::DiagnosticEngine& diagnostics) const;
-};
+    class Lexer {
+    public:
+        TokenStream Tokenize(const snow::common::SourceFile &source, snow::common::DiagnosticEngine &diagnostics) const;
+    };
 
-}  // namespace snow::frontend
+} // namespace snow::frontend
