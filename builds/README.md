@@ -14,4 +14,16 @@ powershell -ExecutionPolicy Bypass -File builds/tools/check-snow-v1-compliance.p
 powershell -ExecutionPolicy Bypass -File builds/tools/run-snow-cpp-gate.ps1
 ```
 
+## One-Click Release Package
+
+```powershell
+powershell -ExecutionPolicy Bypass -File builds/tools/package-snow-release.ps1
+```
+
+Fast local repackage (skip gate/build, package existing artifacts):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File builds/tools/package-snow-release.ps1 -SkipGate -SkipBuild
+```
+
 All Java/Maven release scripts have been removed. This directory now serves C++ mainline build and validation only.
