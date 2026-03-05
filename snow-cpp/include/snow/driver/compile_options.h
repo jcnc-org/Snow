@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "snow/common/function_signature.h"
 #include "snow/passes/pass_manager.h"
 
 namespace snow::driver {
@@ -29,6 +30,7 @@ struct CompileRequest {
   OutputKind output_kind = OutputKind::Executable;
   std::string output_path;
   std::vector<std::string> link_inputs;
+  std::vector<snow::common::FunctionSignature> available_functions;
   bool write_artifact = true;
   EmitOptions emit;
 };

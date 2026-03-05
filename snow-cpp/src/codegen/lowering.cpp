@@ -1,19 +1,29 @@
 #include "snow/codegen/lowering.h"
 
+#include <algorithm>
 #include <cctype>
+#include <optional>
 #include <sstream>
+#include <string>
 #include <unordered_map>
+#include <unordered_set>
+#include <utility>
 #include <vector>
 
 #if SNOW_ENABLE_LLVM
-#include <llvm/IR/BasicBlock.h>
-#include <llvm/IR/Constants.h>
-#include <llvm/IR/DerivedTypes.h>
-#include <llvm/IR/Function.h>
-#include <llvm/IR/IRBuilder.h>
+#include <llvm/AsmParser/Parser.h>
+#include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
+#include <llvm/IR/Verifier.h>
+#include <llvm/MC/TargetRegistry.h>
+#include <llvm/Support/FileSystem.h>
+#include <llvm/Support/SourceMgr.h>
+#include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/raw_ostream.h>
+#include <llvm/Target/TargetMachine.h>
+#include <llvm/Target/TargetOptions.h>
+#include <llvm/TargetParser/Triple.h>
 #endif
 
 namespace snow::codegen {
@@ -36,12 +46,18 @@ std::string ToLlvmTypeText(const std::string& snow_type) {
   if (snow_type == "f64") {
     return "double";
   }
+  if (snow_type == "ptr") {
+    return "ptr";
+  }
   return "i32";
 }
 
 std::string ZeroValueText(const std::string& llvm_type) {
   if (llvm_type == "float" || llvm_type == "double") {
     return "0.0";
+  }
+  if (llvm_type == "ptr") {
+    return "null";
   }
   return "0";
 }
@@ -78,7 +94,10 @@ std::string NormalizeOperand(const std::string& operand) {
   if (operand == "false") {
     return "0";
   }
-  // Bootstrap fallback for unresolved symbols (for example function names in expressions).
+  if (operand == "null") {
+    return "null";
+  }
+  // Unresolved textual symbols are lowered to zero and should be caught earlier by sema.
   return "0";
 }
 
@@ -86,6 +105,9 @@ std::string InferOperandLlvmTypeText(const std::string& operand,
                                      const std::unordered_map<std::string, std::string>& value_types) {
   if (operand == "true" || operand == "false") {
     return "i1";
+  }
+  if (operand == "null") {
+    return "ptr";
   }
   if (!operand.empty() && operand[0] == '%') {
     const auto it = value_types.find(operand);
@@ -140,109 +162,6 @@ std::string LinkagePrefixText(const snow::sir::Linkage linkage) {
   return "";
 }
 
-#if SNOW_ENABLE_LLVM
-llvm::Type* ToLlvmType(llvm::LLVMContext& context, const std::string& snow_type) {
-  if (snow_type == "i1" || snow_type == "bool") {
-    return llvm::Type::getInt1Ty(context);
-  }
-  if (snow_type == "i32") {
-    return llvm::Type::getInt32Ty(context);
-  }
-  if (snow_type == "i64") {
-    return llvm::Type::getInt64Ty(context);
-  }
-  if (snow_type == "f32") {
-    return llvm::Type::getFloatTy(context);
-  }
-  if (snow_type == "f64") {
-    return llvm::Type::getDoubleTy(context);
-  }
-  return llvm::Type::getInt32Ty(context);
-}
-
-llvm::Constant* ZeroValue(llvm::Type* type) {
-  if (type->isFloatingPointTy()) {
-    return llvm::ConstantFP::get(type, 0.0);
-  }
-  if (type->isIntegerTy()) {
-    return llvm::ConstantInt::get(type, 0);
-  }
-  return llvm::Constant::getNullValue(type);
-}
-
-llvm::GlobalValue::LinkageTypes ToLlvmLinkage(const snow::sir::Linkage linkage) {
-  switch (linkage) {
-    case snow::sir::Linkage::External:
-      return llvm::GlobalValue::ExternalLinkage;
-    case snow::sir::Linkage::Internal:
-      return llvm::GlobalValue::InternalLinkage;
-    case snow::sir::Linkage::Private:
-      return llvm::GlobalValue::PrivateLinkage;
-  }
-  return llvm::GlobalValue::ExternalLinkage;
-}
-
-std::string LowerWithLlvmApi(const snow::sir::Module& module, const TargetConfig& target) {
-  llvm::LLVMContext context;
-  auto llvm_module = std::make_unique<llvm::Module>("snow_module", context);
-  llvm_module->setTargetTriple(target.triple);
-
-  for (const auto& function : module.functions) {
-    llvm::Type* ret_type = ToLlvmType(context, function.return_type);
-    std::vector<llvm::Type*> arg_types;
-    arg_types.reserve(function.params.size());
-    for (const auto& param : function.params) {
-      arg_types.push_back(ToLlvmType(context, param.type));
-    }
-    auto* fn_type = llvm::FunctionType::get(ret_type, arg_types, false);
-    auto* fn = llvm::Function::Create(fn_type, ToLlvmLinkage(function.linkage), function.name, llvm_module.get());
-
-    auto* entry = llvm::BasicBlock::Create(context, "entry", fn);
-    llvm::IRBuilder<> builder(entry);
-    builder.CreateRet(ZeroValue(ret_type));
-  }
-
-  if (target.executable_entry_wrapper) {
-    const snow::sir::Function* user_main = FindUserMain(module);
-    if (user_main != nullptr) {
-      auto* i32_ty = llvm::Type::getInt32Ty(context);
-      auto* ptr_ty = llvm::PointerType::get(context, 0);
-
-      auto* runtime_type = llvm::FunctionType::get(i32_ty, {ptr_ty}, false);
-      auto* runtime_fn =
-          llvm::Function::Create(runtime_type, llvm::Function::ExternalLinkage, "snow_runtime_start", llvm_module.get());
-      if (runtime_fn->empty()) {
-        auto* entry = llvm::BasicBlock::Create(context, "entry", runtime_fn);
-        llvm::IRBuilder<> runtime_builder(entry);
-        auto* user_main_ptr = runtime_fn->getArg(0);
-        auto* result = runtime_builder.CreateCall(runtime_type, user_main_ptr, {});
-        runtime_builder.CreateRet(result);
-      }
-
-      auto* host_type = llvm::FunctionType::get(i32_ty, {}, false);
-      auto* host_main = llvm::Function::Create(host_type, llvm::Function::ExternalLinkage, "main", llvm_module.get());
-      auto* entry = llvm::BasicBlock::Create(context, "entry", host_main);
-      llvm::IRBuilder<> builder(entry);
-
-      auto* user_fn = llvm_module->getFunction(user_main->name);
-      llvm::Value* user_ptr = user_fn;
-      if (user_fn->getType() != ptr_ty) {
-        user_ptr = builder.CreateBitCast(user_fn, ptr_ty);
-      }
-
-      auto* call = builder.CreateCall(runtime_fn, {user_ptr});
-      builder.CreateRet(call);
-    }
-  }
-
-  std::string buffer;
-  llvm::raw_string_ostream stream(buffer);
-  llvm_module->print(stream, nullptr);
-  stream.flush();
-  return buffer;
-}
-#endif
-
 std::string LowerTextual(const snow::sir::Module& module, const TargetConfig& target,
                          const snow::passes::OptLevel opt_level) {
   std::ostringstream oss;
@@ -250,6 +169,57 @@ std::string LowerTextual(const snow::sir::Module& module, const TargetConfig& ta
   oss << "target triple = \"" << target.triple << "\"\n";
   oss << "; entry-wrapper = " << (target.executable_entry_wrapper ? "enabled" : "disabled") << "\n";
   oss << "; opt-level = " << (opt_level == snow::passes::OptLevel::O0 ? "O0" : "O2") << "\n\n";
+
+  std::unordered_set<std::string> defined_functions;
+  for (const auto& function : module.functions) {
+    defined_functions.insert(function.name);
+  }
+
+  std::vector<snow::sir::ExternalFunction> externals = module.external_functions;
+  std::sort(externals.begin(), externals.end(),
+            [](const auto& lhs, const auto& rhs) { return lhs.name < rhs.name; });
+  for (const auto& external : externals) {
+    if (external.name.empty() || defined_functions.contains(external.name)) {
+      continue;
+    }
+    oss << "declare " << ToLlvmTypeText(external.return_type.empty() ? "i32" : external.return_type) << " @"
+        << external.name << "(";
+    for (std::size_t i = 0; i < external.param_types.size(); ++i) {
+      if (i > 0) {
+        oss << ", ";
+      }
+      oss << ToLlvmTypeText(external.param_types[i]);
+    }
+    oss << ")\n";
+  }
+
+  bool needs_runtime_drop = false;
+  for (const auto& function : module.functions) {
+    for (const auto& block : function.blocks) {
+      for (const auto& instr : block.instructions) {
+        if (instr.opcode == snow::sir::Opcode::Drop) {
+          needs_runtime_drop = true;
+          break;
+        }
+      }
+      if (needs_runtime_drop) {
+        break;
+      }
+    }
+    if (needs_runtime_drop) {
+      break;
+    }
+  }
+  if (needs_runtime_drop) {
+    oss << "define linkonce_odr void @snow_runtime_drop(ptr %value) {\n";
+    oss << "entry:\n";
+    oss << "  ret void\n";
+    oss << "}\n";
+  }
+
+  if (!externals.empty() || needs_runtime_drop) {
+    oss << "\n";
+  }
 
   for (const auto& function : module.functions) {
     const std::string ret_ty = ToLlvmTypeText(function.return_type);
@@ -326,9 +296,9 @@ std::string LowerTextual(const snow::sir::Module& module, const TargetConfig& ta
 
           case snow::sir::Opcode::Drop:
             if (!instr.operands.empty()) {
-              oss << "  ; drop " << instr.operands[0] << "\n";
+              oss << "  call void @snow_runtime_drop(ptr " << NormalizeOperand(instr.operands[0]) << ")\n";
             } else {
-              oss << "  ; drop\n";
+              oss << "  call void @snow_runtime_drop(ptr null)\n";
             }
             break;
 
@@ -455,9 +425,19 @@ std::string LowerTextual(const snow::sir::Module& module, const TargetConfig& ta
   if (target.executable_entry_wrapper) {
     const snow::sir::Function* user_main = FindUserMain(module);
     if (user_main != nullptr) {
+      oss << "define linkonce_odr void @snow_runtime_init() {\n";
+      oss << "entry:\n";
+      oss << "  ret void\n";
+      oss << "}\n\n";
+      oss << "define linkonce_odr void @snow_runtime_shutdown() {\n";
+      oss << "entry:\n";
+      oss << "  ret void\n";
+      oss << "}\n\n";
       oss << "define i32 @snow_runtime_start(ptr %user_main) {\n";
       oss << "entry:\n";
+      oss << "  call void @snow_runtime_init()\n";
       oss << "  %0 = call i32 %user_main()\n";
+      oss << "  call void @snow_runtime_shutdown()\n";
       oss << "  ret i32 %0\n";
       oss << "}\n\n";
       oss << "define i32 @main() {\n";
@@ -471,21 +451,144 @@ std::string LowerTextual(const snow::sir::Module& module, const TargetConfig& ta
   return oss.str();
 }
 
+#if SNOW_ENABLE_LLVM
+void InitializeTargetsOnce() {
+  static const bool initialized = []() {
+    LLVMInitializeX86TargetInfo();
+    LLVMInitializeX86Target();
+    LLVMInitializeX86TargetMC();
+    LLVMInitializeX86AsmParser();
+    LLVMInitializeX86AsmPrinter();
+
+    LLVMInitializeAArch64TargetInfo();
+    LLVMInitializeAArch64Target();
+    LLVMInitializeAArch64TargetMC();
+    LLVMInitializeAArch64AsmParser();
+    LLVMInitializeAArch64AsmPrinter();
+    return true;
+  }();
+  (void)initialized;
+}
+
+ObjectEmitResult EmitObjectWithLlvmApi(const snow::sir::Module& module, const TargetConfig& target,
+                                       const snow::passes::OptLevel opt_level, const std::string& output_path) {
+  (void)opt_level;
+
+  llvm::LLVMContext context;
+  llvm::SMDiagnostic parse_error;
+  const std::string textual_ir = LowerTextual(module, target, opt_level);
+  std::unique_ptr<llvm::Module> llvm_module = llvm::parseAssemblyString(textual_ir, parse_error, context);
+  if (!llvm_module) {
+    std::string error;
+    llvm::raw_string_ostream error_stream(error);
+    parse_error.print("snowc", error_stream);
+    error_stream.flush();
+    return ObjectEmitResult{
+        .success = false,
+        .error_message = "LLVM IR parse failed: " + error,
+    };
+  }
+
+  InitializeTargetsOnce();
+
+  std::string target_error;
+  const llvm::Target* llvm_target = llvm::TargetRegistry::lookupTarget(target.triple, target_error);
+  if (llvm_target == nullptr) {
+    return ObjectEmitResult{
+        .success = false,
+        .error_message = "target lookup failed for '" + target.triple + "': " + target_error,
+    };
+  }
+
+  llvm::TargetOptions target_options;
+  llvm::Triple triple(target.triple);
+  std::optional<llvm::Reloc::Model> reloc_model = std::nullopt;
+  std::unique_ptr<llvm::TargetMachine> machine(
+      llvm_target->createTargetMachine(triple, "generic", "", target_options, reloc_model));
+  if (!machine) {
+    return ObjectEmitResult{
+        .success = false,
+        .error_message = "cannot create target machine for '" + target.triple + "'",
+    };
+  }
+
+  llvm_module->setDataLayout(machine->createDataLayout());
+  llvm_module->setTargetTriple(triple);
+
+  std::string verify_error;
+  llvm::raw_string_ostream verify_stream(verify_error);
+  if (llvm::verifyModule(*llvm_module, &verify_stream)) {
+    verify_stream.flush();
+    return ObjectEmitResult{
+        .success = false,
+        .error_message = "module verification failed: " + verify_error,
+    };
+  }
+
+  std::error_code ec;
+  llvm::raw_fd_ostream output(output_path, ec, llvm::sys::fs::OF_None);
+  if (ec) {
+    return ObjectEmitResult{
+        .success = false,
+        .error_message = "cannot open output object: " + ec.message(),
+    };
+  }
+
+  llvm::legacy::PassManager pass_manager;
+  if (machine->addPassesToEmitFile(pass_manager, output, nullptr, llvm::CodeGenFileType::ObjectFile)) {
+    return ObjectEmitResult{
+        .success = false,
+        .error_message = "target does not support object emission for '" + target.triple + "'",
+    };
+  }
+
+  pass_manager.run(*llvm_module);
+  output.flush();
+  return ObjectEmitResult{
+      .success = true,
+      .error_message = "",
+  };
+}
+#endif
+
 }  // namespace
 
 LoweringResult LlvmLowering::Lower(const snow::sir::Module& module, const TargetConfig& target,
                                    const snow::passes::OptLevel opt_level) const {
   LoweringResult result;
+  result.backend = BackendKind::RealLlvm;
+  result.native_ready = true;
+  result.llvm_ir = LowerTextual(module, target, opt_level);
 
 #if SNOW_ENABLE_LLVM
-  result.used_real_llvm = true;
-  result.llvm_ir = LowerWithLlvmApi(module, target);
+  llvm::LLVMContext context;
+  llvm::SMDiagnostic parse_error;
+  std::unique_ptr<llvm::Module> parsed = llvm::parseAssemblyString(result.llvm_ir, parse_error, context);
+  if (!parsed) {
+    result.native_ready = false;
+  }
 #else
-  result.used_real_llvm = false;
-  result.llvm_ir = LowerTextual(module, target, opt_level);
+  result.native_ready = false;
 #endif
 
   return result;
+}
+
+ObjectEmitResult LlvmLowering::EmitObject(const snow::sir::Module& module, const TargetConfig& target,
+                                          const snow::passes::OptLevel opt_level,
+                                          const std::string& output_path) const {
+#if SNOW_ENABLE_LLVM
+  return EmitObjectWithLlvmApi(module, target, opt_level, output_path);
+#else
+  (void)module;
+  (void)target;
+  (void)opt_level;
+  (void)output_path;
+  return ObjectEmitResult{
+      .success = false,
+      .error_message = "LLVM backend is unavailable",
+  };
+#endif
 }
 
 }  // namespace snow::codegen

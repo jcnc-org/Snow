@@ -60,6 +60,17 @@ std::string JoinPath(const std::vector<std::string>& segments) {
   return oss.str();
 }
 
+snow::common::SourceRange MergeRange(const snow::common::SourceRange& lhs, const snow::common::SourceRange& rhs) {
+  snow::common::SourceRange out = lhs;
+  out.end_line = rhs.end_line;
+  out.end_column = rhs.end_column;
+  return out;
+}
+
+snow::common::SourceRange UnknownRange() {
+  return snow::common::SourceRange{1, 1, 1, 1};
+}
+
 Visibility ParseVisibility(Cursor& cursor) {
   if (cursor.Match(TokenType::KeywordPub)) {
     return Visibility::Public;
@@ -73,25 +84,28 @@ Visibility ParseVisibility(Cursor& cursor) {
   return Visibility::Private;
 }
 
-ExprPtr MakeNumberExpr(std::string value) {
+ExprPtr MakeNumberExpr(std::string value, const snow::common::SourceRange range) {
   auto expr = std::make_shared<Expr>();
   expr->kind = Expr::Kind::Number;
   expr->value = std::move(value);
+  expr->range = range;
   return expr;
 }
 
-ExprPtr MakeIdentifierExpr(std::string value) {
+ExprPtr MakeIdentifierExpr(std::string value, const snow::common::SourceRange range) {
   auto expr = std::make_shared<Expr>();
   expr->kind = Expr::Kind::Identifier;
   expr->value = std::move(value);
+  expr->range = range;
   return expr;
 }
 
-ExprPtr MakeCallExpr(std::string callee, std::vector<ExprPtr> args) {
+ExprPtr MakeCallExpr(std::string callee, std::vector<ExprPtr> args, const snow::common::SourceRange range) {
   auto expr = std::make_shared<Expr>();
   expr->kind = Expr::Kind::Call;
   expr->value = std::move(callee);
   expr->args = std::move(args);
+  expr->range = range;
   return expr;
 }
 
@@ -99,6 +113,7 @@ ExprPtr MakeBinaryExpr(BinaryOp op, ExprPtr lhs, ExprPtr rhs) {
   auto expr = std::make_shared<Expr>();
   expr->kind = Expr::Kind::Binary;
   expr->op = op;
+  expr->range = lhs ? MergeRange(lhs->range, rhs ? rhs->range : lhs->range) : UnknownRange();
   expr->lhs = std::move(lhs);
   expr->rhs = std::move(rhs);
   return expr;
@@ -240,30 +255,39 @@ bool ExpectToken(Cursor& cursor, const TokenType expected, const std::string& er
 
 ExprPtr ParsePrimary(Cursor& cursor, snow::common::DiagnosticEngine& diagnostics, const std::string& module_path) {
   if (cursor.Peek().type == TokenType::Number) {
-    return MakeNumberExpr(cursor.Advance().lexeme);
+    const auto token = cursor.Advance();
+    return MakeNumberExpr(token.lexeme, token.range);
   }
 
   if (cursor.Peek().type == TokenType::Identifier) {
-    const std::string ident = cursor.Advance().lexeme;
+    const auto ident_token = cursor.Advance();
+    const std::string ident = ident_token.lexeme;
 
     if (!cursor.Match(TokenType::LParen)) {
-      return MakeIdentifierExpr(ident);
+      return MakeIdentifierExpr(ident, ident_token.range);
     }
 
     std::vector<ExprPtr> args;
+    snow::common::SourceRange call_end_range = ident_token.range;
     if (cursor.Peek().type != TokenType::RParen) {
       while (!cursor.AtEnd()) {
-        args.push_back(ParseExpression(cursor, diagnostics, module_path, 1));
+        auto arg = ParseExpression(cursor, diagnostics, module_path, 1);
+        if (arg) {
+          call_end_range = arg->range;
+        }
+        args.push_back(std::move(arg));
         if (!cursor.Match(TokenType::Comma)) {
           break;
         }
       }
     }
 
-    if (!cursor.Match(TokenType::RParen)) {
+    if (cursor.Peek().type != TokenType::RParen) {
       diagnostics.Error("E_PARSE_CALL_RPAREN", "Unclosed call expression", module_path, cursor.Peek().range);
+    } else {
+      call_end_range = cursor.Advance().range;
     }
-    return MakeCallExpr(ident, std::move(args));
+    return MakeCallExpr(ident, std::move(args), MergeRange(ident_token.range, call_end_range));
   }
 
   if (cursor.Match(TokenType::LParen)) {
@@ -277,9 +301,10 @@ ExprPtr ParsePrimary(Cursor& cursor, snow::common::DiagnosticEngine& diagnostics
 
   diagnostics.Error("E_PARSE_EXPR_PRIMARY", "Expected expression", module_path, cursor.Peek().range);
   if (!cursor.AtEnd()) {
-    cursor.Advance();
+    const auto bad = cursor.Advance();
+    return MakeNumberExpr("0", bad.range);
   }
-  return MakeNumberExpr("0");
+  return MakeNumberExpr("0", UnknownRange());
 }
 
 ExprPtr ParseExpression(Cursor& cursor, snow::common::DiagnosticEngine& diagnostics, const std::string& module_path,
@@ -336,26 +361,34 @@ std::vector<Statement> ParseBlock(Cursor& cursor, snow::common::DiagnosticEngine
 
 std::optional<Statement> ParseStatement(Cursor& cursor, snow::common::DiagnosticEngine& diagnostics,
                                         const std::string& module_path) {
-  if (cursor.Match(TokenType::KeywordReturn)) {
+  if (cursor.Peek().type == TokenType::KeywordReturn) {
+    const auto start = cursor.Advance();
     Statement stmt;
     stmt.kind = Statement::Kind::Return;
     if (cursor.Peek().type != TokenType::Semicolon) {
       stmt.expr = ParseExpression(cursor, diagnostics, module_path, 1);
     }
+    snow::common::SourceRange end_range = stmt.expr ? stmt.expr->range : start.range;
+    if (cursor.Peek().type == TokenType::Semicolon) {
+      end_range = cursor.Peek().range;
+    }
     if (!ExpectToken(cursor, TokenType::Semicolon, "E_PARSE_RETURN_SEMI", "Expected ';' after return statement",
                      diagnostics, module_path)) {
       RecoverToStatementBoundary(cursor);
     }
+    stmt.range = MergeRange(start.range, end_range);
     return stmt;
   }
 
-  if (cursor.Match(TokenType::KeywordLet)) {
+  if (cursor.Peek().type == TokenType::KeywordLet) {
+    const auto start = cursor.Advance();
     Statement stmt;
     stmt.kind = Statement::Kind::Let;
 
     if (cursor.Peek().type != TokenType::Identifier) {
       diagnostics.Error("E_PARSE_LET_NAME", "Expected variable name after 'let'", module_path, cursor.Peek().range);
       RecoverToStatementBoundary(cursor);
+      stmt.range = start.range;
       return stmt;
     }
     stmt.name = cursor.Advance().lexeme;
@@ -367,18 +400,25 @@ std::optional<Statement> ParseStatement(Cursor& cursor, snow::common::Diagnostic
     if (!ExpectToken(cursor, TokenType::Equal, "E_PARSE_LET_ASSIGN", "Expected '=' in let declaration", diagnostics,
                      module_path)) {
       RecoverToStatementBoundary(cursor);
+      stmt.range = start.range;
       return stmt;
     }
 
     stmt.expr = ParseExpression(cursor, diagnostics, module_path, 1);
+    snow::common::SourceRange end_range = stmt.expr ? stmt.expr->range : start.range;
+    if (cursor.Peek().type == TokenType::Semicolon) {
+      end_range = cursor.Peek().range;
+    }
     if (!ExpectToken(cursor, TokenType::Semicolon, "E_PARSE_LET_SEMI", "Expected ';' after let declaration",
                      diagnostics, module_path)) {
       RecoverToStatementBoundary(cursor);
     }
+    stmt.range = MergeRange(start.range, end_range);
     return stmt;
   }
 
-  if (cursor.Match(TokenType::KeywordIf)) {
+  if (cursor.Peek().type == TokenType::KeywordIf) {
+    const auto start = cursor.Advance();
     Statement stmt;
     stmt.kind = Statement::Kind::If;
     stmt.expr = ParseExpression(cursor, diagnostics, module_path, 1);
@@ -386,47 +426,78 @@ std::optional<Statement> ParseStatement(Cursor& cursor, snow::common::Diagnostic
     if (cursor.Match(TokenType::KeywordElse)) {
       stmt.else_body = ParseBlock(cursor, diagnostics, module_path);
     }
+    snow::common::SourceRange end_range = stmt.expr ? stmt.expr->range : start.range;
+    if (!stmt.else_body.empty()) {
+      end_range = stmt.else_body.back().range;
+    } else if (!stmt.then_body.empty()) {
+      end_range = stmt.then_body.back().range;
+    }
+    stmt.range = MergeRange(start.range, end_range);
     return stmt;
   }
 
-  if (cursor.Match(TokenType::KeywordWhile)) {
+  if (cursor.Peek().type == TokenType::KeywordWhile) {
+    const auto start = cursor.Advance();
     Statement stmt;
     stmt.kind = Statement::Kind::While;
     stmt.expr = ParseExpression(cursor, diagnostics, module_path, 1);
     stmt.body = ParseBlock(cursor, diagnostics, module_path);
+    snow::common::SourceRange end_range = stmt.expr ? stmt.expr->range : start.range;
+    if (!stmt.body.empty()) {
+      end_range = stmt.body.back().range;
+    }
+    stmt.range = MergeRange(start.range, end_range);
     return stmt;
   }
 
-  if (cursor.Match(TokenType::KeywordBreak)) {
+  if (cursor.Peek().type == TokenType::KeywordBreak) {
+    const auto start = cursor.Advance();
     Statement stmt;
     stmt.kind = Statement::Kind::Break;
+    snow::common::SourceRange end_range = start.range;
+    if (cursor.Peek().type == TokenType::Semicolon) {
+      end_range = cursor.Peek().range;
+    }
     if (!ExpectToken(cursor, TokenType::Semicolon, "E_PARSE_BREAK_SEMI", "Expected ';' after break", diagnostics,
                      module_path)) {
       RecoverToStatementBoundary(cursor);
     }
+    stmt.range = MergeRange(start.range, end_range);
     return stmt;
   }
 
-  if (cursor.Match(TokenType::KeywordContinue)) {
+  if (cursor.Peek().type == TokenType::KeywordContinue) {
+    const auto start = cursor.Advance();
     Statement stmt;
     stmt.kind = Statement::Kind::Continue;
+    snow::common::SourceRange end_range = start.range;
+    if (cursor.Peek().type == TokenType::Semicolon) {
+      end_range = cursor.Peek().range;
+    }
     if (!ExpectToken(cursor, TokenType::Semicolon, "E_PARSE_CONTINUE_SEMI", "Expected ';' after continue", diagnostics,
                      module_path)) {
       RecoverToStatementBoundary(cursor);
     }
+    stmt.range = MergeRange(start.range, end_range);
     return stmt;
   }
 
   if (cursor.Peek().type == TokenType::Identifier && cursor.Peek(1).type == TokenType::Equal) {
+    const auto start = cursor.Advance();
     Statement stmt;
     stmt.kind = Statement::Kind::Assign;
-    stmt.name = cursor.Advance().lexeme;
+    stmt.name = start.lexeme;
     (void)cursor.Advance();
     stmt.expr = ParseExpression(cursor, diagnostics, module_path, 1);
+    snow::common::SourceRange end_range = stmt.expr ? stmt.expr->range : start.range;
+    if (cursor.Peek().type == TokenType::Semicolon) {
+      end_range = cursor.Peek().range;
+    }
     if (!ExpectToken(cursor, TokenType::Semicolon, "E_PARSE_ASSIGN_SEMI", "Expected ';' after assignment",
                      diagnostics, module_path)) {
       RecoverToStatementBoundary(cursor);
     }
+    stmt.range = MergeRange(start.range, end_range);
     return stmt;
   }
 
@@ -436,11 +507,17 @@ std::optional<Statement> ParseStatement(Cursor& cursor, snow::common::Diagnostic
 
   Statement stmt;
   stmt.kind = Statement::Kind::Expr;
+  const auto start = cursor.Peek();
   stmt.expr = ParseExpression(cursor, diagnostics, module_path, 1);
+  snow::common::SourceRange end_range = stmt.expr ? stmt.expr->range : start.range;
+  if (cursor.Peek().type == TokenType::Semicolon) {
+    end_range = cursor.Peek().range;
+  }
   if (!ExpectToken(cursor, TokenType::Semicolon, "E_PARSE_STMT_SEMI", "Expected ';' after expression statement",
                    diagnostics, module_path)) {
     RecoverToStatementBoundary(cursor);
   }
+  stmt.range = MergeRange(start.range, end_range);
   return stmt;
 }
 
@@ -556,18 +633,23 @@ AstModule Parser::Parse(std::string module_path, const TokenStream& tokens,
   module.module_path = std::move(module_path);
 
   while (!cursor.AtEnd()) {
-    if (cursor.Match(TokenType::KeywordImport)) {
+    if (cursor.Peek().type == TokenType::KeywordImport) {
+      const auto import_start = cursor.Advance();
       ImportDecl import;
+      import.range = import_start.range;
       if (cursor.Peek().type != TokenType::Identifier) {
         diagnostics.Error("E_PARSE_IMPORT_PATH", "Expected module path after import", module.module_path,
                           cursor.Peek().range);
         cursor.Advance();
         continue;
       }
-      import.path_segments.push_back(cursor.Advance().lexeme);
+      auto segment = cursor.Advance();
+      import.path_segments.push_back(segment.lexeme);
+      import.range = MergeRange(import.range, segment.range);
       while (cursor.Match(TokenType::Dot)) {
         if (cursor.Match(TokenType::Star)) {
           import.is_star = true;
+          import.range = MergeRange(import.range, cursor.Peek().range);
           break;
         }
         if (cursor.Peek().type != TokenType::Identifier) {
@@ -575,32 +657,43 @@ AstModule Parser::Parse(std::string module_path, const TokenStream& tokens,
                             cursor.Peek().range);
           break;
         }
-        import.path_segments.push_back(cursor.Advance().lexeme);
+        auto next = cursor.Advance();
+        import.path_segments.push_back(next.lexeme);
+        import.range = MergeRange(import.range, next.range);
       }
       if (cursor.Match(TokenType::KeywordAs)) {
         if (cursor.Peek().type != TokenType::Identifier) {
           diagnostics.Error("E_PARSE_IMPORT_ALIAS", "Expected alias name after 'as'", module.module_path,
                             cursor.Peek().range);
         } else {
-          import.alias = cursor.Advance().lexeme;
+          auto alias = cursor.Advance();
+          import.alias = alias.lexeme;
+          import.range = MergeRange(import.range, alias.range);
         }
+      }
+      if (cursor.Peek().type == TokenType::Semicolon) {
+        import.range = MergeRange(import.range, cursor.Peek().range);
       }
       (void)cursor.Match(TokenType::Semicolon);
       module.imports.push_back(std::move(import));
       continue;
     }
 
+    const auto item_start = cursor.Peek().range;
     const Visibility visibility = ParseVisibility(cursor);
     if (cursor.Match(TokenType::KeywordFn)) {
       FunctionDecl function;
       function.visibility = visibility;
+      function.range = item_start;
 
       if (cursor.Peek().type != TokenType::Identifier) {
         diagnostics.Error("E_PARSE_FN_NAME", "Expected function name", module.module_path, cursor.Peek().range);
         cursor.Advance();
         continue;
       }
-      function.name = cursor.Advance().lexeme;
+      auto fn_name = cursor.Advance();
+      function.name = fn_name.lexeme;
+      function.range = MergeRange(function.range, fn_name.range);
 
       if (!cursor.Match(TokenType::LParen)) {
         diagnostics.Error("E_PARSE_FN_LPAREN", "Expected '(' after function name", module.module_path,
@@ -643,12 +736,20 @@ AstModule Parser::Parse(std::string module_path, const TokenStream& tokens,
       if (cursor.Peek().type != TokenType::Identifier) {
         diagnostics.Error("E_PARSE_FN_RET", "Expected return type", module.module_path, cursor.Peek().range);
       } else {
-        function.return_type = cursor.Advance().lexeme;
+        auto ret_token = cursor.Advance();
+        function.return_type = ret_token.lexeme;
+        function.range = MergeRange(function.range, ret_token.range);
       }
 
       if (cursor.Peek().type == TokenType::LBrace) {
         function.statements = ParseBlock(cursor, diagnostics, module.module_path);
+        if (!function.statements.empty()) {
+          function.range = MergeRange(function.range, function.statements.back().range);
+        }
       } else {
+        if (cursor.Peek().type == TokenType::Semicolon) {
+          function.range = MergeRange(function.range, cursor.Peek().range);
+        }
         (void)cursor.Match(TokenType::Semicolon);
       }
 

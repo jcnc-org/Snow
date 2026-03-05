@@ -274,6 +274,14 @@ OwnershipFacts OwnershipChecker::Check(const snow::sema::SemaModule& sema_module
   for (const auto& function : sema_module.ast.functions) {
     function_return_types[function.name] = function.return_type.empty() ? "i32" : function.return_type;
   }
+  for (const auto& external : sema_module.resolved_external_functions) {
+    if (external.source_name.empty()) {
+      continue;
+    }
+    if (!function_return_types.contains(external.source_name)) {
+      function_return_types[external.source_name] = external.return_type.empty() ? "i32" : external.return_type;
+    }
+  }
 
   for (const auto& function : sema_module.ast.functions) {
     if (function.return_type.empty()) {

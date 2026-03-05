@@ -64,8 +64,15 @@ struct Function {
   std::vector<BasicBlock> blocks;
 };
 
+struct ExternalFunction {
+  std::string name;
+  std::vector<std::string> param_types;
+  std::string return_type;
+};
+
 struct Module {
   std::string module_path;
+  std::vector<ExternalFunction> external_functions;
   std::vector<Function> functions;
 };
 

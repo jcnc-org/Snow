@@ -343,6 +343,21 @@ Module SirBuilder::Build(const snow::sema::SemaModule& sema_module,
     callee_symbols[function_ast.name] = mangled;
     callee_return_types[function_ast.name] = function_ast.return_type.empty() ? "i32" : function_ast.return_type;
   }
+  for (const auto& external : sema_module.resolved_external_functions) {
+    if (external.source_name.empty() || external.mangled_name.empty()) {
+      continue;
+    }
+    module.external_functions.push_back(ExternalFunction{
+        .name = external.mangled_name,
+        .param_types = external.param_types,
+        .return_type = external.return_type.empty() ? "i32" : external.return_type,
+    });
+    if (callee_symbols.contains(external.source_name)) {
+      continue;
+    }
+    callee_symbols[external.source_name] = external.mangled_name;
+    callee_return_types[external.source_name] = external.return_type.empty() ? "i32" : external.return_type;
+  }
 
   for (const auto& function_ast : sema_module.ast.functions) {
     Function function;
@@ -435,11 +450,18 @@ Module SirBuilder::Build(const snow::sema::SemaModule& sema_module,
         if (rit->is_copy_type || !rit->drop_at_exit) {
           continue;
         }
+        std::string drop_operand = rit->name.empty() ? rit->symbol : rit->name;
+        if (!rit->name.empty()) {
+          const auto ptr_it = symbol_ptrs.find(rit->name);
+          if (ptr_it != symbol_ptrs.end()) {
+            drop_operand = ptr_it->second;
+          }
+        }
         block.instructions.push_back(Instruction{
             .result = std::nullopt,
             .type = rit->type_name.empty() ? "unknown" : rit->type_name,
             .opcode = Opcode::Drop,
-            .operands = {rit->name.empty() ? rit->symbol : rit->name},
+            .operands = {drop_operand},
             .is_terminator = false,
         });
       }

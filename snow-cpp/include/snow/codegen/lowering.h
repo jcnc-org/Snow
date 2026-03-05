@@ -12,15 +12,27 @@ struct TargetConfig {
   bool executable_entry_wrapper = false;
 };
 
+enum class BackendKind {
+  RealLlvm,
+};
+
 struct LoweringResult {
   std::string llvm_ir;
-  bool used_real_llvm = false;
+  BackendKind backend = BackendKind::RealLlvm;
+  bool native_ready = true;
+};
+
+struct ObjectEmitResult {
+  bool success = false;
+  std::string error_message;
 };
 
 class LlvmLowering {
  public:
   LoweringResult Lower(const snow::sir::Module& module, const TargetConfig& target,
                        snow::passes::OptLevel opt_level) const;
+  ObjectEmitResult EmitObject(const snow::sir::Module& module, const TargetConfig& target,
+                              snow::passes::OptLevel opt_level, const std::string& output_path) const;
 };
 
 }  // namespace snow::codegen

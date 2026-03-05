@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include "snow/common/diagnostic.h"
+
 namespace snow::frontend {
 
 enum class Visibility {
@@ -16,6 +18,7 @@ struct ImportDecl {
   std::vector<std::string> path_segments;
   std::string alias;
   bool is_star = false;
+  snow::common::SourceRange range;
 };
 
 struct ParamDecl {
@@ -51,6 +54,7 @@ struct Expr {
   std::shared_ptr<Expr> lhs;
   std::shared_ptr<Expr> rhs;
   std::vector<std::shared_ptr<Expr>> args;
+  snow::common::SourceRange range;
 };
 
 struct Statement {
@@ -72,6 +76,7 @@ struct Statement {
   std::vector<Statement> then_body;
   std::vector<Statement> else_body;
   std::vector<Statement> body;
+  snow::common::SourceRange range;
 };
 
 struct FunctionDecl {
@@ -80,6 +85,7 @@ struct FunctionDecl {
   std::vector<ParamDecl> params;
   std::string return_type;
   std::vector<Statement> statements;
+  snow::common::SourceRange range;
 };
 
 struct AstModule {

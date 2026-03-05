@@ -83,6 +83,15 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
     std::string return_type;
   };
   std::unordered_map<std::string, FunctionSignature> signatures;
+  for (const auto& external : module.external_functions) {
+    if (external.name.empty()) {
+      continue;
+    }
+    FunctionSignature sig;
+    sig.return_type = external.return_type;
+    sig.param_types = external.param_types;
+    signatures.emplace(external.name, std::move(sig));
+  }
   for (const auto& function : module.functions) {
     FunctionSignature sig;
     sig.return_type = function.return_type;

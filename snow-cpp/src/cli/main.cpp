@@ -245,16 +245,6 @@ int RunRun(const std::vector<std::string>& args) {
     return 1;
   }
 
-  std::ifstream in(result.artifact_path, std::ios::in | std::ios::binary);
-  if (in) {
-    std::string first_line;
-    std::getline(in, first_line);
-    if (first_line.rfind("# snow artifact (bootstrap)", 0) == 0) {
-      std::cerr << "run: executable artifact is bootstrap text (native toolchain unavailable)\n";
-      return 1;
-    }
-  }
-
   const std::string command = "\"" + result.artifact_path + "\"";
   const int run_rc = std::system(command.c_str());
   if (run_rc < 0) {

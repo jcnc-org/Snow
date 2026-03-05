@@ -21,6 +21,7 @@
 
 #include "snow/codegen/lowering.h"
 #include "snow/common/manifest.h"
+#include "snow/common/mangling.h"
 #include "snow/common/source_file.h"
 #include "snow/common/target.h"
 #include "snow/frontend/lexer.h"
@@ -80,18 +81,6 @@ struct ProjectBuildConfig {
   std::filesystem::path main_file;
   std::string manifest_target;
 };
-
-std::string ToString(const OutputKind output_kind) {
-  switch (output_kind) {
-    case OutputKind::Object:
-      return "object";
-    case OutputKind::Library:
-      return "library";
-    case OutputKind::Executable:
-      return "executable";
-  }
-  return "object";
-}
 
 std::string ExtensionForOutputKind(const OutputKind output_kind) {
   switch (output_kind) {
@@ -178,15 +167,6 @@ std::string ResolveToolPath(const char* env_name, const std::string& fallback_na
   return fallback_name;
 }
 
-bool WriteTextFile(const std::filesystem::path& path, const std::string& content) {
-  std::ofstream out(path, std::ios::out | std::ios::binary);
-  if (!out) {
-    return false;
-  }
-  out << content;
-  return true;
-}
-
 int RunSystemCommand(const std::string& command) {
   return std::system(command.c_str());
 }
@@ -211,139 +191,113 @@ int RunProcess(const std::string& program, const std::vector<std::string>& args)
 #endif
 }
 
-bool TryEmitNativeArtifact(const std::filesystem::path& output_path, const OutputKind output_kind,
-                           const std::string& target_triple, const std::vector<std::string>& link_inputs,
-                           const std::string& llvm_ir) {
-  if (target_triple != common::DetectHostTriple()) {
-    return false;
+bool EnsureOutputDirectory(const std::filesystem::path& output_path, common::DiagnosticEngine& diagnostics) {
+  const auto parent = output_path.parent_path();
+  if (parent.empty()) {
+    return true;
   }
-
-  const std::string clang = ResolveToolPath("SNOW_CLANG", "clang");
-  const std::string llvm_ar = ResolveToolPath("SNOW_LLVM_AR", "llvm-ar");
-
-  const std::filesystem::path ir_path = output_path.string() + ".ll";
-  if (!WriteTextFile(ir_path, llvm_ir)) {
-    return false;
-  }
-
-  auto cleanup = [&](const std::optional<std::filesystem::path>& extra = std::nullopt) {
-    std::error_code ignore_ec;
-    std::filesystem::remove(ir_path, ignore_ec);
-    if (extra.has_value()) {
-      std::filesystem::remove(extra.value(), ignore_ec);
-    }
-  };
-
-  auto compile_ir = [&](const std::filesystem::path& destination, const bool object_only) {
-    std::vector<std::string> args = {"-Wno-override-module", "-x", "ir"};
-    if (object_only) {
-      args.push_back("-c");
-    }
-    args.push_back(ir_path.string());
-    args.push_back("-o");
-    args.push_back(destination.string());
-    return RunProcess(clang, args) == 0;
-  };
-
-  switch (output_kind) {
-    case OutputKind::Object: {
-      const bool ok = compile_ir(output_path, true);
-      cleanup();
-      return ok;
-    }
-
-    case OutputKind::Executable: {
-      if (link_inputs.empty()) {
-        const bool ok = compile_ir(output_path, false);
-        cleanup();
-        return ok;
-      }
-
-#if defined(_WIN32)
-      const std::filesystem::path temp_obj = output_path.string() + ".tmp.obj";
-#else
-      const std::filesystem::path temp_obj = output_path.string() + ".tmp.o";
-#endif
-      if (!compile_ir(temp_obj, true)) {
-        cleanup(temp_obj);
-        return false;
-      }
-
-      std::vector<std::string> link_args;
-      link_args.reserve(link_inputs.size() + 3);
-      link_args.push_back(temp_obj.string());
-      for (const auto& input : link_inputs) {
-        link_args.push_back(input);
-      }
-      link_args.push_back("-o");
-      link_args.push_back(output_path.string());
-
-      const bool ok = RunProcess(clang, link_args) == 0;
-      cleanup(temp_obj);
-      return ok;
-    }
-
-    case OutputKind::Library: {
-#if defined(_WIN32)
-      const std::filesystem::path temp_obj = output_path.string() + ".tmp.obj";
-#else
-      const std::filesystem::path temp_obj = output_path.string() + ".tmp.o";
-#endif
-      if (!compile_ir(temp_obj, true)) {
-        cleanup(temp_obj);
-        return false;
-      }
-      std::vector<std::string> ar_args;
-      ar_args.reserve(link_inputs.size() + 3);
-      ar_args.push_back("rcs");
-      ar_args.push_back(output_path.string());
-      ar_args.push_back(temp_obj.string());
-      for (const auto& input : link_inputs) {
-        ar_args.push_back(input);
-      }
-      const bool ok = RunProcess(llvm_ar, ar_args) == 0;
-      cleanup(temp_obj);
-      return ok;
-    }
-  }
-
-  cleanup();
-  return false;
-}
-
-bool WriteBootstrapArtifact(const std::filesystem::path& output_path, const OutputKind output_kind,
-                            const std::string& target_triple, const std::string& module_path,
-                            const std::string& llvm_ir, common::DiagnosticEngine& diagnostics) {
-  std::ofstream out(output_path, std::ios::out | std::ios::binary);
-  if (!out) {
-    diagnostics.Error("E_DRIVER_OUTFILE", "Cannot write output artifact", output_path.string(), {0, 0, 0, 0});
-    return false;
-  }
-
-  out << "# snow artifact (bootstrap)\\n";
-  out << "kind=" << ToString(output_kind) << "\\n";
-  out << "target=" << target_triple << "\\n";
-  out << "module=" << module_path << "\\n";
-  out << "--- llvm ---\\n";
-  out << llvm_ir;
-  return true;
-}
-
-bool WriteArtifact(const std::filesystem::path& output_path, const OutputKind output_kind, const std::string& target_triple,
-                   const std::string& module_path, const std::vector<std::string>& link_inputs,
-                   const std::string& llvm_ir, common::DiagnosticEngine& diagnostics) {
   std::error_code ec;
-  std::filesystem::create_directories(output_path.parent_path(), ec);
+  std::filesystem::create_directories(parent, ec);
   if (ec) {
-    diagnostics.Error("E_DRIVER_OUTDIR", "Cannot create output directory", output_path.string(), {0, 0, 0, 0},
+    diagnostics.Error("E_DRIVER_OUTDIR", "Cannot create output directory", output_path.string(), {1, 1, 1, 1},
                       ec.message());
     return false;
   }
+  return true;
+}
 
-  if (TryEmitNativeArtifact(output_path, output_kind, target_triple, link_inputs, llvm_ir)) {
+bool LinkExecutable(const std::filesystem::path& output_path, const std::string& target_triple,
+                    const std::vector<std::string>& objects, common::DiagnosticEngine& diagnostics) {
+  const std::string clang = ResolveToolPath("SNOW_CLANG", "clang");
+  std::vector<std::string> args;
+  args.reserve(objects.size() + 4);
+  args.push_back("--target=" + target_triple);
+  for (const auto& object : objects) {
+    args.push_back(object);
+  }
+  args.push_back("-o");
+  args.push_back(output_path.string());
+  if (RunProcess(clang, args) == 0) {
     return true;
   }
-  return WriteBootstrapArtifact(output_path, output_kind, target_triple, module_path, llvm_ir, diagnostics);
+  diagnostics.Error("E_BACKEND_LINK_FAIL", "Failed to link executable artifact", output_path.string(), {1, 1, 1, 1},
+                    "Ensure clang/lld is installed and visible in PATH");
+  return false;
+}
+
+bool CreateStaticLibrary(const std::filesystem::path& output_path, const std::vector<std::string>& objects,
+                         common::DiagnosticEngine& diagnostics) {
+  const std::string llvm_ar = ResolveToolPath("SNOW_LLVM_AR", "llvm-ar");
+  std::vector<std::string> args;
+  args.reserve(objects.size() + 2);
+  args.push_back("rcs");
+  args.push_back(output_path.string());
+  for (const auto& object : objects) {
+    args.push_back(object);
+  }
+  if (RunProcess(llvm_ar, args) == 0) {
+    return true;
+  }
+  diagnostics.Error("E_BACKEND_LINK_FAIL", "Failed to archive static library artifact", output_path.string(),
+                    {1, 1, 1, 1}, "Ensure llvm-ar is installed and visible in PATH");
+  return false;
+}
+
+bool WriteArtifact(const std::filesystem::path& output_path, const OutputKind output_kind, const std::string& target_triple,
+                   const std::vector<std::string>& link_inputs, const snow::sir::Module& module,
+                   const snow::passes::OptLevel opt_level, common::DiagnosticEngine& diagnostics) {
+  if (!EnsureOutputDirectory(output_path, diagnostics)) {
+    return false;
+  }
+
+  codegen::LlvmLowering lowering;
+  codegen::TargetConfig target{
+      .triple = target_triple,
+      .executable_entry_wrapper = output_kind == OutputKind::Executable,
+  };
+
+  if (output_kind == OutputKind::Object) {
+    const auto emit = lowering.EmitObject(module, target, opt_level, output_path.string());
+    if (!emit.success) {
+      diagnostics.Error("E_BACKEND_OBJECT_EMIT", "Failed to emit object artifact", output_path.string(), {1, 1, 1, 1},
+                        emit.error_message);
+      return false;
+    }
+    return true;
+  }
+
+#if defined(_WIN32)
+  const std::filesystem::path module_object = output_path.string() + ".tmp.obj";
+#else
+  const std::filesystem::path module_object = output_path.string() + ".tmp.o";
+#endif
+
+  const auto emit = lowering.EmitObject(module, target, opt_level, module_object.string());
+  if (!emit.success) {
+    diagnostics.Error("E_BACKEND_OBJECT_EMIT", "Failed to emit object artifact", output_path.string(), {1, 1, 1, 1},
+                      emit.error_message);
+    std::error_code ignore_ec;
+    std::filesystem::remove(module_object, ignore_ec);
+    return false;
+  }
+
+  std::vector<std::string> objects;
+  objects.reserve(link_inputs.size() + 1);
+  objects.push_back(module_object.string());
+  for (const auto& input : link_inputs) {
+    objects.push_back(input);
+  }
+
+  bool ok = false;
+  if (output_kind == OutputKind::Executable) {
+    ok = LinkExecutable(output_path, target_triple, objects, diagnostics);
+  } else {
+    ok = CreateStaticLibrary(output_path, objects, diagnostics);
+  }
+
+  std::error_code ignore_ec;
+  std::filesystem::remove(module_object, ignore_ec);
+  return ok;
 }
 
 std::string JoinSegments(const std::vector<std::string>& segments) {
@@ -584,7 +538,7 @@ CompileResult Driver::Compile(const CompileRequest& request) const {
   }
 
   sema::SemanticAnalyzer sema;
-  auto sema_module = sema.Analyze(ast, result.diagnostics);
+  auto sema_module = sema.Analyze(ast, result.diagnostics, request.available_functions);
   if (request.emit.sema) {
     result.sema_dump = sema::DumpSema(sema_module);
   }
@@ -622,16 +576,21 @@ CompileResult Driver::Compile(const CompileRequest& request) const {
         .executable_entry_wrapper = request.output_kind == OutputKind::Executable,
     };
     const auto llvm_result = lowering.Lower(pass_result.module, target, request.opt_level);
+    if (!llvm_result.native_ready) {
+      result.diagnostics.Error("E_BACKEND_LLVM_REQUIRED", "LLVM backend is required but not ready for this module",
+                               request.input_path, {1, 1, 1, 1},
+                               "Enable LLVM backend support and verify toolchain installation");
+    }
     if (request.emit.llvm) {
       result.llvm_dump = llvm_result.llvm_ir;
     }
 
-    if (request.write_artifact) {
+    if (request.write_artifact && !result.diagnostics.HasErrors()) {
       const std::filesystem::path out_path = request.output_path.empty()
                                                  ? DefaultArtifactPath(request, module_path)
                                                  : std::filesystem::path(request.output_path);
-      if (WriteArtifact(out_path, request.output_kind, target_triple, module_path, request.link_inputs, llvm_result.llvm_ir,
-                        result.diagnostics)) {
+      if (WriteArtifact(out_path, request.output_kind, target_triple, request.link_inputs, pass_result.module,
+                        request.opt_level, result.diagnostics)) {
         result.artifact_path = out_path.string();
       }
     }
@@ -666,6 +625,35 @@ BuildResult Driver::BuildProject(const BuildRequest& request) const {
   (void)TopologicalOrder(nodes, topo, result.diagnostics);
   result.module_order = topo;
   std::vector<std::string> linkable_objects;
+  std::vector<snow::common::FunctionSignature> available_functions;
+
+  for (const auto& module_id : topo) {
+    const auto node_it = nodes.find(module_id);
+    if (node_it == nodes.end()) {
+      continue;
+    }
+    for (const auto& function : node_it->second.ast.functions) {
+      if (function.visibility != snow::frontend::Visibility::Public) {
+        continue;
+      }
+      if (function.name.empty()) {
+        continue;
+      }
+      std::vector<std::string> param_types;
+      param_types.reserve(function.params.size());
+      for (const auto& param : function.params) {
+        param_types.push_back(param.type);
+      }
+      const std::string return_type = function.return_type.empty() ? "i32" : function.return_type;
+      available_functions.push_back(snow::common::FunctionSignature{
+          .module_path = module_id,
+          .source_name = function.name,
+          .param_types = param_types,
+          .return_type = return_type,
+          .mangled_name = snow::common::MangleSymbol(module_id, function.name, param_types, return_type, false),
+      });
+    }
+  }
 
   for (const auto& module_id : topo) {
     const auto it = nodes.find(module_id);
@@ -680,6 +668,7 @@ BuildResult Driver::BuildProject(const BuildRequest& request) const {
     module_request.opt_level = request.opt_level;
     module_request.output_kind = OutputKind::Object;
     module_request.write_artifact = true;
+    module_request.available_functions = available_functions;
 
     if (is_main_module) {
       module_request.emit = request.emit;
