@@ -89,6 +89,62 @@ bool TestSemaLetTypeMismatch() {
   return true;
 }
 
+bool TestSemaCallUndefined() {
+  const std::string test_name = "TestSemaCallUndefined";
+  const snow::common::SourceFile source{
+      "unit_call_undefined.snow",
+      "pub fn main() -> i32 { missing(); return 0; }",
+  };
+
+  snow::common::DiagnosticEngine diagnostics;
+  snow::frontend::Lexer lexer;
+  snow::frontend::Parser parser;
+  snow::sema::SemanticAnalyzer sema;
+
+  const auto tokens = lexer.Tokenize(source, diagnostics);
+  const auto ast = parser.Parse("unit.call_undefined", tokens, diagnostics);
+  (void)sema.Analyze(ast, diagnostics);
+
+  if (!ContainsCode(diagnostics, "E_SEMA_CALL_UNDEFINED")) {
+    return Fail(test_name, "expected E_SEMA_CALL_UNDEFINED");
+  }
+  return true;
+}
+
+bool TestSemaImportedCallResolves() {
+  const std::string test_name = "TestSemaImportedCallResolves";
+  const snow::common::SourceFile source{
+      "unit_call_imported.snow",
+      "import math.vector; pub fn main() -> i32 { return len(); }",
+  };
+
+  snow::common::DiagnosticEngine diagnostics;
+  snow::frontend::Lexer lexer;
+  snow::frontend::Parser parser;
+  snow::sema::SemanticAnalyzer sema;
+
+  const auto tokens = lexer.Tokenize(source, diagnostics);
+  const auto ast = parser.Parse("unit.call_imported", tokens, diagnostics);
+
+  std::vector<snow::common::FunctionSignature> available_functions;
+  available_functions.push_back(snow::common::FunctionSignature{
+      .module_path = "math.vector",
+      .source_name = "len",
+      .param_types = {},
+      .return_type = "i32",
+      .mangled_name = "_snow_math_vector_len_deadbeef",
+  });
+  (void)sema.Analyze(ast, diagnostics, available_functions);
+
+  if (ContainsCode(diagnostics, "E_SEMA_CALL_UNDEFINED")) {
+    return Fail(test_name, "unexpected E_SEMA_CALL_UNDEFINED for imported function");
+  }
+  if (diagnostics.HasErrors()) {
+    return Fail(test_name, "unexpected diagnostics for imported function resolution");
+  }
+  return true;
+}
+
 }  // namespace
 
 int main() {
@@ -96,6 +152,8 @@ int main() {
   failed += TestSemaAssignUndefined() ? 0 : 1;
   failed += TestSemaAssignTypeMismatch() ? 0 : 1;
   failed += TestSemaLetTypeMismatch() ? 0 : 1;
+  failed += TestSemaCallUndefined() ? 0 : 1;
+  failed += TestSemaImportedCallResolves() ? 0 : 1;
 
   if (failed == 0) {
     std::cout << "[PASS] snow-sema-tests\n";

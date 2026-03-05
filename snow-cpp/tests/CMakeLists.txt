@@ -13,6 +13,14 @@ file(COPY ${DATA_DIR}/project_ok DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY ${DATA_DIR}/project_cycle DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY ${DATA_DIR}/project_manifest DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
+if(WIN32)
+  set(EXEC_MAGIC_HEX 4d5a)
+elseif(APPLE)
+  set(EXEC_MAGIC_HEX cffaedfe)
+else()
+  set(EXEC_MAGIC_HEX 7f454c46)
+endif()
+
 add_executable(snow-unit-tests unit/snow_unit_tests.cpp)
 target_link_libraries(snow-unit-tests PRIVATE snow_compiler)
 add_test(
@@ -51,6 +59,21 @@ function(add_cli_assert_test NAME EXE EXIT_CODE ARGS EXPECT REJECT EXPECT_FILE)
       -DEXPECT_REGEX=${EXPECT}
       -DREJECT_REGEX=${REJECT}
       -DEXPECT_FILE=${EXPECT_FILE}
+      -P ${ASSERT_SCRIPT}
+  )
+endfunction()
+
+function(add_cli_assert_magic_test NAME EXE EXIT_CODE ARGS EXPECT REJECT EXPECT_FILE EXPECT_FILE_MAGIC)
+  add_test(
+    NAME ${NAME}
+    COMMAND ${CMAKE_COMMAND}
+      -DEXE=$<TARGET_FILE:${EXE}>
+      -DEXPECT_EXIT=${EXIT_CODE}
+      -DARGS=${ARGS}
+      -DEXPECT_REGEX=${EXPECT}
+      -DREJECT_REGEX=${REJECT}
+      -DEXPECT_FILE=${EXPECT_FILE}
+      -DEXPECT_FILE_MAGIC=${EXPECT_FILE_MAGIC}
       -P ${ASSERT_SCRIPT}
   )
 endfunction()
@@ -99,10 +122,10 @@ add_cli_assert_test(
   snowc_compile_target_override
   snowc
   0
-  "compile|--emit-llvm|--target|x86_64-unknown-linux-gnu|-o|${ARTIFACT_DIR}/target_override.exe|${DATA_DIR}/minimal.snow"
+  "compile|--emit-llvm|--emit-object|--target|x86_64-unknown-linux-gnu|-o|${ARTIFACT_DIR}/target_override.o|${DATA_DIR}/minimal.snow"
   "target triple = \"x86_64-unknown-linux-gnu\""
   ""
-  ""
+  "${ARTIFACT_DIR}/target_override.o"
 )
 
 add_cli_assert_test(
@@ -466,6 +489,16 @@ add_cli_assert_test(
 )
 
 add_cli_assert_test(
+  snowc_compile_call_undefined
+  snowc
+  1
+  "compile|-o|${ARTIFACT_DIR}/call_undefined.exe|${CASES_DIR}/call_undefined.snow"
+  "E_SEMA_CALL_UNDEFINED"
+  ""
+  ""
+)
+
+add_cli_assert_test(
   snowc_compile_ownership_use_after_move
   snowc
   1
@@ -525,6 +558,28 @@ add_cli_assert_test(
   "${ARTIFACT_DIR}/test_obj.o"
 )
 
+add_cli_assert_magic_test(
+  snowc_compile_artifact_executable_magic
+  snowc
+  0
+  "compile|-o|${ARTIFACT_DIR}/native_magic.exe|${DATA_DIR}/minimal.snow"
+  "artifact:"
+  ""
+  "${ARTIFACT_DIR}/native_magic.exe"
+  "${ARTIFACT_DIR}/native_magic.exe=>${EXEC_MAGIC_HEX}"
+)
+
+add_cli_assert_test(
+  snowc_compile_missing_linker_fail
+  snowc
+  1
+  "compile|-o|${ARTIFACT_DIR}/missing_linker.exe|${DATA_DIR}/minimal.snow"
+  "E_BACKEND_LINK_FAIL"
+  ""
+  ""
+)
+set_tests_properties(snowc_compile_missing_linker_fail PROPERTIES ENVIRONMENT "SNOW_CLANG=__snow_missing_clang__")
+
 add_cli_assert_test(
   snowc_build_project_ok
   snowc
@@ -539,7 +594,7 @@ add_test(
   NAME snowc_build_project_ok_run_binary
   COMMAND ${CMAKE_COMMAND}
     -DEXE=${PROJECT_OK_DIR}/snow-build/main.exe
-    -DEXPECT_EXIT=0
+    -DEXPECT_EXIT=1
     -P ${ASSERT_SCRIPT}
 )
 set_tests_properties(snowc_build_project_ok_run_binary PROPERTIES DEPENDS snowc_build_project_ok)
@@ -558,20 +613,20 @@ add_cli_assert_test(
   snowc_build_project_manifest_main_target
   snowc
   0
-  "build|--emit-llvm|${PROJECT_MANIFEST_DIR}"
+  "build|--emit-llvm|--emit-object|${PROJECT_MANIFEST_DIR}"
   "build modules: 1|app|target triple = \"x86_64-unknown-linux-gnu\""
   ""
-  "${PROJECT_MANIFEST_DIR}/snow-build/main.exe"
+  "${PROJECT_MANIFEST_DIR}/snow-build/main.o"
 )
 
 add_cli_assert_test(
   snowc_build_project_manifest_cli_target_override
   snowc
   0
-  "build|--emit-llvm|--target|aarch64-apple-darwin|${PROJECT_MANIFEST_DIR}"
+  "build|--emit-llvm|--emit-object|--target|aarch64-apple-darwin|${PROJECT_MANIFEST_DIR}"
   "target triple = \"aarch64-apple-darwin\""
   ""
-  "${PROJECT_MANIFEST_DIR}/snow-build/main.exe"
+  "${PROJECT_MANIFEST_DIR}/snow-build/main.o"
 )
 
 add_cli_assert_test(

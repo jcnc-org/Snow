@@ -1,5 +1,5 @@
 import math.vector as vec;
 
 pub fn main() -> i32 {
-  return 0;
+  return len();
 }
