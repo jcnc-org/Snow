@@ -1,120 +1,127 @@
-# AGENTS.md (Snow Compiler v1.0 Governance)
+# Snow Compiler Governance Index (v1.0)
 
-This file defines mandatory architecture and code-quality constraints for all contributors and AI agents working on Snow.
+This file is the mandatory governance index for contributors and AI agents.
+Detailed workflows and checklists are delegated to `.claude/skills/`.
 
 ## 1. Scope
 
-- Applies to all C++ compiler work in this repository root layout.
-- Java/Maven implementation is decommissioned from active build/test flows.
-- If this file conflicts with local style habits, this file wins.
+- Applies to all active C++ compiler/runtime/driver/test tooling in this repository.
+- Java/VM-era assets are archival only and must live under `docs/legacy/`.
+- If local habits conflict with this file or referenced skills, this governance wins.
 
-## 2. Architecture Boundaries
+## 2. Architecture Hard Rules
 
-- Pipeline is fixed: `Source -> Lexer -> Parser -> AST -> Semantic Analysis -> Ownership Check -> SIR Build -> sir-validator -> Passes -> LLVM Lowering -> LLVM CodeGen -> Object/Executable`.
-- Backend target path is fixed: `AST -> SIR -> LLVM`.
-- Custom VM is not a primary backend for v1.0.
+- Fixed pipeline:
+  `Source -> Lexer -> Parser -> AST -> Semantic Analysis -> Ownership Check -> SIR Build -> sir-validator -> Passes -> LLVM Lowering -> LLVM CodeGen -> Object/Executable`
+- Fixed backend route: `AST -> SIR -> LLVM`.
+- No custom VM backend in v1.
 
-### Layering
+Layer responsibilities:
 
-- `frontend`: tokenization, parsing, AST only.
-- `sema`: symbol tables, type checks, import/name resolution, visibility checks.
-- `ownership`: ownership/lifetime checks and drop-insertion facts.
-- `sir`: strongly typed SSA IR data model and printers.
-- `passes`: standalone IR transforms.
-- `codegen/llvm`: lowering to LLVM IR and target config.
-- `runtime`: C ABI runtime surface used by generated programs.
-- `driver/cli`: command orchestration, flag handling, compile entrypoint.
+- `frontend`: tokenize/parse/AST only.
+- `sema`: name/import/visibility/type resolution.
+- `ownership`: move/lifetime/drop facts.
+- `sir`: strongly typed SSA IR and validation.
+- `passes`: isolated IR transforms.
+- `codegen/llvm`: LLVM lowering and object emission.
+- `runtime`: C ABI runtime surface.
+- `driver` and `cli`: orchestration and CLI boundary.
 
-No layer may depend upward.
+Dependency direction is one-way (no upward dependency).
 
-## 3. C++ Standards
+## 3. C++ and Code Quality Hard Rules
 
 - Language: C++20.
-- Prefer Rule of Zero and RAII.
+- Prefer RAII and Rule of Zero.
 - Owning raw pointers are forbidden.
-- Use `std::unique_ptr`/`std::shared_ptr` only where ownership semantics are explicit.
+- Use `std::unique_ptr`/`std::shared_ptr` only with explicit ownership intent.
+- Formatting must follow repository `.clang-format`.
+- Comments are required when logic is non-obvious:
+  - module intent (`// Module:`) at source file top for substantial modules,
+  - key invariant/contract comments on complex algorithms or state transitions.
 
-## 4. File and Module Size
+## 4. File Size Limits (Enforced)
 
-- Prefer single responsibility per file.
-- Hard guidance: each source file should stay under 800 lines.
-- If file grows beyond 800 lines, split by concern immediately.
+- Compiler core files (`src/`, `include/`) must stay `<= 800` lines.
+- Tests and tool scripts (`tests/`, `tools/`, `builds/tools/`) must stay `<= 1000` lines.
+- If over limit, split by concern immediately.
 
-## 5. SIR and Pass Rules
+## 5. SIR / Pass / Ownership Constraints
 
-- SIR must be strongly typed, SSA, explicit CFG, platform-independent.
-- Any IR transformation must be an isolated pass in `passes/`.
-- New pass must document:
+- SIR must remain strongly typed, SSA, explicit CFG, platform-independent.
+- Each pass must be isolated and document:
   - input invariants
   - output invariants
   - failure modes
-- `sir-validator` must run:
-  - debug builds: after every pass
-  - release builds: key checkpoints
+- `drop` is side-effecting; unsafe removal/reorder is forbidden.
+- `sir-validator` policy:
+  - debug: after every pass
+  - release: key checkpoints
 
-## 6. Ownership and Lifetime
+## 6. ABI / LLVM / Target Constraints
 
-- MVP has no implicit GC.
-- Language model is ownership + deterministic drop.
-- `drop` is side-effecting; optimization cannot remove/reorder it unsafely.
-
-## 7. Import/Name/Visibility Policy
-
-- Resolution order: `local -> current module -> imported modules`.
-- Unqualified symbol collisions across imports must error (`AmbiguousSymbol`).
-- `star import` is allowed but discouraged and should emit warning by default.
-- Visibility defaults to private. `pub` is required for cross-module exports.
-
-## 8. ABI and Runtime Constraints
-
-- ABI baseline is native platform ABI (SysV/MSVC/AArch64 PCS).
-- Stack alignment at call boundary: 16 bytes.
-- Runtime entry chain for executables: `host main -> snow_runtime_start -> user main`.
-- Runtime auto-entry wrapping applies only to executables, not libraries.
-
-## 9. LLVM and Target Policy
-
-- Locked LLVM toolchain: 21.1.8.
-- CI matrix must validate LLVM 21.1.8 on supported host platforms.
+- Runtime entry chain for executables:
+  `host main -> snow_runtime_start -> user main`
+- Entry wrapping applies to executables only.
+- Call-boundary stack alignment: 16 bytes.
+- Locked LLVM toolchain: `21.1.8` (exact).
 - Supported targets:
-  - x86_64-pc-windows-msvc
-  - x86_64-unknown-linux-gnu
-  - x86_64-apple-darwin
-  - aarch64-apple-darwin
-- Default target is host triple.
+  - `x86_64-pc-windows-msvc`
+  - `x86_64-unknown-linux-gnu`
+  - `x86_64-apple-darwin`
+  - `aarch64-apple-darwin`
 
-## 10. Diagnostics
+## 7. Diagnostics / Dumps / Determinism
 
 Every diagnostic must include:
 
 - severity (`Error`/`Warning`/`Note`/`InternalError`)
 - stable code
 - message
-- source file and precise span (line/column/range)
+- precise source span (line/column/range)
 - optional suggestion
 
-## 11. Debug Facilities (Required)
+Required debug dump surfaces:
 
-Driver must support:
+- tokens
+- ast
+- sema
+- sir
+- cfg
+- llvm
+- timings
 
-- `--emit-tokens`
-- `--emit-ast`
-- `--emit-sema`
-- `--emit-sir`
-- `--emit-cfg`
-- `--emit-llvm`
+AST/Sema/SIR/CFG/diagnostic dumps must be deterministic.
 
-## 12. Serialization and Introspection
+## 8. Required Gates
 
-- AST/Sema/SIR/CFG/Diagnostic structures must support debug dump (text or JSON).
-- Dumps must be deterministic to support CI and diff-based debugging.
+Hard-fail gates for this repository:
 
-## 13. Testing and Differential Validation
+- architecture/style check: `tools/arch_check.ps1`
+- format check: `tools/check_clang_format.ps1`
+- test gate: `builds/tools/run-snow-cpp-gate.ps1`
+- compliance gate: `builds/tools/check-snow-v1-compliance.ps1`
+- knowledge base integrity: `tools/check_knowledge_base.ps1`
 
-- C++ unit/CLI/compliance gates are mandatory for all PRs.
-- Deterministic dumps and validator checks are the primary regression signals in v1.
+## 9. Change Control
 
-## 14. Change Control
+The same change set must update specs/docs when changing:
 
-- Any change touching ABI, mangling, ownership semantics, or SIR instruction semantics requires spec update in `docs/` within the same PR.
-- Any command-line compatibility change requires CLI docs update.
+- ABI or mangling
+- ownership semantics
+- SIR instruction semantics
+- CLI compatibility
+- pass invariants
+
+## 10. Skills Index
+
+Detailed process rules are in `.claude/skills/`:
+
+- `compiler-layering`
+- `cpp-style`
+- `architecture-check`
+- `testing-gate`
+- `llvm-authority-kb`
+- `refactor-roadmap`
+
+When a task matches one of the above, consult that skill before editing.

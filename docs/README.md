@@ -1,14 +1,19 @@
-# Docs Index
+# Snow Docs Index
 
-## Current (C++ Mainline)
+## Active v1 Docs (C++ Mainline)
 
 - `Snow-Compiler-Architecture-v1.md`
 - `Snow-SIR-Spec-v1.md`
 - `Snow-Runtime-ABI-v1.md`
-- `Snow-Migration-Plan-Java-to-CPP.md`
 - `Snow-Pass-Invariants-v1.md`
+- `Snow-Migration-Plan-Java-to-CPP.md`
+- `knowledge/llvm-21.1.8-authority.md`
+- `knowledge/runtime-abi-authority.md`
+- `knowledge/third-party-api-authority.md`
+- `knowledge/update-sop.md`
 
-## Historical
+## Legacy Archive
 
+- `legacy/README.md`
 - `legacy/README-java.md`
-- Other Java/VM-era docs remain in this directory tree for archival reference only.
+- Java/VM-era historical documents and images are archived under `legacy/`.
