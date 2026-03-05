@@ -4,8 +4,8 @@ This file defines mandatory architecture and code-quality constraints for all co
 
 ## 1. Scope
 
-- Applies to all new C++ compiler work under `snow-cpp/`.
-- Existing Java modules remain baseline/reference for differential testing.
+- Applies to all C++ compiler work in this repository root layout.
+- Java/Maven implementation is decommissioned from active build/test flows.
 - If this file conflicts with local style habits, this file wins.
 
 ## 2. Architecture Boundaries
@@ -111,11 +111,8 @@ Driver must support:
 
 ## 13. Testing and Differential Validation
 
-- Keep Java behavior as reference baseline during migration.
-- Differential mismatch labels are fixed:
-  - `JAVA_BUG`
-  - `LLVM_BUG`
-  - `SEMANTIC_UNSPECIFIED`
+- C++ unit/CLI/compliance gates are mandatory for all PRs.
+- Deterministic dumps and validator checks are the primary regression signals in v1.
 
 ## 14. Change Control
 

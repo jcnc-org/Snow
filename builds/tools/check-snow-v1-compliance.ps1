@@ -1,5 +1,5 @@
 param(
-  [string]$BuildDir = 'snow-cpp/build'
+  [string]$BuildDir = 'build'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -25,8 +25,8 @@ if (Test-Path $tmpRoot) {
   Remove-Item -Recurse -Force $tmpRoot
 }
 New-Item -ItemType Directory -Force $tmpRoot | Out-Null
-Copy-Item -Recurse -Force 'snow-cpp\tests\data\project_ok' (Join-Path $tmpRoot 'project_ok')
-Copy-Item -Recurse -Force 'snow-cpp\tests\data\project_cycle' (Join-Path $tmpRoot 'project_cycle')
+Copy-Item -Recurse -Force 'tests\data\project_ok' (Join-Path $tmpRoot 'project_ok')
+Copy-Item -Recurse -Force 'tests\data\project_cycle' (Join-Path $tmpRoot 'project_cycle')
 
 $required = @(
   'AGENTS.md',
@@ -40,22 +40,24 @@ foreach ($f in $required) {
   Add-Check "doc:$f" $exists ($(if ($exists) { 'ok' } else { 'missing' }))
 }
 
-$build = Invoke-Cmd "powershell -ExecutionPolicy Bypass -File builds\tools\build-snow-cpp.ps1"
+$build = Invoke-Cmd "powershell -ExecutionPolicy Bypass -File builds\tools\build-snow-cpp.ps1 -BuildDir $BuildDir"
 Add-Check 'build+ctest' ($build.ExitCode -eq 0) (($build.Output -split "`n" | Select-Object -Last 6) -join "`n")
 
-$emit = Invoke-Cmd "snow-cpp\\build\\snowc.exe compile --emit-tokens --emit-ast --emit-sema --emit-sir --emit-cfg --emit-llvm -o $tmpRoot\\minimal.exe snow-cpp\\tests\\data\\minimal.snow"
+$snowc = if ($IsWindows) { Join-Path $BuildDir 'snowc.exe' } else { Join-Path $BuildDir 'snowc' }
+
+$emit = Invoke-Cmd "`"$snowc`" compile --emit-tokens --emit-ast --emit-sema --emit-sir --emit-cfg --emit-llvm -o $tmpRoot\\minimal.exe tests\\data\\minimal.snow"
 $emitOk = $emit.ExitCode -eq 0 -and $emit.Output -match 'entry-wrapper = enabled'
 Add-Check 'cli-emits' $emitOk 'expected emit pipeline + entry wrapper in llvm output'
 
-$dag = Invoke-Cmd "snow-cpp\\build\\snowc.exe build $tmpRoot\\project_ok"
+$dag = Invoke-Cmd "`"$snowc`" build $tmpRoot\\project_ok"
 $dagOk = $dag.ExitCode -eq 0 -and $dag.Output -match 'build modules: 2'
 Add-Check 'module-dag' $dagOk 'expected 2 modules in topo build order'
 
-$cycle = Invoke-Cmd "snow-cpp\\build\\snowc.exe build $tmpRoot\\project_cycle"
+$cycle = Invoke-Cmd "`"$snowc`" build $tmpRoot\\project_cycle"
 $cycleOk = $cycle.ExitCode -ne 0 -and $cycle.Output -match 'E_MODULE_CYCLE'
 Add-Check 'module-cycle-detect' $cycleOk 'expected E_MODULE_CYCLE on cyclic imports'
 
-$llvm = Invoke-Cmd "snow-cpp\\build\\snowc.exe compile --emit-llvm -o $tmpRoot\\minimal-llvm.exe snow-cpp\\tests\\data\\minimal.snow"
+$llvm = Invoke-Cmd "`"$snowc`" compile --emit-llvm -o $tmpRoot\\minimal-llvm.exe tests\\data\\minimal.snow"
 $mangleOk = $llvm.ExitCode -eq 0 -and $llvm.Output -match '_snow_'
 $entryOk = $llvm.ExitCode -eq 0 -and $llvm.Output -match 'snow_runtime_start'
 Add-Check 'symbol-mangling' $mangleOk 'expected _snow_ mangled symbols'

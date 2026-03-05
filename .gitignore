@@ -42,8 +42,9 @@ target/
 *.water
 /.lingma/
 *.txt
-!snow-cpp/tests/CMakeLists.txt
+!CMakeLists.txt
+!tests/CMakeLists.txt
 /demoDir/
 /.env
-/snow-cpp/build/
+/build/
 /builds/tmp/

@@ -18,7 +18,7 @@ Primary backend route is fixed:
 
 `AST -> SIR -> LLVM -> Object/Executable`
 
-The legacy Java implementation remains as a reference baseline for differential testing only.
+Legacy Java materials are archived as historical documentation only and are outside active build/test policy.
 
 ## 2. Compilation Pipeline
 
@@ -61,7 +61,6 @@ This overview is normative for contributors and tooling integration.
 - LLVM backend and runtime ABI integration
 - CLI and package manifest flow (`snow.toml`)
 - Compiler debug emits and diagnostics
-- Differential testing against Java baseline
 
 ### 3.2 Out of Scope (v1.0)
 
@@ -71,32 +70,31 @@ This overview is normative for contributors and tooling integration.
 - Incremental compilation cache
 - New custom VM backend work
 
-## 4. Project Layout (`snow-cpp/`)
+## 4. Project Layout (repository root)
 
 ```text
-snow-cpp/
-  include/snow/
-    common/
-    frontend/
-    sema/
-    ownership/
-    sir/
-    passes/
-    codegen/
-    driver/
-    runtime/
-  src/
-    frontend/
-    sema/
-    ownership/
-    sir/
-    passes/
-    codegen/
-    driver/
-    runtime/
-  tools/
-    cloud2toml/
-  tests/
+include/snow/
+  common/
+  frontend/
+  sema/
+  ownership/
+  sir/
+  passes/
+  codegen/
+  driver/
+  runtime/
+src/
+  frontend/
+  sema/
+  ownership/
+  sir/
+  passes/
+  codegen/
+  driver/
+  runtime/
+tools/
+  cloud2toml/
+tests/
 ```
 
 Layer dependencies are one-way from driver to backend to middle-end to frontend.
@@ -316,13 +314,6 @@ Required test coverage areas:
 - O0/O2 semantic equivalence
 - ABI behavior across targets
 - entry wrapping policy validation
-- differential tests against Java baseline
-
-Differential mismatch labels:
-
-- `JAVA_BUG`
-- `LLVM_BUG`
-- `SEMANTIC_UNSPECIFIED`
 
 ## 16. Governance
 

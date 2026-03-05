@@ -1,5 +1,5 @@
 param(
-  [string]$BuildDir = 'snow-cpp/build',
+  [string]$BuildDir = 'build',
   [string]$Generator = 'Ninja',
   [switch]$Clean
 )
@@ -30,7 +30,7 @@ if ($Clean -and (Test-Path $BuildDir)) {
 }
 
 Invoke-Step -Name 'configure' -Command {
-  cmake -S snow-cpp -B $BuildDir -G $Generator -DCMAKE_CXX_COMPILER=clang++ -DSNOW_ENABLE_LLVM:BOOL=ON
+  cmake -S . -B $BuildDir -G $Generator -DCMAKE_CXX_COMPILER=clang++ -DSNOW_ENABLE_LLVM:BOOL=ON
 }
 
 Invoke-Step -Name 'build' -Command {
