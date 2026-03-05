@@ -48,3 +48,4 @@ target/
 /.env
 /build/
 /builds/tmp/
+tests/perf/latest_timing_report.txt
