@@ -153,7 +153,7 @@ Exit criteria:
 
 ## 4. Risk Register
 
-- LLVM API drift across versions -> mitigated by Min17 + latest CI matrix
+- LLVM API drift across versions -> mitigated by pinning LLVM 21.1.8 in CI and local tooling
 - semantics drift during migration -> mitigated by differential harness and deterministic dumps
 - ownership bugs in complex CFG -> mitigated by sir-validator lifetime checks and negative tests
 - cross-platform ABI regressions -> mitigated by ABI conformance tests per target

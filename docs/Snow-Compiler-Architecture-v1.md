@@ -235,8 +235,8 @@ Default target is host triple.
 
 LLVM version strategy:
 
-- Minimum supported: LLVM 17
-- CI required matrix: LLVM 17 + latest stable LLVM
+- Locked toolchain: LLVM 21.1.8
+- CI required matrix: LLVM 21.1.8 on supported host platforms
 
 ## 11. Symbol Mangling
 

@@ -91,8 +91,8 @@ Default target is host triple.
 
 ## 8. LLVM Version Policy
 
-- Minimum supported LLVM: 17
-- CI matrix validates LLVM 17 and latest stable LLVM
+- Locked LLVM toolchain: 21.1.8
+- CI matrix validates LLVM 21.1.8 on supported host platforms
 
 ## 9. Validation and Testing
 

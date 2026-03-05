@@ -74,8 +74,8 @@ No layer may depend upward.
 
 ## 9. LLVM and Target Policy
 
-- Minimum supported LLVM: 17.
-- CI matrix must validate LLVM 17 plus latest stable LLVM.
+- Locked LLVM toolchain: 21.1.8.
+- CI matrix must validate LLVM 21.1.8 on supported host platforms.
 - Supported targets:
   - x86_64-pc-windows-msvc
   - x86_64-unknown-linux-gnu

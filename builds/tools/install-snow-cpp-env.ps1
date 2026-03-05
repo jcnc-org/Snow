@@ -147,12 +147,56 @@ function Ensure-UserPathContains {
   Write-Step "Added to User PATH: $Directory"
 }
 
+function Ensure-LlvmSdk21 {
+  $toolchainRoot = Join-Path $env:USERPROFILE '.snow\toolchains'
+  $versionRoot = Join-Path $toolchainRoot 'llvm-21.1.8'
+  $archiveName = 'clang+llvm-21.1.8-x86_64-pc-windows-msvc.tar.xz'
+  $archivePath = Join-Path $toolchainRoot $archiveName
+  $sdkRoot = Join-Path $versionRoot 'clang+llvm-21.1.8-x86_64-pc-windows-msvc'
+  $llvmConfig = Join-Path $sdkRoot 'lib\cmake\llvm\LLVMConfig.cmake'
+  $downloadUrl =
+    'https://github.com/llvm/llvm-project/releases/download/llvmorg-21.1.8/clang%2Bllvm-21.1.8-x86_64-pc-windows-msvc.tar.xz'
+
+  if ((Test-Path $llvmConfig) -and -not $Force) {
+    Write-Step "LLVM SDK already present: $sdkRoot"
+    return $sdkRoot
+  }
+
+  New-Item -ItemType Directory -Force -Path $toolchainRoot | Out-Null
+  New-Item -ItemType Directory -Force -Path $versionRoot | Out-Null
+
+  if ($Force -or -not (Test-Path $archivePath)) {
+    Write-Step "Downloading LLVM 21 SDK archive..."
+    Invoke-WebRequest -Uri $downloadUrl -OutFile $archivePath
+  }
+
+  if ($Force -and (Test-Path $sdkRoot)) {
+    Remove-Item -Recurse -Force $sdkRoot
+  }
+
+  if (-not (Test-Path $sdkRoot)) {
+    Write-Step "Extracting LLVM 21 SDK archive..."
+    & tar -xf $archivePath -C $versionRoot
+    if ($LASTEXITCODE -ne 0) {
+      throw "Failed to extract LLVM SDK archive."
+    }
+  }
+
+  if (-not (Test-Path $llvmConfig)) {
+    throw "LLVM SDK incomplete: LLVMConfig.cmake not found at $llvmConfig"
+  }
+
+  Write-Step "LLVM SDK ready: $sdkRoot"
+  return $sdkRoot
+}
+
 Write-Step "Starting Snow C++ environment bootstrap"
 Write-Step "IncludeMsvc=$IncludeMsvc Force=$Force UseChocoFallback=$UseChocoFallback"
 
 Ensure-Tool -ToolName 'cmake' -WingetId 'Kitware.CMake' -ChocoPackage 'cmake'
 Ensure-Tool -ToolName 'ninja' -WingetId 'Ninja-build.Ninja' -ChocoPackage 'ninja'
 Ensure-Tool -ToolName 'clang' -WingetId 'LLVM.LLVM' -ChocoPackage 'llvm'
+$llvmSdkRoot = Ensure-LlvmSdk21
 
 if ($IncludeMsvc) {
   if (-not (Test-IsAdmin)) {
@@ -190,6 +234,7 @@ if ($IncludeMsvc) {
 }
 
 Ensure-UserPathContains -Directory 'C:\Program Files\CMake\bin'
+Ensure-UserPathContains -Directory (Join-Path $llvmSdkRoot 'bin')
 Ensure-UserPathContains -Directory 'C:\Program Files\LLVM\bin'
 
 Refresh-Path

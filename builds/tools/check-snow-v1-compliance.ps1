@@ -18,6 +18,7 @@ function Invoke-Cmd([string]$CommandLine) {
 
 $root = Resolve-Path "$PSScriptRoot\..\.."
 Set-Location $root
+. "$PSScriptRoot\enter-snow-cpp-env.ps1"
 
 $tmpRoot = Join-Path $root 'builds\tmp\compliance'
 if (Test-Path $tmpRoot) {

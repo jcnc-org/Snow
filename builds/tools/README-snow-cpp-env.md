@@ -13,6 +13,7 @@ This installs/checks:
 - CMake
 - Ninja
 - LLVM/Clang
+- LLVM 21 C++ SDK archive (`clang+llvm-21.1.8`) with `LLVMConfig.cmake`
 
 If current terminal cannot find `cmake`/`clang` immediately after install, run:
 
@@ -46,11 +47,7 @@ powershell -ExecutionPolicy Bypass -File builds/tools/install-snow-cpp-env.ps1 -
 powershell -ExecutionPolicy Bypass -File builds/tools/build-snow-cpp.ps1
 ```
 
-Build with real LLVM API lowering enabled:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File builds/tools/build-snow-cpp.ps1 -EnableLlvm
-```
+`build-snow-cpp.ps1` always builds with LLVM backend enabled (`SNOW_ENABLE_LLVM=ON`).
 
 ## Run v1 compliance checklist
 
