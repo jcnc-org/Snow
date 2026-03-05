@@ -24,6 +24,10 @@ Set-Location $root
 
 . "$PSScriptRoot\enter-snow-cpp-env.ps1"
 
+Invoke-Step -Name 'format-check' -Command {
+  powershell -ExecutionPolicy Bypass -File tools/check_clang_format.ps1
+}
+
 Invoke-Step -Name 'configure' -Command {
   cmake -S . -B $BuildDir -G $Generator -DCMAKE_CXX_COMPILER=clang++ -DSNOW_ENABLE_LLVM:BOOL=ON
 }
@@ -32,12 +36,20 @@ Invoke-Step -Name 'build' -Command {
   cmake --build $BuildDir
 }
 
+Invoke-Step -Name 'architecture-check' -Command {
+  powershell -ExecutionPolicy Bypass -File tools/arch_check.ps1 -BuildDir $BuildDir
+}
+
 Invoke-Step -Name 'unit-tests' -Command {
   ctest --test-dir "$BuildDir/tests" --output-on-failure -R "^(snow_unit_tests|snow_pass_tests|snow_sema_tests|snow_common_tests|snow_pass_docs_exist)$"
 }
 
 Invoke-Step -Name 'cli-tests' -Command {
   ctest --test-dir "$BuildDir/tests" --output-on-failure -R "^snowc_"
+}
+
+Invoke-Step -Name 'knowledge-check' -Command {
+  powershell -ExecutionPolicy Bypass -File tools/check_knowledge_base.ps1
 }
 
 Invoke-Step -Name 'compliance' -Command {

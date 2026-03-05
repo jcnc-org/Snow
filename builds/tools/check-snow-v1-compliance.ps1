@@ -33,7 +33,10 @@ $required = @(
   'docs/Snow-Compiler-Architecture-v1.md',
   'docs/Snow-SIR-Spec-v1.md',
   'docs/Snow-Runtime-ABI-v1.md',
-  'docs/Snow-Migration-Plan-Java-to-CPP.md'
+  'docs/Snow-Migration-Plan-Java-to-CPP.md',
+  'docs/knowledge/llvm-21.1.8-authority.md',
+  'docs/knowledge/runtime-abi-authority.md',
+  'docs/knowledge/third-party-api-authority.md'
 )
 foreach ($f in $required) {
   $exists = Test-Path $f
@@ -42,6 +45,15 @@ foreach ($f in $required) {
 
 $build = Invoke-Cmd "powershell -ExecutionPolicy Bypass -File builds\tools\build-snow-cpp.ps1 -BuildDir $BuildDir"
 Add-Check 'build+ctest' ($build.ExitCode -eq 0) (($build.Output -split "`n" | Select-Object -Last 6) -join "`n")
+
+$arch = Invoke-Cmd "powershell -ExecutionPolicy Bypass -File tools\arch_check.ps1 -BuildDir $BuildDir"
+Add-Check 'architecture-check' ($arch.ExitCode -eq 0) 'expected architecture/style gates'
+
+$format = Invoke-Cmd "powershell -ExecutionPolicy Bypass -File tools\check_clang_format.ps1"
+Add-Check 'format-check' ($format.ExitCode -eq 0) 'expected clang-format clean state'
+
+$kb = Invoke-Cmd "powershell -ExecutionPolicy Bypass -File tools\check_knowledge_base.ps1"
+Add-Check 'knowledge-check' ($kb.ExitCode -eq 0) 'expected authority docs with required provenance'
 
 $snowc = if ($IsWindows) { Join-Path $BuildDir 'snowc.exe' } else { Join-Path $BuildDir 'snowc' }
 
