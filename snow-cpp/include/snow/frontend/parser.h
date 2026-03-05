@@ -8,7 +8,8 @@ namespace snow::frontend {
 
 class Parser {
  public:
-  AstModule Parse(std::string module_path, const TokenStream& tokens, snow::common::DiagnosticEngine& diagnostics) const;
+  AstModule Parse(std::string module_path, const TokenStream& tokens, snow::common::DiagnosticEngine& diagnostics,
+                  std::string source_path = "") const;
 };
 
 }  // namespace snow::frontend

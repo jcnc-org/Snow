@@ -20,10 +20,13 @@ struct LoweringResult {
   std::string llvm_ir;
   BackendKind backend = BackendKind::RealLlvm;
   bool native_ready = true;
+  std::string error_code;
+  std::string error_message;
 };
 
 struct ObjectEmitResult {
   bool success = false;
+  std::string error_code;
   std::string error_message;
 };
 

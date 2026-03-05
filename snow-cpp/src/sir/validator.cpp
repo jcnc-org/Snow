@@ -29,6 +29,17 @@ bool IsPointerType(const std::string& type) {
   return type == "ptr" || type.rfind("ptr<", 0) == 0;
 }
 
+bool HasRange(const snow::common::SourceRange& range) {
+  return range.line > 0 && range.column > 0 && range.end_line > 0 && range.end_column > 0;
+}
+
+snow::common::SourceRange NormalizeRange(const snow::common::SourceRange& range) {
+  if (HasRange(range)) {
+    return range;
+  }
+  return snow::common::SourceRange{1, 1, 1, 1};
+}
+
 bool IsTypeCompatible(const std::string& expected, const std::string& actual) {
   if (expected == actual) {
     return true;
@@ -77,6 +88,7 @@ std::optional<std::string> InferOperandType(const std::string& operand,
 ValidationReport SirValidator::Validate(const Module& module, const ValidationLevel level,
                                         snow::common::DiagnosticEngine& diagnostics) const {
   ValidationReport report;
+  const std::string diag_file = module.source_path.empty() ? module.module_path : module.source_path;
 
   struct FunctionSignature {
     std::vector<std::string> param_types;
@@ -103,6 +115,7 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
   }
 
   for (const auto& function : module.functions) {
+    const snow::common::SourceRange function_diag_range = NormalizeRange(function.range);
     std::unordered_set<std::string> defs;
     std::unordered_map<std::string, int> drop_counts;
     std::unordered_set<std::string> block_labels;
@@ -120,9 +133,11 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
     }
 
     for (const auto& block : function.blocks) {
+      const snow::common::SourceRange block_diag_range =
+          block.instructions.empty() ? function_diag_range : NormalizeRange(block.instructions.front().range);
       if (block.instructions.empty()) {
-        diagnostics.Error("E_SIR_EMPTY_BLOCK", "BasicBlock has no instructions: " + block.label, module.module_path,
-                          {0, 0, 0, 0});
+        diagnostics.Error("E_SIR_EMPTY_BLOCK", "BasicBlock has no instructions: " + block.label, diag_file,
+                          block_diag_range);
         report.ok = false;
         continue;
       }
@@ -132,10 +147,10 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
 
       for (std::size_t i = 0; i < block.instructions.size(); ++i) {
         const auto& instr = block.instructions[i];
+        const snow::common::SourceRange current_range = HasRange(instr.range) ? instr.range : function_diag_range;
 
         if (instr.opcode == Opcode::Phi && non_phi_seen) {
-          diagnostics.Error("E_SIR_PHI_ORDER", "phi instruction must be at block start", module.module_path,
-                            {0, 0, 0, 0});
+          diagnostics.Error("E_SIR_PHI_ORDER", "phi instruction must be at block start", diag_file, current_range);
           report.ok = false;
         }
         if (instr.opcode != Opcode::Phi) {
@@ -144,8 +159,8 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
 
         if (instr.result.has_value()) {
           if (defs.contains(instr.result.value())) {
-            diagnostics.Error("E_SIR_SSA_REDEF", "SSA redefinition: " + instr.result.value(), module.module_path,
-                              {0, 0, 0, 0});
+            diagnostics.Error("E_SIR_SSA_REDEF", "SSA redefinition: " + instr.result.value(), diag_file,
+                              current_range);
             report.ok = false;
           }
           defs.insert(instr.result.value());
@@ -156,16 +171,15 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
 
         for (const auto& operand : instr.operands) {
           if (LooksLikeValue(operand) && !defs.contains(operand) && instr.opcode != Opcode::Phi) {
-            diagnostics.Warning("W_SIR_USE_BEFORE_DEF", "Use before def candidate: " + operand, module.module_path,
-                                {0, 0, 0, 0});
+            diagnostics.Warning("W_SIR_USE_BEFORE_DEF", "Use before def candidate: " + operand, diag_file,
+                                current_range);
           }
         }
 
         if (IsTerminator(instr.opcode) || instr.is_terminator) {
           ++terminator_count;
           if (i + 1 != block.instructions.size()) {
-            diagnostics.Error("E_SIR_TERM_NOT_LAST", "Terminator must be final instruction", module.module_path,
-                              {0, 0, 0, 0});
+            diagnostics.Error("E_SIR_TERM_NOT_LAST", "Terminator must be final instruction", diag_file, current_range);
             report.ok = false;
           }
         }
@@ -182,81 +196,74 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
           case Opcode::Le:
           case Opcode::Ge:
             if (instr.operands.size() != 2) {
-              diagnostics.Error("E_SIR_ARITY", "Binary instruction requires 2 operands", module.module_path,
-                                {0, 0, 0, 0});
+              diagnostics.Error("E_SIR_ARITY", "Binary instruction requires 2 operands", diag_file, current_range);
               report.ok = false;
             } else {
               const auto lhs_type = InferOperandType(instr.operands[0], value_types);
               const auto rhs_type = InferOperandType(instr.operands[1], value_types);
               if (lhs_type.has_value() && rhs_type.has_value() && lhs_type.value() != rhs_type.value()) {
-                diagnostics.Error("E_SIR_TYPE_MISMATCH", "Binary operands have incompatible types", module.module_path,
-                                  {0, 0, 0, 0});
+                diagnostics.Error("E_SIR_TYPE_MISMATCH", "Binary operands have incompatible types", diag_file,
+                                  current_range);
                 report.ok = false;
               }
               if (instr.opcode == Opcode::Add || instr.opcode == Opcode::Sub || instr.opcode == Opcode::Mul ||
                   instr.opcode == Opcode::Div) {
                 if (!instr.type.empty() && !IsNumericType(instr.type)) {
-                  diagnostics.Error("E_SIR_TYPE_ARITH", "Arithmetic instruction result must be numeric",
-                                    module.module_path, {0, 0, 0, 0});
+                  diagnostics.Error("E_SIR_TYPE_ARITH", "Arithmetic instruction result must be numeric", diag_file,
+                                    current_range);
                   report.ok = false;
                 }
               } else if (!instr.type.empty() && !IsBooleanType(instr.type)) {
-                diagnostics.Error("E_SIR_TYPE_CMP", "Comparison instruction result must be bool/i1",
-                                  module.module_path, {0, 0, 0, 0});
+                diagnostics.Error("E_SIR_TYPE_CMP", "Comparison instruction result must be bool/i1", diag_file,
+                                  current_range);
                 report.ok = false;
               }
             }
             break;
           case Opcode::CondBr:
             if (instr.operands.size() != 3) {
-              diagnostics.Error("E_SIR_CONDBR_ARITY", "cond_br requires condition and two targets", module.module_path,
-                                {0, 0, 0, 0});
+              diagnostics.Error("E_SIR_CONDBR_ARITY", "cond_br requires condition and two targets", diag_file,
+                                current_range);
               report.ok = false;
             } else {
               const auto cond_type = InferOperandType(instr.operands[0], value_types);
               if (cond_type.has_value() && !IsBooleanType(cond_type.value())) {
-                diagnostics.Error("E_SIR_CONDBR_TYPE", "cond_br condition must be bool/i1", module.module_path,
-                                  {0, 0, 0, 0});
+                diagnostics.Error("E_SIR_CONDBR_TYPE", "cond_br condition must be bool/i1", diag_file, current_range);
                 report.ok = false;
               }
               const auto& true_label = instr.operands[1];
               const auto& false_label = instr.operands[2];
               if (!block_labels.contains(true_label) || !block_labels.contains(false_label)) {
-                diagnostics.Error("E_SIR_CFG_TARGET", "cond_br target label does not exist", module.module_path,
-                                  {0, 0, 0, 0});
+                diagnostics.Error("E_SIR_CFG_TARGET", "cond_br target label does not exist", diag_file, current_range);
                 report.ok = false;
               }
             }
             break;
           case Opcode::Br:
             if (instr.operands.size() != 1) {
-              diagnostics.Error("E_SIR_BR_ARITY", "br requires exactly one target label", module.module_path,
-                                {0, 0, 0, 0});
+              diagnostics.Error("E_SIR_BR_ARITY", "br requires exactly one target label", diag_file, current_range);
               report.ok = false;
             } else if (!block_labels.contains(instr.operands[0])) {
-              diagnostics.Error("E_SIR_CFG_TARGET", "br target label does not exist", module.module_path,
-                                {0, 0, 0, 0});
+              diagnostics.Error("E_SIR_CFG_TARGET", "br target label does not exist", diag_file, current_range);
               report.ok = false;
             }
             break;
           case Opcode::Phi:
             if (instr.operands.size() < 4 || (instr.operands.size() % 2) != 0) {
-              diagnostics.Error("E_SIR_PHI_ARITY", "phi requires value/label pairs", module.module_path,
-                                {0, 0, 0, 0});
+              diagnostics.Error("E_SIR_PHI_ARITY", "phi requires value/label pairs", diag_file, current_range);
               report.ok = false;
             } else {
               for (std::size_t phi_i = 0; phi_i + 1 < instr.operands.size(); phi_i += 2) {
                 const auto value_type = InferOperandType(instr.operands[phi_i], value_types);
                 const auto& pred_label = instr.operands[phi_i + 1];
                 if (!block_labels.contains(pred_label)) {
-                  diagnostics.Error("E_SIR_PHI_LABEL", "phi predecessor label does not exist", module.module_path,
-                                    {0, 0, 0, 0});
+                  diagnostics.Error("E_SIR_PHI_LABEL", "phi predecessor label does not exist", diag_file,
+                                    current_range);
                   report.ok = false;
                 }
                 if (value_type.has_value() && !instr.type.empty() && value_type.value() != instr.type) {
                   if (!IsTypeCompatible(instr.type, value_type.value())) {
-                    diagnostics.Error("E_SIR_PHI_TYPE", "phi incoming value type mismatch", module.module_path,
-                                      {0, 0, 0, 0});
+                    diagnostics.Error("E_SIR_PHI_TYPE", "phi incoming value type mismatch", diag_file, current_range);
                     report.ok = false;
                   }
                 }
@@ -265,23 +272,21 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
             break;
           case Opcode::Drop:
             if (instr.operands.size() != 1) {
-              diagnostics.Error("E_SIR_DROP_ARITY", "drop requires exactly one operand", module.module_path,
-                                {0, 0, 0, 0});
+              diagnostics.Error("E_SIR_DROP_ARITY", "drop requires exactly one operand", diag_file, current_range);
               report.ok = false;
             } else {
               const auto& dropped = instr.operands[0];
               drop_counts[dropped] += 1;
               if (drop_counts[dropped] > 1) {
-                diagnostics.Error("E_SIR_DOUBLE_DROP", "value dropped more than once: " + dropped, module.module_path,
-                                  {0, 0, 0, 0});
+                diagnostics.Error("E_SIR_DOUBLE_DROP", "value dropped more than once: " + dropped, diag_file,
+                                  current_range);
                 report.ok = false;
               }
             }
             break;
           case Opcode::Call:
             if (instr.operands.empty()) {
-              diagnostics.Error("E_SIR_CALL_ARITY", "call requires callee operand", module.module_path,
-                                {0, 0, 0, 0});
+              diagnostics.Error("E_SIR_CALL_ARITY", "call requires callee operand", diag_file, current_range);
               report.ok = false;
             } else {
               const auto sig_it = signatures.find(instr.operands[0]);
@@ -289,16 +294,14 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
                 const std::size_t expected = sig_it->second.param_types.size();
                 const std::size_t actual = instr.operands.size() - 1;
                 if (expected != actual) {
-                  diagnostics.Error("E_SIR_CALL_ARITY", "call argument count mismatch", module.module_path,
-                                    {0, 0, 0, 0});
+                  diagnostics.Error("E_SIR_CALL_ARITY", "call argument count mismatch", diag_file, current_range);
                   report.ok = false;
                 } else {
                   for (std::size_t arg_i = 0; arg_i < expected; ++arg_i) {
                     const auto arg_type = InferOperandType(instr.operands[arg_i + 1], value_types);
                     if (arg_type.has_value() &&
                         !IsTypeCompatible(sig_it->second.param_types[arg_i], arg_type.value())) {
-                      diagnostics.Error("E_SIR_CALL_TYPE", "call argument type mismatch", module.module_path,
-                                        {0, 0, 0, 0});
+                      diagnostics.Error("E_SIR_CALL_TYPE", "call argument type mismatch", diag_file, current_range);
                       report.ok = false;
                     }
                   }
@@ -307,68 +310,65 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
                 if (!instr.type.empty() && !sig_it->second.return_type.empty() &&
                     !IsTypeCompatible(sig_it->second.return_type, instr.type)) {
                   diagnostics.Error("E_SIR_CALL_RET_TYPE", "call result type mismatch with callee signature",
-                                    module.module_path, {0, 0, 0, 0});
+                                    diag_file, current_range);
                   report.ok = false;
                 }
               }
             }
             if (!instr.result.has_value()) {
-              diagnostics.Warning("W_SIR_CALL_NO_RESULT", "call result is ignored in MVP pipeline", module.module_path,
-                                  {0, 0, 0, 0});
+              diagnostics.Warning("W_SIR_CALL_NO_RESULT", "call result is ignored in MVP pipeline", diag_file,
+                                  current_range);
             }
             break;
           case Opcode::Alloc:
             if (!instr.result.has_value()) {
-              diagnostics.Error("E_SIR_ALLOC_RESULT", "alloc requires SSA result", module.module_path, {0, 0, 0, 0});
+              diagnostics.Error("E_SIR_ALLOC_RESULT", "alloc requires SSA result", diag_file, current_range);
               report.ok = false;
             }
             if (instr.operands.size() != 1) {
               diagnostics.Error("E_SIR_ALLOC_ARITY", "alloc requires exactly one element type operand",
-                                module.module_path, {0, 0, 0, 0});
+                                diag_file, current_range);
               report.ok = false;
             } else if (instr.result.has_value()) {
               pointer_element_types[instr.result.value()] = instr.operands[0];
             }
             if (!instr.type.empty() && !IsPointerType(instr.type)) {
-              diagnostics.Error("E_SIR_ALLOC_TYPE", "alloc result type must be pointer-like", module.module_path,
-                                {0, 0, 0, 0});
+              diagnostics.Error("E_SIR_ALLOC_TYPE", "alloc result type must be pointer-like", diag_file, current_range);
               report.ok = false;
             }
             break;
           case Opcode::Load:
             if (!instr.result.has_value()) {
-              diagnostics.Error("E_SIR_LOAD_RESULT", "load requires SSA result", module.module_path, {0, 0, 0, 0});
+              diagnostics.Error("E_SIR_LOAD_RESULT", "load requires SSA result", diag_file, current_range);
               report.ok = false;
             }
             if (instr.operands.size() != 1) {
-              diagnostics.Error("E_SIR_LOAD_ARITY", "load requires exactly one pointer operand", module.module_path,
-                                {0, 0, 0, 0});
+              diagnostics.Error("E_SIR_LOAD_ARITY", "load requires exactly one pointer operand", diag_file,
+                                current_range);
               report.ok = false;
               break;
             }
             if (!LooksLikeValue(instr.operands[0])) {
-              diagnostics.Error("E_SIR_LOAD_PTR", "load operand must be pointer SSA value", module.module_path,
-                                {0, 0, 0, 0});
+              diagnostics.Error("E_SIR_LOAD_PTR", "load operand must be pointer SSA value", diag_file, current_range);
               report.ok = false;
               break;
             }
             if (pointer_element_types.contains(instr.operands[0]) && !instr.type.empty() &&
                 !IsTypeCompatible(pointer_element_types[instr.operands[0]], instr.type)) {
               diagnostics.Error("E_SIR_LOAD_TYPE", "load result type mismatch with pointer element type",
-                                module.module_path, {0, 0, 0, 0});
+                                diag_file, current_range);
               report.ok = false;
             }
             break;
           case Opcode::Store:
             if (instr.operands.size() != 2) {
-              diagnostics.Error("E_SIR_STORE_ARITY", "store requires value and pointer operands", module.module_path,
-                                {0, 0, 0, 0});
+              diagnostics.Error("E_SIR_STORE_ARITY", "store requires value and pointer operands", diag_file,
+                                current_range);
               report.ok = false;
               break;
             }
             if (!LooksLikeValue(instr.operands[1])) {
-              diagnostics.Error("E_SIR_STORE_PTR", "store pointer operand must be SSA value", module.module_path,
-                                {0, 0, 0, 0});
+              diagnostics.Error("E_SIR_STORE_PTR", "store pointer operand must be SSA value", diag_file, current_range);
               report.ok = false;
               break;
             }
@@ -377,22 +377,21 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
               if (stored_type.has_value() &&
                   !IsTypeCompatible(pointer_element_types[instr.operands[1]], stored_type.value())) {
                 diagnostics.Error("E_SIR_STORE_TYPE", "store value type mismatch with pointer element type",
-                                  module.module_path, {0, 0, 0, 0});
+                                  diag_file, current_range);
                 report.ok = false;
               }
             }
             break;
           case Opcode::Ret:
             if (instr.operands.size() != 1) {
-              diagnostics.Error("E_SIR_RET_ARITY", "ret requires exactly one operand", module.module_path,
-                                {0, 0, 0, 0});
+              diagnostics.Error("E_SIR_RET_ARITY", "ret requires exactly one operand", diag_file, current_range);
               report.ok = false;
             } else {
               const auto ret_type = InferOperandType(instr.operands[0], value_types);
               if (ret_type.has_value() && !function.return_type.empty() && ret_type.value() != function.return_type) {
                 if (!IsTypeCompatible(function.return_type, ret_type.value())) {
                   diagnostics.Error("E_SIR_RET_TYPE", "ret operand type does not match function return type",
-                                    module.module_path, {0, 0, 0, 0});
+                                    diag_file, current_range);
                   report.ok = false;
                 }
               }
@@ -404,8 +403,8 @@ ValidationReport SirValidator::Validate(const Module& module, const ValidationLe
       }
 
       if (terminator_count != 1) {
-        diagnostics.Error("E_SIR_TERM_COUNT", "BasicBlock must have exactly one terminator", module.module_path,
-                          {0, 0, 0, 0});
+        diagnostics.Error("E_SIR_TERM_COUNT", "BasicBlock must have exactly one terminator", diag_file,
+                          block_diag_range);
         report.ok = false;
       }
     }

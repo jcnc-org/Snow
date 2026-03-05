@@ -319,6 +319,7 @@ Module SirBuilder::Build(const snow::sema::SemaModule& sema_module,
                          const snow::ownership::OwnershipFacts& ownership_facts) const {
   Module module;
   module.module_path = sema_module.ast.module_path;
+  module.source_path = sema_module.ast.source_path;
 
   std::unordered_map<std::string, std::vector<snow::ownership::OwnershipFact>> ownership_facts_by_function;
   for (const auto& fact : ownership_facts.facts) {
@@ -373,6 +374,7 @@ Module SirBuilder::Build(const snow::sema::SemaModule& sema_module,
                         : snow::common::MangleSymbol(sema_module.ast.module_path, function_ast.name, param_types,
                                                      function_ast.return_type, false);
     function.return_type = function_ast.return_type.empty() ? "i32" : function_ast.return_type;
+    function.range = function_ast.range;
     for (const auto& param : function_ast.params) {
       function.params.push_back(FunctionParam{
           .name = param.name,

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 
+#include "snow/codegen/lowering.h"
 #include "snow/common/diagnostic_engine.h"
 #include "snow/common/manifest.h"
 #include "snow/common/source_file.h"
@@ -369,6 +370,67 @@ bool TestPassManagerCfgSimplify() {
   if (blocks.front().instructions.empty() || blocks.front().instructions.back().opcode != snow::sir::Opcode::Br) {
     return Fail(test_name, "expected entry cond_br simplified to br");
   }
+  return true;
+}
+
+bool TestLoweringUnsupportedOpcodeFails() {
+  const std::string test_name = "TestLoweringUnsupportedOpcodeFails";
+
+  snow::sir::Module module;
+  module.module_path = "tests.lowering.unsupported";
+  module.source_path = "tests.lowering.unsupported.snow";
+
+  snow::sir::Function function;
+  function.name = "_snow_tests_lowering_unsupported_main_deadbeef";
+  function.original_name = "main";
+  function.return_type = "i32";
+  function.linkage = snow::sir::Linkage::External;
+  function.range = snow::common::SourceRange{1, 1, 1, 1};
+
+  snow::sir::BasicBlock entry;
+  entry.label = "entry";
+  entry.instructions.push_back(snow::sir::Instruction{
+      .result = std::string("%1"),
+      .type = "i32",
+      .opcode = snow::sir::Opcode::Extract,
+      .operands = {"%x", "0"},
+      .is_terminator = false,
+      .range = snow::common::SourceRange{1, 1, 1, 1},
+  });
+  entry.instructions.push_back(snow::sir::Instruction{
+      .result = std::nullopt,
+      .type = "i32",
+      .opcode = snow::sir::Opcode::Ret,
+      .operands = {"0"},
+      .is_terminator = true,
+      .range = snow::common::SourceRange{1, 1, 1, 1},
+  });
+  function.blocks.push_back(std::move(entry));
+  module.functions.push_back(std::move(function));
+
+  snow::codegen::LlvmLowering lowering;
+  const snow::codegen::TargetConfig target{
+      .triple = "x86_64-pc-windows-msvc",
+      .executable_entry_wrapper = true,
+  };
+
+  const auto lower = lowering.Lower(module, target, snow::passes::OptLevel::O0);
+  if (lower.native_ready) {
+    return Fail(test_name, "expected lowering to fail for unsupported opcode");
+  }
+  if (lower.error_code != "E_BACKEND_UNSUPPORTED_OPCODE") {
+    return Fail(test_name, "unexpected lowering error code: " + lower.error_code);
+  }
+
+  const auto emit =
+      lowering.EmitObject(module, target, snow::passes::OptLevel::O0, "tests_unsupported_opcode_should_fail.o");
+  if (emit.success) {
+    return Fail(test_name, "expected object emission to fail for unsupported opcode");
+  }
+  if (emit.error_code != "E_BACKEND_UNSUPPORTED_OPCODE") {
+    return Fail(test_name, "unexpected emit error code: " + emit.error_code);
+  }
+
   return true;
 }
 
@@ -762,6 +824,7 @@ int main() {
   failed += TestSirValidatorStoreTypeMismatch() ? 0 : 1;
   failed += TestPassManagerConstantFold() ? 0 : 1;
   failed += TestPassManagerCfgSimplify() ? 0 : 1;
+  failed += TestLoweringUnsupportedOpcodeFails() ? 0 : 1;
   failed += TestParserExpressionPrecedence() ? 0 : 1;
   failed += TestSemaReturnTypeMismatch() ? 0 : 1;
   failed += TestParserControlFlowForms() ? 0 : 1;

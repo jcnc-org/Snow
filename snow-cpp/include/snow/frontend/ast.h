@@ -90,6 +90,7 @@ struct FunctionDecl {
 
 struct AstModule {
   std::string module_path;
+  std::string source_path;
   std::vector<ImportDecl> imports;
   std::vector<FunctionDecl> functions;
 };

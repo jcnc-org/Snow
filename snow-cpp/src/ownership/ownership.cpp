@@ -17,6 +17,17 @@ struct SymbolState {
   std::size_t fact_index = 0;
 };
 
+bool HasRange(const snow::common::SourceRange& range) {
+  return range.line > 0 && range.column > 0 && range.end_line > 0 && range.end_column > 0;
+}
+
+snow::common::SourceRange NormalizeRange(const snow::common::SourceRange& range) {
+  if (HasRange(range)) {
+    return range;
+  }
+  return snow::common::SourceRange{1, 1, 1, 1};
+}
+
 bool IsCopyType(const std::string& type_name) {
   static const std::unordered_set<std::string> kCopyTypes = {
       "bool",
@@ -103,7 +114,7 @@ std::string InferExprType(const std::shared_ptr<snow::frontend::Expr>& expr,
 void VisitExprOwnership(const std::shared_ptr<snow::frontend::Expr>& expr, const bool consume_non_copy,
                         std::unordered_map<std::string, SymbolState>& symbols,
                         const std::unordered_map<std::string, std::string>& function_return_types,
-                        const std::string& module_path, std::vector<OwnershipFact>& facts,
+                        const std::string& diag_file, std::vector<OwnershipFact>& facts,
                         snow::common::DiagnosticEngine& diagnostics) {
   if (!expr) {
     return;
@@ -120,8 +131,8 @@ void VisitExprOwnership(const std::shared_ptr<snow::frontend::Expr>& expr, const
       }
       SymbolState& state = symbols[expr->value];
       if (state.moved) {
-        diagnostics.Error("E_OWNERSHIP_USE_AFTER_MOVE", "use after move: " + expr->value, module_path,
-                          {0, 0, 0, 0});
+        diagnostics.Error("E_OWNERSHIP_USE_AFTER_MOVE", "use after move: " + expr->value, diag_file,
+                          NormalizeRange(expr->range));
         return;
       }
       if (consume_non_copy) {
@@ -135,13 +146,13 @@ void VisitExprOwnership(const std::shared_ptr<snow::frontend::Expr>& expr, const
 
     case snow::frontend::Expr::Kind::Call:
       for (const auto& arg : expr->args) {
-        VisitExprOwnership(arg, true, symbols, function_return_types, module_path, facts, diagnostics);
+        VisitExprOwnership(arg, true, symbols, function_return_types, diag_file, facts, diagnostics);
       }
       return;
 
     case snow::frontend::Expr::Kind::Binary:
-      VisitExprOwnership(expr->lhs, false, symbols, function_return_types, module_path, facts, diagnostics);
-      VisitExprOwnership(expr->rhs, false, symbols, function_return_types, module_path, facts, diagnostics);
+      VisitExprOwnership(expr->lhs, false, symbols, function_return_types, diag_file, facts, diagnostics);
+      VisitExprOwnership(expr->rhs, false, symbols, function_return_types, diag_file, facts, diagnostics);
       return;
   }
 }
@@ -149,18 +160,18 @@ void VisitExprOwnership(const std::shared_ptr<snow::frontend::Expr>& expr, const
 void AnalyzeStatements(const std::vector<snow::frontend::Statement>& statements,
                        std::unordered_map<std::string, SymbolState>& symbols,
                        const std::unordered_map<std::string, std::string>& function_return_types,
-                       const std::string& module_path, std::vector<OwnershipFact>& facts,
+                       const std::string& diag_file, std::vector<OwnershipFact>& facts,
                        snow::common::DiagnosticEngine& diagnostics);
 
 void AnalyzeIf(const snow::frontend::Statement& stmt, std::unordered_map<std::string, SymbolState>& symbols,
-               const std::unordered_map<std::string, std::string>& function_return_types, const std::string& module_path,
+               const std::unordered_map<std::string, std::string>& function_return_types, const std::string& diag_file,
                std::vector<OwnershipFact>& facts, snow::common::DiagnosticEngine& diagnostics) {
-  VisitExprOwnership(stmt.expr, false, symbols, function_return_types, module_path, facts, diagnostics);
+  VisitExprOwnership(stmt.expr, false, symbols, function_return_types, diag_file, facts, diagnostics);
 
   auto then_symbols = symbols;
   auto else_symbols = symbols;
-  AnalyzeStatements(stmt.then_body, then_symbols, function_return_types, module_path, facts, diagnostics);
-  AnalyzeStatements(stmt.else_body, else_symbols, function_return_types, module_path, facts, diagnostics);
+  AnalyzeStatements(stmt.then_body, then_symbols, function_return_types, diag_file, facts, diagnostics);
+  AnalyzeStatements(stmt.else_body, else_symbols, function_return_types, diag_file, facts, diagnostics);
 
   for (auto& kv : symbols) {
     const auto then_it = then_symbols.find(kv.first);
@@ -176,12 +187,12 @@ void AnalyzeIf(const snow::frontend::Statement& stmt, std::unordered_map<std::st
 
 void AnalyzeWhile(const snow::frontend::Statement& stmt, std::unordered_map<std::string, SymbolState>& symbols,
                   const std::unordered_map<std::string, std::string>& function_return_types,
-                  const std::string& module_path, std::vector<OwnershipFact>& facts,
+                  const std::string& diag_file, std::vector<OwnershipFact>& facts,
                   snow::common::DiagnosticEngine& diagnostics) {
-  VisitExprOwnership(stmt.expr, false, symbols, function_return_types, module_path, facts, diagnostics);
+  VisitExprOwnership(stmt.expr, false, symbols, function_return_types, diag_file, facts, diagnostics);
 
   auto loop_symbols = symbols;
-  AnalyzeStatements(stmt.body, loop_symbols, function_return_types, module_path, facts, diagnostics);
+  AnalyzeStatements(stmt.body, loop_symbols, function_return_types, diag_file, facts, diagnostics);
 
   for (auto& kv : symbols) {
     const auto loop_it = loop_symbols.find(kv.first);
@@ -197,20 +208,20 @@ void AnalyzeWhile(const snow::frontend::Statement& stmt, std::unordered_map<std:
 void AnalyzeStatements(const std::vector<snow::frontend::Statement>& statements,
                        std::unordered_map<std::string, SymbolState>& symbols,
                        const std::unordered_map<std::string, std::string>& function_return_types,
-                       const std::string& module_path, std::vector<OwnershipFact>& facts,
+                       const std::string& diag_file, std::vector<OwnershipFact>& facts,
                        snow::common::DiagnosticEngine& diagnostics) {
   for (const auto& stmt : statements) {
     switch (stmt.kind) {
       case snow::frontend::Statement::Kind::Return:
-        VisitExprOwnership(stmt.expr, true, symbols, function_return_types, module_path, facts, diagnostics);
+        VisitExprOwnership(stmt.expr, true, symbols, function_return_types, diag_file, facts, diagnostics);
         break;
 
       case snow::frontend::Statement::Kind::Expr:
-        VisitExprOwnership(stmt.expr, false, symbols, function_return_types, module_path, facts, diagnostics);
+        VisitExprOwnership(stmt.expr, false, symbols, function_return_types, diag_file, facts, diagnostics);
         break;
 
       case snow::frontend::Statement::Kind::Assign:
-        VisitExprOwnership(stmt.expr, true, symbols, function_return_types, module_path, facts, diagnostics);
+        VisitExprOwnership(stmt.expr, true, symbols, function_return_types, diag_file, facts, diagnostics);
         if (!stmt.name.empty() && symbols.contains(stmt.name)) {
           symbols[stmt.name].moved = false;
           if (symbols[stmt.name].fact_index < facts.size() && !symbols[stmt.name].is_copy_type) {
@@ -220,7 +231,7 @@ void AnalyzeStatements(const std::vector<snow::frontend::Statement>& statements,
         break;
 
       case snow::frontend::Statement::Kind::Let: {
-        VisitExprOwnership(stmt.expr, true, symbols, function_return_types, module_path, facts, diagnostics);
+        VisitExprOwnership(stmt.expr, true, symbols, function_return_types, diag_file, facts, diagnostics);
         if (stmt.name.empty()) {
           break;
         }
@@ -250,11 +261,11 @@ void AnalyzeStatements(const std::vector<snow::frontend::Statement>& statements,
       }
 
       case snow::frontend::Statement::Kind::If:
-        AnalyzeIf(stmt, symbols, function_return_types, module_path, facts, diagnostics);
+        AnalyzeIf(stmt, symbols, function_return_types, diag_file, facts, diagnostics);
         break;
 
       case snow::frontend::Statement::Kind::While:
-        AnalyzeWhile(stmt, symbols, function_return_types, module_path, facts, diagnostics);
+        AnalyzeWhile(stmt, symbols, function_return_types, diag_file, facts, diagnostics);
         break;
 
       case snow::frontend::Statement::Kind::Break:
@@ -269,6 +280,8 @@ void AnalyzeStatements(const std::vector<snow::frontend::Statement>& statements,
 OwnershipFacts OwnershipChecker::Check(const snow::sema::SemaModule& sema_module,
                                        snow::common::DiagnosticEngine& diagnostics) const {
   OwnershipFacts facts;
+  const std::string diag_file = sema_module.ast.source_path.empty() ? sema_module.ast.module_path
+                                                                     : sema_module.ast.source_path;
 
   std::unordered_map<std::string, std::string> function_return_types;
   for (const auto& function : sema_module.ast.functions) {
@@ -286,7 +299,7 @@ OwnershipFacts OwnershipChecker::Check(const snow::sema::SemaModule& sema_module
   for (const auto& function : sema_module.ast.functions) {
     if (function.return_type.empty()) {
       diagnostics.Error("E_OWNERSHIP_RET_TYPE", "Function missing return type: " + function.name,
-                        sema_module.ast.module_path, {0, 0, 0, 0});
+                        diag_file, NormalizeRange(function.range));
     }
 
     std::unordered_map<std::string, SymbolState> symbols;
@@ -311,7 +324,7 @@ OwnershipFacts OwnershipChecker::Check(const snow::sema::SemaModule& sema_module
       };
     }
 
-    AnalyzeStatements(function.statements, symbols, function_return_types, sema_module.ast.module_path, fn_facts,
+    AnalyzeStatements(function.statements, symbols, function_return_types, diag_file, fn_facts,
                       diagnostics);
 
     for (auto& fact : fn_facts) {

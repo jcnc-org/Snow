@@ -1,5 +1,7 @@
 #pragma once
 
+#include "snow/common/diagnostic.h"
+
 #include <optional>
 #include <string>
 #include <vector>
@@ -43,6 +45,7 @@ struct Instruction {
   Opcode opcode = Opcode::Unreachable;
   std::vector<std::string> operands;
   bool is_terminator = false;
+  snow::common::SourceRange range;
 };
 
 struct BasicBlock {
@@ -62,6 +65,7 @@ struct Function {
   Linkage linkage = Linkage::Internal;
   std::vector<FunctionParam> params;
   std::vector<BasicBlock> blocks;
+  snow::common::SourceRange range;
 };
 
 struct ExternalFunction {
@@ -72,6 +76,7 @@ struct ExternalFunction {
 
 struct Module {
   std::string module_path;
+  std::string source_path;
   std::vector<ExternalFunction> external_functions;
   std::vector<Function> functions;
 };

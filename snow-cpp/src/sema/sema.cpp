@@ -20,7 +20,7 @@ struct StatementContext {
   const std::unordered_map<std::string, std::vector<std::string>>& function_param_types;
   const std::unordered_set<std::string>& ambiguous_function_names;
   std::string expected_return_type;
-  std::string module_path;
+  std::string diag_file;
 };
 
 std::string JoinPath(const std::vector<std::string>& parts) {
@@ -32,6 +32,17 @@ std::string JoinPath(const std::vector<std::string>& parts) {
     oss << parts[i];
   }
   return oss.str();
+}
+
+bool HasRange(const snow::common::SourceRange& range) {
+  return range.line > 0 && range.column > 0 && range.end_line > 0 && range.end_column > 0;
+}
+
+snow::common::SourceRange NormalizeRange(const snow::common::SourceRange& range) {
+  if (HasRange(range)) {
+    return range;
+  }
+  return snow::common::SourceRange{1, 1, 1, 1};
 }
 
 bool IsNumericType(const std::string& type) {
@@ -117,7 +128,7 @@ ExprTypeResult InferExprType(const std::shared_ptr<snow::frontend::Expr>& expr,
                              const std::unordered_map<std::string, std::string>& function_return_types,
                              const std::unordered_map<std::string, std::vector<std::string>>& function_param_types,
                              const std::unordered_set<std::string>& ambiguous_function_names,
-                             const std::string& module_path, snow::common::DiagnosticEngine& diagnostics) {
+                             const std::string& diag_file, snow::common::DiagnosticEngine& diagnostics) {
   if (!expr) {
     return ExprTypeResult{.type = "unknown", .known = false};
   }
@@ -137,34 +148,35 @@ ExprTypeResult InferExprType(const std::shared_ptr<snow::frontend::Expr>& expr,
     case snow::frontend::Expr::Kind::Call: {
       if (ambiguous_function_names.contains(expr->value)) {
         diagnostics.Error("AmbiguousSymbol",
-                          "Call target '" + expr->value + "' is ambiguous across imported modules", module_path,
-                          {0, 0, 0, 0}, "Use alias import (as ...) or qualified module path");
+                          "Call target '" + expr->value + "' is ambiguous across imported modules", diag_file,
+                          NormalizeRange(expr->range), "Use alias import (as ...) or qualified module path");
       }
 
       const auto sig_it = function_param_types.find(expr->value);
       if (sig_it == function_param_types.end() && !ambiguous_function_names.contains(expr->value)) {
-        diagnostics.Error("E_SEMA_CALL_UNDEFINED", "Call target is not defined: " + expr->value, module_path,
-                          {0, 0, 0, 0});
+        diagnostics.Error("E_SEMA_CALL_UNDEFINED", "Call target is not defined: " + expr->value, diag_file,
+                          NormalizeRange(expr->range));
       } else if (sig_it != function_param_types.end() && sig_it->second.size() != expr->args.size()) {
         diagnostics.Error("E_SEMA_CALL_ARITY", "Call argument count mismatch for function '" + expr->value + "'",
-                          module_path, {0, 0, 0, 0});
+                          diag_file, NormalizeRange(expr->range));
       }
 
       for (const auto& arg : expr->args) {
         (void)InferExprType(arg, symbol_types, function_return_types, function_param_types, ambiguous_function_names,
-                            module_path, diagnostics);
+                            diag_file, diagnostics);
       }
       if (sig_it != function_param_types.end()) {
         const std::size_t count = std::min(sig_it->second.size(), expr->args.size());
         for (std::size_t i = 0; i < count; ++i) {
           const ExprTypeResult arg_type = InferExprType(expr->args[i], symbol_types, function_return_types,
-                                                        function_param_types, ambiguous_function_names, module_path,
+                                                        function_param_types, ambiguous_function_names, diag_file,
                                                         diagnostics);
           if (arg_type.known && !IsTypeCompatible(sig_it->second[i], arg_type.type)) {
             diagnostics.Error("E_SEMA_CALL_ARG_TYPE",
                               "Call argument type mismatch at index " + std::to_string(i) + " for function '" +
                                   expr->value + "'",
-                              module_path, {0, 0, 0, 0});
+                              diag_file, expr->args[i] ? NormalizeRange(expr->args[i]->range)
+                                                       : NormalizeRange(expr->range));
           }
         }
       }
@@ -178,33 +190,33 @@ ExprTypeResult InferExprType(const std::shared_ptr<snow::frontend::Expr>& expr,
     case snow::frontend::Expr::Kind::Binary: {
       const ExprTypeResult lhs =
           InferExprType(expr->lhs, symbol_types, function_return_types, function_param_types, ambiguous_function_names,
-                        module_path, diagnostics);
+                        diag_file, diagnostics);
       const ExprTypeResult rhs =
           InferExprType(expr->rhs, symbol_types, function_return_types, function_param_types, ambiguous_function_names,
-                        module_path, diagnostics);
+                        diag_file, diagnostics);
 
       if (expr->op == snow::frontend::BinaryOp::Mod) {
-        diagnostics.Error("E_SEMA_UNSUPPORTED_OP", "operator '%' is not supported in Snow v1 MVP", module_path,
-                          {0, 0, 0, 0});
+        diagnostics.Error("E_SEMA_UNSUPPORTED_OP", "operator '%' is not supported in Snow v1 MVP", diag_file,
+                          NormalizeRange(expr->range));
         return ExprTypeResult{.type = "unknown", .known = false};
       }
 
       if (IsComparisonOp(expr->op)) {
         if (lhs.known && rhs.known && lhs.type != rhs.type) {
-          diagnostics.Error("E_SEMA_EXPR_TYPE", "comparison operands have incompatible types", module_path,
-                            {0, 0, 0, 0});
+          diagnostics.Error("E_SEMA_EXPR_TYPE", "comparison operands have incompatible types", diag_file,
+                            NormalizeRange(expr->range));
         }
         return ExprTypeResult{.type = "bool", .known = true};
       }
 
       if (IsArithmeticOp(expr->op)) {
         if (lhs.known && !IsNumericType(lhs.type)) {
-          diagnostics.Error("E_SEMA_EXPR_TYPE", "left arithmetic operand is not numeric", module_path,
-                            {0, 0, 0, 0});
+          diagnostics.Error("E_SEMA_EXPR_TYPE", "left arithmetic operand is not numeric", diag_file,
+                            expr->lhs ? NormalizeRange(expr->lhs->range) : NormalizeRange(expr->range));
         }
         if (rhs.known && !IsNumericType(rhs.type)) {
-          diagnostics.Error("E_SEMA_EXPR_TYPE", "right arithmetic operand is not numeric", module_path,
-                            {0, 0, 0, 0});
+          diagnostics.Error("E_SEMA_EXPR_TYPE", "right arithmetic operand is not numeric", diag_file,
+                            expr->rhs ? NormalizeRange(expr->rhs->range) : NormalizeRange(expr->range));
         }
         if (lhs.known && rhs.known) {
           if (lhs.type == "i64" || rhs.type == "i64") {
@@ -231,68 +243,67 @@ void AnalyzeStatements(const std::vector<snow::frontend::Statement>& statements,
                        std::unordered_map<std::string, std::string>& symbol_types, const StatementContext& context,
                        const bool inside_loop, snow::common::DiagnosticEngine& diagnostics) {
   for (const auto& stmt : statements) {
+    const snow::common::SourceRange stmt_range = NormalizeRange(stmt.range);
     switch (stmt.kind) {
       case snow::frontend::Statement::Kind::Return: {
         if (!stmt.expr) {
-          diagnostics.Error("E_SEMA_RET_MISSING", "return statement requires a value in Snow v1", context.module_path,
-                            {0, 0, 0, 0});
+          diagnostics.Error("E_SEMA_RET_MISSING", "return statement requires a value in Snow v1", context.diag_file,
+                            stmt_range);
           break;
         }
         const ExprTypeResult return_expr_type =
             InferExprType(stmt.expr, symbol_types, context.function_return_types, context.function_param_types,
-                          context.ambiguous_function_names, context.module_path, diagnostics);
+                          context.ambiguous_function_names, context.diag_file, diagnostics);
         if (return_expr_type.known && !IsTypeCompatible(context.expected_return_type, return_expr_type.type)) {
           diagnostics.Error("E_SEMA_RET_TYPE",
                             "Return expression type '" + return_expr_type.type +
                                 "' does not match function return type '" + context.expected_return_type + "'",
-                            context.module_path, {0, 0, 0, 0});
+                            context.diag_file, NormalizeRange(stmt.expr->range));
         }
         break;
       }
 
       case snow::frontend::Statement::Kind::Expr:
         (void)InferExprType(stmt.expr, symbol_types, context.function_return_types, context.function_param_types,
-                            context.ambiguous_function_names, context.module_path, diagnostics);
+                            context.ambiguous_function_names, context.diag_file, diagnostics);
         break;
 
       case snow::frontend::Statement::Kind::Assign: {
         if (stmt.name.empty() || !symbol_types.contains(stmt.name)) {
           diagnostics.Error("E_SEMA_ASSIGN_UNDEFINED", "Assignment target is not defined: " + stmt.name,
-                            context.module_path, {0, 0, 0, 0});
+                            context.diag_file, stmt_range);
           break;
         }
         const ExprTypeResult assigned =
             InferExprType(stmt.expr, symbol_types, context.function_return_types, context.function_param_types,
-                          context.ambiguous_function_names, context.module_path, diagnostics);
+                          context.ambiguous_function_names, context.diag_file, diagnostics);
         if (assigned.known && !IsTypeCompatible(symbol_types[stmt.name], assigned.type)) {
           diagnostics.Error("E_SEMA_ASSIGN_TYPE",
                             "Cannot assign value of type '" + assigned.type + "' to '" + stmt.name + "' of type '" +
                                 symbol_types[stmt.name] + "'",
-                            context.module_path, {0, 0, 0, 0});
+                            context.diag_file, stmt_range);
         }
         break;
       }
 
       case snow::frontend::Statement::Kind::Let: {
         if (stmt.name.empty()) {
-          diagnostics.Error("E_SEMA_LET_NAME", "let statement missing variable name", context.module_path,
-                            {0, 0, 0, 0});
+          diagnostics.Error("E_SEMA_LET_NAME", "let statement missing variable name", context.diag_file, stmt_range);
           break;
         }
         if (symbol_types.contains(stmt.name)) {
-          diagnostics.Error("E_SEMA_DUP_LOCAL", "Duplicate local symbol: " + stmt.name, context.module_path,
-                            {0, 0, 0, 0});
+          diagnostics.Error("E_SEMA_DUP_LOCAL", "Duplicate local symbol: " + stmt.name, context.diag_file, stmt_range);
           break;
         }
         const ExprTypeResult init_type =
             InferExprType(stmt.expr, symbol_types, context.function_return_types, context.function_param_types,
-                          context.ambiguous_function_names, context.module_path, diagnostics);
+                          context.ambiguous_function_names, context.diag_file, diagnostics);
         if (!stmt.type_name.empty()) {
           if (init_type.known && !IsTypeCompatible(stmt.type_name, init_type.type)) {
             diagnostics.Error("E_SEMA_LET_TYPE",
                               "Initializer type '" + init_type.type + "' does not match declared let type '" +
                                   stmt.type_name + "'",
-                              context.module_path, {0, 0, 0, 0});
+                              context.diag_file, stmt_range);
           }
           symbol_types[stmt.name] = stmt.type_name;
         } else {
@@ -304,10 +315,9 @@ void AnalyzeStatements(const std::vector<snow::frontend::Statement>& statements,
       case snow::frontend::Statement::Kind::If: {
         const ExprTypeResult cond_type =
             InferExprType(stmt.expr, symbol_types, context.function_return_types, context.function_param_types,
-                          context.ambiguous_function_names, context.module_path, diagnostics);
+                          context.ambiguous_function_names, context.diag_file, diagnostics);
         if (cond_type.known && !IsBooleanType(cond_type.type)) {
-          diagnostics.Error("E_SEMA_IF_COND_TYPE", "if condition must be bool/i1", context.module_path,
-                            {0, 0, 0, 0});
+          diagnostics.Error("E_SEMA_IF_COND_TYPE", "if condition must be bool/i1", context.diag_file, stmt_range);
         }
 
         auto then_symbols = symbol_types;
@@ -320,10 +330,9 @@ void AnalyzeStatements(const std::vector<snow::frontend::Statement>& statements,
       case snow::frontend::Statement::Kind::While: {
         const ExprTypeResult cond_type =
             InferExprType(stmt.expr, symbol_types, context.function_return_types, context.function_param_types,
-                          context.ambiguous_function_names, context.module_path, diagnostics);
+                          context.ambiguous_function_names, context.diag_file, diagnostics);
         if (cond_type.known && !IsBooleanType(cond_type.type)) {
-          diagnostics.Error("E_SEMA_WHILE_COND_TYPE", "while condition must be bool/i1", context.module_path,
-                            {0, 0, 0, 0});
+          diagnostics.Error("E_SEMA_WHILE_COND_TYPE", "while condition must be bool/i1", context.diag_file, stmt_range);
         }
         auto loop_symbols = symbol_types;
         AnalyzeStatements(stmt.body, loop_symbols, context, true, diagnostics);
@@ -332,15 +341,15 @@ void AnalyzeStatements(const std::vector<snow::frontend::Statement>& statements,
 
       case snow::frontend::Statement::Kind::Break:
         if (!inside_loop) {
-          diagnostics.Error("E_SEMA_BREAK_OUTSIDE_LOOP", "break can only appear inside while loop", context.module_path,
-                            {0, 0, 0, 0});
+          diagnostics.Error("E_SEMA_BREAK_OUTSIDE_LOOP", "break can only appear inside while loop", context.diag_file,
+                            stmt_range);
         }
         break;
 
       case snow::frontend::Statement::Kind::Continue:
         if (!inside_loop) {
           diagnostics.Error("E_SEMA_CONTINUE_OUTSIDE_LOOP", "continue can only appear inside while loop",
-                            context.module_path, {0, 0, 0, 0});
+                            context.diag_file, stmt_range);
         }
         break;
     }
@@ -354,8 +363,10 @@ SemaModule SemanticAnalyzer::Analyze(
     const std::vector<snow::common::FunctionSignature>& available_functions) const {
   SemaModule sema;
   sema.ast = ast_module;
+  const std::string diag_file = ast_module.source_path.empty() ? ast_module.module_path : ast_module.source_path;
 
   std::unordered_map<std::string, std::string> import_owner;
+  std::unordered_map<std::string, snow::common::SourceRange> import_name_ranges;
   std::unordered_set<std::string> imported_modules;
   std::vector<std::string> star_import_prefixes;
   for (const auto& import : ast_module.imports) {
@@ -365,8 +376,8 @@ SemaModule SemanticAnalyzer::Analyze(
     resolved.is_star = import.is_star;
 
     if (import.is_star) {
-      diagnostics.Warning("W_STAR_IMPORT_DISCOURAGED", "star import is discouraged", ast_module.module_path,
-                          {0, 0, 0, 0}, "Use explicit import or alias import for stable name resolution");
+      diagnostics.Warning("W_STAR_IMPORT_DISCOURAGED", "star import is discouraged", diag_file,
+                          NormalizeRange(import.range), "Use explicit import or alias import for stable name resolution");
       resolved.unqualified_name = "";
       if (!resolved.canonical_path.empty()) {
         star_import_prefixes.push_back(resolved.canonical_path);
@@ -386,10 +397,11 @@ SemaModule SemanticAnalyzer::Analyze(
       if (it != import_owner.end() && it->second != resolved.canonical_path) {
         diagnostics.Error(
             "AmbiguousSymbol",
-            "Unqualified symbol conflict for import name '" + resolved.unqualified_name + "'", ast_module.module_path,
-            {0, 0, 0, 0}, "Use alias import (as ...) or qualified module path");
+            "Unqualified symbol conflict for import name '" + resolved.unqualified_name + "'", diag_file,
+            NormalizeRange(import.range), "Use alias import (as ...) or qualified module path");
       } else {
         import_owner.emplace(resolved.unqualified_name, resolved.canonical_path);
+        import_name_ranges.emplace(resolved.unqualified_name, NormalizeRange(import.range));
       }
     }
 
@@ -457,8 +469,11 @@ SemaModule SemanticAnalyzer::Analyze(
 
     if (candidates.size() > 1) {
       ambiguous_function_names.insert(name);
-      diagnostics.Error("AmbiguousSymbol", "Ambiguous imported function name '" + name + "'", ast_module.module_path,
-                        {0, 0, 0, 0}, "Conflicting modules: " + JoinModules(candidates));
+      const auto range_it = import_name_ranges.find(name);
+      const auto range = range_it == import_name_ranges.end() ? snow::common::SourceRange{1, 1, 1, 1}
+                                                               : range_it->second;
+      diagnostics.Error("AmbiguousSymbol", "Ambiguous imported function name '" + name + "'", diag_file, range,
+                        "Conflicting modules: " + JoinModules(candidates));
       continue;
     }
 
@@ -485,8 +500,8 @@ SemaModule SemanticAnalyzer::Analyze(
 
   for (const auto& function : ast_module.functions) {
     if (symbol_seen.contains(function.name)) {
-      diagnostics.Error("E_SEMA_DUP_SYMBOL", "Duplicate symbol in module: " + function.name, ast_module.module_path,
-                        {0, 0, 0, 0});
+      diagnostics.Error("E_SEMA_DUP_SYMBOL", "Duplicate symbol in module: " + function.name, diag_file,
+                        NormalizeRange(function.range));
       continue;
     }
     symbol_seen[function.name] = true;
@@ -502,7 +517,7 @@ SemaModule SemanticAnalyzer::Analyze(
         .function_param_types = function_param_types,
         .ambiguous_function_names = ambiguous_function_names,
         .expected_return_type = function.return_type.empty() ? "i32" : function.return_type,
-        .module_path = ast_module.module_path,
+        .diag_file = diag_file,
     };
     AnalyzeStatements(function.statements, symbol_types, context, false, diagnostics);
   }

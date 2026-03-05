@@ -1,5 +1,8 @@
 #include "snow/common/target.h"
 
+#include <algorithm>
+#include <vector>
+
 namespace snow::common {
 
 std::string DetectHostTriple() {
@@ -26,6 +29,21 @@ std::string DetectHostTriple() {
 #else
   return "x86_64-unknown-linux-gnu";
 #endif
+}
+
+const std::vector<std::string>& SupportedTargetTriples() {
+  static const std::vector<std::string> kSupported = {
+      "x86_64-pc-windows-msvc",
+      "x86_64-unknown-linux-gnu",
+      "x86_64-apple-darwin",
+      "aarch64-apple-darwin",
+  };
+  return kSupported;
+}
+
+bool IsSupportedTargetTriple(const std::string& triple) {
+  const auto& supported = SupportedTargetTriples();
+  return std::find(supported.begin(), supported.end(), triple) != supported.end();
 }
 
 }  // namespace snow::common

@@ -36,6 +36,10 @@ namespace snow::driver {
 
 namespace {
 
+snow::common::SourceRange FallbackRange() {
+  return snow::common::SourceRange{1, 1, 1, 1};
+}
+
 std::optional<std::string> ReadFile(const std::string& path) {
   std::ifstream in(path, std::ios::in | std::ios::binary);
   if (!in) {
@@ -167,6 +171,28 @@ std::string ResolveToolPath(const char* env_name, const std::string& fallback_na
   return fallback_name;
 }
 
+std::string JoinSupportedTargets() {
+  std::ostringstream oss;
+  const auto& supported = snow::common::SupportedTargetTriples();
+  for (std::size_t i = 0; i < supported.size(); ++i) {
+    if (i > 0) {
+      oss << ", ";
+    }
+    oss << supported[i];
+  }
+  return oss.str();
+}
+
+bool ValidateTargetTriple(const std::string& target_triple, const std::string& diag_file,
+                          common::DiagnosticEngine& diagnostics) {
+  if (snow::common::IsSupportedTargetTriple(target_triple)) {
+    return true;
+  }
+  diagnostics.Error("E_TARGET_UNSUPPORTED", "Unsupported target triple: " + target_triple, diag_file, FallbackRange(),
+                    "Supported targets: " + JoinSupportedTargets());
+  return false;
+}
+
 int RunSystemCommand(const std::string& command) {
   return std::system(command.c_str());
 }
@@ -259,7 +285,8 @@ bool WriteArtifact(const std::filesystem::path& output_path, const OutputKind ou
   if (output_kind == OutputKind::Object) {
     const auto emit = lowering.EmitObject(module, target, opt_level, output_path.string());
     if (!emit.success) {
-      diagnostics.Error("E_BACKEND_OBJECT_EMIT", "Failed to emit object artifact", output_path.string(), {1, 1, 1, 1},
+      diagnostics.Error(emit.error_code.empty() ? "E_BACKEND_OBJECT_EMIT" : emit.error_code,
+                        "Failed to emit object artifact", output_path.string(), FallbackRange(),
                         emit.error_message);
       return false;
     }
@@ -274,7 +301,8 @@ bool WriteArtifact(const std::filesystem::path& output_path, const OutputKind ou
 
   const auto emit = lowering.EmitObject(module, target, opt_level, module_object.string());
   if (!emit.success) {
-    diagnostics.Error("E_BACKEND_OBJECT_EMIT", "Failed to emit object artifact", output_path.string(), {1, 1, 1, 1},
+    diagnostics.Error(emit.error_code.empty() ? "E_BACKEND_OBJECT_EMIT" : emit.error_code,
+                      "Failed to emit object artifact", output_path.string(), FallbackRange(),
                       emit.error_message);
     std::error_code ignore_ec;
     std::filesystem::remove(module_object, ignore_ec);
@@ -327,7 +355,7 @@ ProjectBuildConfig ResolveProjectBuildConfig(const std::filesystem::path& projec
   common::SnowManifest parsed;
   std::string error;
   if (!common::ParseSnowToml(manifest.string(), parsed, error)) {
-    diagnostics.Error("E_MANIFEST_PARSE", "Cannot parse snow.toml", manifest.string(), {0, 0, 0, 0}, error);
+    diagnostics.Error("E_MANIFEST_PARSE", "Cannot parse snow.toml", manifest.string(), FallbackRange(), error);
     return config;
   }
 
@@ -343,7 +371,8 @@ ProjectBuildConfig ResolveProjectBuildConfig(const std::filesystem::path& projec
 
 std::vector<std::filesystem::path> ResolveImportFiles(const frontend::ImportDecl& import, const std::filesystem::path& src_root,
                                                       common::DiagnosticEngine& diagnostics,
-                                                      const std::string& module_path_for_diag) {
+                                                      const std::string& diag_file,
+                                                      const snow::common::SourceRange& import_range) {
   std::vector<std::filesystem::path> files;
 
   const auto joined = JoinSegments(import.path_segments);
@@ -360,8 +389,8 @@ std::vector<std::filesystem::path> ResolveImportFiles(const frontend::ImportDecl
         }
       }
       if (files.empty()) {
-        diagnostics.Warning("W_IMPORT_STAR_EMPTY", "star import directory has no .snow modules", module_path_for_diag,
-                            {0, 0, 0, 0});
+        diagnostics.Warning("W_IMPORT_STAR_EMPTY", "star import directory has no .snow modules", diag_file,
+                            import_range.line == 0 ? FallbackRange() : import_range);
       }
       std::sort(files.begin(), files.end());
       return files;
@@ -370,7 +399,8 @@ std::vector<std::filesystem::path> ResolveImportFiles(const frontend::ImportDecl
 
   const auto file = src_root / (joined + ".snow");
   if (!std::filesystem::exists(file)) {
-    diagnostics.Error("E_MODULE_NOT_FOUND", "Module import not found: " + joined, module_path_for_diag, {0, 0, 0, 0},
+    diagnostics.Error("E_MODULE_NOT_FOUND", "Module import not found: " + joined, diag_file,
+                      import_range.line == 0 ? FallbackRange() : import_range,
                       "Create file " + file.string() + " or fix import path");
     return files;
   }
@@ -409,14 +439,14 @@ bool BuildModuleGraph(const std::filesystem::path& main_file, const std::filesys
 
     const auto source_text = ReadFile(abs.string());
     if (!source_text.has_value()) {
-      diagnostics.Error("E_DRIVER_INPUT", "Cannot read input file", abs.string(), {0, 0, 0, 0});
+      diagnostics.Error("E_DRIVER_INPUT", "Cannot read input file", abs.string(), FallbackRange());
       continue;
     }
 
     const std::string module_id = GuessModulePathFromFile(abs);
     const common::SourceFile source{abs.string(), source_text.value()};
     const auto tokens = lexer.Tokenize(source, diagnostics);
-    auto ast = parser.Parse(module_id, tokens, diagnostics);
+    auto ast = parser.Parse(module_id, tokens, diagnostics, abs.string());
 
     ModuleNode node;
     node.module_id = module_id;
@@ -424,7 +454,7 @@ bool BuildModuleGraph(const std::filesystem::path& main_file, const std::filesys
     node.ast = ast;
 
     for (const auto& import : ast.imports) {
-      auto import_files = ResolveImportFiles(import, src_root, diagnostics, module_id);
+      auto import_files = ResolveImportFiles(import, src_root, diagnostics, abs.string(), import.range);
       for (const auto& import_file : import_files) {
         const auto import_abs = std::filesystem::weakly_canonical(import_file);
         const auto dep_id = GuessModulePathFromFile(import_abs);
@@ -456,6 +486,8 @@ bool TopologicalOrder(const std::unordered_map<std::string, ModuleNode>& nodes, 
   std::sort(all_ids.begin(), all_ids.end());
 
   std::function<bool(const std::string&)> dfs = [&](const std::string& id) -> bool {
+    const auto node_it = nodes.find(id);
+    const std::string diag_file = node_it == nodes.end() ? id : node_it->second.file_path.string();
     const int current = state[id];
     if (current == 2) {
       return true;
@@ -466,7 +498,8 @@ bool TopologicalOrder(const std::unordered_map<std::string, ModuleNode>& nodes, 
         cycle << s << " -> ";
       }
       cycle << id;
-      diagnostics.Error("E_MODULE_CYCLE", "Module dependency cycle detected", id, {0, 0, 0, 0}, cycle.str());
+      diagnostics.Error("E_MODULE_CYCLE", "Module dependency cycle detected", diag_file, FallbackRange(),
+                        cycle.str());
       return false;
     }
 
@@ -477,7 +510,7 @@ bool TopologicalOrder(const std::unordered_map<std::string, ModuleNode>& nodes, 
     if (it != nodes.end()) {
       for (const auto& dep : it->second.deps) {
         if (!nodes.contains(dep)) {
-          diagnostics.Error("E_MODULE_MISSING", "Dependency module not loaded: " + dep, id, {0, 0, 0, 0});
+          diagnostics.Error("E_MODULE_MISSING", "Dependency module not loaded: " + dep, diag_file, FallbackRange());
           continue;
         }
         if (!dfs(dep)) {
@@ -516,13 +549,17 @@ CompileResult Driver::Compile(const CompileRequest& request) const {
 
   const auto source_text = ReadFile(request.input_path);
   if (!source_text.has_value()) {
-    result.diagnostics.Error("E_DRIVER_INPUT", "Cannot read input file", request.input_path, {0, 0, 0, 0});
+    result.diagnostics.Error("E_DRIVER_INPUT", "Cannot read input file", request.input_path, FallbackRange());
     return result;
   }
 
   const auto module_path = GuessModulePathFromFile(std::filesystem::path(request.input_path));
   const std::string target_triple = request.target_triple.empty() ? snow::common::DetectHostTriple() : request.target_triple;
   result.target_triple = target_triple;
+  if (!ValidateTargetTriple(target_triple, request.input_path, result.diagnostics)) {
+    result.success = false;
+    return result;
+  }
   const snow::common::SourceFile source{request.input_path, source_text.value()};
 
   frontend::Lexer lexer;
@@ -532,7 +569,7 @@ CompileResult Driver::Compile(const CompileRequest& request) const {
   }
 
   frontend::Parser parser;
-  auto ast = parser.Parse(module_path, tokens, result.diagnostics);
+  auto ast = parser.Parse(module_path, tokens, result.diagnostics, source.path);
   if (request.emit.ast) {
     result.ast_dump = frontend::DumpAst(ast);
   }
@@ -577,8 +614,10 @@ CompileResult Driver::Compile(const CompileRequest& request) const {
     };
     const auto llvm_result = lowering.Lower(pass_result.module, target, request.opt_level);
     if (!llvm_result.native_ready) {
-      result.diagnostics.Error("E_BACKEND_LLVM_REQUIRED", "LLVM backend is required but not ready for this module",
-                               request.input_path, {1, 1, 1, 1},
+      const std::string code = llvm_result.error_code.empty() ? "E_BACKEND_LLVM_REQUIRED" : llvm_result.error_code;
+      const std::string message = llvm_result.error_message.empty() ? "LLVM backend is not ready for this module"
+                                                                    : llvm_result.error_message;
+      result.diagnostics.Error(code, message, request.input_path, FallbackRange(),
                                "Enable LLVM backend support and verify toolchain installation");
     }
     if (request.emit.llvm) {
@@ -608,11 +647,17 @@ BuildResult Driver::BuildProject(const BuildRequest& request) const {
   const std::filesystem::path src_root = root / "src";
   const ProjectBuildConfig project_config = ResolveProjectBuildConfig(root, result.diagnostics);
   const std::filesystem::path main_file = project_config.main_file;
+  const std::string requested_target = request.target_triple.empty() ? project_config.manifest_target
+                                                                      : request.target_triple;
   const std::string build_target =
-      request.target_triple.empty() ? project_config.manifest_target : request.target_triple;
+      requested_target.empty() ? snow::common::DetectHostTriple() : requested_target;
+  if (!ValidateTargetTriple(build_target, main_file.string(), result.diagnostics)) {
+    result.success = false;
+    return result;
+  }
 
   if (!std::filesystem::exists(main_file)) {
-    result.diagnostics.Error("E_BUILD_MAIN_NOT_FOUND", "Main source file not found", main_file.string(), {0, 0, 0, 0},
+    result.diagnostics.Error("E_BUILD_MAIN_NOT_FOUND", "Main source file not found", main_file.string(), FallbackRange(),
                              "Create src/main.snow or set main in snow.toml");
     return result;
   }

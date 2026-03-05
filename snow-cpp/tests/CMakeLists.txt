@@ -1,4 +1,6 @@
 set(ASSERT_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/assert_cli.cmake)
+set(DIFF_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/run_diff_harness.cmake)
+set(DOC_ASSERT_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/assert_docs.cmake)
 set(DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/data)
 set(CASES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/data/cases)
 set(ARTIFACT_DIR ${CMAKE_CURRENT_BINARY_DIR}/artifacts)
@@ -47,6 +49,13 @@ target_link_libraries(snow-common-tests PRIVATE snow_compiler)
 add_test(
   NAME snow_common_tests
   COMMAND $<TARGET_FILE:snow-common-tests>
+)
+add_test(
+  NAME snow_pass_docs_exist
+  COMMAND ${CMAKE_COMMAND}
+    -DDOC_PATH=${CMAKE_SOURCE_DIR}/../docs/Snow-Pass-Invariants-v1.md
+    -DREQUIRED_PATTERNS="Canonicalize|ConstantFold|CfgSimplify|CopyPropagation|DeadCodeElimination|Inline|input invariants|output invariants|failure modes"
+    -P ${DOC_ASSERT_SCRIPT}
 )
 
 function(add_cli_assert_test NAME EXE EXIT_CODE ARGS EXPECT REJECT EXPECT_FILE)
@@ -126,6 +135,16 @@ add_cli_assert_test(
   "target triple = \"x86_64-unknown-linux-gnu\""
   ""
   "${ARTIFACT_DIR}/target_override.o"
+)
+
+add_cli_assert_test(
+  snowc_compile_target_unsupported
+  snowc
+  1
+  "compile|--emit-object|--target|aarch64-unknown-linux-gnu|-o|${ARTIFACT_DIR}/target_unsupported.o|${DATA_DIR}/minimal.snow"
+  "E_TARGET_UNSUPPORTED"
+  ""
+  ""
 )
 
 add_cli_assert_test(
@@ -254,7 +273,7 @@ add_cli_assert_test(
   1
   "compile|-o|${ARTIFACT_DIR}/expr_mod_unsupported.exe|${CASES_DIR}/expr_mod_unsupported.snow"
   "E_SEMA_UNSUPPORTED_OP"
-  ""
+  ":0:0"
   ""
 )
 
@@ -635,16 +654,16 @@ add_cli_assert_test(
   1
   "build|${PROJECT_CYCLE_DIR}"
   "E_MODULE_CYCLE"
-  ""
+  ":0:0"
   ""
 )
 
-add_cli_assert_test(
-  snow_diff_harness_match
-  snow-diff-harness
-  0
-  "--java-cmd|$<TARGET_FILE:snowc>|--snowc|$<TARGET_FILE:snowc>|${DATA_DIR}/minimal.snow"
-  "classification=MATCH"
-  ""
-  ""
+add_test(
+  NAME snow_diff_harness_java_baseline
+  COMMAND ${CMAKE_COMMAND}
+    -DHARNESS=$<TARGET_FILE:snow-diff-harness>
+    -DSNOWC=$<TARGET_FILE:snowc>
+    -DINPUT=${DATA_DIR}/minimal.snow
+    -DREPORT=${ARTIFACT_DIR}/diff_report.json
+    -P ${DIFF_SCRIPT}
 )

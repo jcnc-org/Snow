@@ -30,6 +30,46 @@ namespace snow::codegen {
 
 namespace {
 
+bool IsLowerableOpcode(const snow::sir::Opcode opcode) {
+  switch (opcode) {
+    case snow::sir::Opcode::Add:
+    case snow::sir::Opcode::Sub:
+    case snow::sir::Opcode::Mul:
+    case snow::sir::Opcode::Div:
+    case snow::sir::Opcode::Eq:
+    case snow::sir::Opcode::Ne:
+    case snow::sir::Opcode::Lt:
+    case snow::sir::Opcode::Gt:
+    case snow::sir::Opcode::Le:
+    case snow::sir::Opcode::Ge:
+    case snow::sir::Opcode::Drop:
+    case snow::sir::Opcode::Alloc:
+    case snow::sir::Opcode::Load:
+    case snow::sir::Opcode::Store:
+    case snow::sir::Opcode::Phi:
+    case snow::sir::Opcode::Br:
+    case snow::sir::Opcode::CondBr:
+    case snow::sir::Opcode::Call:
+    case snow::sir::Opcode::Ret:
+      return true;
+    default:
+      return false;
+  }
+}
+
+std::optional<std::string> FirstUnsupportedOpcode(const snow::sir::Module& module) {
+  for (const auto& function : module.functions) {
+    for (const auto& block : function.blocks) {
+      for (const auto& instr : block.instructions) {
+        if (!IsLowerableOpcode(instr.opcode)) {
+          return snow::sir::ToString(instr.opcode);
+        }
+      }
+    }
+  }
+  return std::nullopt;
+}
+
 std::string ToLlvmTypeText(const std::string& snow_type) {
   if (snow_type == "i1" || snow_type == "bool") {
     return "i1";
@@ -473,6 +513,13 @@ void InitializeTargetsOnce() {
 ObjectEmitResult EmitObjectWithLlvmApi(const snow::sir::Module& module, const TargetConfig& target,
                                        const snow::passes::OptLevel opt_level, const std::string& output_path) {
   (void)opt_level;
+  if (const auto unsupported = FirstUnsupportedOpcode(module); unsupported.has_value()) {
+    return ObjectEmitResult{
+        .success = false,
+        .error_code = "E_BACKEND_UNSUPPORTED_OPCODE",
+        .error_message = "unsupported opcode in LLVM lowering: " + unsupported.value(),
+    };
+  }
 
   llvm::LLVMContext context;
   llvm::SMDiagnostic parse_error;
@@ -485,6 +532,7 @@ ObjectEmitResult EmitObjectWithLlvmApi(const snow::sir::Module& module, const Ta
     error_stream.flush();
     return ObjectEmitResult{
         .success = false,
+        .error_code = "E_BACKEND_LLVM_PARSE",
         .error_message = "LLVM IR parse failed: " + error,
     };
   }
@@ -496,6 +544,7 @@ ObjectEmitResult EmitObjectWithLlvmApi(const snow::sir::Module& module, const Ta
   if (llvm_target == nullptr) {
     return ObjectEmitResult{
         .success = false,
+        .error_code = "E_TARGET_UNSUPPORTED",
         .error_message = "target lookup failed for '" + target.triple + "': " + target_error,
     };
   }
@@ -508,6 +557,7 @@ ObjectEmitResult EmitObjectWithLlvmApi(const snow::sir::Module& module, const Ta
   if (!machine) {
     return ObjectEmitResult{
         .success = false,
+        .error_code = "E_BACKEND_TARGET_MACHINE",
         .error_message = "cannot create target machine for '" + target.triple + "'",
     };
   }
@@ -521,6 +571,7 @@ ObjectEmitResult EmitObjectWithLlvmApi(const snow::sir::Module& module, const Ta
     verify_stream.flush();
     return ObjectEmitResult{
         .success = false,
+        .error_code = "E_BACKEND_LLVM_VERIFY",
         .error_message = "module verification failed: " + verify_error,
     };
   }
@@ -530,6 +581,7 @@ ObjectEmitResult EmitObjectWithLlvmApi(const snow::sir::Module& module, const Ta
   if (ec) {
     return ObjectEmitResult{
         .success = false,
+        .error_code = "E_BACKEND_OBJECT_EMIT",
         .error_message = "cannot open output object: " + ec.message(),
     };
   }
@@ -538,6 +590,7 @@ ObjectEmitResult EmitObjectWithLlvmApi(const snow::sir::Module& module, const Ta
   if (machine->addPassesToEmitFile(pass_manager, output, nullptr, llvm::CodeGenFileType::ObjectFile)) {
     return ObjectEmitResult{
         .success = false,
+        .error_code = "E_BACKEND_OBJECT_EMIT",
         .error_message = "target does not support object emission for '" + target.triple + "'",
     };
   }
@@ -546,6 +599,7 @@ ObjectEmitResult EmitObjectWithLlvmApi(const snow::sir::Module& module, const Ta
   output.flush();
   return ObjectEmitResult{
       .success = true,
+      .error_code = "",
       .error_message = "",
   };
 }
@@ -558,17 +612,34 @@ LoweringResult LlvmLowering::Lower(const snow::sir::Module& module, const Target
   LoweringResult result;
   result.backend = BackendKind::RealLlvm;
   result.native_ready = true;
+  result.error_code.clear();
+  result.error_message.clear();
+
+  if (const auto unsupported = FirstUnsupportedOpcode(module); unsupported.has_value()) {
+    result.native_ready = false;
+    result.error_code = "E_BACKEND_UNSUPPORTED_OPCODE";
+    result.error_message = "unsupported opcode in LLVM lowering: " + unsupported.value();
+  }
+
   result.llvm_ir = LowerTextual(module, target, opt_level);
 
 #if SNOW_ENABLE_LLVM
-  llvm::LLVMContext context;
-  llvm::SMDiagnostic parse_error;
-  std::unique_ptr<llvm::Module> parsed = llvm::parseAssemblyString(result.llvm_ir, parse_error, context);
-  if (!parsed) {
-    result.native_ready = false;
+  if (result.native_ready) {
+    llvm::LLVMContext context;
+    llvm::SMDiagnostic parse_error;
+    std::unique_ptr<llvm::Module> parsed = llvm::parseAssemblyString(result.llvm_ir, parse_error, context);
+    if (!parsed) {
+      result.native_ready = false;
+      result.error_code = "E_BACKEND_LLVM_PARSE";
+      result.error_message = "LLVM IR parse failed";
+    }
   }
 #else
-  result.native_ready = false;
+  if (result.native_ready) {
+    result.native_ready = false;
+    result.error_code = "E_BACKEND_LLVM_REQUIRED";
+    result.error_message = "LLVM backend is unavailable";
+  }
 #endif
 
   return result;
@@ -586,6 +657,7 @@ ObjectEmitResult LlvmLowering::EmitObject(const snow::sir::Module& module, const
   (void)output_path;
   return ObjectEmitResult{
       .success = false,
+      .error_code = "E_BACKEND_LLVM_REQUIRED",
       .error_message = "LLVM backend is unavailable",
   };
 #endif

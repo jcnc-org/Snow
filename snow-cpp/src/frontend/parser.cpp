@@ -627,10 +627,12 @@ std::string DumpAst(const AstModule& module) {
 }
 
 AstModule Parser::Parse(std::string module_path, const TokenStream& tokens,
-                        snow::common::DiagnosticEngine& diagnostics) const {
+                        snow::common::DiagnosticEngine& diagnostics, std::string source_path) const {
   Cursor cursor(tokens);
   AstModule module;
   module.module_path = std::move(module_path);
+  module.source_path = source_path.empty() ? module.module_path : std::move(source_path);
+  const std::string& diag_file = module.source_path;
 
   while (!cursor.AtEnd()) {
     if (cursor.Peek().type == TokenType::KeywordImport) {
@@ -638,7 +640,7 @@ AstModule Parser::Parse(std::string module_path, const TokenStream& tokens,
       ImportDecl import;
       import.range = import_start.range;
       if (cursor.Peek().type != TokenType::Identifier) {
-        diagnostics.Error("E_PARSE_IMPORT_PATH", "Expected module path after import", module.module_path,
+        diagnostics.Error("E_PARSE_IMPORT_PATH", "Expected module path after import", diag_file,
                           cursor.Peek().range);
         cursor.Advance();
         continue;
@@ -653,7 +655,7 @@ AstModule Parser::Parse(std::string module_path, const TokenStream& tokens,
           break;
         }
         if (cursor.Peek().type != TokenType::Identifier) {
-          diagnostics.Error("E_PARSE_IMPORT_PATH", "Expected identifier in import path", module.module_path,
+          diagnostics.Error("E_PARSE_IMPORT_PATH", "Expected identifier in import path", diag_file,
                             cursor.Peek().range);
           break;
         }
@@ -663,7 +665,7 @@ AstModule Parser::Parse(std::string module_path, const TokenStream& tokens,
       }
       if (cursor.Match(TokenType::KeywordAs)) {
         if (cursor.Peek().type != TokenType::Identifier) {
-          diagnostics.Error("E_PARSE_IMPORT_ALIAS", "Expected alias name after 'as'", module.module_path,
+          diagnostics.Error("E_PARSE_IMPORT_ALIAS", "Expected alias name after 'as'", diag_file,
                             cursor.Peek().range);
         } else {
           auto alias = cursor.Advance();
@@ -687,7 +689,7 @@ AstModule Parser::Parse(std::string module_path, const TokenStream& tokens,
       function.range = item_start;
 
       if (cursor.Peek().type != TokenType::Identifier) {
-        diagnostics.Error("E_PARSE_FN_NAME", "Expected function name", module.module_path, cursor.Peek().range);
+        diagnostics.Error("E_PARSE_FN_NAME", "Expected function name", diag_file, cursor.Peek().range);
         cursor.Advance();
         continue;
       }
@@ -696,24 +698,24 @@ AstModule Parser::Parse(std::string module_path, const TokenStream& tokens,
       function.range = MergeRange(function.range, fn_name.range);
 
       if (!cursor.Match(TokenType::LParen)) {
-        diagnostics.Error("E_PARSE_FN_LPAREN", "Expected '(' after function name", module.module_path,
+        diagnostics.Error("E_PARSE_FN_LPAREN", "Expected '(' after function name", diag_file,
                           cursor.Peek().range);
       } else {
         while (cursor.Peek().type != TokenType::RParen && !cursor.AtEnd()) {
           ParamDecl param;
           if (cursor.Peek().type != TokenType::Identifier) {
-            diagnostics.Error("E_PARSE_PARAM_NAME", "Expected parameter name", module.module_path,
+            diagnostics.Error("E_PARSE_PARAM_NAME", "Expected parameter name", diag_file,
                               cursor.Peek().range);
             break;
           }
           param.name = cursor.Advance().lexeme;
           if (!cursor.Match(TokenType::Colon)) {
-            diagnostics.Error("E_PARSE_PARAM_COLON", "Expected ':' after parameter name", module.module_path,
+            diagnostics.Error("E_PARSE_PARAM_COLON", "Expected ':' after parameter name", diag_file,
                               cursor.Peek().range);
             break;
           }
           if (cursor.Peek().type != TokenType::Identifier) {
-            diagnostics.Error("E_PARSE_PARAM_TYPE", "Expected parameter type", module.module_path,
+            diagnostics.Error("E_PARSE_PARAM_TYPE", "Expected parameter type", diag_file,
                               cursor.Peek().range);
             break;
           }
@@ -724,17 +726,17 @@ AstModule Parser::Parse(std::string module_path, const TokenStream& tokens,
           }
         }
         if (!cursor.Match(TokenType::RParen)) {
-          diagnostics.Error("E_PARSE_FN_RPAREN", "Expected ')' after parameter list", module.module_path,
+          diagnostics.Error("E_PARSE_FN_RPAREN", "Expected ')' after parameter list", diag_file,
                             cursor.Peek().range);
         }
       }
 
       if (!cursor.Match(TokenType::Arrow)) {
-        diagnostics.Error("E_PARSE_FN_ARROW", "Expected '->' return type marker", module.module_path,
+        diagnostics.Error("E_PARSE_FN_ARROW", "Expected '->' return type marker", diag_file,
                           cursor.Peek().range);
       }
       if (cursor.Peek().type != TokenType::Identifier) {
-        diagnostics.Error("E_PARSE_FN_RET", "Expected return type", module.module_path, cursor.Peek().range);
+        diagnostics.Error("E_PARSE_FN_RET", "Expected return type", diag_file, cursor.Peek().range);
       } else {
         auto ret_token = cursor.Advance();
         function.return_type = ret_token.lexeme;
@@ -742,7 +744,7 @@ AstModule Parser::Parse(std::string module_path, const TokenStream& tokens,
       }
 
       if (cursor.Peek().type == TokenType::LBrace) {
-        function.statements = ParseBlock(cursor, diagnostics, module.module_path);
+        function.statements = ParseBlock(cursor, diagnostics, diag_file);
         if (!function.statements.empty()) {
           function.range = MergeRange(function.range, function.statements.back().range);
         }
@@ -761,7 +763,7 @@ AstModule Parser::Parse(std::string module_path, const TokenStream& tokens,
     }
 
     if (!cursor.AtEnd()) {
-      diagnostics.Error("E_PARSE_TOPLEVEL", "Unexpected token at top-level", module.module_path, cursor.Peek().range);
+      diagnostics.Error("E_PARSE_TOPLEVEL", "Unexpected token at top-level", diag_file, cursor.Peek().range);
       cursor.Advance();
     }
   }

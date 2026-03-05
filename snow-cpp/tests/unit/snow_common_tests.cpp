@@ -1,7 +1,9 @@
 #include <iostream>
 #include <string>
+#include <cstdint>
 
 #include "snow/common/mangling.h"
+#include "snow/runtime/runtime_api.h"
 
 namespace {
 
@@ -35,12 +37,36 @@ bool TestMangleSymbolExternCBypass() {
   return true;
 }
 
+bool TestRuntimeAbiSurface() {
+  const std::string test_name = "TestRuntimeAbiSurface";
+
+  void* ptr = snow_alloc(64, 16);
+  if (ptr == nullptr) {
+    return Fail(test_name, "snow_alloc returned null");
+  }
+  const auto addr = reinterpret_cast<std::uintptr_t>(ptr);
+  if ((addr % 16) != 0) {
+    return Fail(test_name, "snow_alloc alignment mismatch");
+  }
+
+  snow_runtime_drop_dispatch(0, ptr);
+  snow_free(ptr, 16);
+
+  const int rc = snow_runtime_start(nullptr);
+  if (rc != 1) {
+    return Fail(test_name, "snow_runtime_start(nullptr) should return 1");
+  }
+
+  return true;
+}
+
 }  // namespace
 
 int main() {
   int failed = 0;
   failed += TestMangleSymbolSanitizesModulePath() ? 0 : 1;
   failed += TestMangleSymbolExternCBypass() ? 0 : 1;
+  failed += TestRuntimeAbiSurface() ? 0 : 1;
 
   if (failed == 0) {
     std::cout << "[PASS] snow-common-tests\n";
