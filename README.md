@@ -19,6 +19,9 @@ powershell -ExecutionPolicy Bypass -File builds/tools/install-snow-cpp-env.ps1
 ## Quality Gates
 
 ```powershell
+powershell -ExecutionPolicy Bypass -File tools/check_clang_format.ps1
+powershell -ExecutionPolicy Bypass -File tools/arch_check.ps1 -BuildDir build
+powershell -ExecutionPolicy Bypass -File tools/check_knowledge_base.ps1
 powershell -ExecutionPolicy Bypass -File builds/tools/check-snow-v1-compliance.ps1
 powershell -ExecutionPolicy Bypass -File builds/tools/run-snow-cpp-gate.ps1
 ```
@@ -27,7 +30,7 @@ powershell -ExecutionPolicy Bypass -File builds/tools/run-snow-cpp-gate.ps1
 
 ```bash
 snowc version
-snowc compile --emit-tokens --emit-ast --emit-sema --emit-sir --emit-cfg --emit-llvm input.snow
+snowc compile --dump=tokens,ast,sema,sir,cfg,llvm,timings input.snow
 snowc build path/to/project-root
 snowc run input.snow
 snowc init

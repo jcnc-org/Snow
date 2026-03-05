@@ -81,6 +81,7 @@ include/snow/
   sir/
   passes/
   codegen/
+    llvm/
   driver/
   runtime/
 src/
@@ -90,6 +91,7 @@ src/
   sir/
   passes/
   codegen/
+    llvm/
   driver/
   runtime/
 tools/
@@ -291,12 +293,7 @@ Core compile flags:
 
 - `--target`
 - `--opt=0|2`
-- `--emit-tokens`
-- `--emit-ast`
-- `--emit-sema`
-- `--emit-sir`
-- `--emit-cfg`
-- `--emit-llvm`
+- `--dump=tokens,ast,sema,sir,cfg,llvm,timings`
 
 ## 14. Packaging and Manifest
 
