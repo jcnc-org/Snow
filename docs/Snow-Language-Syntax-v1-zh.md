@@ -161,6 +161,11 @@ binop          := "+" | "-" | "*" | "/" | "%" | "==" | "!=" | "<" | ">" | "<=" |
 
 ## 6. 诊断约束（语法相关）
 
+- 诊断码总表（唯一清单）：
+  - `docs/Snow-Diagnostics-v1.manifest.json`
+  - 语法子域诊断集合见 `docs/Snow-Language-Syntax-v1.manifest.json` 的
+    `parse_diagnostics` / `sema_diagnostics` / `ownership_diagnostics`。
+
 - 词法错误：
   - `E_LEX_UNKNOWN_CHAR`
 - 语法错误（示例）：
@@ -185,6 +190,12 @@ binop          := "+" | "-" | "*" | "/" | "%" | "==" | "!=" | "<" | ">" | "<=" |
 - 字符串字面量（`"..."`）：
   - lexer 当前不支持，触发 `E_LEX_UNKNOWN_CHAR`。
 - 本规范不包含旧语法（如 `module:`, `struct:`, `loop:` 风格）与 legacy 语法扩展。
+
+### 7.1 受限特性状态表（与 manifest 对齐）
+
+| op | kind | parser | sema | diagnostic_code | status |
+| --- | --- | --- | --- | --- | --- |
+| % | binary_mod | accept | reject | E_SEMA_UNSUPPORTED_OP | parser_accept_sema_reject |
 
 ## 8. 规范与实现映射
 

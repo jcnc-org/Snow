@@ -1,0 +1,695 @@
+{
+  "status": "Accepted",
+  "date": "2026-03-05",
+  "naming_policy": {
+    "allowed_prefixes": [
+      "E_",
+      "W_"
+    ],
+    "legacy_aliases": [
+      "AmbiguousSymbol"
+    ]
+  },
+  "entries": [
+    {
+      "code": "AmbiguousSymbol",
+      "severity": "Error",
+      "layer": "sema",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": true,
+      "legacy_alias": true
+    },
+    {
+      "code": "E_BACKEND_LINK_FAIL",
+      "severity": "Error",
+      "layer": "driver",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_BACKEND_LLVM_PARSE",
+      "severity": "Error",
+      "layer": "codegen",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_BACKEND_LLVM_REQUIRED",
+      "severity": "Error",
+      "layer": "codegen",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": true
+    },
+    {
+      "code": "E_BACKEND_LLVM_VERIFY",
+      "severity": "Error",
+      "layer": "codegen",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_BACKEND_OBJECT_EMIT",
+      "severity": "Error",
+      "layer": "codegen",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_BACKEND_TARGET_MACHINE",
+      "severity": "Error",
+      "layer": "codegen",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_BACKEND_UNSUPPORTED_OPCODE",
+      "severity": "Error",
+      "layer": "codegen",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_BUILD_MAIN_NOT_FOUND",
+      "severity": "Error",
+      "layer": "driver",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": true
+    },
+    {
+      "code": "E_DRIVER_INPUT",
+      "severity": "Error",
+      "layer": "driver",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_DRIVER_OUTDIR",
+      "severity": "Error",
+      "layer": "driver",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_LEX_UNKNOWN_CHAR",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_MANIFEST_PARSE",
+      "severity": "Error",
+      "layer": "driver",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": true
+    },
+    {
+      "code": "E_MODULE_CYCLE",
+      "severity": "Error",
+      "layer": "driver",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": true
+    },
+    {
+      "code": "E_MODULE_MISSING",
+      "severity": "Error",
+      "layer": "driver",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_MODULE_NOT_FOUND",
+      "severity": "Error",
+      "layer": "driver",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": true
+    },
+    {
+      "code": "E_OWNERSHIP_RET_TYPE",
+      "severity": "Error",
+      "layer": "ownership",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_OWNERSHIP_USE_AFTER_MOVE",
+      "severity": "Error",
+      "layer": "ownership",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_PARSE_ASSIGN_SEMI",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_PARSE_BLOCK_LBRACE",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_PARSE_BLOCK_RBRACE",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_PARSE_BREAK_SEMI",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_PARSE_CALL_RPAREN",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_PARSE_CONTINUE_SEMI",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_PARSE_EXPR_PRIMARY",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_PARSE_EXPR_RPAREN",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_PARSE_FN_ARROW",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_PARSE_FN_LPAREN",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_PARSE_FN_NAME",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_PARSE_FN_RET",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_PARSE_FN_RPAREN",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_PARSE_IMPORT_ALIAS",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_PARSE_IMPORT_PATH",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_PARSE_LET_ASSIGN",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_PARSE_LET_NAME",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_PARSE_LET_SEMI",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_PARSE_PARAM_COLON",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_PARSE_PARAM_NAME",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_PARSE_PARAM_TYPE",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_PARSE_RETURN_SEMI",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_PARSE_STMT_SEMI",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_PARSE_TOPLEVEL",
+      "severity": "Error",
+      "layer": "frontend",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SEMA_ASSIGN_TYPE",
+      "severity": "Error",
+      "layer": "sema",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SEMA_ASSIGN_UNDEFINED",
+      "severity": "Error",
+      "layer": "sema",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SEMA_BREAK_OUTSIDE_LOOP",
+      "severity": "Error",
+      "layer": "sema",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SEMA_CALL_ARG_TYPE",
+      "severity": "Error",
+      "layer": "sema",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SEMA_CALL_ARITY",
+      "severity": "Error",
+      "layer": "sema",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SEMA_CALL_UNDEFINED",
+      "severity": "Error",
+      "layer": "sema",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SEMA_CONTINUE_OUTSIDE_LOOP",
+      "severity": "Error",
+      "layer": "sema",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SEMA_DUP_LOCAL",
+      "severity": "Error",
+      "layer": "sema",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SEMA_DUP_SYMBOL",
+      "severity": "Error",
+      "layer": "sema",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SEMA_EXPR_TYPE",
+      "severity": "Error",
+      "layer": "sema",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SEMA_IF_COND_TYPE",
+      "severity": "Error",
+      "layer": "sema",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SEMA_LET_NAME",
+      "severity": "Error",
+      "layer": "sema",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SEMA_LET_TYPE",
+      "severity": "Error",
+      "layer": "sema",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SEMA_RET_MISSING",
+      "severity": "Error",
+      "layer": "sema",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SEMA_RET_TYPE",
+      "severity": "Error",
+      "layer": "sema",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SEMA_UNSUPPORTED_OP",
+      "severity": "Error",
+      "layer": "sema",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SEMA_WHILE_COND_TYPE",
+      "severity": "Error",
+      "layer": "sema",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_ALLOC_ARITY",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_ALLOC_RESULT",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_ALLOC_TYPE",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_ARITY",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_BR_ARITY",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_CALL_ARITY",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_CALL_RET_TYPE",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_CALL_TYPE",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_CFG_TARGET",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_CONDBR_ARITY",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_CONDBR_TYPE",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_DOUBLE_DROP",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_DROP_ARITY",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_EMPTY_BLOCK",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_LOAD_ARITY",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_LOAD_PTR",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_LOAD_RESULT",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_LOAD_TYPE",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_PHI_ARITY",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_PHI_LABEL",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_PHI_ORDER",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_PHI_TYPE",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_RET_ARITY",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_RET_TYPE",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_SSA_REDEF",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_STORE_ARITY",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_STORE_PTR",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_STORE_TYPE",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_TERM_COUNT",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_TERM_NOT_LAST",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_TYPE_ARITH",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_TYPE_CMP",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_SIR_TYPE_MISMATCH",
+      "severity": "Error",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "E_TARGET_UNSUPPORTED",
+      "severity": "Error",
+      "layer": "driver",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": true
+    },
+    {
+      "code": "W_IMPORT_STAR_EMPTY",
+      "severity": "Warning",
+      "layer": "driver",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "W_SIR_CALL_NO_RESULT",
+      "severity": "Warning",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "W_SIR_USE_BEFORE_DEF",
+      "severity": "Warning",
+      "layer": "sir",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": false
+    },
+    {
+      "code": "W_STAR_IMPORT_DISCOURAGED",
+      "severity": "Warning",
+      "layer": "sema",
+      "message_contract": "Stable actionable summary; wording may evolve without changing semantic intent.",
+      "has_suggestion": true
+    }
+  ]
+}

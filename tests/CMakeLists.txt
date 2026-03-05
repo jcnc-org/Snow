@@ -77,6 +77,14 @@ add_test(
     -Root ${CMAKE_SOURCE_DIR}
 )
 
+add_test(
+  NAME snow_diagnostic_alignment
+  COMMAND ${SNOW_POWERSHELL_EXE}
+    -ExecutionPolicy Bypass
+    -File ${CMAKE_SOURCE_DIR}/tools/check_diagnostic_alignment.ps1
+    -Root ${CMAKE_SOURCE_DIR}
+)
+
 function(add_cli_assert_test NAME EXE EXIT_CODE ARGS EXPECT REJECT EXPECT_FILE)
   add_test(
     NAME ${NAME}

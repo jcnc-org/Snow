@@ -99,6 +99,7 @@ Hard-fail gates for this repository:
 
 - architecture/style check: `tools/arch_check.ps1`
 - syntax alignment check: `tools/check_syntax_alignment.ps1`
+- diagnostic alignment check: `tools/check_diagnostic_alignment.ps1`
 - format check: `tools/check_clang_format.ps1`
 - test gate: `builds/tools/run-snow-cpp-gate.ps1`
 - compliance gate: `builds/tools/check-snow-v1-compliance.ps1`

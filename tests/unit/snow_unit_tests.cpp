@@ -761,6 +761,38 @@ namespace {
         return true;
     }
 
+    bool TestOwnershipMissingReturnType() {
+        const std::string test_name = "TestOwnershipMissingReturnType";
+
+        snow::sema::SemaModule sema_module;
+        sema_module.ast.module_path = "unit.ownership_ret";
+        sema_module.ast.source_path = "unit_ownership_ret.snow";
+
+        snow::frontend::FunctionDecl function;
+        function.name = "main";
+        function.return_type = "";
+        function.range = {1, 1, 1, 1};
+        function.statements.push_back(snow::frontend::Statement{
+                .kind = snow::frontend::Statement::Kind::Return,
+                .expr = std::make_shared<snow::frontend::Expr>(snow::frontend::Expr{
+                        .kind = snow::frontend::Expr::Kind::Number,
+                        .value = "0",
+                        .range = {1, 1, 1, 1},
+                }),
+                .range = {1, 1, 1, 1},
+        });
+        sema_module.ast.functions.push_back(std::move(function));
+
+        snow::common::DiagnosticEngine diagnostics;
+        snow::ownership::OwnershipChecker ownership;
+        (void) ownership.Check(sema_module, diagnostics);
+
+        if (!ContainsCode(diagnostics, "E_OWNERSHIP_RET_TYPE")) {
+            return Fail(test_name, "expected E_OWNERSHIP_RET_TYPE");
+        }
+        return true;
+    }
+
     bool TestOwnershipMoveSuppressesDrop() {
         const std::string test_name = "TestOwnershipMoveSuppressesDrop";
         const snow::common::SourceFile source{
@@ -839,6 +871,7 @@ int main() {
     failed += TestParserTypedLetStatement() ? 0 : 1;
     failed += TestSemaBreakOutsideLoop() ? 0 : 1;
     failed += TestOwnershipUseAfterMove() ? 0 : 1;
+    failed += TestOwnershipMissingReturnType() ? 0 : 1;
     failed += TestOwnershipMoveSuppressesDrop() ? 0 : 1;
     failed += TestSemaContinueOutsideLoop() ? 0 : 1;
 

@@ -7,7 +7,25 @@ $PSNativeCommandUseErrorActionPreference = $true
 
 Set-Location (Resolve-Path $Root)
 
-$clangFormat = Get-Command clang-format -ErrorAction SilentlyContinue
+function Resolve-ClangFormat {
+  $cmd = Get-Command clang-format -ErrorAction SilentlyContinue
+  if ($cmd) {
+    return $cmd
+  }
+
+  $envScript = "builds/tools/enter-snow-cpp-env.ps1"
+  if (Test-Path $envScript) {
+    . (Resolve-Path $envScript)
+    $cmd = Get-Command clang-format -ErrorAction SilentlyContinue
+    if ($cmd) {
+      return $cmd
+    }
+  }
+
+  return $null
+}
+
+$clangFormat = Resolve-ClangFormat
 if (-not $clangFormat) {
   Write-Host "[format] FAIL: clang-format not found in PATH." -ForegroundColor Red
   exit 1
@@ -28,7 +46,7 @@ if (-not $files -or $files.Count -eq 0) {
 $batchSize = 50
 for ($i = 0; $i -lt $files.Count; $i += $batchSize) {
   $batch = $files[$i..([Math]::Min($i + $batchSize - 1, $files.Count - 1))]
-  & clang-format --dry-run --Werror @batch
+  & $clangFormat.Source --dry-run --Werror @batch
   if ($LASTEXITCODE -ne 0) {
     Write-Host "[format] FAIL: clang-format mismatch detected." -ForegroundColor Red
     exit 1

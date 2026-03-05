@@ -5,6 +5,7 @@
 - `Snow-Compiler-Architecture-v1.md`
 - `Snow-Language-Syntax-v1-zh.md`
 - `Snow-Language-Syntax-v1.manifest.json`
+- `Snow-Diagnostics-v1.manifest.json`
 - `Snow-SIR-Spec-v1.md`
 - `Snow-Runtime-ABI-v1.md`
 - `Snow-Pass-Invariants-v1.md`

@@ -37,15 +37,19 @@ Invoke-Step -Name 'build' -Command {
 }
 
 Invoke-Step -Name 'architecture-check' -Command {
-  powershell -ExecutionPolicy Bypass -File tools/arch_check.ps1 -BuildDir $BuildDir
+  powershell -ExecutionPolicy Bypass -File tools/arch_check.ps1 -BuildDir $BuildDir -RequireDeterminismBinary
 }
 
 Invoke-Step -Name 'syntax-alignment-check' -Command {
   powershell -ExecutionPolicy Bypass -File tools/check_syntax_alignment.ps1
 }
 
+Invoke-Step -Name 'diagnostic-alignment-check' -Command {
+  powershell -ExecutionPolicy Bypass -File tools/check_diagnostic_alignment.ps1
+}
+
 Invoke-Step -Name 'unit-tests' -Command {
-  ctest --test-dir "$BuildDir/tests" --output-on-failure -R "^(snow_unit_tests|snow_pass_tests|snow_sema_tests|snow_common_tests|snow_pass_docs_exist|snow_syntax_alignment)$"
+  ctest --test-dir "$BuildDir/tests" --output-on-failure -R "^(snow_unit_tests|snow_pass_tests|snow_sema_tests|snow_common_tests|snow_pass_docs_exist|snow_syntax_alignment|snow_diagnostic_alignment)$"
 }
 
 Invoke-Step -Name 'cli-tests' -Command {

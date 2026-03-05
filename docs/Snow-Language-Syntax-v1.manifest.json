@@ -84,6 +84,61 @@
     "Le",
     "Ge"
   ],
+  "parse_diagnostics": [
+    "E_LEX_UNKNOWN_CHAR",
+    "E_PARSE_ASSIGN_SEMI",
+    "E_PARSE_BLOCK_LBRACE",
+    "E_PARSE_BLOCK_RBRACE",
+    "E_PARSE_BREAK_SEMI",
+    "E_PARSE_CALL_RPAREN",
+    "E_PARSE_CONTINUE_SEMI",
+    "E_PARSE_EXPR_PRIMARY",
+    "E_PARSE_EXPR_RPAREN",
+    "E_PARSE_FN_ARROW",
+    "E_PARSE_FN_LPAREN",
+    "E_PARSE_FN_NAME",
+    "E_PARSE_FN_RET",
+    "E_PARSE_FN_RPAREN",
+    "E_PARSE_IMPORT_ALIAS",
+    "E_PARSE_IMPORT_PATH",
+    "E_PARSE_LET_ASSIGN",
+    "E_PARSE_LET_NAME",
+    "E_PARSE_LET_SEMI",
+    "E_PARSE_PARAM_COLON",
+    "E_PARSE_PARAM_NAME",
+    "E_PARSE_PARAM_TYPE",
+    "E_PARSE_RETURN_SEMI",
+    "E_PARSE_STMT_SEMI",
+    "E_PARSE_TOPLEVEL"
+  ],
+  "sema_diagnostics": [
+    "AmbiguousSymbol",
+    "E_SEMA_ASSIGN_TYPE",
+    "E_SEMA_ASSIGN_UNDEFINED",
+    "E_SEMA_BREAK_OUTSIDE_LOOP",
+    "E_SEMA_CALL_ARG_TYPE",
+    "E_SEMA_CALL_ARITY",
+    "E_SEMA_CALL_UNDEFINED",
+    "E_SEMA_CONTINUE_OUTSIDE_LOOP",
+    "E_SEMA_DUP_LOCAL",
+    "E_SEMA_DUP_SYMBOL",
+    "E_SEMA_EXPR_TYPE",
+    "E_SEMA_IF_COND_TYPE",
+    "E_SEMA_LET_NAME",
+    "E_SEMA_LET_TYPE",
+    "E_SEMA_RET_MISSING",
+    "E_SEMA_RET_TYPE",
+    "E_SEMA_UNSUPPORTED_OP",
+    "E_SEMA_WHILE_COND_TYPE",
+    "W_STAR_IMPORT_DISCOURAGED"
+  ],
+  "ownership_diagnostics": [
+    "E_OWNERSHIP_RET_TYPE",
+    "E_OWNERSHIP_USE_AFTER_MOVE"
+  ],
+  "unit_only_diagnostics": [
+    "E_OWNERSHIP_RET_TYPE"
+  ],
   "unsupported_or_gated_ops": [
     {
       "op": "%",
@@ -106,24 +161,144 @@
       "expected": "loop_cond"
     },
     {
-      "case_path": "tests/data/cases/star_import_warning.snow",
-      "expected": "W_STAR_IMPORT_DISCOURAGED",
-      "diag_code": "W_STAR_IMPORT_DISCOURAGED"
+      "case_path": "tests/data/cases/lex_error.snow",
+      "expected": "E_LEX_UNKNOWN_CHAR",
+      "diag_code": "E_LEX_UNKNOWN_CHAR"
     },
     {
-      "case_path": "tests/data/cases/expr_mod_unsupported.snow",
-      "expected": "E_SEMA_UNSUPPORTED_OP",
-      "diag_code": "E_SEMA_UNSUPPORTED_OP"
+      "case_path": "tests/data/cases/parse_assign_semi_bad.snow",
+      "expected": "E_PARSE_ASSIGN_SEMI",
+      "diag_code": "E_PARSE_ASSIGN_SEMI"
     },
     {
-      "case_path": "tests/data/cases/let_typed_bad.snow",
-      "expected": "E_SEMA_LET_TYPE",
-      "diag_code": "E_SEMA_LET_TYPE"
+      "case_path": "tests/data/cases/parse_block_lbrace_bad.snow",
+      "expected": "E_PARSE_BLOCK_LBRACE",
+      "diag_code": "E_PARSE_BLOCK_LBRACE"
     },
     {
-      "case_path": "tests/data/cases/call_arg_type_bad.snow",
-      "expected": "E_SEMA_CALL_ARG_TYPE",
-      "diag_code": "E_SEMA_CALL_ARG_TYPE"
+      "case_path": "tests/data/cases/parse_block_rbrace_bad.snow",
+      "expected": "E_PARSE_BLOCK_RBRACE",
+      "diag_code": "E_PARSE_BLOCK_RBRACE"
+    },
+    {
+      "case_path": "tests/data/cases/parse_break_semi_bad.snow",
+      "expected": "E_PARSE_BREAK_SEMI",
+      "diag_code": "E_PARSE_BREAK_SEMI"
+    },
+    {
+      "case_path": "tests/data/cases/parse_call_rparen_bad.snow",
+      "expected": "E_PARSE_CALL_RPAREN",
+      "diag_code": "E_PARSE_CALL_RPAREN"
+    },
+    {
+      "case_path": "tests/data/cases/parse_continue_semi_bad.snow",
+      "expected": "E_PARSE_CONTINUE_SEMI",
+      "diag_code": "E_PARSE_CONTINUE_SEMI"
+    },
+    {
+      "case_path": "tests/data/cases/parse_expr_primary_bad.snow",
+      "expected": "E_PARSE_EXPR_PRIMARY",
+      "diag_code": "E_PARSE_EXPR_PRIMARY"
+    },
+    {
+      "case_path": "tests/data/cases/parse_expr_rparen_bad.snow",
+      "expected": "E_PARSE_EXPR_RPAREN",
+      "diag_code": "E_PARSE_EXPR_RPAREN"
+    },
+    {
+      "case_path": "tests/data/cases/parse_fn_arrow_bad.snow",
+      "expected": "E_PARSE_FN_ARROW",
+      "diag_code": "E_PARSE_FN_ARROW"
+    },
+    {
+      "case_path": "tests/data/cases/parse_fn_lparen_bad.snow",
+      "expected": "E_PARSE_FN_LPAREN",
+      "diag_code": "E_PARSE_FN_LPAREN"
+    },
+    {
+      "case_path": "tests/data/cases/parse_fn_name_bad.snow",
+      "expected": "E_PARSE_FN_NAME",
+      "diag_code": "E_PARSE_FN_NAME"
+    },
+    {
+      "case_path": "tests/data/cases/parse_fn_ret_bad.snow",
+      "expected": "E_PARSE_FN_RET",
+      "diag_code": "E_PARSE_FN_RET"
+    },
+    {
+      "case_path": "tests/data/cases/parse_fn_rparen_bad.snow",
+      "expected": "E_PARSE_FN_RPAREN",
+      "diag_code": "E_PARSE_FN_RPAREN"
+    },
+    {
+      "case_path": "tests/data/cases/parse_import_alias_bad.snow",
+      "expected": "E_PARSE_IMPORT_ALIAS",
+      "diag_code": "E_PARSE_IMPORT_ALIAS"
+    },
+    {
+      "case_path": "tests/data/cases/parse_import_path_bad.snow",
+      "expected": "E_PARSE_IMPORT_PATH",
+      "diag_code": "E_PARSE_IMPORT_PATH"
+    },
+    {
+      "case_path": "tests/data/cases/parse_let_assign_bad.snow",
+      "expected": "E_PARSE_LET_ASSIGN",
+      "diag_code": "E_PARSE_LET_ASSIGN"
+    },
+    {
+      "case_path": "tests/data/cases/parse_let_name_bad.snow",
+      "expected": "E_PARSE_LET_NAME",
+      "diag_code": "E_PARSE_LET_NAME"
+    },
+    {
+      "case_path": "tests/data/cases/parse_let_semi_bad.snow",
+      "expected": "E_PARSE_LET_SEMI",
+      "diag_code": "E_PARSE_LET_SEMI"
+    },
+    {
+      "case_path": "tests/data/cases/parse_param_colon_bad.snow",
+      "expected": "E_PARSE_PARAM_COLON",
+      "diag_code": "E_PARSE_PARAM_COLON"
+    },
+    {
+      "case_path": "tests/data/cases/parse_param_name_bad.snow",
+      "expected": "E_PARSE_PARAM_NAME",
+      "diag_code": "E_PARSE_PARAM_NAME"
+    },
+    {
+      "case_path": "tests/data/cases/parse_param_type_bad.snow",
+      "expected": "E_PARSE_PARAM_TYPE",
+      "diag_code": "E_PARSE_PARAM_TYPE"
+    },
+    {
+      "case_path": "tests/data/cases/parse_return_semi_bad.snow",
+      "expected": "E_PARSE_RETURN_SEMI",
+      "diag_code": "E_PARSE_RETURN_SEMI"
+    },
+    {
+      "case_path": "tests/data/cases/parse_stmt_semi_bad.snow",
+      "expected": "E_PARSE_STMT_SEMI",
+      "diag_code": "E_PARSE_STMT_SEMI"
+    },
+    {
+      "case_path": "tests/data/cases/parse_toplevel_bad.snow",
+      "expected": "E_PARSE_TOPLEVEL",
+      "diag_code": "E_PARSE_TOPLEVEL"
+    },
+    {
+      "case_path": "tests/data/cases/ambiguous_import.snow",
+      "expected": "AmbiguousSymbol",
+      "diag_code": "AmbiguousSymbol"
+    },
+    {
+      "case_path": "tests/data/cases/assign_type_bad.snow",
+      "expected": "E_SEMA_ASSIGN_TYPE",
+      "diag_code": "E_SEMA_ASSIGN_TYPE"
+    },
+    {
+      "case_path": "tests/data/cases/assign_undefined.snow",
+      "expected": "E_SEMA_ASSIGN_UNDEFINED",
+      "diag_code": "E_SEMA_ASSIGN_UNDEFINED"
     },
     {
       "case_path": "tests/data/cases/break_outside.snow",
@@ -131,19 +306,84 @@
       "diag_code": "E_SEMA_BREAK_OUTSIDE_LOOP"
     },
     {
+      "case_path": "tests/data/cases/call_arg_type_bad.snow",
+      "expected": "E_SEMA_CALL_ARG_TYPE",
+      "diag_code": "E_SEMA_CALL_ARG_TYPE"
+    },
+    {
+      "case_path": "tests/data/cases/call_arity_bad.snow",
+      "expected": "E_SEMA_CALL_ARITY",
+      "diag_code": "E_SEMA_CALL_ARITY"
+    },
+    {
+      "case_path": "tests/data/cases/call_undefined.snow",
+      "expected": "E_SEMA_CALL_UNDEFINED",
+      "diag_code": "E_SEMA_CALL_UNDEFINED"
+    },
+    {
       "case_path": "tests/data/cases/continue_outside.snow",
       "expected": "E_SEMA_CONTINUE_OUTSIDE_LOOP",
       "diag_code": "E_SEMA_CONTINUE_OUTSIDE_LOOP"
     },
     {
+      "case_path": "tests/data/cases/sema_dup_local.snow",
+      "expected": "E_SEMA_DUP_LOCAL",
+      "diag_code": "E_SEMA_DUP_LOCAL"
+    },
+    {
+      "case_path": "tests/data/cases/dup_symbol.snow",
+      "expected": "E_SEMA_DUP_SYMBOL",
+      "diag_code": "E_SEMA_DUP_SYMBOL"
+    },
+    {
+      "case_path": "tests/data/cases/sema_expr_type_bad.snow",
+      "expected": "E_SEMA_EXPR_TYPE",
+      "diag_code": "E_SEMA_EXPR_TYPE"
+    },
+    {
+      "case_path": "tests/data/cases/if_cond_bad.snow",
+      "expected": "E_SEMA_IF_COND_TYPE",
+      "diag_code": "E_SEMA_IF_COND_TYPE"
+    },
+    {
+      "case_path": "tests/data/cases/sema_let_name_bad.snow",
+      "expected": "E_SEMA_LET_NAME",
+      "diag_code": "E_SEMA_LET_NAME"
+    },
+    {
+      "case_path": "tests/data/cases/let_typed_bad.snow",
+      "expected": "E_SEMA_LET_TYPE",
+      "diag_code": "E_SEMA_LET_TYPE"
+    },
+    {
+      "case_path": "tests/data/cases/sema_ret_missing.snow",
+      "expected": "E_SEMA_RET_MISSING",
+      "diag_code": "E_SEMA_RET_MISSING"
+    },
+    {
+      "case_path": "tests/data/cases/expr_ret_mismatch.snow",
+      "expected": "E_SEMA_RET_TYPE",
+      "diag_code": "E_SEMA_RET_TYPE"
+    },
+    {
+      "case_path": "tests/data/cases/expr_mod_unsupported.snow",
+      "expected": "E_SEMA_UNSUPPORTED_OP",
+      "diag_code": "E_SEMA_UNSUPPORTED_OP"
+    },
+    {
+      "case_path": "tests/data/cases/while_cond_bad.snow",
+      "expected": "E_SEMA_WHILE_COND_TYPE",
+      "diag_code": "E_SEMA_WHILE_COND_TYPE"
+    },
+    {
+      "case_path": "tests/data/cases/star_import_warning.snow",
+      "expected": "W_STAR_IMPORT_DISCOURAGED",
+      "diag_code": "W_STAR_IMPORT_DISCOURAGED"
+    },
+    {
       "case_path": "tests/data/cases/ownership_use_after_move.snow",
       "expected": "E_OWNERSHIP_USE_AFTER_MOVE",
       "diag_code": "E_OWNERSHIP_USE_AFTER_MOVE"
-    },
-    {
-      "case_path": "tests/data/cases/lex_error.snow",
-      "expected": "E_LEX_UNKNOWN_CHAR",
-      "diag_code": "E_LEX_UNKNOWN_CHAR"
     }
   ]
 }

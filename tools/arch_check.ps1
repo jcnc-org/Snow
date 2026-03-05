@@ -1,13 +1,15 @@
 param(
   [string]$Root = ".",
   [string]$BuildDir = "build",
-  [switch]$SkipDeterminism
+  [switch]$SkipDeterminism,
+  [switch]$RequireDeterminismBinary
 )
 
 $ErrorActionPreference = "Stop"
 $PSNativeCommandUseErrorActionPreference = $true
 
 Set-Location (Resolve-Path $Root)
+$repoRoot = (Resolve-Path ".").Path
 
 $errors = @()
 $warnings = @()
@@ -125,57 +127,138 @@ function Check-LayerDependencies {
   }
 }
 
+function Resolve-SnowcBinary {
+  $candidateExe = Join-Path $BuildDir "snowc.exe"
+  $candidateBin = Join-Path $BuildDir "snowc"
+  if (Test-Path $candidateExe) {
+    return $candidateExe
+  }
+  if (Test-Path $candidateBin) {
+    return $candidateBin
+  }
+  return $null
+}
+
+function Invoke-CompileDump([string]$Snowc, [string]$SourcePath, [string]$DumpSpec, [string]$OutputPath, [int]$ExpectedExit) {
+  $cmd = "`"$Snowc`" compile --dump=$DumpSpec --no-artifact `"$SourcePath`" > `"$OutputPath`" 2>&1"
+  cmd /c $cmd
+  $actual = $LASTEXITCODE
+  if ($actual -ne $ExpectedExit) {
+    Add-Error "determinism check failed for '$SourcePath': expected exit=$ExpectedExit actual=$actual"
+    return $false
+  }
+  return $true
+}
+
+function Normalize-Text([string]$Raw, [string]$RootPath) {
+  $text = [regex]::Replace($Raw, [char]27 + '\[[0-9;]*[A-Za-z]', '')
+  $text = $text -replace "`r`n", "`n"
+
+  $rootNorm = $RootPath
+  $rootForward = $RootPath -replace "\\", "/"
+  $rootBackward = $RootPath -replace "/", "\\"
+
+  $text = [regex]::Replace($text, [regex]::Escape($rootNorm), "<ROOT>", [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+  $text = [regex]::Replace($text, [regex]::Escape($rootForward), "<ROOT>", [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+  $text = [regex]::Replace($text, [regex]::Escape($rootBackward), "<ROOT>", [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+
+  $lines = $text -split "`n" | Where-Object {
+    $_ -notmatch "^artifact:" -and $_ -notmatch "^target:"
+  }
+
+  return (($lines -join "`n").TrimEnd())
+}
+
+function Get-DiagnosticSequence([string]$Text) {
+  $sequence = @()
+  $pattern = '(?ms)^(error|warning|note|internal-error)\[([^\]]+)\]:.*?\r?\n\s*-->\s*(.+?):(\d+):(\d+)'
+  foreach ($m in [regex]::Matches($Text, $pattern)) {
+    $sequence += "$($m.Groups[1].Value)|$($m.Groups[2].Value)|$($m.Groups[3].Value)|$($m.Groups[4].Value)|$($m.Groups[5].Value)"
+  }
+  return $sequence
+}
+
+function Check-TimingsPresence([string]$Snowc, [string]$SourcePath, [string]$OutputPath) {
+  if (-not (Invoke-CompileDump $Snowc $SourcePath "timings" $OutputPath 0)) {
+    return
+  }
+
+  $raw = Get-Content -Raw $OutputPath
+  $normalized = Normalize-Text $raw $repoRoot
+
+  $requiredPatterns = @(
+    'timings \(phases\)',
+    '^\s*lex:\s*',
+    '^\s*parse:\s*',
+    '^\s*sema:\s*',
+    '^\s*ownership:\s*',
+    '^\s*sir-build:\s*',
+    '^\s*sir-validate-pre-pass:\s*',
+    '^\s*passes:\s*',
+    '^\s*llvm-lower:\s*',
+    'timings \(passes\)'
+  )
+
+  foreach ($pattern in $requiredPatterns) {
+    if (-not [regex]::IsMatch($normalized, $pattern, [System.Text.RegularExpressions.RegexOptions]::Multiline)) {
+      Add-Error "determinism timings check failed: missing field pattern '$pattern'"
+    }
+  }
+}
+
 function Check-DeterministicDump {
   if ($SkipDeterminism) {
     return
   }
 
-  $snowc = $null
-  $candidateExe = Join-Path $BuildDir "snowc.exe"
-  $candidateBin = Join-Path $BuildDir "snowc"
-  if (Test-Path $candidateExe) {
-    $snowc = $candidateExe
-  } elseif (Test-Path $candidateBin) {
-    $snowc = $candidateBin
-  }
-
+  $snowc = Resolve-SnowcBinary
   if (-not $snowc) {
+    if ($RequireDeterminismBinary) {
+      Add-Error "determinism check failed: snowc binary not found in $BuildDir"
+      return
+    }
     Add-Warning "determinism check skipped: snowc binary not found in $BuildDir"
     return
   }
 
   $tmp = Join-Path $BuildDir "arch-check"
   New-Item -ItemType Directory -Force $tmp | Out-Null
-  $outA = Join-Path $tmp "dump_a.txt"
-  $outB = Join-Path $tmp "dump_b.txt"
-  $input = "tests/data/minimal.snow"
 
-  $cmdA = "`"$snowc`" compile --dump=sir,cfg,llvm --no-artifact `"$input`" > `"$outA`" 2>&1"
-  cmd /c $cmdA
-  if ($LASTEXITCODE -ne 0) {
-    Add-Error "determinism check failed: first compile command exited with $LASTEXITCODE"
-    return
+  $samples = @(
+    [pscustomobject]@{ Name = "minimal"; Input = "tests/data/minimal.snow"; ExpectedExit = 0 },
+    [pscustomobject]@{ Name = "if_phi"; Input = "tests/data/cases/if_phi.snow"; ExpectedExit = 0 },
+    [pscustomobject]@{ Name = "while_cfg"; Input = "tests/data/cases/while_cfg.snow"; ExpectedExit = 0 },
+    [pscustomobject]@{ Name = "star_import_warning"; Input = "tests/data/cases/star_import_warning.snow"; ExpectedExit = 0 },
+    [pscustomobject]@{ Name = "lex_error"; Input = "tests/data/cases/lex_error.snow"; ExpectedExit = 1 }
+  )
+
+  foreach ($sample in $samples) {
+    $outA = Join-Path $tmp ($sample.Name + "_a.txt")
+    $outB = Join-Path $tmp ($sample.Name + "_b.txt")
+
+    if (-not (Invoke-CompileDump $snowc $sample.Input "tokens,ast,sema,sir,cfg,llvm" $outA $sample.ExpectedExit)) {
+      continue
+    }
+    if (-not (Invoke-CompileDump $snowc $sample.Input "tokens,ast,sema,sir,cfg,llvm" $outB $sample.ExpectedExit)) {
+      continue
+    }
+
+    $normalizedA = Normalize-Text (Get-Content -Raw $outA) $repoRoot
+    $normalizedB = Normalize-Text (Get-Content -Raw $outB) $repoRoot
+
+    if ($normalizedA -ne $normalizedB) {
+      Add-Error "deterministic dump check failed for sample '$($sample.Name)': normalized outputs differ"
+    }
+
+    $diagA = Get-DiagnosticSequence $normalizedA
+    $diagB = Get-DiagnosticSequence $normalizedB
+    if (($diagA -join "`n") -ne ($diagB -join "`n")) {
+      Add-Error "diagnostic order/range determinism check failed for sample '$($sample.Name)'"
+    }
   }
 
-  $cmdB = "`"$snowc`" compile --dump=sir,cfg,llvm --no-artifact `"$input`" > `"$outB`" 2>&1"
-  cmd /c $cmdB
-  if ($LASTEXITCODE -ne 0) {
-    Add-Error "determinism check failed: second compile command exited with $LASTEXITCODE"
-    return
-  }
-
-  $normalize = {
-    param([string]$path)
-    return (Get-Content $path) |
-      Where-Object { $_ -notmatch "^artifact:" } |
-      Where-Object { $_ -notmatch "^target:" }
-  }
-
-  $a = & $normalize $outA
-  $b = & $normalize $outB
-  if (($a -join "`n") -ne ($b -join "`n")) {
-    Add-Error "deterministic dump check failed: compile dumps differ across runs"
-  }
+  $timingsOut = Join-Path $tmp "timings_minimal.txt"
+  Check-TimingsPresence $snowc "tests/data/minimal.snow" $timingsOut
 }
 
 Check-FileSizeLimits

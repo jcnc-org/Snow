@@ -1,5 +1,5 @@
 param(
-  [string]$BuildDir = 'build'
+  [string]$BuildDir = 'build/compliance'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -20,10 +20,9 @@ $root = Resolve-Path "$PSScriptRoot\..\.."
 Set-Location $root
 . "$PSScriptRoot\enter-snow-cpp-env.ps1"
 
-$tmpRoot = Join-Path $root 'builds\tmp\compliance'
-if (Test-Path $tmpRoot) {
-  Remove-Item -Recurse -Force $tmpRoot
-}
+$stamp = (Get-Date -Format 'yyyyMMdd-HHmmss-fff')
+$pidPart = [System.Diagnostics.Process]::GetCurrentProcess().Id
+$tmpRoot = Join-Path $root \"builds\\tmp\\compliance\\$stamp-$pidPart\"
 New-Item -ItemType Directory -Force $tmpRoot | Out-Null
 Copy-Item -Recurse -Force 'tests\data\project_ok' (Join-Path $tmpRoot 'project_ok')
 Copy-Item -Recurse -Force 'tests\data\project_cycle' (Join-Path $tmpRoot 'project_cycle')
@@ -33,6 +32,7 @@ $required = @(
   'docs/Snow-Compiler-Architecture-v1.md',
   'docs/Snow-Language-Syntax-v1-zh.md',
   'docs/Snow-Language-Syntax-v1.manifest.json',
+  'docs/Snow-Diagnostics-v1.manifest.json',
   'docs/Snow-SIR-Spec-v1.md',
   'docs/Snow-Runtime-ABI-v1.md',
   'docs/Snow-Migration-Plan-Java-to-CPP.md',
@@ -48,11 +48,14 @@ foreach ($f in $required) {
 $build = Invoke-Cmd "powershell -ExecutionPolicy Bypass -File builds\tools\build-snow-cpp.ps1 -BuildDir $BuildDir"
 Add-Check 'build+ctest' ($build.ExitCode -eq 0) (($build.Output -split "`n" | Select-Object -Last 6) -join "`n")
 
-$arch = Invoke-Cmd "powershell -ExecutionPolicy Bypass -File tools\arch_check.ps1 -BuildDir $BuildDir"
+$arch = Invoke-Cmd "powershell -ExecutionPolicy Bypass -File tools\arch_check.ps1 -BuildDir $BuildDir -RequireDeterminismBinary"
 Add-Check 'architecture-check' ($arch.ExitCode -eq 0) 'expected architecture/style gates'
 
 $syntax = Invoke-Cmd "powershell -ExecutionPolicy Bypass -File tools\check_syntax_alignment.ps1"
 Add-Check 'syntax-alignment-check' ($syntax.ExitCode -eq 0) 'expected syntax docs/manifest/code/tests alignment'
+
+$diag = Invoke-Cmd "powershell -ExecutionPolicy Bypass -File tools\check_diagnostic_alignment.ps1"
+Add-Check 'diagnostic-alignment-check' ($diag.ExitCode -eq 0) 'expected diagnostics docs/manifest/code alignment'
 
 $format = Invoke-Cmd "powershell -ExecutionPolicy Bypass -File tools\check_clang_format.ps1"
 Add-Check 'format-check' ($format.ExitCode -eq 0) 'expected clang-format clean state'
