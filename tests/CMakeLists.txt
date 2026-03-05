@@ -60,6 +60,23 @@ add_test(
     -P ${DOC_ASSERT_SCRIPT}
 )
 
+if(WIN32)
+  set(SNOW_POWERSHELL_EXE powershell)
+else()
+  find_program(SNOW_POWERSHELL_EXE NAMES pwsh powershell)
+  if(NOT SNOW_POWERSHELL_EXE)
+    message(FATAL_ERROR "PowerShell executable not found (expected pwsh or powershell)")
+  endif()
+endif()
+
+add_test(
+  NAME snow_syntax_alignment
+  COMMAND ${SNOW_POWERSHELL_EXE}
+    -ExecutionPolicy Bypass
+    -File ${CMAKE_SOURCE_DIR}/tools/check_syntax_alignment.ps1
+    -Root ${CMAKE_SOURCE_DIR}
+)
+
 function(add_cli_assert_test NAME EXE EXIT_CODE ARGS EXPECT REJECT EXPECT_FILE)
   add_test(
     NAME ${NAME}

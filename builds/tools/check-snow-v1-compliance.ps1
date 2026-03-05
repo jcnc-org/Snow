@@ -31,6 +31,8 @@ Copy-Item -Recurse -Force 'tests\data\project_cycle' (Join-Path $tmpRoot 'projec
 $required = @(
   'AGENTS.md',
   'docs/Snow-Compiler-Architecture-v1.md',
+  'docs/Snow-Language-Syntax-v1-zh.md',
+  'docs/Snow-Language-Syntax-v1.manifest.json',
   'docs/Snow-SIR-Spec-v1.md',
   'docs/Snow-Runtime-ABI-v1.md',
   'docs/Snow-Migration-Plan-Java-to-CPP.md',
@@ -48,6 +50,9 @@ Add-Check 'build+ctest' ($build.ExitCode -eq 0) (($build.Output -split "`n" | Se
 
 $arch = Invoke-Cmd "powershell -ExecutionPolicy Bypass -File tools\arch_check.ps1 -BuildDir $BuildDir"
 Add-Check 'architecture-check' ($arch.ExitCode -eq 0) 'expected architecture/style gates'
+
+$syntax = Invoke-Cmd "powershell -ExecutionPolicy Bypass -File tools\check_syntax_alignment.ps1"
+Add-Check 'syntax-alignment-check' ($syntax.ExitCode -eq 0) 'expected syntax docs/manifest/code/tests alignment'
 
 $format = Invoke-Cmd "powershell -ExecutionPolicy Bypass -File tools\check_clang_format.ps1"
 Add-Check 'format-check' ($format.ExitCode -eq 0) 'expected clang-format clean state'

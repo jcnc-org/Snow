@@ -1,0 +1,149 @@
+{
+  "token_types": [
+    "Identifier",
+    "Number",
+    "KeywordImport",
+    "KeywordAs",
+    "KeywordFn",
+    "KeywordPub",
+    "KeywordInternal",
+    "KeywordPrivate",
+    "KeywordReturn",
+    "KeywordIf",
+    "KeywordElse",
+    "KeywordWhile",
+    "KeywordBreak",
+    "KeywordContinue",
+    "KeywordLet",
+    "Arrow",
+    "Dot",
+    "Comma",
+    "Colon",
+    "Semicolon",
+    "Star",
+    "Plus",
+    "Minus",
+    "Slash",
+    "Percent",
+    "Equal",
+    "EqualEqual",
+    "Less",
+    "LessEqual",
+    "Greater",
+    "GreaterEqual",
+    "Bang",
+    "BangEqual",
+    "LParen",
+    "RParen",
+    "LBrace",
+    "RBrace",
+    "EndOfFile",
+    "Unknown"
+  ],
+  "keywords": [
+    "import",
+    "as",
+    "fn",
+    "pub",
+    "internal",
+    "private",
+    "return",
+    "if",
+    "else",
+    "while",
+    "break",
+    "continue",
+    "let"
+  ],
+  "statement_kinds": [
+    "Return",
+    "Expr",
+    "Assign",
+    "If",
+    "While",
+    "Break",
+    "Continue",
+    "Let"
+  ],
+  "expr_kinds": [
+    "Number",
+    "Identifier",
+    "Call",
+    "Binary"
+  ],
+  "binary_ops": [
+    "Add",
+    "Sub",
+    "Mul",
+    "Div",
+    "Mod",
+    "Eq",
+    "Ne",
+    "Lt",
+    "Gt",
+    "Le",
+    "Ge"
+  ],
+  "unsupported_or_gated_ops": [
+    {
+      "op": "%",
+      "kind": "binary_mod",
+      "diagnostic_code": "E_SEMA_UNSUPPORTED_OP",
+      "status": "parser_accept_sema_reject"
+    }
+  ],
+  "required_cases": [
+    {
+      "case_path": "tests/data/cases/expr_arith.snow",
+      "expected": "ret 7 : i32"
+    },
+    {
+      "case_path": "tests/data/cases/if_phi.snow",
+      "expected": "phi"
+    },
+    {
+      "case_path": "tests/data/cases/while_cfg.snow",
+      "expected": "loop_cond"
+    },
+    {
+      "case_path": "tests/data/cases/star_import_warning.snow",
+      "expected": "W_STAR_IMPORT_DISCOURAGED",
+      "diag_code": "W_STAR_IMPORT_DISCOURAGED"
+    },
+    {
+      "case_path": "tests/data/cases/expr_mod_unsupported.snow",
+      "expected": "E_SEMA_UNSUPPORTED_OP",
+      "diag_code": "E_SEMA_UNSUPPORTED_OP"
+    },
+    {
+      "case_path": "tests/data/cases/let_typed_bad.snow",
+      "expected": "E_SEMA_LET_TYPE",
+      "diag_code": "E_SEMA_LET_TYPE"
+    },
+    {
+      "case_path": "tests/data/cases/call_arg_type_bad.snow",
+      "expected": "E_SEMA_CALL_ARG_TYPE",
+      "diag_code": "E_SEMA_CALL_ARG_TYPE"
+    },
+    {
+      "case_path": "tests/data/cases/break_outside.snow",
+      "expected": "E_SEMA_BREAK_OUTSIDE_LOOP",
+      "diag_code": "E_SEMA_BREAK_OUTSIDE_LOOP"
+    },
+    {
+      "case_path": "tests/data/cases/continue_outside.snow",
+      "expected": "E_SEMA_CONTINUE_OUTSIDE_LOOP",
+      "diag_code": "E_SEMA_CONTINUE_OUTSIDE_LOOP"
+    },
+    {
+      "case_path": "tests/data/cases/ownership_use_after_move.snow",
+      "expected": "E_OWNERSHIP_USE_AFTER_MOVE",
+      "diag_code": "E_OWNERSHIP_USE_AFTER_MOVE"
+    },
+    {
+      "case_path": "tests/data/cases/lex_error.snow",
+      "expected": "E_LEX_UNKNOWN_CHAR",
+      "diag_code": "E_LEX_UNKNOWN_CHAR"
+    }
+  ]
+}

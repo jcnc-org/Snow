@@ -98,12 +98,23 @@ AST/Sema/SIR/CFG/diagnostic dumps must be deterministic.
 Hard-fail gates for this repository:
 
 - architecture/style check: `tools/arch_check.ps1`
+- syntax alignment check: `tools/check_syntax_alignment.ps1`
 - format check: `tools/check_clang_format.ps1`
 - test gate: `builds/tools/run-snow-cpp-gate.ps1`
 - compliance gate: `builds/tools/check-snow-v1-compliance.ps1`
 - knowledge base integrity: `tools/check_knowledge_base.ps1`
 
-## 9. Change Control
+## 9. Syntax Change Control
+
+For any syntax behavior change in `lexer` / `parser` / `AST` / `sema`, the same change set must update:
+
+- `docs/Snow-Language-Syntax-v1-zh.md`
+- `docs/Snow-Language-Syntax-v1.manifest.json`
+- corresponding tests (`tests/unit` and/or `tests/data/cli_cases.tsv` + case files)
+
+`tools/check_syntax_alignment.ps1` is hard-fail and enforces alignment between syntax docs, manifest, implementation, and tests.
+
+## 10. Change Control
 
 The same change set must update specs/docs when changing:
 
@@ -113,7 +124,7 @@ The same change set must update specs/docs when changing:
 - CLI compatibility
 - pass invariants
 
-## 10. Skills Index
+## 11. Skills Index
 
 Detailed process rules are in `.claude/skills/`:
 
